@@ -1,0 +1,8 @@
+services:
+  ml_server:
+    image: ghcr.io/ggml-org/llama.cpp:server 
+    volumes:
+      - ./dist:/models
+    ports:
+      - "8080:8080"
+    command: ["-m", "/models/gemma-4-E4B-it-Q4_K_M.gguf", "--port", "8080", "--host", "0.0.0.0", "-n", "512"]
