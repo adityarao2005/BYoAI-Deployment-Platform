@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+tasks:
+  pull_models:
+    desc: Pull gemma 4 from huggingface
+    cmds:
+      - uv sync
+      - hf download --local-dir ./dist/ ggml-org/gemma-4-E4B-it-GGUF
+  run_gemma4_server:
+    desc: Run the gemma 4 server
+    cmds:
+      - docker compose up -d
+      - bash ./wait-for-health.sh 300
+  stop_gemma4_server:
+    desc: Stop the gemma 4 server
+    cmds:
+      - docker compose down

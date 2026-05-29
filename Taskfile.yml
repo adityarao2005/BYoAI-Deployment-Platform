@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+includes:
+  agentic_harness:
+    taskfile: agentic_harness/Taskfile.yml
+    dir: agentic_harness
+  local_models:
+    taskfile: local_models/Taskfile.yml
+    dir: local_models
+
+tasks:
+  run_harness:
+    desc: Run the agentic harness
+    cmds:
+      - task: local_models:run_gemma4_server
+      - task: agentic_harness:run
+      - task: local_models:stop_gemma4_server

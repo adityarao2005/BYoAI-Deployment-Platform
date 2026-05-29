@@ -6,3 +6,9 @@ services:
     ports:
       - "8080:8080"
     command: ["-m", "/models/gemma-4-E4B-it-Q4_K_M.gguf", "--port", "8080", "--host", "0.0.0.0", "-n", "512"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
