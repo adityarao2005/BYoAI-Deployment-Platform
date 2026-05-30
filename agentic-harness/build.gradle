@@ -1,0 +1,26 @@
+plugins {
+    id 'war'
+    id 'io.openliberty.tools.gradle.Liberty' version '3.9.5'
+}
+
+version '1.0-SNAPSHOT'
+group 'com.github.adityarao2005'
+
+sourceCompatibility = 21
+targetCompatibility = 21
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // provided dependencies
+    providedCompile 'jakarta.platform:jakarta.jakartaee-api:11.0.0' 
+    providedCompile 'org.eclipse.microprofile:microprofile:7.1' 
+
+}
+
+clean.dependsOn 'libertyStop'
