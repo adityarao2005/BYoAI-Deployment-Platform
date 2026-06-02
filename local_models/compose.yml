@@ -5,7 +5,7 @@ services:
       - ./dist:/models
     ports:
       - "8080:8080"
-    command: ["-m", "/models/gemma-4-E4B-it-Q4_K_M.gguf", "--port", "8080", "--host", "0.0.0.0", "-n", "512"]
+    command: ["-m", "/models/gemma-4-E4B-it-Q4_K_M.gguf", "--mmproj", "/models/mmproj-gemma-4-E4B-it-Q8_0.gguf", "--port", "8080", "--host", "0.0.0.0", "-n", "512"]
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
       interval: 20s
