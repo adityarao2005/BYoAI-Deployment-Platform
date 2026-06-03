@@ -1,9 +1,10 @@
-package com.github.adityarao2005.harness.models.tools;
+package com.github.adityarao2005.harness.tools;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
-import com.github.adityarao2005.harness.models.tools.error.ToolCallException;
-import com.github.adityarao2005.harness.models.tools.error.ToolSchemaValidationException;
+import com.github.adityarao2005.harness.tools.error.ToolCallException;
+import com.github.adityarao2005.harness.tools.error.ToolSchemaValidationException;
 
 import jakarta.json.JsonValue;
 
@@ -33,11 +34,12 @@ public interface Tool {
      * 
      * @param input A list of ToolArgument objects that represent the input to the
      *              tool.
-     * @return An Object that represents the output of the tool execution.
+     * @return A CompletableFuture that will be completed with the output of the
+     *         tool execution.
      * @throws ToolSchemaValidationException
      * @throws ToolCallException
      */
-    JsonValue execute(List<JsonValue> input) throws ToolSchemaValidationException, ToolCallException;
+    CompletableFuture<JsonValue> execute(List<JsonValue> input) throws ToolSchemaValidationException, ToolCallException;
 
     /**
      * Gets the schema of the tool, which defines the expected input and output.

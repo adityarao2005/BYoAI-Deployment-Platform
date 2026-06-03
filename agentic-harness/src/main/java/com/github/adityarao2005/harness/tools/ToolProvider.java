@@ -1,8 +1,8 @@
-package com.github.adityarao2005.harness.models.tools;
+package com.github.adityarao2005.harness.tools;
 
 import java.util.List;
 
-import com.github.adityarao2005.harness.models.tools.error.ToolNotFoundException;
+import com.github.adityarao2005.harness.tools.error.ToolNotFoundException;
 
 /**
  * Provides access to a collection of available tools.

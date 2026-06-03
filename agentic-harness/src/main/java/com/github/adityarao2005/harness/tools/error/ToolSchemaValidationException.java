@@ -1,4 +1,4 @@
-package com.github.adityarao2005.harness.models.tools.error;
+package com.github.adityarao2005.harness.tools.error;
 
 /**
  * Exception thrown when a tool's schema validation fails.
