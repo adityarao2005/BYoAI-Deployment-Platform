@@ -6,10 +6,14 @@ plugins {
 version '1.0-SNAPSHOT'
 group 'com.github.adityarao2005'
 
-sourceCompatibility = 21
-targetCompatibility = 21
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 repositories {
