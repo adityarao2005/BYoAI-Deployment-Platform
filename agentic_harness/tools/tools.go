@@ -28,3 +28,17 @@ type Tool interface {
 	*/
 	Execute(args []map[string]any) (map[string]any, error)
 }
+
+/*
+Provides access to a collection of available tools.
+*/
+type ToolProvider interface {
+	/*
+		Gets a list of all available tools.
+	*/
+	GetTools() ([]Tool, error)
+	/*
+		Gets a tool by its name.
+	*/
+	GetToolByName(name string) (Tool, error)
+}
