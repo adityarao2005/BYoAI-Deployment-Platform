@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: 3
+
+tasks:
+  clean:
+    desc: Clean the agentic harness
+    cmds:
+      - rm -rf bin
+  build:
+    desc: Build the agentic harness
+    cmds:
+      - go mod tidy
+      - go build -o bin/agentic_harness main.go
+      - chmod +x bin/agentic_harness
+    deps:
+      - clean
+  run:
+    desc: Run the agentic harness
+    cmds:
+      - ./bin/agentic_harness
+    deps:
+      - build
+  test:
+    desc: Test the agentic harness
+    cmds:
+      - go test ./...
+    deps:
+      - build
