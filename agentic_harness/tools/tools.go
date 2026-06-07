@@ -31,6 +31,7 @@ type Tool interface {
 
 /*
 Provides access to a collection of available tools.
+TODO: Define the different tool provider methods
 */
 type ToolProvider interface {
 	/*

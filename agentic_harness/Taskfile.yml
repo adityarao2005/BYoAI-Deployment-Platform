@@ -21,9 +21,15 @@ tasks:
       - ./bin/agentic_harness
     deps:
       - build
-  test:
+  full_test:
     desc: Test the agentic harness
     cmds:
       - go test ./...
+    deps:
+      - build
+  unit_test:
+    desc: Test the agentic harness
+    cmds:
+      - go test -short ./...
     deps:
       - build

@@ -10,7 +10,7 @@ https://agentskills.io/specification#skill-md-format
 */
 type Skill struct {
 	frontMatter map[string]any // Metadata about the skill (e.g., name, description, parameters)
-	body        string // The actual implementation of the skill
+	body        string         // The actual implementation of the skill
 }
 
 /*
@@ -49,6 +49,8 @@ defines methods for accessing the collection of skills available in the
 system. Implementations of this interface
 will provide the logic for storing and retrieving skills, which can be used
 by agents to perform various tasks.
+
+TODO: Create different types of skill repositories (e.g., file-based, database-based, API-based)
 */
 type SkillRepository interface {
 	/*

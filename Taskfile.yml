@@ -17,9 +17,13 @@ tasks:
       - task: local_models:run_gemma4_server
       - task: agentic_harness:run
       - task: local_models:stop_gemma4_server
-  test_harness:
+  integration_test:
     desc: Test the agentic harness
     cmds:
       - task: local_models:run_gemma4_server
-      - task: agentic_harness:test
+      - task: agentic_harness:full_test
       - task: local_models:stop_gemma4_server
+  unit_test:
+    desc: Test the agentic harness
+    cmds:
+      - task: agentic_harness:unit_test
