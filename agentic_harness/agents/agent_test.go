@@ -1,12 +1,12 @@
-package test
+package agents
 
 import (
 	"testing"
 
-	"github.com/adityarao2005/BYoAI-Deployment-Platform/agentic_harness/agents"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/agentic_harness/models"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/agentic_harness/skills"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/agentic_harness/tools"
+	"github.com/adityarao2005/BYoAI-Deployment-Platform/agentic_harness/test"
 )
 
 const (
@@ -22,9 +22,9 @@ func (m *DummyModel) Execute(messages []models.Message) (string, error) {
 
 // Tests the creation of an agent with dummy parameters
 func TestAgentCreation(t *testing.T) {
-	SetupUnitTest(t)
+	test.SetupUnitTest(t)
 
-	agent := agents.NewAgent("New Agent", &DummyModel{}, []skills.SkillRepository{}, []tools.ToolProvider{})
+	agent := NewAgent("New Agent", &DummyModel{}, []skills.SkillRepository{}, []tools.ToolProvider{})
 
 	message, err := agent.PerformTask("Tell me your name")
 	if err != nil {
@@ -32,21 +32,5 @@ func TestAgentCreation(t *testing.T) {
 	}
 	if message != DUMMY_MESSAGE {
 		t.Errorf("Expected message '%s', got '%s'", DUMMY_MESSAGE, message)
-	}
-}
-
-func TestSelfHostedModelExecution(t *testing.T) {
-	SetupIntegrationTest(t)
-
-	model := models.NewSelfHostedModel(GetSelfHostedModelBaseUri())
-
-	response, err := model.Execute([]models.Message{
-		{Role: models.User, Content: "Hello, how are you?"},
-	})
-	if err != nil {
-		t.Fatalf("Failed to execute model: %v", err)
-	}
-	if response == "" {
-		t.Errorf("Expected a response from the model, got an empty string")
 	}
 }
