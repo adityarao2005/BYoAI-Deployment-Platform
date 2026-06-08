@@ -1,6 +1,7 @@
 package test
 
 import (
+	"os"
 	"testing"
 )
 
@@ -14,4 +15,15 @@ func SetupIntegrationTest(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration test in short mode.")
 	}
+}
+
+func GetSelfHostedModelBaseUri() string {
+
+	uri := os.Getenv("SELF_HOSTED_MODEL_BASE_URI")
+	if uri != "" {
+		return uri
+	}
+
+	// In a real implementation, this could read from environment variables or configuration files
+	return "http://localhost:8000/v1"
 }

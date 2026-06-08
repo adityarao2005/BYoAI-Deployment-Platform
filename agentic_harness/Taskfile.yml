@@ -24,12 +24,12 @@ tasks:
   full_test:
     desc: Test the agentic harness
     cmds:
-      - go test ./...
+      - SELF_HOSTED_MODEL_BASE_URI=http://localhost:8080/v1 go test -v ./...
     deps:
       - build
   unit_test:
     desc: Test the agentic harness
     cmds:
-      - go test -short ./...
+      - go test -short -v ./...
     deps:
       - build

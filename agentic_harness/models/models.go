@@ -1,10 +1,18 @@
 package models
 
 type Message struct {
-	Role        string // The role of the sender (e.g., "user", "system")
+	Role        Role   // The role of the sender (e.g., "user", "system", "assistant")
 	MessageType string // The type of the message
 	Content     string // The content of the message
 }
+
+type Role string
+
+const (
+	User      Role = "user"
+	System    Role = "system"
+	Assistant Role = "assistant"
+)
 
 type Model interface {
 
