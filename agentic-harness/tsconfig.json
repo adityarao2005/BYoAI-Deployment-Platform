@@ -4,11 +4,19 @@
         // File Layout
         "rootDir": "./src",
         "outDir": "./dist",
+        "paths": {
+            "@/*": [
+                "./src/*"
+            ]
+        },
         // Environment Settings
         // See also https://aka.ms/tsconfig/module
-        "module": "nodenext",
+        "module": "esnext",
+        "moduleResolution": "bundler",
         "target": "esnext",
-        "types": [],
+        "types": [
+            "node"
+        ],
         // For nodejs:
         // "lib": ["esnext"],
         // "types": ["node"],
@@ -38,5 +46,5 @@
     },
     "include": [
         "src/**/*"
-    ]
+    ],
 }
