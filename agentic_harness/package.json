@@ -1,0 +1,29 @@
+{
+  "name": "agentic-harness",
+  "version": "1.0.0",
+  "description": "Loads typescript plugins",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "vitest run",
+    "integration:test": "vitest run test/openai.integration.test.ts",
+    "build:types": "tsc --emitDeclarationOnly --declaration --declarationMap --outDir dist",
+    "build:bundle": "esbuild src/index.ts --bundle --platform=node --target=esnext --format=esm --outfile=dist/index.js --minify --sourcemap",
+    "build": "npm run build:types && npm run build:bundle",
+    "start": "npm run build && node dist/index.js",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "esbuild": "^0.28.0",
+    "typescript": "5.9.2",
+    "vitest": "^4.1.7"
+  },
+  "dependencies": {
+    "openai": "^6.42.0",
+    "winston": "^3.19.0"
+  }
+}
