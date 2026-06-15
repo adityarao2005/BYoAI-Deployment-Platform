@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: 3
+
+tasks:
+  clean:
+    desc: Clean the agentic harness
+    cmds:
+      - rm -rf node_modules
+      - rm -rf dist
+  install:
+    desc: Install the agentic harness
+    cmds:
+      - pnpm install
+  build:
+    desc: Build the agentic harness
+    cmds:
+      - pnpm build
+    deps:
+      - install
+  run:
+    desc: Run the agentic harness
+    cmds:
+      - pnpm start
+    deps:
+      - build
+  full_test:
+    desc: Test the agentic harness
+    cmds:
+      - SELF_HOSTED_MODEL_BASE_URL=http://localhost:8080/v1 pnpm test
+    deps:
+      - install
+  unit_test:
+    desc: Test the agentic harness
+    cmds:
+      - pnpm test
+    deps:
+      - install
+      
