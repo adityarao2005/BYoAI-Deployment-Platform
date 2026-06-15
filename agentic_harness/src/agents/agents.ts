@@ -1,4 +1,4 @@
-import { Message, Model, modelRegistry } from "@/models/models";
+import { Message, modelRegistry } from "@/models";
 import { SkillRepository } from "@/skills/skills";
 import { ToolProvider } from "@/tools/tools";
 
@@ -18,7 +18,7 @@ export class Agent {
     implementation and should be expanded to include the actual logic for
     executing tasks based on the agent's capabilities.
     */
-    public async performTask(taskDescription: string): Promise<Message> {
+    public async performTask(taskDescription: string, history?: Message[]): Promise<Message> {
 
         const model = modelRegistry.getDefaultModel();
 
@@ -26,10 +26,15 @@ export class Agent {
             throw new Error("No model registered in the model registry. Cannot perform task.");
         }
 
-        return model.execute([{
+        const messages: Message[] = history ? [...history] : [];
+
+        messages.push({
             role: "user",
             type: "text",
             content: taskDescription
-        }])
+        })
+
+        return model.execute(messages)
     }
+
 }

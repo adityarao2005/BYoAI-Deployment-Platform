@@ -4,8 +4,10 @@ import { logger } from "@/logger";
 
 export class SelfHostedModel {
     private client: OpenAI
+    private modelName: string
 
-    constructor(baseURL: string, apiKey?: string) {
+    constructor(baseURL: string, modelName: string, apiKey?: string) {
+        this.modelName = modelName;
         this.client = new OpenAI({
             baseURL,
             apiKey: apiKey ?? "local-api-key",
@@ -14,45 +16,34 @@ export class SelfHostedModel {
 
     async execute(messages: Message[]): Promise<Message> {
 
-        // send the messages to the self-hosted model and get the response
-        const response = await this.client.responses.create({
-            input: messages.map((message) => ({
+        const response = await this.client.chat.completions.create({
+            model: this.modelName,
+            messages: messages.map((message) => ({
                 role: message.role,
                 content: message.content,
             }))
         })
 
-        // log the token usage for the self-hosted model response
-        logger.info(`Input tokens: ${response.usage?.input_tokens}`);
-        logger.info(`Output tokens: ${response.usage?.output_tokens}`);
+        logger.info(`Input tokens: ${response.usage?.prompt_tokens}`);
+        logger.info(`Output tokens: ${response.usage?.completion_tokens}`);
+        logger.info(`Total tokens: ${response.usage?.total_tokens}`);
+        logger.info(`Model response choices: ${response.choices.length}`);
 
-        // go through each output from the self-hosted model response and find the first message output
-        let message: string = ""
-        for (const output of response.output) {
-            logger.info(`Output: ${JSON.stringify(output)}`);
+        response.choices.forEach((choice, index) => {
+            logger.info(`Choice ${index + 1}: ${choice.message?.content}. Finish reason: ${choice.finish_reason}`);
+        });
 
-            if (output.type === "message") {
-                const messageResponse = output.content[0];
-
-                if (messageResponse?.type === "output_text") {
-                    message = messageResponse.text;
-                } else {
-                    throw new Error("Invalid response format from self-hosted model: expected output_text type in message content.");
-                }
-            }
+        if (response.choices.length === 0) {
+            throw new Error("No response choices received from self-hosted model.");
         }
 
+        const content = response.choices[0]!.message.content!;
 
-        // return the message output from the self-hosted model response, if we found one, otherwise throw an error
-        if (response.output.length) {
-            return {
-                content: message,
-                role: "assistant",
-                type: "text"
-            };
-        }
-
-        throw new Error("No valid response received from self-hosted model.");
+        return {
+            content,
+            role: "assistant",
+            type: "text"
+        };
     }
 }
 
@@ -91,7 +82,7 @@ modelRegistry.registerModels((env) => {
 
             // log the registration of the self-hosted model, but don't log the actual API key for security reasons
             logger.info(`Registering self-hosted model: ${modelName} with base URL: ${baseURL} and API key: ${apiKey ? "provided" : "not provided"}`);
-            models.set(modelName, new SelfHostedModel(baseURL, apiKey));
+            models.set(modelName, new SelfHostedModel(baseURL, modelName, apiKey));
         }
     }
 

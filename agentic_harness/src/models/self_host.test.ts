@@ -9,7 +9,7 @@ describe.runIf(SELF_HOSTED_MODEL_BASE_URL)("SelfHostedModel integration test", (
     // test whether it completes a chat completion request successfully, and logs the choices and selected response
     test("should execute a chat completion request", async () => {
 
-        const model = new SelfHostedModel(SELF_HOSTED_MODEL_BASE_URL!)
+        const model = new SelfHostedModel(SELF_HOSTED_MODEL_BASE_URL!, "model")
 
         const message = await model.execute([
             {
