@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { Model } from "@/models/models";
+import { Model, modelRegistry } from "@/models/models";
 import { Agent } from "./agents";
 
 const DUMMY_MESSAGE = "Hello, I am a dummy model!"
@@ -16,7 +16,10 @@ describe("Agents Unit Test", () => {
         }
     } satisfies Model;
 
-    const agent = new Agent("New Agent", model, [], [])
+    // register the model as mock
+    modelRegistry.registerModel("default", model)
+
+    const agent = new Agent("New Agent", [], [])
 
     test("Agent should perform task and return expected message", async () => {
         const response = await agent.performTask("What is the meaning of life?");

@@ -8,7 +8,7 @@
     "test": "vitest run",
     "integration:test": "vitest run test/openai.integration.test.ts",
     "build:types": "tsc --emitDeclarationOnly --declaration --declarationMap --outDir dist",
-    "build:bundle": "esbuild src/index.ts --bundle --platform=node --target=esnext --format=esm --outfile=dist/index.js --minify --sourcemap",
+    "build:bundle": "esbuild src/index.ts --bundle --platform=node --target=esnext --format=esm --outfile=dist/index.js --minify --sourcemap --packages=external",
     "build": "npm run build:types && npm run build:bundle",
     "start": "npm run build && node dist/index.js",
     "clean": "rm -rf dist",
