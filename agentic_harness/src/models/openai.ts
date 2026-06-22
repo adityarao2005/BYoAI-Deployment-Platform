@@ -34,7 +34,7 @@ export class OpenAIModel {
         const content = response.output_text?.trim();
 
         if (!content) {
-            throw new Error("No text output received from self-hosted model response.");
+            throw new Error("No text output received from OpenAI model response.");
         }
 
         return {
@@ -45,22 +45,23 @@ export class OpenAIModel {
     }
 }
 
-// Self hosted models are registered with the model registry, but only if the environment variable is set
+// OpenAI models are registered with the model registry, but only if the environment variable is set
 modelRegistry.registerModels((env) => {
 
     // environment variable prefixes
-    const SELF_HOSTED_MODEL_API_KEY_PREFIX = "SELF_HOSTED_MODEL_API_KEY_";
+    const OPENAI_MODEL_API_KEY_PREFIX = "OPENAI_MODEL_API_KEY_";
+    const OPENAI_MODEL_NAME_PREFIX = "OPENAI_MODEL_NAME_";
 
     const models = new Map<string, OpenAIModel>();
 
     for (const key in env) {
-        if (key.startsWith(SELF_HOSTED_MODEL_API_KEY_PREFIX) && env[key]) {
+        if (key.startsWith(OPENAI_MODEL_API_KEY_PREFIX) && env[key]) {
 
             // get the model name from the environment variable
-            const modelName = key.substring(SELF_HOSTED_MODEL_API_KEY_PREFIX.length).toLowerCase();
+            const modelId = key.substring(OPENAI_MODEL_API_KEY_PREFIX.length).toLowerCase();
 
-            if (modelName.length === 0) {
-                logger.warn(`Environment variable ${key} is missing a model name suffix, skipping registration of this self hosted model.`);
+            if (modelId.length === 0) {
+                logger.warn(`Environment variable ${key} is missing a model ID suffix, skipping registration of this OpenAI model.`);
                 continue;
             }
 
@@ -68,12 +69,20 @@ modelRegistry.registerModels((env) => {
 
             // look for a corresponding API key environment variable
             if (!apiKey) {
-                logger.warn(`Invalid API Key for self-hosted model: ${modelName}. Skipping registration.`);
+                logger.warn(`Invalid API Key for OpenAI model: ${modelId}. Skipping registration.`);
                 continue;
             }
 
-            // log the registration of the self-hosted model, but don't log the actual API key for security reasons
-            logger.info(`Registering self-hosted model: ${modelName} with API key: ${apiKey ? "provided" : "not provided"}`);
+            const modelNameEnvVar = `${OPENAI_MODEL_NAME_PREFIX}${modelId.toUpperCase()}`;
+            const modelName = env[modelNameEnvVar];
+
+            if (!modelName) {
+                logger.warn(`Missing environment variable ${modelNameEnvVar} for OpenAI model: ${modelId}. Skipping registration.`);
+                continue;
+            }
+
+            // log the registration of the OpenAI model, but don't log the actual API key for security reasons
+            logger.info(`Registering OpenAI model: ${modelId} with API key: ${apiKey ? "provided" : "not provided"} and model name: ${modelName}`);
             models.set(modelName, new OpenAIModel(modelName, apiKey));
         }
     }
