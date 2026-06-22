@@ -75,7 +75,7 @@ modelRegistry.registerModels((env) => {
 
             // log the registration of the Gemini model, but don't log the actual API key for security reasons
             logger.info(`Registering Gemini model: ${modelId} with API key: ${apiKey ? "provided" : "not provided"} and model name: ${modelName}`);
-            models.set(modelName, new GeminiModel(modelName, apiKey));
+            models.set(modelId, new GeminiModel(modelName, apiKey));
         }
     }
 

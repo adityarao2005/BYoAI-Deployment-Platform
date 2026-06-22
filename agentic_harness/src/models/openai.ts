@@ -83,7 +83,7 @@ modelRegistry.registerModels((env) => {
 
             // log the registration of the OpenAI model, but don't log the actual API key for security reasons
             logger.info(`Registering OpenAI model: ${modelId} with API key: ${apiKey ? "provided" : "not provided"} and model name: ${modelName}`);
-            models.set(modelName, new OpenAIModel(modelName, apiKey));
+            models.set(modelId, new OpenAIModel(modelName, apiKey));
         }
     }
 
