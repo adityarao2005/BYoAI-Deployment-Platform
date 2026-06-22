@@ -32,11 +32,13 @@ jobs:
         with:
           version: ${{ matrix.pnpm-version }}
 
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
           cache: "pnpm"
+          cache-dependency-path: "agentic_harness/pnpm-lock.yaml"
           
       - name: Install Task
         uses: go-task/setup-task@v1
