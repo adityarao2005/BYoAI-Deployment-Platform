@@ -11,7 +11,7 @@ tasks:
   install:
     desc: Install the agentic harness
     cmds:
-      - pnpm install
+      - pnpm install --ignore-scripts
   build:
     desc: Build the agentic harness
     cmds:
