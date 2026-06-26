@@ -25,6 +25,12 @@ export class AnthropicModel implements Model {
             messages: input.history.map((message) => ({
                 role: message.role === "user" ? "user" : "assistant",
                 content: message.content,
+            })),
+            tools: input.tools.map((tool) => ({
+                input_schema: tool.inputSchema,
+                name: tool.name,
+                description: tool.description,
+                strict: true
             }))
         });
 

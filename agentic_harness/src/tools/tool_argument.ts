@@ -87,7 +87,7 @@ export type ToolObjectArgument = {
     type: "object",
     description: string,
     properties: Record<string, ToolArgument>,
-    required?: string[] | undefined,
+    required?: string[] | null,
     additionalProperties?: boolean | undefined;
 }
 
@@ -100,7 +100,7 @@ export function toolObject(description: string, properties: Record<string, ToolA
         type: "object",
         description,
         properties,
-        required,
+        required: required || null,
         additionalProperties
     };
 }

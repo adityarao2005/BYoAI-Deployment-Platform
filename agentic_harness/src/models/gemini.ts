@@ -1,6 +1,39 @@
 import { GoogleGenAI } from "@google/genai";
 import { Message, Model, ModelMessageInput, modelRegistry } from "./models";
 import { logger } from "@/logger";
+import { ToolArgument } from "@/tools/tool_argument";
+
+export function formatSchemaForGemini(arg: ToolArgument): any {
+    // Deep clone to prevent mutating your core registry state
+    const clone = JSON.parse(JSON.stringify(arg));
+
+    const convertToUppercase = (obj: any) => {
+        if (!obj || typeof obj !== "object") return;
+
+        // Convert the type string to uppercase if it exists
+        if (typeof obj.type === "string") {
+            obj.type = obj.type.toUpperCase(); // "object" -> "OBJECT", "string" -> "STRING"
+        } else if (Array.isArray(obj.type)) {
+            // Handle type arrays if applicable e.g., ["string", "null"] -> ["STRING", "NULL"]
+            obj.type = obj.type.map((t: string) => t.toUpperCase());
+        }
+
+        // Recursively handle nested object properties
+        if (obj.properties) {
+            for (const key of Object.keys(obj.properties)) {
+                convertToUppercase(obj.properties[key]);
+            }
+        }
+
+        // Recursively handle array items
+        if (obj.items) {
+            convertToUppercase(obj.items);
+        }
+    };
+
+    convertToUppercase(clone);
+    return clone;
+}
 
 export class GeminiModel implements Model {
     private client: GoogleGenAI
@@ -17,7 +50,16 @@ export class GeminiModel implements Model {
             contents: input.history.map((message) => ({
                 role: message.role === "user" ? "user" : "model",
                 parts: [{ text: message.content }],
-            }))
+            })),
+            config: {
+                tools: input.tools.map((tool) => ({
+                    functionDeclarations: [{
+                        name: tool.name,
+                        description: tool.description,
+                        parameters: formatSchemaForGemini(tool.inputSchema),
+                    }]
+                }))
+            }
         });
 
         const result = response;

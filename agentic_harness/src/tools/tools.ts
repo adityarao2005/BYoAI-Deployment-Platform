@@ -1,4 +1,4 @@
-import { ToolArgument } from "./tool_argument";
+import {  ToolObjectArgument } from "./tool_argument";
 
 
 /*
@@ -10,7 +10,7 @@ Object as output. If the execution fails, it throws a ToolCallException.
 export interface Tool {
     name: string;
     description: string;
-    inputSchema: ToolArgument; // JSON Schema for input validation
+    inputSchema: ToolObjectArgument; // JSON Schema for input validation
 
     /**
      * executes the tool call given the arguments

@@ -24,6 +24,13 @@ export class OpenAIModel implements Model {
                     text: message.content,
                 }],
             })),
+            tools: input.tools.map((tool) => ({
+                type: "function",
+                name: tool.name,
+                description: tool.description,
+                parameters: tool.inputSchema,
+                strict: true
+            }))
         });
 
         logger.info(`Input tokens: ${response.usage?.input_tokens}`);

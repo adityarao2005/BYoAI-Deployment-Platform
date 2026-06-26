@@ -21,6 +21,14 @@ export class SelfHostedModel implements Model {
             messages: input.history.map((message) => ({
                 role: message.role,
                 content: message.content,
+            })),
+            tools: input.tools.map((tool) => ({
+                type: "function",
+                function: {
+                    name: tool.name,
+                    description: tool.description,
+                    parameters: tool.inputSchema
+                }
             }))
         })
 

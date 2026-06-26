@@ -34,7 +34,10 @@ export class Agent {
             content: taskDescription
         })
 
-        return model.execute(messages)
+        return model.execute({
+            history: messages,
+            tools: (await Promise.all(this.toolProviders.map(async (provider) => await provider.getAllTools()))).flatMap(e => e)
+        });
     }
 
 }
