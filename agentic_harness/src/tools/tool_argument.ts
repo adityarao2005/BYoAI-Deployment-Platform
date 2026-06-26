@@ -114,7 +114,7 @@ export function validateToolArgument(arg: ToolArgument, value: any): boolean {
         case "integer":
             return Number.isInteger(value);
         case "number":
-            return typeof value === "number" && !Number.isNaN(value);
+            return typeof value === "number" && !Number.isNaN(value) && Number.isFinite(value);
         case "boolean":
             return typeof value === "boolean";
         case "array":
