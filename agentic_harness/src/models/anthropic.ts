@@ -1,9 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { Message, modelRegistry } from "./models";
+import { Message, Model, ModelMessageInput, modelRegistry } from "./models";
 import { logger } from "@/logger";
 
 
-export class AnthropicModel {
+export class AnthropicModel implements Model {
     private client: Anthropic
     private modelName: string
     private max_tokens: number
@@ -14,15 +14,15 @@ export class AnthropicModel {
         this.max_tokens = max_tokens;
     }
 
-    async execute(messages: Message[]): Promise<Message> {
+    async execute(input: ModelMessageInput): Promise<Message> {
         const response = await this.client.messages.create({
             model: this.modelName,
             max_tokens: this.max_tokens,
-            system: messages.filter((message) => message.role === "system").map((message) => ({
+            system: input.history.filter((message) => message.role === "system").map((message) => ({
                 type: "text",
                 text: message.content,
             })),
-            messages: messages.map((message) => ({
+            messages: input.history.map((message) => ({
                 role: message.role === "user" ? "user" : "assistant",
                 content: message.content,
             }))

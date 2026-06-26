@@ -1,8 +1,8 @@
 import OpenAI from "openai";
-import { Message, modelRegistry } from "./models";
+import { Message, Model, ModelMessageInput, modelRegistry } from "./models";
 import { logger } from "@/logger";
 
-export class OpenAIModel {
+export class OpenAIModel implements Model {
     private client: OpenAI
     private modelName: string
 
@@ -13,11 +13,11 @@ export class OpenAIModel {
         });
     }
 
-    async execute(messages: Message[]): Promise<Message> {
+    async execute(input: ModelMessageInput): Promise<Message> {
 
         const response = await this.client.responses.create({
             model: this.modelName,
-            input: messages.map((message) => ({
+            input: input.history.map((message) => ({
                 role: message.role,
                 content: [{
                     type: "input_text",

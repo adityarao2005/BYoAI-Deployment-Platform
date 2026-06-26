@@ -1,8 +1,8 @@
 import { GoogleGenAI } from "@google/genai";
-import { Message, modelRegistry } from "./models";
+import { Message, Model, ModelMessageInput, modelRegistry } from "./models";
 import { logger } from "@/logger";
 
-export class GeminiModel {
+export class GeminiModel implements Model {
     private client: GoogleGenAI
     private modelName: string
 
@@ -11,10 +11,10 @@ export class GeminiModel {
         this.client = new GoogleGenAI({ apiKey });
     }
 
-    async execute(messages: Message[]): Promise<Message> {
+    async execute(input: ModelMessageInput): Promise<Message> {
         const response = await this.client.models.generateContent({
             model: this.modelName,
-            contents: messages.map((message) => ({
+            contents: input.history.map((message) => ({
                 role: message.role === "user" ? "user" : "model",
                 parts: [{ text: message.content }],
             }))

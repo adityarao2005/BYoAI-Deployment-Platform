@@ -1,8 +1,8 @@
 import OpenAI from "openai";
-import { Message, modelRegistry } from "./models";
+import { Message, Model, ModelMessageInput, modelRegistry } from "./models";
 import { logger } from "@/logger";
 
-export class SelfHostedModel {
+export class SelfHostedModel implements Model {
     private client: OpenAI
     private modelName: string
 
@@ -14,11 +14,11 @@ export class SelfHostedModel {
         });
     }
 
-    async execute(messages: Message[]): Promise<Message> {
+    async execute(input: ModelMessageInput): Promise<Message> {
 
         const response = await this.client.chat.completions.create({
             model: this.modelName,
-            messages: messages.map((message) => ({
+            messages: input.history.map((message) => ({
                 role: message.role,
                 content: message.content,
             }))
