@@ -1,6 +1,6 @@
 import { Tool } from "@/tools/tools";
 
-export type Role = 'user' | 'assistant' | 'system';
+export type Role = 'user' | 'assistant';
 
 export interface Message {
     role: Role;
@@ -11,6 +11,7 @@ export interface Message {
 export type ModelMessageInput = {
     history: Message[];
     tools: Tool[];
+    systemPrompt?: string | undefined;
 }
 
 export interface Model {

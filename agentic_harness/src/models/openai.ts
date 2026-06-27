@@ -17,6 +17,7 @@ export class OpenAIModel implements Model {
 
         const response = await this.client.responses.create({
             model: this.modelName,
+            instructions: input.systemPrompt ?? "You are a helpful assistant.",
             input: input.history.map((message) => ({
                 role: message.role,
                 content: [{

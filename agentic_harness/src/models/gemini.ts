@@ -47,10 +47,15 @@ export class GeminiModel implements Model {
     async execute(input: ModelMessageInput): Promise<Message> {
         const response = await this.client.models.generateContent({
             model: this.modelName,
-            contents: input.history.map((message) => ({
+            contents: [
+                {
+                    role: "system",
+                    parts: [{ text: input.systemPrompt ?? "You are a helpful assistant." }]
+                },
+                ...input.history.map((message) => ({
                 role: message.role === "user" ? "user" : "model",
                 parts: [{ text: message.content }],
-            })),
+            }))],
             config: {
                 tools: input.tools.map((tool) => ({
                     functionDeclarations: [{

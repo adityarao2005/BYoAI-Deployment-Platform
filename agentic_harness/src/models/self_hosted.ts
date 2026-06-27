@@ -18,10 +18,15 @@ export class SelfHostedModel implements Model {
 
         const response = await this.client.chat.completions.create({
             model: this.modelName,
-            messages: input.history.map((message) => ({
-                role: message.role,
-                content: message.content,
-            })),
+            messages: [
+                {
+                    role: "system",
+                    content: input.systemPrompt ?? "You are a helpful assistant."
+                },
+                ...input.history.map((message) => ({
+                    role: message.role,
+                    content: message.content,
+                }))],
             tools: input.tools.map((tool) => ({
                 type: "function",
                 function: {

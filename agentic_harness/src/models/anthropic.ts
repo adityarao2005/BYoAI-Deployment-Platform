@@ -18,10 +18,7 @@ export class AnthropicModel implements Model {
         const response = await this.client.messages.create({
             model: this.modelName,
             max_tokens: this.max_tokens,
-            system: input.history.filter((message) => message.role === "system").map((message) => ({
-                type: "text",
-                text: message.content,
-            })),
+            system: input.systemPrompt ?? "You are a helpful assistant.",
             messages: input.history.map((message) => ({
                 role: message.role === "user" ? "user" : "assistant",
                 content: message.content,
