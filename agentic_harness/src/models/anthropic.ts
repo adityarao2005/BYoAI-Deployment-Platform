@@ -63,6 +63,8 @@ export class AnthropicModel implements Model {
             throw new Error("No text output received from Anthropic model response.");
         }
 
+        logger.info(`Token Count: ${response.usage.output_tokens + response.usage.input_tokens}`);
+
         const output = [] as ModelMessageOutput[];
 
         for (const message of response.content) {
