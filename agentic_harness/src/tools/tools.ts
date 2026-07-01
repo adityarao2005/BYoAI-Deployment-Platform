@@ -1,3 +1,5 @@
+import {  ToolObjectArgument } from "./tool_argument";
+
 
 /*
 Represents a tool that can be executed by an agent. Each tool has a name,
@@ -8,9 +10,13 @@ Object as output. If the execution fails, it throws a ToolCallException.
 export interface Tool {
     name: string;
     description: string;
-    schema: object; // JSON Schema for input validation
+    inputSchema: ToolObjectArgument; // JSON Schema for input validation
 
-    execute(args: object[]): Promise<object>;
+    /**
+     * executes the tool call given the arguments
+     * @param args the tool arguments
+     */
+    execute(args: Record<string, any>): Promise<any>;
 }
 
 /*
@@ -18,6 +24,14 @@ Provides access to a collection of available tools.
 TODO: Define the different tool provider methods
 */
 export interface ToolProvider {
+    /**
+     * Get the tool by name. Returns null if the tool is not found.
+     * @param name name of thet tool
+     */
     getToolByName(name: string): Promise<Tool | null>;
+
+    /**
+     * Get all the tools available in the provider.
+     */
     getAllTools(): Promise<Tool[]>;
 }

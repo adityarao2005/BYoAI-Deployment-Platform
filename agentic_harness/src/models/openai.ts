@@ -1,8 +1,35 @@
 import OpenAI from "openai";
-import { Message, modelRegistry } from "./models";
+import { Model, modelRegistry } from "./models";
 import { logger } from "@/logger";
+import { AssistantMessage, ModelInput, ModelInteraction, ModelMessageOutput, ToolCallRequest } from "./conversation";
 
-export class OpenAIModel {
+function toOpenAIInteraction(message: ModelInteraction[]): OpenAI.Responses.ResponseInput {
+    return message.map((msg) => {
+        if (msg.type === "message") {
+            return {
+                role: msg.role,
+                content: msg.content,
+            };
+        } else if (msg.type === "tool_call") {
+            return {
+                type: "function_call",
+                name: msg.tool.name,
+                arguments: JSON.stringify(msg.arguments),
+                call_id: msg.id
+            };
+        } else if (msg.type === "tool_response") {
+            return {
+                type: "function_call_output",
+                output: JSON.stringify(msg.result),
+                call_id: msg.id
+            };
+        } else {
+            throw new Error(`Unknown message type: ${msg}`);
+        }
+    })
+}
+
+export class OpenAIModel implements Model {
     private client: OpenAI
     private modelName: string
 
@@ -13,35 +40,69 @@ export class OpenAIModel {
         });
     }
 
-    async execute(messages: Message[]): Promise<Message> {
+    async execute(input: ModelInput): Promise<ModelMessageOutput[]> {
 
         const response = await this.client.responses.create({
             model: this.modelName,
-            input: messages.map((message) => ({
-                role: message.role,
-                content: [{
-                    type: "input_text",
-                    text: message.content,
-                }],
-            })),
+            instructions: input.systemPrompt ?? "You are a helpful assistant.",
+            input: toOpenAIInteraction(input.history),
+            tools: input.tools.map((tool) => ({
+                type: "function",
+                name: tool.name,
+                description: tool.description,
+                parameters: tool.inputSchema,
+                strict: true
+            }))
         });
 
-        logger.info(`Input tokens: ${response.usage?.input_tokens}`);
-        logger.info(`Output tokens: ${response.usage?.output_tokens}`);
-        logger.info(`Total tokens: ${response.usage?.total_tokens}`);
-        logger.info(`Response status: ${response.status ?? "unknown"}`);
-
-        const content = response.output_text?.trim();
-
-        if (!content) {
-            throw new Error("No text output received from OpenAI model response.");
+        if (response.output.length <= 0) {
+            throw new Error("No output received from OpenAI model response.");
         }
 
-        return {
-            content,
-            role: "assistant",
-            type: "text"
-        };
+        logger.info(`Token tokens: ${response.usage!.output_tokens + response.usage!.input_tokens}`);
+
+        const output = [] as ModelMessageOutput[];
+
+        for (const msg of response.output) {
+            if (msg.type === "message") {
+                // check if the message has content
+                if (!msg.content || msg.content.length === 0) {
+                    throw new Error("OpenAI response message has no content.");
+                }
+
+                // any refusal messages should come first
+                const refusal = msg.content.find((c) => c.type === "refusal");
+                if (refusal) {
+                    logger.warn(`OpenAI model refused to answer: ${refusal.refusal}`);
+                    output.push({
+                        role: "assistant",
+                        type: "message",
+                        content: refusal.refusal
+                    });
+                }
+
+                // return success message
+                output.push({
+                    role: "assistant",
+                    type: "message",
+                    content: msg.content.filter(c => c.type === "output_text").flatMap((c) => c.text).join("\n")
+                });
+            } else if (msg.type === "function_call") {
+                const tool = input.tools.find((t) => t.name === msg.name);
+
+                if (!tool) {
+                    throw new Error(`OpenAI model requested unknown tool: ${msg.name}`);
+                }
+
+                output.push({
+                    type: "tool_call",
+                    arguments: JSON.parse(msg.arguments),
+                    id: msg.call_id,
+                    tool: tool
+                })
+            }
+        }
+        return output;
     }
 }
 

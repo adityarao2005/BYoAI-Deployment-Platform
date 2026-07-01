@@ -1,14 +1,8 @@
+import { ModelInput, ModelMessageOutput } from "./conversation";
 
-export type Role = 'user' | 'assistant' | 'system';
-
-export interface Message {
-    role: Role;
-    type: string;
-    content: string;
-}
 
 export interface Model {
-    execute(messages: Message[]): Promise<Message>;
+    execute(input: ModelInput): Promise<ModelMessageOutput[]>;
 }
 
 // a registry for models, which can be used to register and retrieve models by name
