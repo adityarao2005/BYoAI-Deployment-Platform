@@ -25,6 +25,7 @@ export type ToolCallRequest = {
     type: 'tool_call';
     tool: Tool;
     arguments: Record<string, unknown>;
+    id: string;
 };
 
 export function isToolCallRequest(message: ModelInteraction): message is ToolCallRequest {
@@ -35,6 +36,7 @@ export type ToolCallResponse = {
     type: 'tool_response';
     result: unknown;
     tool: Tool;
+    id: string;
 };
 
 export function isToolCallResponse(message: ModelInteraction): message is ToolCallResponse {

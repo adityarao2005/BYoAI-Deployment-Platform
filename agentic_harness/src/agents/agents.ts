@@ -12,7 +12,8 @@ async function executeTool(request: ToolCallRequest): Promise<ToolCallResponse> 
     return {
         type: 'tool_response',
         result: output,
-        tool: request.tool
+        tool: request.tool,
+        id: request.id
     };
 }
 
