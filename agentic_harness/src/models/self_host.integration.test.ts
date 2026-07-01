@@ -11,13 +11,16 @@ describe.runIf(SELF_HOSTED_MODEL_BASE_URL)("SelfHostedModel integration test", (
 
         const model = new SelfHostedModel(SELF_HOSTED_MODEL_BASE_URL!, "model")
 
-        const message = await model.execute([
-            {
-                role: "user",
-                content: "Hello, how are you?",
-                type: "text"
-            }
-        ])
+        const message = await model.execute({
+            history: [
+                {
+                    role: "user",
+                    content: "Hello, how are you?",
+                    type: "message"
+                }
+            ],
+            tools: [],
+        })
 
         expect(message).toBeDefined();
     }, 20_000) // set a longer timeout for this test since it involves network requests

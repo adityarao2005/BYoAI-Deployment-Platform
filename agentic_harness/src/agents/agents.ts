@@ -2,9 +2,14 @@ import { logger } from "@/logger";
 import { modelRegistry } from "@/models";
 import { isToolCallRequest, ModelInteraction, ToolCallRequest, ToolCallResponse } from "@/models/conversation";
 import { SkillRepository } from "@/skills/skills";
+import { validateToolArgument } from "@/tools/tool_argument";
 import { ToolProvider } from "@/tools/tools";
 
 async function executeTool(request: ToolCallRequest): Promise<ToolCallResponse> {
+    if (!validateToolArgument(request.tool.inputSchema, request.arguments)) {
+        throw new Error(`Invalid arguments for tool ${request.tool.name}`);
+    }
+
     const output = await request.tool.execute(request.arguments);
 
     logger.info(`Tool ${request.tool.name} executed with arguments ${JSON.stringify(request.arguments)}. Output: ${JSON.stringify(output)}`);
