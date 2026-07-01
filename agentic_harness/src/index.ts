@@ -1,13 +1,45 @@
 import "./models/self_hosted";
 import { createInterface } from "node:readline/promises";
-import { Agent } from "./agents/agents";
-import { Message } from "./models/models";
+import { Agent, AgentConversation } from "./agents/agents";
+import { Tool, ToolProvider } from "./tools/tools";
 
-const agent = new Agent("agent", [], [])
+const weatherTool: Tool = {
+    name: "get_weather",
+    async execute(args) {
+        return `The weather is sunny with a high of 25°C at ${args.location}.`
+    },
+    description: "Get the current weather for a given location.",
+    inputSchema: {
+        type: "object",
+        description: "Input schema for the get_weather tool.",
+        properties: {
+            location: {
+                type: "string",
+                description: "The location to get the weather for."
+            }
+        },
+        required: ["location"]
+    }
+}
+
+// weather tool provider
+const weatherToolProvider: ToolProvider = {
+    async getAllTools() {
+        return [weatherTool]
+    },
+    async getToolByName(name) {
+        return name === weatherTool.name ? weatherTool : null
+    },
+}
+
+
+const agent = new Agent("agent", [], [weatherToolProvider])
 
 console.log("Agent created: ", agent)
 
-const messages: Message[] = []
+let conversation: AgentConversation = {
+    history: [],
+}
 
 const rl = createInterface({
     input: process.stdin,
@@ -25,14 +57,27 @@ while (true) {
 
     console.log("<<Processing>>...")
 
-    const response = await agent.performTask(input, messages)
-
-    console.log(`Agent response: ${response.content}`)
-
-    messages.push({
+    conversation.history.push({
         role: "user",
-        type: "text",
+        type: "message",
         content: input
     })
-    messages.push(response)
+
+    const lengthBefore = conversation.history.length
+
+    const result = await agent.performTask(conversation)
+
+    const diff = result.history.slice(lengthBefore)
+
+    for (const msg of diff) {
+        if (msg.type === "message") {
+            console.log(`${msg.role}: ${msg.content}`)
+        } else if (msg.type === "tool_call") {
+            console.log(`Tool call: ${msg.tool.name} with arguments: ${JSON.stringify(msg.arguments)}`)
+        } else if (msg.type === "tool_response") {
+            console.log(`Tool response: ${msg.tool.name} with result: ${JSON.stringify(msg.result)}`)
+        }
+    }
+
+    conversation = result
 }
