@@ -47,6 +47,7 @@ function toGeminiInteraction(message: ModelInteraction[]): ContentListUnion {
             return {
                 role: "model",
                 parts: [{
+                    ...(msg.thoughtSignature ? { thoughtSignature: msg.thoughtSignature } : {}),
                     functionCall: {
                         name: msg.tool.name,
                         args: msg.arguments,
@@ -61,7 +62,7 @@ function toGeminiInteraction(message: ModelInteraction[]): ContentListUnion {
                     functionResponse: {
                         id: msg.id,
                         name: msg.tool.name,
-                        response: JSON.parse(JSON.stringify(msg.result))
+                        response: normalizeGeminiFunctionResponse(msg.result)
                     }
                 }]
             }
@@ -69,6 +70,22 @@ function toGeminiInteraction(message: ModelInteraction[]): ContentListUnion {
             throw new Error(`Unknown message type: ${JSON.stringify(msg)}`);
         }
     })
+}
+
+export function normalizeGeminiFunctionResponse(result: unknown): Record<string, unknown> {
+    if (result === undefined) {
+        return {
+            result: null
+        };
+    }
+
+    if (result !== null && typeof result === "object" && !Array.isArray(result)) {
+        return JSON.parse(JSON.stringify(result));
+    }
+
+    return {
+        result: JSON.parse(JSON.stringify(result))
+    };
 }
 
 export class GeminiModel implements Model {
@@ -122,7 +139,7 @@ export class GeminiModel implements Model {
                 })
             } else if (part.functionCall) {
                 const tool = input.tools.find((t) => t.name === part.functionCall!.name);
-                
+
                 if (!tool) {
                     throw new Error(`Tool not found for function call: ${part.functionCall!.name}`);
                 }
@@ -131,6 +148,7 @@ export class GeminiModel implements Model {
                     type: "tool_call",
                     arguments: part.functionCall.args!,
                     id: part.functionCall.id!,
+                    ...(part.thoughtSignature ? { thoughtSignature: part.thoughtSignature } : {}),
                     tool: tool
                 })
             }

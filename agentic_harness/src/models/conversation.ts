@@ -26,6 +26,7 @@ export type ToolCallRequest = {
     tool: Tool;
     arguments: Record<string, unknown>;
     id: string;
+    thoughtSignature?: string;
 };
 
 export function isToolCallRequest(message: ModelInteraction): message is ToolCallRequest {
