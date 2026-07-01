@@ -1,21 +1,8 @@
-import { Tool } from "@/tools/tools";
+import { ModelInput, ModelMessageOutput } from "./conversation";
 
-export type Role = 'user' | 'assistant';
-
-export interface Message {
-    role: Role;
-    type: string;
-    content: string;
-}
-
-export type ModelMessageInput = {
-    history: Message[];
-    tools: Tool[];
-    systemPrompt?: string | undefined;
-}
 
 export interface Model {
-    execute(input: ModelMessageInput): Promise<Message>;
+    execute(input: ModelInput): Promise<ModelMessageOutput[]>;
 }
 
 // a registry for models, which can be used to register and retrieve models by name
