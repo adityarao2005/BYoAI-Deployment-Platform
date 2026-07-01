@@ -59,7 +59,7 @@ export class OpenAIModel implements Model {
             throw new Error("No output received from OpenAI model response.");
         }
 
-        logger.info(`Token Count: ${response.usage!.output_tokens + response.usage!.input_tokens}`);
+        logger.info(`Token tokens: ${response.usage!.output_tokens + response.usage!.input_tokens}`);
 
         const output = [] as ModelMessageOutput[];
 

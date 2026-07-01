@@ -109,7 +109,7 @@ export class GeminiModel implements Model {
             throw new Error("No content parts received from Gemini model response.");
         }
 
-        logger.info(`Token Count: ${result.tokenCount}`);
+        logger.info(`Token tokens: ${result.tokenCount}`);
 
         const output = [] as ModelMessageOutput[];
 
