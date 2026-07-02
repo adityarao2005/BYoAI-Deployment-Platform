@@ -1,74 +1,97 @@
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { stringify } from "yaml";
 import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
+import { loadConfig } from "@/config/config";
 
-// Path to your model file that contains the registration logic
-const MODEL_FILE_PATH = "./self_hosted";
-const REGISTRY_FILE_PATH = "./models"; // Path where modelRegistry lives
+const REGISTRY_FILE_PATH = "./models";
 
-describe("Self-Hosted Model Environment Variable Registration", () => {
-    let originalEnv: NodeJS.ProcessEnv;
+describe("Self-Hosted Model Config Registration", () => {
+    let tempConfigDir: string | undefined;
+
+    async function writeConfig(models: Array<Record<string, unknown>>) {
+        tempConfigDir = await mkdtemp(join(tmpdir(), "agent-self-hosted-config-"));
+        const configPath = join(tempConfigDir, "agent.yaml");
+        await writeFile(configPath, stringify({ models }), "utf8");
+        return loadConfig(configPath);
+    }
 
     beforeEach(() => {
-        // 1. Take a snapshot of the original process.env
-        originalEnv = { ...process.env };
-
-        // 2. Clear the module cache for your specific model file
-        // If using Jest: jest.resetModules();
         vi.resetModules();
-
-        // 3. Clear the model registry map before each test if it has a clear method,
-        // or ensure it starts fresh. (Assuming modelRegistry handles state or gets cleared)
     });
 
     afterEach(() => {
-        // 4. Restore original env variables after each test run
-        process.env = originalEnv;
+        if (tempConfigDir) {
+            return rm(tempConfigDir, { recursive: true, force: true });
+        }
     });
 
-    it("should successfully register a model when valid env variables are provided", async () => {
-        // Set up test environment variables
-        process.env.SELF_HOSTED_MODEL_API_KEY_BASE = "sk-test-key-123";
-        process.env.SELF_HOSTED_MODEL_BASE_URL_BASE = "http://example.com/v1";
+    it("should successfully register a model when valid config is provided", async () => {
+        const config = await writeConfig([
+            {
+                name: "base",
+                brand: "self_hosted",
+                properties: {
+                    baseUrl: "http://example.com/v1",
+                    apiKey: "sk-test-key-123",
+                },
+            },
+        ]);
 
-        // Dynamically import the file to force execution of the registration logic
-        await import(MODEL_FILE_PATH);
+        const { registerSelfHostedModels } = await import("./self_hosted");
+        registerSelfHostedModels(config);
 
-        // 2. Dynamically import the registry *after* cache reset to get the live instance
         const { modelRegistry } = await import(REGISTRY_FILE_PATH);
-        // Get registered models from your registry
-        // (Adjust this method name depending on how your modelRegistry exposes the maps)
         const registeredModels = modelRegistry.getAllModels();
 
         expect(registeredModels.has("base")).toBe(true);
-        // You can also verify that it skipped things it shouldn't have registered
         expect(registeredModels.size).toBe(1);
     });
 
     it("should successfully register model even when API key is missing", async () => {
-        // Set up test environment variables
-        process.env.SELF_HOSTED_MODEL_BASE_URL_BASE = "http://example.com/v1";
+        const config = await writeConfig([
+            {
+                name: "base",
+                brand: "self_hosted",
+                properties: {
+                    baseUrl: "http://example.com/v1",
+                },
+            },
+        ]);
 
-        // Dynamically import the file to force execution of the registration logic
-        await import(MODEL_FILE_PATH);
+        const { registerSelfHostedModels } = await import("./self_hosted");
+        registerSelfHostedModels(config);
 
-        // 2. Dynamically import the registry *after* cache reset to get the live instance
         const { modelRegistry } = await import(REGISTRY_FILE_PATH);
-        // Get registered models from your registry
-        // (Adjust this method name depending on how your modelRegistry exposes the maps)
         const registeredModels = modelRegistry.getAllModels();
 
         expect(registeredModels.has("base")).toBe(true);
-        // You can also verify that it skipped things it shouldn't have registered
         expect(registeredModels.size).toBe(1);
     });
 
     it("should register multiple models simultaneously", async () => {
-        process.env.SELF_HOSTED_MODEL_API_KEY_GPT4 = "sk-123";
-        process.env.SELF_HOSTED_MODEL_BASE_URL_GPT4 = "http://example.com/v2";
+        const config = await writeConfig([
+            {
+                name: "gpt4",
+                brand: "self_hosted",
+                properties: {
+                    baseUrl: "http://example.com/v2",
+                    apiKey: "sk-123",
+                },
+            },
+            {
+                name: "haiduke",
+                brand: "self_hosted",
+                properties: {
+                    baseUrl: "http://example.com/v1",
+                    apiKey: "sk-456",
+                },
+            },
+        ]);
 
-        process.env.SELF_HOSTED_MODEL_API_KEY_HAIDUKE = "sk-456";
-        process.env.SELF_HOSTED_MODEL_BASE_URL_HAIDUKE = "http://example.com/v1";
-
-        await import(MODEL_FILE_PATH);
+        const { registerSelfHostedModels } = await import("./self_hosted");
+        registerSelfHostedModels(config);
 
         const { modelRegistry } = await import(REGISTRY_FILE_PATH);
         const registeredModels = modelRegistry.getAllModels();
@@ -77,12 +100,20 @@ describe("Self-Hosted Model Environment Variable Registration", () => {
         expect(registeredModels.has("haiduke")).toBe(true);
     });
 
-    it("should skip registration and log a warning if base url is missing", async () => {
-        process.env.SELF_HOSTED_MODEL_API_KEY_BROKEN = "sk-only-key";
-        // Intentionally missing: process.env.SELF_HOSTED_MODEL_BASE_URL_BROKEN
+    it("should skip registration when config contains no self-hosted models", async () => {
+        const config = await writeConfig([
+            {
+                name: "broken",
+                brand: "openai",
+                properties: {
+                    apiKey: "sk-only-key",
+                },
+            },
+        ]);
 
-        await import(MODEL_FILE_PATH);
-        // 2. Dynamically import the registry *after* cache reset to get the live instance
+        const { registerSelfHostedModels } = await import("./self_hosted");
+        registerSelfHostedModels(config);
+
         const { modelRegistry } = await import(REGISTRY_FILE_PATH);
         const registeredModels = modelRegistry.getAllModels();
         expect(registeredModels.size).toBe(0);

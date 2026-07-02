@@ -3,6 +3,7 @@ import { Model, modelRegistry } from "./models";
 import { logger } from "@/logger";
 import { ModelInput, ModelInteraction, ModelMessageOutput } from "./conversation";
 import { ChatCompletionAssistantMessageParam } from "openai/resources";
+import { type AgentConfig } from "@/config/config";
 
 function toChatCompletionInteraction(message: ModelInteraction[]): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
     return message.map((msg) => {
@@ -117,44 +118,15 @@ export class SelfHostedModel implements Model {
     }
 }
 
-// Self hosted models are registered with the model registry, but only if the environment variable is set
-modelRegistry.registerModels((env) => {
-
-    // environment variable prefixes
-    const SELF_HOSTED_MODEL_BASE_URL_PREFIX = "SELF_HOSTED_MODEL_BASE_URL_";
-    const SELF_HOSTED_MODEL_API_KEY_PREFIX = "SELF_HOSTED_MODEL_API_KEY_";
-
-    const models = new Map<string, SelfHostedModel>();
-
-    for (const key in env) {
-        if (key.startsWith(SELF_HOSTED_MODEL_BASE_URL_PREFIX) && env[key]) {
-
-            // get the model name from the environment variable
-            const modelName = key.substring(SELF_HOSTED_MODEL_BASE_URL_PREFIX.length).toLowerCase();
-
-            if (modelName.length === 0) {
-                logger.warn(`Environment variable ${key} is missing a model name suffix, skipping registration of this self hosted model.`);
-                continue;
-            }
-
-            const baseURL = env[key];
-
-            if (!baseURL || !URL.canParse(baseURL)) {
-                logger.warn(`Invalid base URL for self-hosted model: ${modelName}. Skipping registration.`);
-                continue;
-            }
-
-            // look for a corresponding API key environment variable
-            const apiKeyEnvVar = SELF_HOSTED_MODEL_API_KEY_PREFIX + modelName.toUpperCase();
-            const apiKey = env[apiKeyEnvVar];
-
-            // it doesn't matter if we get an api-key, api keys are optional
-
-            // log the registration of the self-hosted model, but don't log the actual API key for security reasons
-            logger.info(`Registering self-hosted model: ${modelName} with base URL: ${baseURL} and API key: ${apiKey ? "provided" : "not provided"}`);
-            models.set(modelName, new SelfHostedModel(baseURL, modelName, apiKey));
+export function registerSelfHostedModels(config: AgentConfig) {
+    for (const modelConfig of config.models) {
+        if (modelConfig.brand !== "self_hosted") {
+            continue;
         }
-    }
 
-    return models;
-})
+        const { name, properties } = modelConfig;
+
+        logger.info(`Registering self-hosted model: ${name} with base URL: ${properties.baseUrl} and API key: ${properties.apiKey ? "provided" : "not provided"}`);
+        modelRegistry.registerModel(name, new SelfHostedModel(properties.baseUrl, name, properties.apiKey));
+    }
+}

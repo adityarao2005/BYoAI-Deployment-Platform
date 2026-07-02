@@ -26,6 +26,8 @@
     "@anthropic-ai/sdk": "^0.105.0",
     "@google/genai": "^2.8.0",
     "openai": "^6.42.0",
-    "winston": "^3.19.0"
+    "winston": "^3.19.0",
+    "yaml": "^2.9.0",
+    "zod": "^4.4.3"
   }
 }
