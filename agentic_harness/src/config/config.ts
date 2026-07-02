@@ -2,59 +2,20 @@ import { z } from 'zod'
 import fs from 'fs/promises'
 import path from 'path'
 import { parse } from 'yaml'
+import { ModelConfigSchema } from './model_config';
+import { SkillRepositoryConfigSchema } from './skill_config';
 
-const OpenAIPropertiesSchema = z.object({
-    // If not provided in YAML, it attempts to read from process.env.OPENAI_API_KEY
-    apiKey: z.string().default(() => process.env.OPENAI_API_KEY || ""),
-});
 
-const GeminiPropertiesSchema = z.object({
-    apiKey: z.string().default(() => process.env.GEMINI_API_KEY || ""),
-});
-
-const AnthropicPropertiesSchema = z.object({
-    apiKey: z.string().default(() => process.env.ANTHROPIC_API_KEY || ""),
-    maxTokens: z.number().default(4096),
-});
-
-const SelfHostedPropertiesSchema = z.object({
-    baseUrl: z.url(),
-    apiKey: z.string().optional(),
-});
-
-// model config schema
-const ModelConfigSchema = z.discriminatedUnion("brand", [
-    z.object({
-        name: z.string(),
-        brand: z.literal("openai"),
-        properties: OpenAIPropertiesSchema,
-    }),
-    z.object({
-        name: z.string(),
-        brand: z.literal("gemini"),
-        properties: GeminiPropertiesSchema,
-    }),
-    z.object({
-        name: z.string(),
-        brand: z.literal("anthropic"),
-        properties: AnthropicPropertiesSchema,
-    }),
-    z.object({
-        name: z.string(),
-        brand: z.literal("self_hosted"),
-        properties: SelfHostedPropertiesSchema,
-    }),
-]);
 
 // agent schema
 export const AgentConfigSchema = z.object({
     models: z.array(ModelConfigSchema),
+    skillRepositories: z.array(SkillRepositoryConfigSchema).default([]),
 });
 
 // Extract the infered TypeScript types directly from the Zod schemas
 // This replaces your manual interface declarations!
 export type AgentConfig = z.infer<typeof AgentConfigSchema>;
-export type ModelConfig = z.infer<typeof ModelConfigSchema>;
 
 export async function loadConfig(configPath?: string): Promise<AgentConfig> {
     const resolvedConfigPath = configPath ?? await findConfigPath();

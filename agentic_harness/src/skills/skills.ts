@@ -40,3 +40,17 @@ export interface SkillRepository {
     getSkillByName(name: string): Promise<Skill | null>;
 
 }
+
+export class SkillRepositoryRegistry {
+    private registry: SkillRepository[] = [];
+
+    registerSkillRepository(repo: SkillRepository) {
+        this.registry.push(repo);
+    }
+
+    getAllSkillRepositories(): SkillRepository[] {
+        return this.registry;
+    }
+}
+
+export const skillRepositoryRegistry = new SkillRepositoryRegistry();

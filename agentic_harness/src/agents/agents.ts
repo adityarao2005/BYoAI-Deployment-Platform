@@ -1,7 +1,7 @@
 import { logger } from "@/logger";
 import { modelRegistry } from "@/models";
 import { isToolCallRequest, ModelInteraction, ToolCallRequest, ToolCallResponse } from "@/models/conversation";
-import { getSkillMDFile, SkillRepository } from "@/skills/skills";
+import { getSkillMDFile, SkillRepository } from "@/skills";
 import { validateToolArgument } from "@/tools/tool_argument";
 import { Tool, ToolProvider } from "@/tools/tools";
 
