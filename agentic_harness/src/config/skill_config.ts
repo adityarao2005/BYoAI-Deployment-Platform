@@ -5,7 +5,7 @@ export const SkillRepositoryConfigSchema = z.discriminatedUnion("type", [
     z.object({
         type: z.literal("zip"),
         location: z.string(),
-        skillsSubdirectory: z.string().default("./"), // skills would be under root
+        skillsSubdirectory: z.string().default("/"), // skills would be under root
         // // Optional headers for authentication if hitting a private file server
         headers: z.record(z.string(), z.string()).optional(),
     }),

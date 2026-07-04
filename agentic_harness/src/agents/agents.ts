@@ -187,7 +187,7 @@ ${this.description}
         <skill>
             <name>${skill.frontMatter.name}</name>
             <description><![CDATA[${skill.frontMatter.description}]]></description>
-            ${skill.assetLocation ? `<assetLocation>${skill.assetLocation}</assetLocation>` : ""}
+            ${skill.assetTargetLocation ? `<assetLocation>${skill.assetTargetLocation}</assetLocation>` : ""}
         </skill>`.trim()
         ).join("\n")}
 </available_skills>

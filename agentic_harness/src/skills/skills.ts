@@ -20,7 +20,7 @@ export type Skill = {
     body: string;
 
     // where we store the skill's assets (if any) for the agent to use. This is a path to the directory where the skill's assets are stored.
-    assetLocation?: string
+    assetTargetLocation?: string
 }
 
 export function getSkillMDFile(skill: Skill): string {

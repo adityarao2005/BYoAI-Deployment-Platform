@@ -1,11 +1,13 @@
 
+import AdmZip from "adm-zip";
 import { Skill, SkillRepository, skillRepositoryRegistry } from "./skills";
 import { AgentConfig } from "@/config/config";
 import fs from "fs/promises"
 import { Readable } from "stream";
 import { pipeline } from "stream/promises";
+import { parse } from "yaml";
 
-class ZipSkillRepository implements SkillRepository {
+export class ZipSkillRepository implements SkillRepository {
     location: string;
     skillsSubdirectory: string;
     headers?: Record<string, string> | undefined;
@@ -48,7 +50,39 @@ class ZipSkillRepository implements SkillRepository {
     }
 
     async populateSkillsFromZip(path: string): Promise<void> {
-        // TODO: handle zip logic
+        const zip = new AdmZip(path);
+        const normalizedSubdirectory = this.skillsSubdirectory === "/" ? "" : this.skillsSubdirectory.replace(/^\/+|\/+$/g, "");
+
+        this.skills = [];
+
+        for (const entry of zip.getEntries()) {
+            if (entry.isDirectory) {
+                continue;
+            }
+
+            const entryPath = entry.entryName.replace(/^\/+/, "");
+            if (!entryPath.endsWith("SKILL.md")) {
+                continue;
+            }
+
+            if (normalizedSubdirectory && !entryPath.startsWith(`${normalizedSubdirectory}/`)) {
+                continue;
+            }
+
+            const fileContent = entry.getData().toString("utf8");
+            const match = fileContent.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+
+            if (!match) {
+                throw new Error(`Invalid SKILL.md format in ${entryPath}`);
+            }
+
+            const frontMatter = parse(match[1]!) as Skill["frontMatter"];
+            this.skills.push({
+                frontMatter,
+                body: match[2]!,
+                // TODO: include target location when computer use feature has been created
+            });
+        }
     }
 
     async fetchSkillsFromRemoteHttpZip(): Promise<void> {
