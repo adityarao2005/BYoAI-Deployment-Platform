@@ -54,6 +54,7 @@ function skillToolProvider(agent: Agent): ToolProvider {
                     logger.info(`Skill ${skillName} loaded into agent's memory.`);
                     return {
                         success: true,
+                        location: skill.assetTargetLocation,
                         content: getSkillMDFile(skill)
                     };
                 }
@@ -187,7 +188,6 @@ ${this.description}
         <skill>
             <name>${skill.frontMatter.name}</name>
             <description><![CDATA[${skill.frontMatter.description}]]></description>
-            ${skill.assetTargetLocation ? `<assetLocation>${skill.assetTargetLocation}</assetLocation>` : ""}
         </skill>`.trim()
         ).join("\n")}
 </available_skills>
