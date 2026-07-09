@@ -13,6 +13,7 @@ export const SkillRepositoryConfigSchema = z.discriminatedUnion("type", [
         type: z.literal("git"),
         branch: z.string().default("main"),
         url: z.string(),
+        skillsSubdirectory: z.string().default("/"),
         auth: z.discriminatedUnion("method", [
             z.object({
                 method: z.literal("ssh"),

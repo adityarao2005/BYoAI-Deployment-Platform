@@ -10,6 +10,7 @@
 - Supports tool calling through the agent loop.
 - Includes an example weather tool in the CLI entrypoint so you can see the request/response flow end to end.
 - Supports skills loading through the agent framework, although the current CLI example does not mount any skill repositories.
+- Supports both zip-backed and git-backed skill repositories via `agent.yaml`.
 
 ## Runtime flow
 
@@ -84,6 +85,34 @@ Brand-specific properties:
 - `self_hosted`
   - `baseUrl` is required and must be a valid URL.
   - `apiKey` is optional.
+
+Skill repository config:
+
+```yaml
+skillRepositories:
+  - type: zip
+    location: "/path/to/skills.zip"
+    skillsSubdirectory: "/"
+
+  - type: git
+    url: "git@github.com:org/skills.git"
+    branch: "main"
+    skillsSubdirectory: "nested"
+    auth:
+      method: ssh
+      privateKeyPath: "~/.ssh/id_ed25519"
+```
+
+- `zip`
+  - `location` points to a local zip file or HTTP zip URL.
+  - `skillsSubdirectory` defaults to `/` and limits loading to a nested subtree inside the archive.
+- `git`
+  - `url` points to a git repository path or remote URL.
+  - `branch` defaults to `main`.
+  - `skillsSubdirectory` defaults to `/` and limits loading to a nested subtree in the checkout.
+  - `auth.method: ssh` uses `GIT_SSH_COMMAND` with the configured private key path.
+  - `auth.method: token` injects token auth into HTTPS clone URLs.
+  - `auth.method: none` uses the URL as-is.
 
 ## Outputs
 
