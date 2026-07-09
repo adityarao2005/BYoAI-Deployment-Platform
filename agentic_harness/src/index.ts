@@ -1,4 +1,4 @@
-import "./models/self_hosted";
+import "./models";
 import { createInterface } from "node:readline/promises";
 import { Agent, AgentConversation } from "./agents/agents";
 import { Tool, ToolProvider } from "./tools/tools";

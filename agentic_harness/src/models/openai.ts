@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { Model, modelRegistry } from "./models";
 import { logger } from "@/logger";
 import { AssistantMessage, ModelInput, ModelInteraction, ModelMessageOutput, ToolCallRequest } from "./conversation";
+import { type AgentConfig } from "@/config/config";
 
 function toOpenAIInteraction(message: ModelInteraction[]): OpenAI.Responses.ResponseInput {
     return message.map((msg) => {
@@ -106,47 +107,20 @@ export class OpenAIModel implements Model {
     }
 }
 
-// OpenAI models are registered with the model registry, but only if the environment variable is set
-modelRegistry.registerModels((env) => {
-
-    // environment variable prefixes
-    const OPENAI_MODEL_API_KEY_PREFIX = "OPENAI_MODEL_API_KEY_";
-    const OPENAI_MODEL_NAME_PREFIX = "OPENAI_MODEL_NAME_";
-
-    const models = new Map<string, OpenAIModel>();
-
-    for (const key in env) {
-        if (key.startsWith(OPENAI_MODEL_API_KEY_PREFIX) && env[key]) {
-
-            // get the model name from the environment variable
-            const modelId = key.substring(OPENAI_MODEL_API_KEY_PREFIX.length).toLowerCase();
-
-            if (modelId.length === 0) {
-                logger.warn(`Environment variable ${key} is missing a model ID suffix, skipping registration of this OpenAI model.`);
-                continue;
-            }
-
-            const apiKey = env[key];
-
-            // look for a corresponding API key environment variable
-            if (!apiKey) {
-                logger.warn(`Invalid API Key for OpenAI model: ${modelId}. Skipping registration.`);
-                continue;
-            }
-
-            const modelNameEnvVar = `${OPENAI_MODEL_NAME_PREFIX}${modelId.toUpperCase()}`;
-            const modelName = env[modelNameEnvVar];
-
-            if (!modelName) {
-                logger.warn(`Missing environment variable ${modelNameEnvVar} for OpenAI model: ${modelId}. Skipping registration.`);
-                continue;
-            }
-
-            // log the registration of the OpenAI model, but don't log the actual API key for security reasons
-            logger.info(`Registering OpenAI model: ${modelId} with API key: ${apiKey ? "provided" : "not provided"} and model name: ${modelName}`);
-            models.set(modelId, new OpenAIModel(modelName, apiKey));
+export function registerOpenAIModels(config: AgentConfig) {
+    for (const modelConfig of config.models) {
+        if (modelConfig.brand !== "openai") {
+            continue;
         }
-    }
 
-    return models;
-})
+        const { name, properties } = modelConfig;
+
+        if (!properties.apiKey) {
+            logger.warn(`Missing API key for OpenAI model: ${name}. Skipping registration.`);
+            continue;
+        }
+
+        logger.info(`Registering OpenAI model: ${name} with API key: ${properties.apiKey ? "provided" : "not provided"} and model name: ${name}`);
+        modelRegistry.registerModel(name, new OpenAIModel(name, properties.apiKey));
+    }
+}

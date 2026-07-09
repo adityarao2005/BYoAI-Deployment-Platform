@@ -13,12 +13,6 @@ export class ModelRegistry {
         this.registry.set(key, model);
     }
 
-    registerModels(provider: (dict: Record<string, string | undefined>) => Map<string, Model>) {
-        provider(process.env).forEach((model, key) => {
-            this.registry.set(key, model);
-        })
-    }
-
     getModel(key: string): Model | undefined {
         return this.registry.get(key);
     }
