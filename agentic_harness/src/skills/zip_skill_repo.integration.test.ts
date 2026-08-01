@@ -62,16 +62,13 @@ describe("registerZipSkillRepositories", () => {
         const { registerZipSkillRepositories } = await import("./zip_skill_repo");
         const { skillRepositoryRegistry } = await import("./skills");
 
-        registerZipSkillRepositories({
-            models: [],
-            skillRepositories: [
-                {
-                    type: "zip",
-                    location: zipPath,
-                    skillsSubdirectory: "/",
-                },
-            ],
-        });
+        registerZipSkillRepositories([
+            {
+                type: "zip",
+                location: zipPath,
+                skillsSubdirectory: "/",
+            },
+        ]);
 
         const repository = skillRepositoryRegistry.getAllSkillRepositories()[0]!;
         const skills = await repository.getAllSkills();
@@ -101,16 +98,13 @@ describe("registerZipSkillRepositories", () => {
         const { registerZipSkillRepositories } = await import("./zip_skill_repo");
         const { skillRepositoryRegistry } = await import("./skills");
 
-        registerZipSkillRepositories({
-            models: [],
-            skillRepositories: [
-                {
-                    type: "zip",
-                    location: zipPath,
-                    skillsSubdirectory: "nested",
-                },
-            ],
-        });
+        registerZipSkillRepositories([
+            {
+                type: "zip",
+                location: zipPath,
+                skillsSubdirectory: "nested",
+            },
+        ]);
 
         const repository = skillRepositoryRegistry.getAllSkillRepositories()[0]!;
         const skills = await repository.getAllSkills();
@@ -164,16 +158,13 @@ describe("registerZipSkillRepositories", () => {
             const { registerZipSkillRepositories } = await import("./zip_skill_repo");
             const { skillRepositoryRegistry } = await import("./skills");
 
-            registerZipSkillRepositories({
-                models: [],
-                skillRepositories: [
-                    {
-                        type: "zip",
-                        location: `http://127.0.0.1:${address.port}/skills`,
-                        skillsSubdirectory: "/",
-                    },
-                ],
-            });
+            registerZipSkillRepositories([
+                {
+                    type: "zip",
+                    location: `http://127.0.0.1:${address.port}/skills`,
+                    skillsSubdirectory: "/",
+                },
+            ]);
 
             const repository = skillRepositoryRegistry.getAllSkillRepositories()[0]!;
             const skills = await repository.getAllSkills();

@@ -21,7 +21,6 @@ export interface Tool {
 
 /*
 Provides access to a collection of available tools.
-TODO: Define the different tool provider methods
 */
 export interface ToolProvider {
     /**
