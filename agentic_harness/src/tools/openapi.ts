@@ -2,8 +2,21 @@ import { OpenAPIToolProviderConfig, ToolProviderConfig } from "@/config/tool_con
 import { Tool, ToolProvider, toolProviderRegistry } from "./tools";
 import { parse } from "yaml";
 import RefParser from "@apidevtools/json-schema-ref-parser";
+import { upgrade } from "@scalar/openapi-upgrader";
 
-async function parseSpecURL(specURL: string): Promise<object> {
+export async function normalizeOpenAPIDocument(rawParsed: unknown): Promise<object> {
+    if (!rawParsed || typeof rawParsed !== "object") {
+        throw new Error("Invalid spec format: Response did not resolve to a valid JSON/YAML object.");
+    }
+
+    // openapi document
+    const document = upgrade(rawParsed as any, "3.1");
+
+    // 4. Resolve/Inline all $ref pointers using RefParser
+    return RefParser.dereference(document);
+}
+
+export async function parseSpecURL(specURL: string): Promise<object> {
     // Parse the OpenAPI spec URL and return the parsed spec
     const response = await fetch(specURL, {
         method: "GET",
@@ -23,14 +36,7 @@ async function parseSpecURL(specURL: string): Promise<object> {
         throw new Error(`Failed to parse response body as valid JSON or YAML: ${err}`);
     }
 
-    if (!rawParsed || typeof rawParsed !== "object") {
-        throw new Error("Invalid spec format: Response did not resolve to a valid JSON/YAML object.");
-    }
-    // 4. Resolve/Inline all $ref pointers using RefParser
-    let dereferenced = (await RefParser.dereference(rawParsed)) as any;
-
-    // TODO: turn this now into either a swagger document, openapi v3.0 document or openapi 3.1 document
-    return dereferenced;
+    return normalizeOpenAPIDocument(rawParsed);
 }
 
 export class OpenAPIToolProvider implements ToolProvider {
