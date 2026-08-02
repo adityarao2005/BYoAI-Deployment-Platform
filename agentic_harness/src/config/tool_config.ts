@@ -42,6 +42,8 @@ export const OpenAPIToolProviderConfigSchema = BaseToolProviderConfigSchema.exte
     ])
 })
 
+export type OpenAPIToolProviderConfig = z.infer<typeof OpenAPIToolProviderConfigSchema>;
+
 export const ToolProviderConfigSchema = z.discriminatedUnion("type", [
     OpenAPIToolProviderConfigSchema
 ])

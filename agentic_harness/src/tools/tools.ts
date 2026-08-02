@@ -1,4 +1,4 @@
-import {  ToolObjectArgument } from "./tool_argument";
+import { ToolObjectArgument } from "./tool_argument";
 
 
 /*
@@ -34,3 +34,18 @@ export interface ToolProvider {
      */
     getAllTools(): Promise<Tool[]>;
 }
+
+
+export class ToolProviderRegistry {
+    private registry: ToolProvider[] = [];
+
+    registerToolProvider(provider: ToolProvider) {
+        this.registry.push(provider);
+    }
+
+    getAllToolProviders(): ToolProvider[] {
+        return this.registry;
+    }
+}
+
+export const toolProviderRegistry: ToolProviderRegistry = new ToolProviderRegistry();

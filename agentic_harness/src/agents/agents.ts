@@ -1,7 +1,8 @@
 import { logger } from "@/logger";
 import { modelRegistry } from "@/models";
 import { isToolCallRequest, ModelInteraction, ToolCallRequest, ToolCallResponse } from "@/models/conversation";
-import { getSkillMDFile, SkillRepository } from "@/skills";
+import { SkillRepository } from "@/skills";
+import { loadSkillToolProvider } from "@/tools/load_skill";
 import { validateToolArgument } from "@/tools/tool_argument";
 import { Tool, ToolProvider } from "@/tools/tools";
 
@@ -26,63 +27,6 @@ export type AgentConversation = {
     history: ModelInteraction[];
 }
 
-function skillToolProvider(agent: Agent): ToolProvider {
-
-    // load skill tool
-    const loadSkillTool: Tool = {
-        name: "load_skill",
-        description: "Load a skill into the agent's memory.",
-        inputSchema: {
-            type: "object",
-            description: "The skill to load into the agent's memory.",
-            properties: {
-                skillName: {
-                    type: "string",
-                    description: "The name of the skill to load."
-                }
-            },
-            required: ["skillName"]
-        },
-
-        // executing of the load skill tool will search through the agent's skill repositories for the skill and load it into the agent's memory if found
-        async execute(args: Record<string, any>) {
-            const skillName = args.skillName;
-
-            for (const repo of agent.skillRepository) {
-                const skill = await repo.getSkillByName(skillName);
-                if (skill) {
-                    logger.info(`Skill ${skillName} loaded into agent's memory.`);
-                    return {
-                        success: true,
-                        location: skill.assetTargetLocation,
-                        content: getSkillMDFile(skill)
-                    };
-                }
-            }
-
-            logger.warn(`Skill ${skillName} not found in any of the agent's skill repositories.`);
-            return {
-                success: false,
-                message: `Skill ${skillName} not found.`
-            };
-        }
-    }
-
-    // skill tool provider will provide the load skill tool to the agent  
-    return {
-        async getAllTools() {
-            return [loadSkillTool]
-        },
-
-        async getToolByName(name) {
-            if (name === loadSkillTool.name) {
-                return loadSkillTool
-            }
-            return null
-        }
-    }
-}
-
 export class Agent {
     name: string;
     readonly skillRepository: SkillRepository[];
@@ -99,7 +43,7 @@ export class Agent {
         this.toolProviders = toolProviders;
         this.description = description;
         // add the skill tool provider to the agent's tool providers
-        this.toolProviders.push(skillToolProvider(this));
+        this.toolProviders.push(loadSkillToolProvider(this));
     }
 
     /*

@@ -22,6 +22,109 @@
 6. If the model returns tool calls, the harness executes the matching tools and feeds the results back into the model until the turn finishes.
 7. The resulting assistant messages, tool calls, and tool responses are printed to stdout.
 
+## Architecture diagram
+
+The harness is split into a small bootstrap layer, three registry-backed plugin surfaces, and one agent loop that orchestrates the full turn.
+
+```mermaid
+flowchart LR
+  subgraph Config["Configuration"]
+    A["agent.yaml / AGENT_CONFIG_PATH"]
+    B["loadConfigIfAvailable"]
+    C["AgentConfigSchema"]
+  end
+
+  subgraph Bootstrap["Bootstrap entrypoints"]
+    D["src/index.ts"]
+    E["src/models/index.ts"]
+    F["src/skills/index.ts"]
+    G["src/tools/index.ts"]
+  end
+
+  subgraph Registries["Runtime registries"]
+    H["modelRegistry"]
+    I["skillRepositoryRegistry"]
+    J["toolProviderRegistry"]
+  end
+
+  subgraph AgentLoop["Turn execution"]
+    K["Agent.performTask"]
+    L["constructSystemPrompt"]
+    M["model.execute"]
+    N["validateToolArgument"]
+    O["executeTool"]
+    P["stdout / logger"]
+  end
+
+  subgraph ModelBackends["Model adapters"]
+    Q["OpenAIModel"]
+    R["GeminiModel"]
+    S["AnthropicModel"]
+    T["SelfHostedModel"]
+  end
+
+  subgraph SkillBackends["Skill repositories"]
+    U["GitSkillRepository"]
+    V["ZipSkillRepository"]
+  end
+
+  subgraph ToolBackends["Tool providers"]
+    W["OpenAPIToolProvider currently stubbed"]
+    X["load_skill tool provider"]
+    Y["get_weather example provider"]
+  end
+
+  A --> B --> C
+  B --> E
+  B --> F
+  B --> G
+  D --> E
+  D --> F
+  D --> G
+  D --> K
+
+  E --> H
+  F --> I
+  G --> J
+
+  K --> L --> I
+  K --> M
+  H --> Q
+  H --> R
+  H --> S
+  H --> T
+
+  M -->|assistant text| P
+  M -->|tool_call| N --> O --> J
+  O --> P
+
+  I --> U
+  I --> V
+  J --> W
+  J --> X
+  J --> Y
+```
+
+### How the mapping works
+
+- Model config entries are filtered by `brand` and registered into `modelRegistry` by `src/models/openai.ts`, `src/models/gemini.ts`, `src/models/anthropic.ts`, and `src/models/self_hosted.ts`.
+- Skill repository config entries are registered into `skillRepositoryRegistry` by `src/skills/git_skill_repo.ts` and `src/skills/zip_skill_repo.ts`.
+- Tool provider config entries are registered into `toolProviderRegistry` by `src/tools/index.ts`; `src/tools/openapi.ts` is wired in, but the provider methods are still stubs.
+- `Agent.performTask()` pulls the default model, gathers all tools from all providers, validates tool call arguments, executes tools, and loops until the model stops asking for tool execution.
+
+## Testing map
+
+The test suite mirrors the same seams as the runtime wiring:
+
+- `src/agents/agents.test.ts` covers the agent loop, tool-call execution, and multi-step history updates.
+- `src/models/*.test.ts` covers brand-specific model registration and adapter behavior.
+- `src/models/self_host.integration.test.ts` exercises a live self-hosted completion request when `SELF_HOSTED_MODEL_BASE_URL` is set.
+- `src/skills/git_skill_repo.test.ts` and `src/skills/zip_skill_repo.test.ts` cover skill discovery, subdirectory filtering, and parsing.
+- `src/skills/git_skill_repo.integration.test.ts` and `src/skills/zip_skill_repo.integration.test.ts` cover real git and HTTP-zip loading paths.
+- `src/tools/tool_argument.test.ts` covers JSON-schema-style argument validation for tool inputs.
+
+In practice, the unit tests validate the control flow and mapping logic, while the integration tests verify that the external adapters still work against a real git repo, a real zip payload, or a live model endpoint.
+
 ## Inputs
 
 ### 1. User input

@@ -7,6 +7,6 @@ export * from "./skills"
 const config = await loadConfigIfAvailable()
 
 if (config) {
-    registerZipSkillRepositories(config)
-    registerGitSkillRepositories(config)
+    registerZipSkillRepositories(config.skillRepositories)
+    registerGitSkillRepositories(config.skillRepositories)
 }
