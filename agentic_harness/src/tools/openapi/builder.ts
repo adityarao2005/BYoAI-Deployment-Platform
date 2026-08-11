@@ -32,6 +32,8 @@ export function buildToolsFromSpec(doc: Record<string, any>, config: OpenAPITool
         }
     }
 
+    const providerName = (config.name || "openapi").replace(/[^a-zA-Z0-9_-]/g, "_");
+
     for (const [pathKey, pathItemObj] of Object.entries(paths)) {
         if (!pathItemObj || typeof pathItemObj !== "object") continue;
 
@@ -42,13 +44,16 @@ export function buildToolsFromSpec(doc: Record<string, any>, config: OpenAPITool
             const operation = pathItem[method];
             if (!operation || typeof operation !== "object") continue;
 
-            let toolName = "";
+            let opName = "";
             if (operation.operationId && typeof operation.operationId === "string") {
-                toolName = operation.operationId.replace(/[^a-zA-Z0-9_-]/g, "_");
+                opName = operation.operationId.replace(/[^a-zA-Z0-9_-]/g, "_");
             } else {
                 const raw = `${method}_${pathKey}`;
-                toolName = raw.replace(/[^a-zA-Z0-9_-]/g, "_").replace(/^_+|_+$/g, "").replace(/__+/g, "_");
+                opName = raw.replace(/[^a-zA-Z0-9_-]/g, "_").replace(/^_+|_+$/g, "").replace(/__+/g, "_");
             }
+
+            const rawToolName = `${providerName}_${opName}`;
+            const toolName = rawToolName.replace(/[^a-zA-Z0-9_-]/g, "_").replace(/__+/g, "_").slice(0, 64);
 
             const description = operation.description || operation.summary || `${method.toUpperCase()} ${pathKey}`;
 

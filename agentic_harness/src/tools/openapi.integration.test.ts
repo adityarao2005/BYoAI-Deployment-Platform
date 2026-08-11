@@ -218,16 +218,16 @@ describe("OpenAPIToolProvider Integration Suite", () => {
         const toolNames = tools.map(t => t.name).sort();
 
         expect(toolNames).toEqual([
-            "checkApiKeyCookie",
-            "checkApiKeyHeader",
-            "checkApiKeyQuery",
-            "checkBasicAuth",
-            "checkBearerAuth",
-            "checkCustomAuth",
-            "createPet",
-            "getError",
-            "getPetById",
-            "listPets",
+            "discovery-provider_checkApiKeyCookie",
+            "discovery-provider_checkApiKeyHeader",
+            "discovery-provider_checkApiKeyQuery",
+            "discovery-provider_checkBasicAuth",
+            "discovery-provider_checkBearerAuth",
+            "discovery-provider_checkCustomAuth",
+            "discovery-provider_createPet",
+            "discovery-provider_getError",
+            "discovery-provider_getPetById",
+            "discovery-provider_listPets",
         ]);
     });
 
@@ -239,7 +239,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             securityVariables: { type: "bearerToken", token: "dummy" },
         });
 
-        const listTool = await provider.getToolByName("listPets");
+        const listTool = await provider.getToolByName("query-provider_listPets");
         expect(listTool).not.toBeNull();
 
         const result = await listTool!.execute({ limit: 25 });
@@ -258,7 +258,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             securityVariables: { type: "bearerToken", token: "dummy" },
         });
 
-        const getPetTool = await provider.getToolByName("getPetById");
+        const getPetTool = await provider.getToolByName("path-provider_getPetById");
         expect(getPetTool).not.toBeNull();
 
         const result = await getPetTool!.execute({ id: "pet-42" });
@@ -273,7 +273,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             securityVariables: { type: "bearerToken", token: "dummy" },
         });
 
-        const createTool = await provider.getToolByName("createPet");
+        const createTool = await provider.getToolByName("post-provider_createPet");
         expect(createTool).not.toBeNull();
 
         const result = await createTool!.execute({ name: "Rex", kind: "dog" });
@@ -288,7 +288,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             securityVariables: { type: "bearerToken", token: "dummy" },
         });
 
-        const errorTool = await provider.getToolByName("getError");
+        const errorTool = await provider.getToolByName("error-provider_getError");
         expect(errorTool).not.toBeNull();
 
         await expect(errorTool!.execute({})).rejects.toThrow("HTTP 400 Bad Request");
@@ -307,7 +307,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             },
         });
 
-        const tool = await provider.getToolByName("checkApiKeyHeader");
+        const tool = await provider.getToolByName("apikey-header-provider_checkApiKeyHeader");
         expect(tool).not.toBeNull();
 
         const result = await tool!.execute({});
@@ -327,7 +327,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             },
         });
 
-        const tool = await provider.getToolByName("checkApiKeyQuery");
+        const tool = await provider.getToolByName("apikey-query-provider_checkApiKeyQuery");
         expect(tool).not.toBeNull();
 
         const result = await tool!.execute({});
@@ -347,7 +347,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             },
         });
 
-        const tool = await provider.getToolByName("checkApiKeyCookie");
+        const tool = await provider.getToolByName("apikey-cookie-provider_checkApiKeyCookie");
         expect(tool).not.toBeNull();
 
         const result = await tool!.execute({});
@@ -365,7 +365,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             },
         });
 
-        const tool = await provider.getToolByName("checkBearerAuth");
+        const tool = await provider.getToolByName("bearer-provider_checkBearerAuth");
         expect(tool).not.toBeNull();
 
         const result = await tool!.execute({});
@@ -385,7 +385,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             },
         });
 
-        const tool = await provider.getToolByName("checkBasicAuth");
+        const tool = await provider.getToolByName("basic-provider_checkBasicAuth");
         expect(tool).not.toBeNull();
 
         const result = await tool!.execute({});
@@ -405,7 +405,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             },
         });
 
-        const tool = await provider.getToolByName("checkCustomAuth");
+        const tool = await provider.getToolByName("custom-auth-provider_checkCustomAuth");
         expect(tool).not.toBeNull();
 
         const result = await tool!.execute({});

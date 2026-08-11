@@ -234,19 +234,19 @@ describe("buildToolsFromSpec", () => {
         expect(tools).toHaveLength(3);
 
         const toolNames = tools.map(t => t.name);
-        expect(toolNames).toContain("listPets");
-        expect(toolNames).toContain("post_pets");
-        expect(toolNames).toContain("get_pets_petId");
+        expect(toolNames).toContain("test-provider_listPets");
+        expect(toolNames).toContain("test-provider_post_pets");
+        expect(toolNames).toContain("test-provider_get_pets_petId");
     });
 
     it("correctly structures input schema for query and path parameters", () => {
         const tools = buildToolsFromSpec(doc, sampleConfig);
 
-        const listPetsTool = tools.find(t => t.name === "listPets")!;
+        const listPetsTool = tools.find(t => t.name === "test-provider_listPets")!;
         expect(listPetsTool.description).toBe("List all pets");
         expect(listPetsTool.inputSchema.properties).toHaveProperty("limit");
 
-        const getPetTool = tools.find(t => t.name === "get_pets_petId")!;
+        const getPetTool = tools.find(t => t.name === "test-provider_get_pets_petId")!;
         expect(getPetTool.inputSchema.properties).toHaveProperty("petId");
         expect(getPetTool.inputSchema.required).toEqual(["petId"]);
     });
