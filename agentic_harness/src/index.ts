@@ -1,41 +1,12 @@
 import "./models";
 import { createInterface } from "node:readline/promises";
 import { Agent, AgentConversation } from "./agents/agents";
-import { Tool, ToolProvider } from "./tools/tools";
+import { skillRepositoryRegistry } from "./skills";
+import { toolProviderRegistry } from "./tools/tools";
 
-const weatherTool: Tool = {
-    name: "get_weather",
-    async execute(args) {
-        return `The weather is sunny with a high of 25°C at ${args.location}.`
-    },
-    description: "Get the current weather for a given location.",
-    inputSchema: {
-        type: "object",
-        description: "Input schema for the get_weather tool.",
-        properties: {
-            location: {
-                type: "string",
-                description: "The location to get the weather for."
-            }
-        },
-        required: ["location"]
-    }
-}
-
-// weather tool provider
-const weatherToolProvider: ToolProvider = {
-    async getAllTools() {
-        return [weatherTool]
-    },
-    async getToolByName(name) {
-        return name === weatherTool.name ? weatherTool : null
-    },
-}
-
-
-const agent = new Agent("agent", [], [weatherToolProvider])
-
-console.log("Agent created: ", agent)
+const agent = new Agent("agent",
+    skillRepositoryRegistry.getAllSkillRepositories(),
+    toolProviderRegistry.getAllToolProviders())
 
 let conversation: AgentConversation = {
     history: [],

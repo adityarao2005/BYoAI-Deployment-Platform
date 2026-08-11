@@ -1,11 +1,12 @@
 
 import AdmZip from "adm-zip";
 import { Skill, SkillRepository, skillRepositoryRegistry } from "./skills";
-import { AgentConfig } from "@/config/config";
+import { SkillRepositoryConfig } from "@/config/skill_config";
 import fs from "fs/promises"
 import { Readable } from "stream";
 import { pipeline } from "stream/promises";
 import { parse } from "yaml";
+import z from "zod";
 
 export class ZipSkillRepository implements SkillRepository {
     location: string;
@@ -117,8 +118,9 @@ export class ZipSkillRepository implements SkillRepository {
 }
 
 
-export function registerZipSkillRepositories(config: AgentConfig) {
-    for (const repoConfig of config.skillRepositories) {
+
+export function registerZipSkillRepositories(config: SkillRepositoryConfig[]) {
+    for (const repoConfig of config) {
         if (repoConfig.type === "zip") {
             const zipRepo = new ZipSkillRepository(repoConfig.location, repoConfig.skillsSubdirectory, repoConfig.headers);
             skillRepositoryRegistry.registerSkillRepository(zipRepo);
