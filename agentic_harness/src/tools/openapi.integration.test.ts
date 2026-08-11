@@ -1,23 +1,24 @@
 import express from "express";
+import { AddressInfo } from "node:net";
 import { Server } from "node:http";
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { OpenAPIToolProvider } from "./openapi";
 
-describe("OpenAPIToolProvider Integration with Express Mock Server", () => {
-    it("fetches spec from Express server, discovers tools, and executes API requests", async () => {
-        let lastReceivedHeader: string | undefined;
-        let lastReceivedQuery: string | undefined;
-        let lastReceivedBody: any = undefined;
+describe("OpenAPIToolProvider Integration Suite", () => {
+    let server: Server;
+    let specUrl: string;
+    let lastReceivedPetQuery: string | undefined;
 
+    beforeAll(async () => {
         const app = express();
         app.use(express.json());
 
-        // Serve OpenAPI Specification
-        app.get("/openapi.json", (req, res) => {
-            const address = server.address() as any;
+        // OpenAPI Specification Endpoint
+        app.get("/openapi.json", (_, res) => {
+            const address = server.address() as AddressInfo;
             res.json({
                 openapi: "3.1.0",
-                info: { title: "Petstore Service", version: "1.0.0" },
+                info: { title: "Test Integration API", version: "1.0.0" },
                 servers: [{ url: `http://127.0.0.1:${address.port}` }],
                 paths: {
                     "/pets": {
@@ -67,14 +68,55 @@ describe("OpenAPIToolProvider Integration with Express Mock Server", () => {
                             responses: { "400": { description: "Bad Request" } },
                         },
                     },
+                    "/auth/apikey-header": {
+                        get: {
+                            operationId: "checkApiKeyHeader",
+                            summary: "Check API Key in Header",
+                            responses: { "200": { description: "OK" } },
+                        },
+                    },
+                    "/auth/apikey-query": {
+                        get: {
+                            operationId: "checkApiKeyQuery",
+                            summary: "Check API Key in Query",
+                            responses: { "200": { description: "OK" } },
+                        },
+                    },
+                    "/auth/apikey-cookie": {
+                        get: {
+                            operationId: "checkApiKeyCookie",
+                            summary: "Check API Key in Cookie",
+                            responses: { "200": { description: "OK" } },
+                        },
+                    },
+                    "/auth/bearer": {
+                        get: {
+                            operationId: "checkBearerAuth",
+                            summary: "Check Bearer Token Auth",
+                            responses: { "200": { description: "OK" } },
+                        },
+                    },
+                    "/auth/basic": {
+                        get: {
+                            operationId: "checkBasicAuth",
+                            summary: "Check Basic Auth",
+                            responses: { "200": { description: "OK" } },
+                        },
+                    },
+                    "/auth/custom": {
+                        get: {
+                            operationId: "checkCustomAuth",
+                            summary: "Check Custom Auth",
+                            responses: { "200": { description: "OK" } },
+                        },
+                    },
                 },
             });
         });
 
-        // Express Endpoints
+        // Endpoint Handlers
         app.get("/pets", (req, res) => {
-            lastReceivedHeader = req.headers["x-api-key"] as string | undefined;
-            lastReceivedQuery = req.query.limit as string | undefined;
+            lastReceivedPetQuery = req.query.limit as string | undefined;
             res.json([
                 { id: "1", name: "Fluffy", kind: "cat" },
                 { id: "2", name: "Spot", kind: "dog" },
@@ -86,7 +128,6 @@ describe("OpenAPIToolProvider Integration with Express Mock Server", () => {
         });
 
         app.post("/pets", (req, res) => {
-            lastReceivedBody = req.body;
             res.status(201).json({ id: "pet-99", ...req.body });
         });
 
@@ -94,61 +135,280 @@ describe("OpenAPIToolProvider Integration with Express Mock Server", () => {
             res.status(400).json({ message: "Invalid parameter value" });
         });
 
-        const server: Server = await new Promise(resolve => {
+        // Auth Endpoint Handlers
+        app.get("/auth/apikey-header", (req, res) => {
+            const key = req.headers["x-api-key"];
+            if (key === "secret-header-key") {
+                res.json({ authenticated: true, method: "apiKey-header" });
+            } else {
+                res.status(401).json({ authenticated: false, message: "Invalid API key header" });
+            }
+        });
+
+        app.get("/auth/apikey-query", (req, res) => {
+            const key = req.query["api_key"];
+            if (key === "secret-query-key") {
+                res.json({ authenticated: true, method: "apiKey-query" });
+            } else {
+                res.status(401).json({ authenticated: false, message: "Invalid API key query parameter" });
+            }
+        });
+
+        app.get("/auth/apikey-cookie", (req, res) => {
+            const cookie = req.headers["cookie"];
+            if (cookie === "session=secret-cookie-key") {
+                res.json({ authenticated: true, method: "apiKey-cookie" });
+            } else {
+                res.status(401).json({ authenticated: false, message: "Invalid API key cookie" });
+            }
+        });
+
+        app.get("/auth/bearer", (req, res) => {
+            const authHeader = req.headers["authorization"];
+            if (authHeader === "Bearer secret-bearer-token-123") {
+                res.json({ authenticated: true, method: "bearerToken" });
+            } else {
+                res.status(401).json({ authenticated: false, message: "Invalid Bearer token" });
+            }
+        });
+
+        app.get("/auth/basic", (req, res) => {
+            const authHeader = req.headers["authorization"];
+            const expected = "Basic " + Buffer.from("admin:password123").toString("base64");
+            if (authHeader === expected) {
+                res.json({ authenticated: true, method: "basicAuth" });
+            } else {
+                res.status(401).json({ authenticated: false, message: "Invalid Basic credentials" });
+            }
+        });
+
+        app.get("/auth/custom", (req, res) => {
+            const headerVal = req.headers["x-custom-auth"];
+            const queryVal = req.query["custom_key"];
+            if (headerVal === "custom-header-val" && queryVal === "custom-query-val") {
+                res.json({ authenticated: true, method: "custom" });
+            } else {
+                res.status(401).json({ authenticated: false, message: "Invalid custom auth" });
+            }
+        });
+
+        server = await new Promise(resolve => {
             const s = app.listen(0, () => resolve(s));
         });
 
-        try {
-            const port = (server.address() as any).port;
-            const specUrl = `http://127.0.0.1:${port}/openapi.json`;
+        const address = server.address() as AddressInfo;
+        specUrl = `http://127.0.0.1:${address.port}/openapi.json`;
+    });
 
-            const provider = new OpenAPIToolProvider({
-                name: "express-petstore",
-                type: "openapi",
-                specUrl,
-                securityVariables: {
-                    type: "apiKey",
-                    key: "express-secret-key",
-                    name: "x-api-key",
-                    location: "header",
-                },
-            });
-
-            // 1. Tool discovery
-            const tools = await provider.getAllTools();
-            expect(tools.map(t => t.name).sort()).toEqual(["createPet", "getError", "getPetById", "listPets"]);
-
-            // 2. Execute GET /pets with query parameters & security headers
-            const listTool = await provider.getToolByName("listPets");
-            expect(listTool).not.toBeNull();
-            const listResult = await listTool!.execute({ limit: 10 });
-
-            expect(listResult).toEqual([
-                { id: "1", name: "Fluffy", kind: "cat" },
-                { id: "2", name: "Spot", kind: "dog" },
-            ]);
-            expect(lastReceivedHeader).toBe("express-secret-key");
-            expect(lastReceivedQuery).toBe("10");
-
-            // 3. Execute GET /pets/:id with path parameter
-            const getPetTool = await provider.getToolByName("getPetById");
-            expect(getPetTool).not.toBeNull();
-            const getPetResult = await getPetTool!.execute({ id: "pet-42" });
-            expect(getPetResult).toEqual({ id: "pet-42", name: "Mittens", kind: "cat" });
-
-            // 4. Execute POST /pets with request body
-            const createTool = await provider.getToolByName("createPet");
-            expect(createTool).not.toBeNull();
-            const createResult = await createTool!.execute({ name: "Rex", kind: "dog" });
-            expect(createResult).toEqual({ id: "pet-99", name: "Rex", kind: "dog" });
-            expect(lastReceivedBody).toEqual({ name: "Rex", kind: "dog" });
-
-            // 5. Execute 400 Bad Request error endpoint
-            const errorTool = await provider.getToolByName("getError");
-            expect(errorTool).not.toBeNull();
-            await expect(errorTool!.execute({})).rejects.toThrow("HTTP 400 Bad Request");
-        } finally {
+    afterAll(async () => {
+        if (server) {
             await new Promise<void>(resolve => server.close(() => resolve()));
         }
+    });
+
+    it("discovers all registered tools from OpenAPI spec", async () => {
+        const provider = new OpenAPIToolProvider({
+            name: "discovery-provider",
+            type: "openapi",
+            specUrl,
+            securityVariables: { type: "bearerToken", token: "dummy" },
+        });
+
+        const tools = await provider.getAllTools();
+        const toolNames = tools.map(t => t.name).sort();
+
+        expect(toolNames).toEqual([
+            "checkApiKeyCookie",
+            "checkApiKeyHeader",
+            "checkApiKeyQuery",
+            "checkBasicAuth",
+            "checkBearerAuth",
+            "checkCustomAuth",
+            "createPet",
+            "getError",
+            "getPetById",
+            "listPets",
+        ]);
+    });
+
+    it("executes GET requests with query parameters", async () => {
+        const provider = new OpenAPIToolProvider({
+            name: "query-provider",
+            type: "openapi",
+            specUrl,
+            securityVariables: { type: "bearerToken", token: "dummy" },
+        });
+
+        const listTool = await provider.getToolByName("listPets");
+        expect(listTool).not.toBeNull();
+
+        const result = await listTool!.execute({ limit: 25 });
+        expect(result).toEqual([
+            { id: "1", name: "Fluffy", kind: "cat" },
+            { id: "2", name: "Spot", kind: "dog" },
+        ]);
+        expect(lastReceivedPetQuery).toBe("25");
+    });
+
+    it("executes GET requests with path parameters", async () => {
+        const provider = new OpenAPIToolProvider({
+            name: "path-provider",
+            type: "openapi",
+            specUrl,
+            securityVariables: { type: "bearerToken", token: "dummy" },
+        });
+
+        const getPetTool = await provider.getToolByName("getPetById");
+        expect(getPetTool).not.toBeNull();
+
+        const result = await getPetTool!.execute({ id: "pet-42" });
+        expect(result).toEqual({ id: "pet-42", name: "Mittens", kind: "cat" });
+    });
+
+    it("executes POST requests with JSON request body", async () => {
+        const provider = new OpenAPIToolProvider({
+            name: "post-provider",
+            type: "openapi",
+            specUrl,
+            securityVariables: { type: "bearerToken", token: "dummy" },
+        });
+
+        const createTool = await provider.getToolByName("createPet");
+        expect(createTool).not.toBeNull();
+
+        const result = await createTool!.execute({ name: "Rex", kind: "dog" });
+        expect(result).toEqual({ id: "pet-99", name: "Rex", kind: "dog" });
+    });
+
+    it("handles HTTP error responses by throwing descriptive errors", async () => {
+        const provider = new OpenAPIToolProvider({
+            name: "error-provider",
+            type: "openapi",
+            specUrl,
+            securityVariables: { type: "bearerToken", token: "dummy" },
+        });
+
+        const errorTool = await provider.getToolByName("getError");
+        expect(errorTool).not.toBeNull();
+
+        await expect(errorTool!.execute({})).rejects.toThrow("HTTP 400 Bad Request");
+    });
+
+    it("supports apiKey authentication in headers", async () => {
+        const provider = new OpenAPIToolProvider({
+            name: "apikey-header-provider",
+            type: "openapi",
+            specUrl,
+            securityVariables: {
+                type: "apiKey",
+                key: "secret-header-key",
+                name: "x-api-key",
+                location: "header",
+            },
+        });
+
+        const tool = await provider.getToolByName("checkApiKeyHeader");
+        expect(tool).not.toBeNull();
+
+        const result = await tool!.execute({});
+        expect(result).toEqual({ authenticated: true, method: "apiKey-header" });
+    });
+
+    it("supports apiKey authentication in query parameters", async () => {
+        const provider = new OpenAPIToolProvider({
+            name: "apikey-query-provider",
+            type: "openapi",
+            specUrl,
+            securityVariables: {
+                type: "apiKey",
+                key: "secret-query-key",
+                name: "api_key",
+                location: "query",
+            },
+        });
+
+        const tool = await provider.getToolByName("checkApiKeyQuery");
+        expect(tool).not.toBeNull();
+
+        const result = await tool!.execute({});
+        expect(result).toEqual({ authenticated: true, method: "apiKey-query" });
+    });
+
+    it("supports apiKey authentication in cookies", async () => {
+        const provider = new OpenAPIToolProvider({
+            name: "apikey-cookie-provider",
+            type: "openapi",
+            specUrl,
+            securityVariables: {
+                type: "apiKey",
+                key: "secret-cookie-key",
+                name: "session",
+                location: "cookie",
+            },
+        });
+
+        const tool = await provider.getToolByName("checkApiKeyCookie");
+        expect(tool).not.toBeNull();
+
+        const result = await tool!.execute({});
+        expect(result).toEqual({ authenticated: true, method: "apiKey-cookie" });
+    });
+
+    it("supports Bearer token authentication", async () => {
+        const provider = new OpenAPIToolProvider({
+            name: "bearer-provider",
+            type: "openapi",
+            specUrl,
+            securityVariables: {
+                type: "bearerToken",
+                token: "secret-bearer-token-123",
+            },
+        });
+
+        const tool = await provider.getToolByName("checkBearerAuth");
+        expect(tool).not.toBeNull();
+
+        const result = await tool!.execute({});
+        expect(result).toEqual({ authenticated: true, method: "bearerToken" });
+    });
+
+    it("supports Basic authentication (header location)", async () => {
+        const provider = new OpenAPIToolProvider({
+            name: "basic-provider",
+            type: "openapi",
+            specUrl,
+            securityVariables: {
+                type: "basicAuth",
+                username: "admin",
+                password: "password123",
+                location: "header",
+            },
+        });
+
+        const tool = await provider.getToolByName("checkBasicAuth");
+        expect(tool).not.toBeNull();
+
+        const result = await tool!.execute({});
+        expect(result).toEqual({ authenticated: true, method: "basicAuth" });
+    });
+
+    it("supports custom header and query parameter security configuration", async () => {
+        const provider = new OpenAPIToolProvider({
+            name: "custom-auth-provider",
+            type: "openapi",
+            specUrl,
+            securityVariables: {
+                type: "custom",
+                headers: { "x-custom-auth": "custom-header-val" },
+                queryParams: { custom_key: "custom-query-val" },
+                pathParams: {},
+            },
+        });
+
+        const tool = await provider.getToolByName("checkCustomAuth");
+        expect(tool).not.toBeNull();
+
+        const result = await tool!.execute({});
+        expect(result).toEqual({ authenticated: true, method: "custom" });
     });
 });
