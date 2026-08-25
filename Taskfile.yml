@@ -9,6 +9,9 @@ includes:
   local_models:
     taskfile: local_models/Taskfile.yml
     dir: local_models
+  computer_controller:
+    taskfile: computer_controller/Taskfile.yml
+    dir: computer_controller
 
 tasks:
   run_harness:
@@ -24,6 +27,7 @@ tasks:
       - task: agentic_harness:full_test
       - task: local_models:stop_gemma4_server
   unit_test:
-    desc: Test the agentic harness
+    desc: Test the agentic harness and computer controller
     cmds:
       - task: agentic_harness:unit_test
+      - task: computer_controller:test

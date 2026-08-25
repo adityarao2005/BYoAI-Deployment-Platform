@@ -39,4 +39,15 @@ The architecture for this will be like this:
     - Each of these frontends when sending the job to run, will post the "prompt" into the inbound message queue of the AI Agent. Then it'll be listening/awaiting upon the response from the Agent (this would be the completion response, which in the case of the chat based interaction may be a question). Chat based items can queue messages.
 4. We will also have a Deployment Manager CRD type which will manage and monitor all AI models, AI Agents, and frontends that exist in the namespace
 
+## Computer Controller Architecture (`computer_controller/`)
+
+The **Computer Controller** is a Golang-based service running inside target sandboxes/pods to expose OS execution primitives to AI Agents:
+- **Transport**: ConnectRPC (`connectrpc.com/connect`) over HTTP/1.1 and HTTP/2 (h2c). Supports unary RPCs, HTTP streaming (SSE), and gRPC / JSON requests.
+- **Authentication**: Pluggable interceptors for mTLS (pod-to-pod mesh), Bearer Token, API Key, and Basic Auth.
+- **Session & Capability Management**: 
+  - Dynamic capability detection (`has_display`, supported features).
+  - Session lifecycle tracking with heartbeat keepalives.
+  - Background worker thread for automatic idle timeout and TTL workspace cleanup.
+- **Execution Primitives**: Synchronous and streaming shell command execution, file read/write/list, and GUI interaction hooks.
+
 The admins working on building their AI Agents can either manage it via Kubernetes or through the admin console.
