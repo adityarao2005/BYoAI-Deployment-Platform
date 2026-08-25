@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+tasks:
+  build:
+    desc: Build the computer controller binary
+    cmds:
+      - go build -v -o bin/controller ./cmd/controller
+
+  test:
+    desc: Run unit tests for computer controller
+    cmds:
+      - go test -v ./...
+
+  run:
+    desc: Run the computer controller locally
+    cmds:
+      - go run ./cmd/controller
