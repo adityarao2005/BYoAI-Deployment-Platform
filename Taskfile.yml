@@ -31,3 +31,8 @@ tasks:
     cmds:
       - task: agentic_harness:unit_test
       - task: computer_controller:test
+  build:
+    desc: Builds agentic harness and computer controller
+    cmds:
+      - task: agentic_harness:build
+      - task: computer_controller:build

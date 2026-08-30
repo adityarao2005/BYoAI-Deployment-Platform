@@ -6,6 +6,8 @@ tasks:
   build:
     desc: Build the computer controller binary
     cmds:
+      - go fmt ./...
+      - go mod tidy
       - go build -v -o bin/controller ./cmd/controller
 
   test:
