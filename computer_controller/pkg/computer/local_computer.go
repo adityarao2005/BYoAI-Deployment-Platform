@@ -140,12 +140,13 @@ func (computer LocalComputer) GetSessionId() string {
 
 /// Graphical Components
 
-
-
-// singleton instance of LocalComputer
-var localComputer IComputer = LocalComputer{
-	sessionId: "0",
+func (computer LocalComputer) SupportsGraphics() bool {
+	_, supported := os.LookupEnv("DISPLAY")
+	return supported
 }
+
+// singleton instance of LocalComputer with graphical capabilities
+var localComputer IComputer = NewLocalGraphicalComputer("0")
 
 //// Local Computer Provider
 
