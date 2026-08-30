@@ -94,17 +94,15 @@ type IGraphicalComputer interface {
 }
 
 // computer configuration for creating a computer
-type IComputerConfig struct {
+type ComputerConfig struct {
 	// docker image to use
 	Image string
-
-	// Shell
 }
 
 // provides the computer
 type IComputerProvider interface {
 	// Creates a computer given the configuration and returns a "sessionId"
-	CreateComputer(ctx context.Context, config IComputerConfig) (string, error)
+	CreateComputer(ctx context.Context, config ComputerConfig) (string, error)
 
 	// Retrieves the computer given the "sessionId"
 	GetComputer(ctx context.Context, sessionId string) (IComputer, error)

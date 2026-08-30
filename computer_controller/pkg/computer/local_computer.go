@@ -155,7 +155,7 @@ type LocalComputerProvider struct {
 }
 
 // Creates a computer given the configuration and returns a "sessionId"
-func (provider LocalComputerProvider) CreateComputer(ctx context.Context, config IComputerConfig) (string, error) {
+func (provider LocalComputerProvider) CreateComputer(ctx context.Context, config ComputerConfig) (string, error) {
 	return "0", nil
 }
 
