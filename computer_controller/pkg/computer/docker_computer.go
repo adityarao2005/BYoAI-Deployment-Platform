@@ -13,6 +13,7 @@ import (
 	"sync"
 
 	"github.com/moby/moby/api/pkg/stdcopy"
+	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 	"golang.org/x/sync/singleflight"
 )
@@ -114,8 +115,15 @@ func (provider *DockerComputerProvider) CreateComputer(ctx context.Context, conf
 	provider.pullImage(ctx, config.Image)
 
 	// create the container, resp contains container id
+	// override CMD with "sleep infinity" to keep the container alive as a sandbox
+	// for exec and copy operations. Without this, base images (e.g. alpine) exit
+	// immediately because their default shell has no TTY.
 	resp, err := provider.apiClient.ContainerCreate(ctx, client.ContainerCreateOptions{
 		Image: config.Image,
+		Config: &container.Config{
+			Cmd:       []string{"sleep", "infinity"},
+			OpenStdin: true,
+		},
 	})
 
 	if err != nil {
