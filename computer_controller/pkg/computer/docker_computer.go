@@ -130,8 +130,22 @@ func (provider *DockerComputerProvider) CreateComputer(ctx context.Context, conf
 }
 
 func (provider *DockerComputerProvider) GetComputer(ctx context.Context, sessionId string) (IComputer, error) {
-	// TODO: ..
-	return nil, errors.New("TODO:")
+	// Lock, grab container id and whether exists, unlock
+	provider.mu.RLock()
+	containerId, exists := provider.computers[sessionId]
+	provider.mu.RUnlock()
+
+	// if not exists
+	if !exists {
+		// TODO: add message for computer being potentially cleaned up by reaper when we implement this
+		return nil, fmt.Errorf("computer not found for sessionId %s", sessionId)
+	}
+
+	return DockerComputer{
+		sessionId,
+		containerId,
+		provider.apiClient,
+	}, nil
 }
 
 func (provider *DockerComputerProvider) DeleteComputer(ctx context.Context, sessionId string) error {
@@ -178,5 +192,14 @@ func (provider *DockerComputerProvider) Close() error {
 	return provider.apiClient.Close()
 }
 
+// implementation of the docker computer
 type DockerComputer struct {
+	sessionId string
+	containerId string
+	apiClient *client.Client
 }
+
+func (computer DockerComputer) GetSessionId() string {
+	return computer.sessionId
+}
+
