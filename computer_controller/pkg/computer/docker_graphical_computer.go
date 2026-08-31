@@ -118,7 +118,7 @@ func (c *DockerGraphicalComputer) Click(ctx context.Context, x, y int, button st
 		btnNum = "3"
 	}
 
-	cmd := fmt.Sprintf("xdotool mousemove --sync %d %d click %s", x, y, btnNum)
+	cmd := fmt.Sprintf("xdotool mousemove %d %d click %s", x, y, btnNum)
 	return c.executeGraphicalNoOutput(ctx, cmd)
 }
 
@@ -147,19 +147,19 @@ func (c *DockerGraphicalComputer) PressAndHoldKey(ctx context.Context, key strin
 
 // ReleaseAllKeys releases all modifier and active keys.
 func (c *DockerGraphicalComputer) ReleaseAllKeys(ctx context.Context) error {
-	return c.executeGraphicalNoOutput(ctx, "xdotool keyup --all")
+	return c.executeGraphicalNoOutput(ctx, "xdotool keyup Shift_L Shift_R Control_L Control_R Alt_L Alt_R Meta_L Meta_R Super_L Super_R")
 }
 
 // Drag moves mouse from (x1, y1) to (x2, y2) while holding down left mouse button.
 func (c *DockerGraphicalComputer) Drag(ctx context.Context, x1, y1, x2, y2 int) error {
-	cmd := fmt.Sprintf("xdotool mousemove --sync %d %d mousedown 1 mousemove --sync %d %d mouseup 1",
+	cmd := fmt.Sprintf("xdotool mousemove %d %d mousedown 1 mousemove %d %d mouseup 1",
 		x1, y1, x2, y2)
 	return c.executeGraphicalNoOutput(ctx, cmd)
 }
 
 // MoveMouseTo positions the cursor at (x, y).
 func (c *DockerGraphicalComputer) MoveMouseTo(ctx context.Context, x, y int) error {
-	cmd := fmt.Sprintf("xdotool mousemove --sync %d %d", x, y)
+	cmd := fmt.Sprintf("xdotool mousemove %d %d", x, y)
 	return c.executeGraphicalNoOutput(ctx, cmd)
 }
 

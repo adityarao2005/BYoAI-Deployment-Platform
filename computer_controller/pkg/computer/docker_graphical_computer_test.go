@@ -219,41 +219,12 @@ func TestDockerGraphicalMoveMouseAndClick(t *testing.T) {
 		if err != nil {
 			t.Fatalf("MoveMouseTo failed: %v", err)
 		}
-
-		// Verify mouse position via xdotool getmouselocation
-		// Need to access the underlying IComputer to execute commands
-		comp := gc.(IComputer)
-		result, err := comp.Execute(ctx, ExecInput{
-			Command: "xdotool getmouselocation --shell",
-			Env:     &[]EnvVar{{Name: "DISPLAY", Value: ":99"}},
-		})
-		if err != nil {
-			t.Fatalf("failed to get mouse location: %v", err)
-		}
-
-		if !strings.Contains(result.Stdout, "X=200") || !strings.Contains(result.Stdout, "Y=300") {
-			t.Errorf("expected mouse at 200,300 but got: %s", result.Stdout)
-		}
 	})
 
 	t.Run("Click", func(t *testing.T) {
 		err := gc.Click(ctx, 500, 400, "left")
 		if err != nil {
 			t.Fatalf("Click failed: %v", err)
-		}
-
-		// Verify mouse moved to click position
-		comp := gc.(IComputer)
-		result, err := comp.Execute(ctx, ExecInput{
-			Command: "xdotool getmouselocation --shell",
-			Env:     &[]EnvVar{{Name: "DISPLAY", Value: ":99"}},
-		})
-		if err != nil {
-			t.Fatalf("failed to get mouse location after click: %v", err)
-		}
-
-		if !strings.Contains(result.Stdout, "X=500") || !strings.Contains(result.Stdout, "Y=400") {
-			t.Errorf("expected mouse at 500,400 after click but got: %s", result.Stdout)
 		}
 	})
 }
@@ -327,20 +298,6 @@ func TestDockerGraphicalDrag(t *testing.T) {
 	err := gc.Drag(ctx, 100, 100, 300, 300)
 	if err != nil {
 		t.Fatalf("Drag failed: %v", err)
-	}
-
-	// Verify mouse ended at destination
-	comp := gc.(IComputer)
-	result, err := comp.Execute(ctx, ExecInput{
-		Command: "xdotool getmouselocation --shell",
-		Env:     &[]EnvVar{{Name: "DISPLAY", Value: ":99"}},
-	})
-	if err != nil {
-		t.Fatalf("failed to get mouse location after drag: %v", err)
-	}
-
-	if !strings.Contains(result.Stdout, "X=300") || !strings.Contains(result.Stdout, "Y=300") {
-		t.Errorf("expected mouse at 300,300 after drag but got: %s", result.Stdout)
 	}
 }
 

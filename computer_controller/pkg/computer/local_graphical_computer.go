@@ -114,7 +114,7 @@ func (computer LocalGraphicalComputer) ReleaseAllKeys(ctx context.Context) error
 		return ErrGraphicsUnsupported
 	}
 
-	cmd := exec.CommandContext(ctx, "xdotool", "keyup", "--all")
+	cmd := exec.CommandContext(ctx, "xdotool", "keyup", "Shift_L", "Shift_R", "Control_L", "Control_R", "Alt_L", "Alt_R", "Meta_L", "Meta_R", "Super_L", "Super_R")
 	return cmd.Run()
 }
 
