@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -35,13 +34,7 @@ func (computer LocalComputer) Execute(ctx context.Context, execInput ExecInput) 
 		if execInput.ShellArgs != nil {
 			args = append(args, *execInput.ShellArgs...)
 		} else {
-			baseShell := filepath.Base(shell)
-			switch baseShell {
-			case "sh", "bash", "zsh", "ksh":
-				args = append(args, "-c")
-			default:
-				args = append(args, "-c")
-			}
+			args = append(args, "-c")
 		}
 		args = append(args, execInput.Command)
 		cmd = exec.CommandContext(ctx, shell, args...)
