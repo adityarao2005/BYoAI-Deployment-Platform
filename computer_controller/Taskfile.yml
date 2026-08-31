@@ -15,6 +15,11 @@ tasks:
     cmds:
       - go test -v ./...
 
+  docker_test:
+    desc: Run unit tests for computer controller including that which talks to docker
+    cmds:
+      -  DOCKER_INTEGRATION_TEST=1 go test -v ./...
+
   run:
     desc: Run the computer controller locally
     cmds:
