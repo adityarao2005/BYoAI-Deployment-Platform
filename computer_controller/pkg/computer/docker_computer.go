@@ -160,11 +160,24 @@ func (provider *DockerComputerProvider) GetComputer(ctx context.Context, session
 		return nil, fmt.Errorf("computer not found for sessionId %s", sessionId)
 	}
 
-	return &DockerComputer{
-		sessionId:   sessionId,
-		containerId: containerId,
-		apiClient:   provider.apiClient,
-	}, nil
+	// Detect if the container supports graphics via DISPLAY env var.
+	// If so, return a DockerGraphicalComputer that also implements IGraphicalComputer.
+	if display, ok := detectContainerDisplay(ctx, provider.apiClient, containerId); ok {
+		return &DockerGraphicalComputer{
+			DockerComputer: DockerComputer{
+				sessionId:   sessionId,
+				containerId: containerId,
+				apiClient:   provider.apiClient,
+			},
+			display: display,
+		}, nil
+	} else {
+		return &DockerComputer{
+			sessionId:   sessionId,
+			containerId: containerId,
+			apiClient:   provider.apiClient,
+		}, nil
+	}
 }
 
 func (provider *DockerComputerProvider) DeleteComputer(ctx context.Context, sessionId string) error {
