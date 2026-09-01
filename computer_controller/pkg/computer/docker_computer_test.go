@@ -5,6 +5,8 @@ import (
 	"context"
 	"os"
 	"testing"
+
+	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/config"
 )
 
 // skipIfNoDocker skips the test if the DOCKER_INTEGRATION_TEST environment variable is not set.
@@ -25,7 +27,7 @@ func setupDockerComputer(t *testing.T) (IComputer, func()) {
 	t.Helper()
 
 	provider, err := GetDockerComputerProvider(DockerComputerProviderProps{
-		pullMode: IfNotPresent,
+		pullPolicy: config.IfNotPresent,
 	})
 	if err != nil {
 		t.Fatalf("failed to create DockerComputerProvider: %v", err)
@@ -126,7 +128,7 @@ func TestDockerComputerExecute(t *testing.T) {
 		input := ExecInput{
 			Command: "echo $MY_TEST_VAR && pwd",
 			Cwd:     &cwd,
-			Env:     &env,
+			Env:     env,
 		}
 
 		res, err := comp.Execute(ctx, input)
@@ -305,7 +307,7 @@ func TestDockerComputerProviderLifecycle(t *testing.T) {
 	skipIfNoDocker(t)
 
 	provider, err := GetDockerComputerProvider(DockerComputerProviderProps{
-		pullMode: IfNotPresent,
+		pullPolicy: config.IfNotPresent,
 	})
 	if err != nil {
 		t.Fatalf("failed to create provider: %v", err)

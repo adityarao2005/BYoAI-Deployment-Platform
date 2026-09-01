@@ -1,0 +1,18 @@
+version: v2
+modules:
+  - path: .
+    excludes:
+      - agentic_harness
+      - computer_controller
+      - local_models
+
+
+deps:
+  - buf.build/bufbuild/protovalidate
+lint:
+  use:
+    - STANDARD
+breaking:
+  use:
+    - FILE
+

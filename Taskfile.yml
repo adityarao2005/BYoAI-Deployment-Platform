@@ -36,3 +36,9 @@ tasks:
     cmds:
       - task: agentic_harness:build
       - task: computer_controller:build
+  generate_proto:
+    desc: Generate protobuf stubs
+    cmds:
+      - buf dep update
+      - buf lint
+      - buf generate

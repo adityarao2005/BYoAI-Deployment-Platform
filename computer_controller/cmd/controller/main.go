@@ -1,9 +1,13 @@
 package main
 
 import (
-	"log"
+	"fmt"
+
+	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/server"
 )
 
 func main() {
-	log.Println("Starting Computer Controller Service...")
+	fmt.Println("Starting Computer Controller Service...")
+
+	server.RunServer()
 }

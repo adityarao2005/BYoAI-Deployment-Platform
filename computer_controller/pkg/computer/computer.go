@@ -26,7 +26,7 @@ type ExecInput struct {
 	// The working directory of the command. If nil, the default working directory is used.
 	Cwd *string
 	// Environment variables to set for the command. If nil, the default environment variables are used.
-	Env *[]EnvVar
+	Env []EnvVar
 	// Standard input for the command. If nil, no standard input is provided.
 	Stdin *string
 	// The shell binary or interpreter to use (e.g. "sh", "bash", "python", "psql").
@@ -34,7 +34,7 @@ type ExecInput struct {
 	Shell *string
 	// Optional arguments passed to the shell binary prior to the command string.
 	// If nil, defaults are automatically selected based on the shell (e.g. ["-c"]).
-	ShellArgs *[]string
+	ShellArgs []string
 	// Optional configurable wait delay for process completion and pipe closing.
 	WaitDelay *time.Duration
 }
