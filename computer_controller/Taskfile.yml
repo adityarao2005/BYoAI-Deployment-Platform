@@ -5,22 +5,60 @@ version: '3'
 tasks:
   build:
     desc: Build the computer controller binary
+    run: once
+    sources:
+      - '**/*.go'
+      - go.mod
+      - go.sum
+    generates:
+      - bin/controller
     cmds:
       - go fmt ./...
       - go mod tidy
-      - go build -v -o bin/controller ./cmd/controller
+      - CGO_ENABLED=0 go build -v -ldflags="-s -w" -o bin/controller ./cmd/controller
 
   test:
     desc: Run unit tests for computer controller
+    run: once
+    sources:
+      - '**/*.go'
+      - go.mod
+      - go.sum
     cmds:
       - go test -v ./...
 
   docker_test:
     desc: Run unit tests for computer controller including that which talks to docker
     cmds:
-      -  DOCKER_INTEGRATION_TEST=1 go test -v ./...
+      - DOCKER_INTEGRATION_TEST=1 go test -v ./...
 
   run:
     desc: Run the computer controller locally
     cmds:
       - go run ./cmd/controller
+
+  build_container_image:
+    desc: Build a specific container target image
+    deps:
+      - build
+      - test
+    cmds:
+      - docker build -f docker/Dockerfile --target {{.TARGET}} -t computer-controller:{{.TARGET}} .
+
+  build_container_images:
+    desc: Build all container images for local and docker/podman targets
+    deps:
+      - task: build_container_image
+        vars: { TARGET: 'local-scratch' }
+      - task: build_container_image
+        vars: { TARGET: 'local-alpine' }
+      - task: build_container_image
+        vars: { TARGET: 'local-debian' }
+      - task: build_container_image
+        vars: { TARGET: 'local-redhat' }
+      - task: build_container_image
+        vars: { TARGET: 'docker-podman-redhat' }
+      - task: build_container_image
+        vars: { TARGET: 'docker-podman-debian' }
+      - task: build_container_image
+        vars: { TARGET: 'docker-podman-alpine' }

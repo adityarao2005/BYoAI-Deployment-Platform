@@ -8,32 +8,55 @@ tasks:
     cmds:
       - rm -rf node_modules
       - rm -rf dist
+
   install:
-    desc: Install the agentic harness
+    desc: Install the agentic harness dependencies
+    run: once
+    sources:
+      - package.json
+      - pnpm-lock.yaml
+    generates:
+      - node_modules/.pnpm/lock.yaml
     cmds:
       - pnpm install --ignore-scripts
+
   build:
     desc: Build the agentic harness
+    run: once
+    sources:
+      - 'src/**/*.ts'
+      - package.json
+      - tsconfig.json
+    generates:
+      - 'dist/**/*'
     cmds:
       - pnpm build
     deps:
       - install
+
   run:
     desc: Run the agentic harness
     cmds:
       - pnpm start
     deps:
       - build
+
   full_test:
-    desc: Test the agentic harness
+    desc: Integration test for agentic harness
+    run: once
     cmds:
       - SELF_HOSTED_MODEL_BASE_URL=http://localhost:8080/v1 pnpm test
     deps:
       - install
+
   unit_test:
-    desc: Test the agentic harness
+    desc: Unit test for agentic harness
+    run: once
+    sources:
+      - 'src/**/*.ts'
+      - package.json
+      - tsconfig.json
     cmds:
       - pnpm test
     deps:
       - install
-      
