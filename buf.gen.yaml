@@ -1,23 +1,23 @@
 version: v2
 plugins:
-  - local: [go, tool, protoc-gen-go]
-    out: gen
+  - local: protoc-gen-go
+    out: computer_controller/gen
     opt: paths=source_relative
-  - local: [go, tool, protoc-gen-connect-go]
-    out: gen
+  - local: protoc-gen-connect-go
+    out: computer_controller/gen
     opt:
       - paths=source_relative
-      - simple
-  - local: protoc-gen-es
-    out: gen
-    # Also generate any imported dependencies
-    include_imports: true
+  - local: ./agentic_harness/node_modules/.bin/protoc-gen-es
+    out: agentic_harness/src/gen
+    opt: target=ts
+  - local: ./agentic_harness/node_modules/.bin/protoc-gen-connect-es
+    out: agentic_harness/src/gen
     opt: target=ts
 managed:
   enabled: true
   override:
     - file_option: go_package_prefix
-      value: example/gen
+      value: github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/gen
   disable:
     - file_option: go_package
       module: buf.build/bufbuild/protovalidate

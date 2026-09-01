@@ -4,13 +4,64 @@ package computer_api.v1;
 
 import "buf/validate/validate.proto";
 
-service ComputerProviderService {
-
+// create computer request
+message CreateComputerRequest {
+    string image = 1 [(buf.validate.field).string ={
+        min_len: 1
+        max_len: 255
+    }];
 }
+
+message CreateComputerResponse {
+    oneof result {
+        string error_message = 1;
+        string session_id = 2;
+    }
+}
+
+// computer info
+message GetComputerInfoRequest {
+    string session_id = 1 [(buf.validate.field).string = {
+        min_len: 1
+        max_len: 255
+    }];
+}
+
+enum ComputerType {
+    COMPUTER_TYPE_UNSPECIFIED = 0;
+    COMPUTER_TYPE_HEADLESS = 1;
+    COMPUTER_TYPE_GRAPHICAL = 2;
+}
+
+message GetComputerInfoResponse {
+    ComputerType type = 1;
+}
+
+// delete computer request
+message DeleteComputerRequest {
+    string session_id = 1 [(buf.validate.field).string = {
+        min_len: 1
+        max_len: 255
+    }];
+}
+
+message DeleteComputerResponse {
+}
+
+service ComputerProviderService {
+    rpc CreateComputer(CreateComputerRequest) returns (CreateComputerResponse);
+    rpc GetComputerInfo(GetComputerInfoRequest) returns (GetComputerInfoResponse);
+    rpc DeleteComputer(DeleteComputerRequest) returns (DeleteComputerResponse);
+}
+
+// headless computer service
 
 service BasicComputerService {
 
 }
+
+
+// graphical computer service
 
 service GraphicalComputerService {
     

@@ -1,5 +1,11 @@
-# For details on buf.yaml configuration, visit https://buf.build/docs/configuration/v2/buf-yaml
 version: v2
+modules:
+  - path: .
+    excludes:
+      - agentic_harness
+      - computer_controller
+      - local_models
+
 
 deps:
   - buf.build/bufbuild/protovalidate
@@ -9,3 +15,4 @@ lint:
 breaking:
   use:
     - FILE
+
