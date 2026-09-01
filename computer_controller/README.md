@@ -15,7 +15,15 @@ The Computer Controller server loads its configuration from a YAML file named `c
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `type` | String | Yes | Provider type. Must be either `local` or `docker`. |
+| `server` | Object | No | Server network settings (`host` and `port`). |
 | `spec` | Object | No | Provider-specific configuration. Only allowed when `type` is `docker`. |
+
+#### Server Network Settings (`server`)
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `host` | String | `"localhost"` | Listening host IP or hostname (e.g. `"localhost"`, `"0.0.0.0"`). |
+| `port` | Integer | `8080` | Listening port number (1-65535). |
 
 ---
 
@@ -26,6 +34,9 @@ Executes commands and file operations directly on the host operating system. Whe
 #### Example `computer.yaml`
 ```yaml
 type: local
+server:
+  host: "localhost"
+  port: 8080
 ```
 
 ---
@@ -47,6 +58,9 @@ Manages sandboxed Docker containers for execution. Supports custom daemon socket
 #### Example `computer.yaml`
 ```yaml
 type: docker
+server:
+  host: "0.0.0.0"
+  port: 8080
 spec:
   host: "unix:///var/run/docker.sock"
   apiVersion: "1.41"

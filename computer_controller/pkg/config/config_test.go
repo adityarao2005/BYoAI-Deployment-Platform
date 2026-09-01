@@ -17,8 +17,48 @@ type: local
 		if cfg.Type != TypeLocal {
 			t.Errorf("expected type %q, got %q", TypeLocal, cfg.Type)
 		}
-		if cfg.Spec != nil {
-			t.Errorf("expected spec nil for local type, got %v", cfg.Spec)
+		if cfg.Server.Host != "localhost" {
+			t.Errorf("expected default server host %q, got %q", "localhost", cfg.Server.Host)
+		}
+		if cfg.Server.Port != 8080 {
+			t.Errorf("expected default server port 8080, got %d", cfg.Server.Port)
+		}
+		if cfg.Server.Address() != "localhost:8080" {
+			t.Errorf("expected default address %q, got %q", "localhost:8080", cfg.Server.Address())
+		}
+	})
+
+	t.Run("Valid Local Config with Custom Server Settings", func(t *testing.T) {
+		yamlData := []byte(`
+type: local
+server:
+  host: "0.0.0.0"
+  port: 9090
+`)
+		cfg, err := LoadConfig(yamlData)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if cfg.Server.Host != "0.0.0.0" {
+			t.Errorf("expected server host %q, got %q", "0.0.0.0", cfg.Server.Host)
+		}
+		if cfg.Server.Port != 9090 {
+			t.Errorf("expected server port 9090, got %d", cfg.Server.Port)
+		}
+		if cfg.Server.Address() != "0.0.0.0:9090" {
+			t.Errorf("expected address %q, got %q", "0.0.0.0:9090", cfg.Server.Address())
+		}
+	})
+
+	t.Run("Invalid Server Port Config", func(t *testing.T) {
+		yamlData := []byte(`
+type: local
+server:
+  port: 70000
+`)
+		_, err := LoadConfig(yamlData)
+		if err == nil {
+			t.Fatal("expected error for invalid server port, got nil")
 		}
 	})
 

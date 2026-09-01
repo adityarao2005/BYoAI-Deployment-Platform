@@ -42,9 +42,9 @@ The architecture for this will be like this:
 ## Computer Controller Architecture (`computer_controller/`)
 
 The **Computer Controller** is a Golang-based service running inside target sandboxes/pods to expose OS execution primitives to AI Agents:
-- **Transport**: ConnectRPC (`connectrpc.com/connect`) over HTTP/1.1 and HTTP/2 (h2c) listening on port `8080`. Supports unary RPCs, HTTP streaming (SSE), and gRPC / JSON requests.
+- **Transport**: ConnectRPC (`connectrpc.com/connect`) over HTTP/1.1 and HTTP/2 (h2c) listening on configurable address (defaults to `localhost:8080`). Supports unary RPCs, HTTP streaming (SSE), and gRPC / JSON requests.
 - **Provider Architecture & Configuration**:
-  - Configured at runtime via `computer.yaml` in the server's working directory (`config.LoadConfigFromFile()`).
+  - Configured at runtime via `computer.yaml` in the server's working directory (`config.LoadConfigFromFile()`). Supports optional `server.host` and `server.port` overrides.
   - **Local Provider (`type: local`)**: Host-level execution engine without container virtualization.
   - **Docker Provider (`type: docker`)**: Containerized sandbox lifecycle management, supporting custom Docker host endpoints, API versions, TLS certificate directories, configurable image pull policies (`IfNotPresent`, `Always`, `Never`), and background idle container reaping (`reapIdleContainersAfter`).
 - **Session & Capability Management**: 

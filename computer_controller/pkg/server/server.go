@@ -42,7 +42,7 @@ func RunServer() {
 	protocols.SetUnencryptedHTTP2(true)
 
 	server := http.Server{
-		Addr:      "localhost:8080", // TODO: make this configurable
+		Addr:      server_config.Server.Address(),
 		Handler:   handler,
 		Protocols: protocols,
 	}

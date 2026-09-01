@@ -2,7 +2,9 @@ package config
 
 import (
 	"fmt"
+	"net"
 	"os"
+	"strconv"
 	"time"
 
 	"go.yaml.in/yaml/v3"
@@ -37,23 +39,44 @@ type Spec interface {
 
 func (DockerSpec) isSpec() {}
 
+type ServerNetworkConfig struct {
+	Host string `yaml:"host,omitempty"`
+	Port int    `yaml:"port,omitempty"`
+}
+
+func (s ServerNetworkConfig) Address() string {
+	return net.JoinHostPort(s.Host, strconv.Itoa(s.Port))
+}
+
 type ServerConfig struct {
-	Type ConfigType `yaml:"type"`
-	Spec Spec       `yaml:"-"`
+	Type   ConfigType          `yaml:"type"`
+	Server ServerNetworkConfig `yaml:"server,omitempty"`
+	Spec   Spec                `yaml:"-"`
 }
 
 func (c *ServerConfig) UnmarshalYAML(value *yaml.Node) error {
 	// Intermediate struct to capture top-level fields
 	var raw struct {
-		Type ConfigType `yaml:"type"`
-		Spec yaml.Node  `yaml:"spec"`
+		Type   ConfigType          `yaml:"type"`
+		Server ServerNetworkConfig `yaml:"server"`
+		Spec   yaml.Node           `yaml:"spec"`
 	}
 
 	if err := value.Decode(&raw); err != nil {
 		return err
 	}
 
+	if raw.Server.Host == "" {
+		raw.Server.Host = "localhost"
+	}
+	if raw.Server.Port == 0 {
+		raw.Server.Port = 8080
+	} else if raw.Server.Port < 1 || raw.Server.Port > 65535 {
+		return fmt.Errorf("invalid server port %d: must be between 1 and 65535", raw.Server.Port)
+	}
+
 	c.Type = raw.Type
+	c.Server = raw.Server
 
 	switch raw.Type {
 	case TypeLocal:
