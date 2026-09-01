@@ -10,6 +10,7 @@ import (
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -368,11 +369,1024 @@ func (*DeleteComputerResponse) Descriptor() ([]byte, []int) {
 	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{5}
 }
 
+// execute
+type ExecuteRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	Command       string                 `protobuf:"bytes,2,opt,name=command,proto3" json:"command,omitempty"`
+	Cwd           *string                `protobuf:"bytes,3,opt,name=cwd,proto3,oneof" json:"cwd,omitempty"`
+	EnvVars       map[string]string      `protobuf:"bytes,4,rep,name=env_vars,json=envVars,proto3" json:"env_vars,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Stdin         *string                `protobuf:"bytes,5,opt,name=stdin,proto3,oneof" json:"stdin,omitempty"`
+	Shell         *string                `protobuf:"bytes,6,opt,name=shell,proto3,oneof" json:"shell,omitempty"`
+	ShellArgs     []string               `protobuf:"bytes,7,rep,name=shell_args,json=shellArgs,proto3" json:"shell_args,omitempty"`
+	WaitDelay     *durationpb.Duration   `protobuf:"bytes,8,opt,name=wait_delay,json=waitDelay,proto3,oneof" json:"wait_delay,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExecuteRequest) Reset() {
+	*x = ExecuteRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExecuteRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExecuteRequest) ProtoMessage() {}
+
+func (x *ExecuteRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExecuteRequest.ProtoReflect.Descriptor instead.
+func (*ExecuteRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ExecuteRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *ExecuteRequest) GetCommand() string {
+	if x != nil {
+		return x.Command
+	}
+	return ""
+}
+
+func (x *ExecuteRequest) GetCwd() string {
+	if x != nil && x.Cwd != nil {
+		return *x.Cwd
+	}
+	return ""
+}
+
+func (x *ExecuteRequest) GetEnvVars() map[string]string {
+	if x != nil {
+		return x.EnvVars
+	}
+	return nil
+}
+
+func (x *ExecuteRequest) GetStdin() string {
+	if x != nil && x.Stdin != nil {
+		return *x.Stdin
+	}
+	return ""
+}
+
+func (x *ExecuteRequest) GetShell() string {
+	if x != nil && x.Shell != nil {
+		return *x.Shell
+	}
+	return ""
+}
+
+func (x *ExecuteRequest) GetShellArgs() []string {
+	if x != nil {
+		return x.ShellArgs
+	}
+	return nil
+}
+
+func (x *ExecuteRequest) GetWaitDelay() *durationpb.Duration {
+	if x != nil {
+		return x.WaitDelay
+	}
+	return nil
+}
+
+type ExecutionResult struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ExitCode      int32                  `protobuf:"varint,1,opt,name=exit_code,json=exitCode,proto3" json:"exit_code,omitempty"`
+	Stdout        string                 `protobuf:"bytes,2,opt,name=stdout,proto3" json:"stdout,omitempty"`
+	Stderr        string                 `protobuf:"bytes,3,opt,name=stderr,proto3" json:"stderr,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExecutionResult) Reset() {
+	*x = ExecutionResult{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExecutionResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExecutionResult) ProtoMessage() {}
+
+func (x *ExecutionResult) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExecutionResult.ProtoReflect.Descriptor instead.
+func (*ExecutionResult) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *ExecutionResult) GetExitCode() int32 {
+	if x != nil {
+		return x.ExitCode
+	}
+	return 0
+}
+
+func (x *ExecutionResult) GetStdout() string {
+	if x != nil {
+		return x.Stdout
+	}
+	return ""
+}
+
+func (x *ExecutionResult) GetStderr() string {
+	if x != nil {
+		return x.Stderr
+	}
+	return ""
+}
+
+type ExecuteResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*ExecuteResponse_ErrorMessage
+	//	*ExecuteResponse_ExecResult
+	Result        isExecuteResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExecuteResponse) Reset() {
+	*x = ExecuteResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExecuteResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExecuteResponse) ProtoMessage() {}
+
+func (x *ExecuteResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExecuteResponse.ProtoReflect.Descriptor instead.
+func (*ExecuteResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ExecuteResponse) GetResult() isExecuteResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *ExecuteResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*ExecuteResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *ExecuteResponse) GetExecResult() *ExecutionResult {
+	if x != nil {
+		if x, ok := x.Result.(*ExecuteResponse_ExecResult); ok {
+			return x.ExecResult
+		}
+	}
+	return nil
+}
+
+type isExecuteResponse_Result interface {
+	isExecuteResponse_Result()
+}
+
+type ExecuteResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type ExecuteResponse_ExecResult struct {
+	ExecResult *ExecutionResult `protobuf:"bytes,2,opt,name=exec_result,json=execResult,proto3,oneof"`
+}
+
+func (*ExecuteResponse_ErrorMessage) isExecuteResponse_Result() {}
+
+func (*ExecuteResponse_ExecResult) isExecuteResponse_Result() {}
+
+// read file
+type ReadFileRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	Path          string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
+	Offset        *int64                 `protobuf:"varint,3,opt,name=offset,proto3,oneof" json:"offset,omitempty"` // optional byte offset (e.g start at byte 1024)
+	Limit         *int32                 `protobuf:"varint,4,opt,name=limit,proto3,oneof" json:"limit,omitempty"`   // Optional byte limit (e.g. read max 4096 bytes)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReadFileRequest) Reset() {
+	*x = ReadFileRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReadFileRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReadFileRequest) ProtoMessage() {}
+
+func (x *ReadFileRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReadFileRequest.ProtoReflect.Descriptor instead.
+func (*ReadFileRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ReadFileRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *ReadFileRequest) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *ReadFileRequest) GetOffset() int64 {
+	if x != nil && x.Offset != nil {
+		return *x.Offset
+	}
+	return 0
+}
+
+func (x *ReadFileRequest) GetLimit() int32 {
+	if x != nil && x.Limit != nil {
+		return *x.Limit
+	}
+	return 0
+}
+
+type ReadFileResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*ReadFileResponse_ErrorMessage
+	//	*ReadFileResponse_Content
+	Result        isReadFileResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReadFileResponse) Reset() {
+	*x = ReadFileResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReadFileResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReadFileResponse) ProtoMessage() {}
+
+func (x *ReadFileResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReadFileResponse.ProtoReflect.Descriptor instead.
+func (*ReadFileResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *ReadFileResponse) GetResult() isReadFileResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *ReadFileResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*ReadFileResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *ReadFileResponse) GetContent() []byte {
+	if x != nil {
+		if x, ok := x.Result.(*ReadFileResponse_Content); ok {
+			return x.Content
+		}
+	}
+	return nil
+}
+
+type isReadFileResponse_Result interface {
+	isReadFileResponse_Result()
+}
+
+type ReadFileResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type ReadFileResponse_Content struct {
+	Content []byte `protobuf:"bytes,2,opt,name=content,proto3,oneof"`
+}
+
+func (*ReadFileResponse_ErrorMessage) isReadFileResponse_Result() {}
+
+func (*ReadFileResponse_Content) isReadFileResponse_Result() {}
+
+// write file
+type WriteFileRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	Path          string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
+	Content       []byte                 `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
+	Append        *bool                  `protobuf:"varint,4,opt,name=append,proto3,oneof" json:"append,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WriteFileRequest) Reset() {
+	*x = WriteFileRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WriteFileRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WriteFileRequest) ProtoMessage() {}
+
+func (x *WriteFileRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WriteFileRequest.ProtoReflect.Descriptor instead.
+func (*WriteFileRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *WriteFileRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *WriteFileRequest) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *WriteFileRequest) GetContent() []byte {
+	if x != nil {
+		return x.Content
+	}
+	return nil
+}
+
+func (x *WriteFileRequest) GetAppend() bool {
+	if x != nil && x.Append != nil {
+		return *x.Append
+	}
+	return false
+}
+
+type SuccessWriteResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessWriteResponse) Reset() {
+	*x = SuccessWriteResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessWriteResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessWriteResponse) ProtoMessage() {}
+
+func (x *SuccessWriteResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessWriteResponse.ProtoReflect.Descriptor instead.
+func (*SuccessWriteResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{12}
+}
+
+type WriteFileResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*WriteFileResponse_ErrorMessage
+	//	*WriteFileResponse_Resp
+	Result        isWriteFileResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WriteFileResponse) Reset() {
+	*x = WriteFileResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WriteFileResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WriteFileResponse) ProtoMessage() {}
+
+func (x *WriteFileResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WriteFileResponse.ProtoReflect.Descriptor instead.
+func (*WriteFileResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *WriteFileResponse) GetResult() isWriteFileResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *WriteFileResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*WriteFileResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *WriteFileResponse) GetResp() *SuccessWriteResponse {
+	if x != nil {
+		if x, ok := x.Result.(*WriteFileResponse_Resp); ok {
+			return x.Resp
+		}
+	}
+	return nil
+}
+
+type isWriteFileResponse_Result interface {
+	isWriteFileResponse_Result()
+}
+
+type WriteFileResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type WriteFileResponse_Resp struct {
+	Resp *SuccessWriteResponse `protobuf:"bytes,2,opt,name=resp,proto3,oneof"`
+}
+
+func (*WriteFileResponse_ErrorMessage) isWriteFileResponse_Result() {}
+
+func (*WriteFileResponse_Resp) isWriteFileResponse_Result() {}
+
+type ListDirectoryRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	Path          string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListDirectoryRequest) Reset() {
+	*x = ListDirectoryRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListDirectoryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListDirectoryRequest) ProtoMessage() {}
+
+func (x *ListDirectoryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListDirectoryRequest.ProtoReflect.Descriptor instead.
+func (*ListDirectoryRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *ListDirectoryRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *ListDirectoryRequest) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+type SuccessListDirectoryResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Files         []string               `protobuf:"bytes,1,rep,name=files,proto3" json:"files,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessListDirectoryResponse) Reset() {
+	*x = SuccessListDirectoryResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessListDirectoryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessListDirectoryResponse) ProtoMessage() {}
+
+func (x *SuccessListDirectoryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessListDirectoryResponse.ProtoReflect.Descriptor instead.
+func (*SuccessListDirectoryResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *SuccessListDirectoryResponse) GetFiles() []string {
+	if x != nil {
+		return x.Files
+	}
+	return nil
+}
+
+type ListDirectoryResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*ListDirectoryResponse_ErrorMessage
+	//	*ListDirectoryResponse_Response
+	Result        isListDirectoryResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListDirectoryResponse) Reset() {
+	*x = ListDirectoryResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListDirectoryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListDirectoryResponse) ProtoMessage() {}
+
+func (x *ListDirectoryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListDirectoryResponse.ProtoReflect.Descriptor instead.
+func (*ListDirectoryResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *ListDirectoryResponse) GetResult() isListDirectoryResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *ListDirectoryResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*ListDirectoryResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *ListDirectoryResponse) GetResponse() *SuccessListDirectoryResponse {
+	if x != nil {
+		if x, ok := x.Result.(*ListDirectoryResponse_Response); ok {
+			return x.Response
+		}
+	}
+	return nil
+}
+
+type isListDirectoryResponse_Result interface {
+	isListDirectoryResponse_Result()
+}
+
+type ListDirectoryResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type ListDirectoryResponse_Response struct {
+	Response *SuccessListDirectoryResponse `protobuf:"bytes,2,opt,name=response,proto3,oneof"`
+}
+
+func (*ListDirectoryResponse_ErrorMessage) isListDirectoryResponse_Result() {}
+
+func (*ListDirectoryResponse_Response) isListDirectoryResponse_Result() {}
+
+// Get User Id request
+type GetUserIdRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetUserIdRequest) Reset() {
+	*x = GetUserIdRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetUserIdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetUserIdRequest) ProtoMessage() {}
+
+func (x *GetUserIdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetUserIdRequest.ProtoReflect.Descriptor instead.
+func (*GetUserIdRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *GetUserIdRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+type GetUserIdResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*GetUserIdResponse_ErrorMessage
+	//	*GetUserIdResponse_UserId
+	Result        isGetUserIdResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetUserIdResponse) Reset() {
+	*x = GetUserIdResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetUserIdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetUserIdResponse) ProtoMessage() {}
+
+func (x *GetUserIdResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetUserIdResponse.ProtoReflect.Descriptor instead.
+func (*GetUserIdResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *GetUserIdResponse) GetResult() isGetUserIdResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *GetUserIdResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*GetUserIdResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *GetUserIdResponse) GetUserId() string {
+	if x != nil {
+		if x, ok := x.Result.(*GetUserIdResponse_UserId); ok {
+			return x.UserId
+		}
+	}
+	return ""
+}
+
+type isGetUserIdResponse_Result interface {
+	isGetUserIdResponse_Result()
+}
+
+type GetUserIdResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type GetUserIdResponse_UserId struct {
+	UserId string `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3,oneof"`
+}
+
+func (*GetUserIdResponse_ErrorMessage) isGetUserIdResponse_Result() {}
+
+func (*GetUserIdResponse_UserId) isGetUserIdResponse_Result() {}
+
+// Get Group Id request
+type GetGroupIdRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetGroupIdRequest) Reset() {
+	*x = GetGroupIdRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetGroupIdRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetGroupIdRequest) ProtoMessage() {}
+
+func (x *GetGroupIdRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetGroupIdRequest.ProtoReflect.Descriptor instead.
+func (*GetGroupIdRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *GetGroupIdRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+type GetGroupIdResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*GetGroupIdResponse_ErrorMessage
+	//	*GetGroupIdResponse_GroupId
+	Result        isGetGroupIdResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetGroupIdResponse) Reset() {
+	*x = GetGroupIdResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetGroupIdResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetGroupIdResponse) ProtoMessage() {}
+
+func (x *GetGroupIdResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetGroupIdResponse.ProtoReflect.Descriptor instead.
+func (*GetGroupIdResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *GetGroupIdResponse) GetResult() isGetGroupIdResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *GetGroupIdResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*GetGroupIdResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *GetGroupIdResponse) GetGroupId() string {
+	if x != nil {
+		if x, ok := x.Result.(*GetGroupIdResponse_GroupId); ok {
+			return x.GroupId
+		}
+	}
+	return ""
+}
+
+type isGetGroupIdResponse_Result interface {
+	isGetGroupIdResponse_Result()
+}
+
+type GetGroupIdResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type GetGroupIdResponse_GroupId struct {
+	GroupId string `protobuf:"bytes,2,opt,name=group_id,json=groupId,proto3,oneof"`
+}
+
+func (*GetGroupIdResponse_ErrorMessage) isGetGroupIdResponse_Result() {}
+
+func (*GetGroupIdResponse_GroupId) isGetGroupIdResponse_Result() {}
+
 var File_computer_api_v1_computer_proto protoreflect.FileDescriptor
 
 const file_computer_api_v1_computer_proto_rawDesc = "" +
 	"\n" +
-	"\x1ecomputer_api/v1/computer.proto\x12\x0fcomputer_api.v1\x1a\x1bbuf/validate/validate.proto\"9\n" +
+	"\x1ecomputer_api/v1/computer.proto\x12\x0fcomputer_api.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1egoogle/protobuf/duration.proto\"9\n" +
 	"\x15CreateComputerRequest\x12 \n" +
 	"\x05image\x18\x01 \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\xff\x01R\x05image\"j\n" +
@@ -391,7 +1405,83 @@ const file_computer_api_v1_computer_proto_rawDesc = "" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\xff\x01R\tsessionId\"\x18\n" +
-	"\x16DeleteComputerResponse*f\n" +
+	"\x16DeleteComputerResponse\"\xa4\x03\n" +
+	"\x0eExecuteRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x18\n" +
+	"\acommand\x18\x02 \x01(\tR\acommand\x12\x15\n" +
+	"\x03cwd\x18\x03 \x01(\tH\x00R\x03cwd\x88\x01\x01\x12G\n" +
+	"\benv_vars\x18\x04 \x03(\v2,.computer_api.v1.ExecuteRequest.EnvVarsEntryR\aenvVars\x12\x19\n" +
+	"\x05stdin\x18\x05 \x01(\tH\x01R\x05stdin\x88\x01\x01\x12\x19\n" +
+	"\x05shell\x18\x06 \x01(\tH\x02R\x05shell\x88\x01\x01\x12\x1d\n" +
+	"\n" +
+	"shell_args\x18\a \x03(\tR\tshellArgs\x12=\n" +
+	"\n" +
+	"wait_delay\x18\b \x01(\v2\x19.google.protobuf.DurationH\x03R\twaitDelay\x88\x01\x01\x1a:\n" +
+	"\fEnvVarsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01B\x06\n" +
+	"\x04_cwdB\b\n" +
+	"\x06_stdinB\b\n" +
+	"\x06_shellB\r\n" +
+	"\v_wait_delay\"^\n" +
+	"\x0fExecutionResult\x12\x1b\n" +
+	"\texit_code\x18\x01 \x01(\x05R\bexitCode\x12\x16\n" +
+	"\x06stdout\x18\x02 \x01(\tR\x06stdout\x12\x16\n" +
+	"\x06stderr\x18\x03 \x01(\tR\x06stderr\"\x87\x01\n" +
+	"\x0fExecuteResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12C\n" +
+	"\vexec_result\x18\x02 \x01(\v2 .computer_api.v1.ExecutionResultH\x00R\n" +
+	"execResultB\b\n" +
+	"\x06result\"\x91\x01\n" +
+	"\x0fReadFileRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x12\n" +
+	"\x04path\x18\x02 \x01(\tR\x04path\x12\x1b\n" +
+	"\x06offset\x18\x03 \x01(\x03H\x00R\x06offset\x88\x01\x01\x12\x19\n" +
+	"\x05limit\x18\x04 \x01(\x05H\x01R\x05limit\x88\x01\x01B\t\n" +
+	"\a_offsetB\b\n" +
+	"\x06_limit\"_\n" +
+	"\x10ReadFileResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12\x1a\n" +
+	"\acontent\x18\x02 \x01(\fH\x00R\acontentB\b\n" +
+	"\x06result\"\x87\x01\n" +
+	"\x10WriteFileRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x12\n" +
+	"\x04path\x18\x02 \x01(\tR\x04path\x12\x18\n" +
+	"\acontent\x18\x03 \x01(\fR\acontent\x12\x1b\n" +
+	"\x06append\x18\x04 \x01(\bH\x00R\x06append\x88\x01\x01B\t\n" +
+	"\a_append\"\x16\n" +
+	"\x14SuccessWriteResponse\"\x81\x01\n" +
+	"\x11WriteFileResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12;\n" +
+	"\x04resp\x18\x02 \x01(\v2%.computer_api.v1.SuccessWriteResponseH\x00R\x04respB\b\n" +
+	"\x06result\"I\n" +
+	"\x14ListDirectoryRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x12\n" +
+	"\x04path\x18\x02 \x01(\tR\x04path\"4\n" +
+	"\x1cSuccessListDirectoryResponse\x12\x14\n" +
+	"\x05files\x18\x01 \x03(\tR\x05files\"\x95\x01\n" +
+	"\x15ListDirectoryResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12K\n" +
+	"\bresponse\x18\x02 \x01(\v2-.computer_api.v1.SuccessListDirectoryResponseH\x00R\bresponseB\b\n" +
+	"\x06result\"1\n" +
+	"\x10GetUserIdRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"_\n" +
+	"\x11GetUserIdResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12\x19\n" +
+	"\auser_id\x18\x02 \x01(\tH\x00R\x06userIdB\b\n" +
+	"\x06result\"2\n" +
+	"\x11GetGroupIdRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"b\n" +
+	"\x12GetGroupIdResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12\x1b\n" +
+	"\bgroup_id\x18\x02 \x01(\tH\x00R\agroupIdB\b\n" +
+	"\x06result*f\n" +
 	"\fComputerType\x12\x1d\n" +
 	"\x19COMPUTER_TYPE_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16COMPUTER_TYPE_HEADLESS\x10\x01\x12\x1b\n" +
@@ -399,8 +1489,15 @@ const file_computer_api_v1_computer_proto_rawDesc = "" +
 	"\x17ComputerProviderService\x12a\n" +
 	"\x0eCreateComputer\x12&.computer_api.v1.CreateComputerRequest\x1a'.computer_api.v1.CreateComputerResponse\x12d\n" +
 	"\x0fGetComputerInfo\x12'.computer_api.v1.GetComputerInfoRequest\x1a(.computer_api.v1.GetComputerInfoResponse\x12a\n" +
-	"\x0eDeleteComputer\x12&.computer_api.v1.DeleteComputerRequest\x1a'.computer_api.v1.DeleteComputerResponse2\x16\n" +
-	"\x14BasicComputerService2\x1a\n" +
+	"\x0eDeleteComputer\x12&.computer_api.v1.DeleteComputerRequest\x1a'.computer_api.v1.DeleteComputerResponse2\x94\x04\n" +
+	"\x14BasicComputerService\x12L\n" +
+	"\aExecute\x12\x1f.computer_api.v1.ExecuteRequest\x1a .computer_api.v1.ExecuteResponse\x12O\n" +
+	"\bReadFile\x12 .computer_api.v1.ReadFileRequest\x1a!.computer_api.v1.ReadFileResponse\x12R\n" +
+	"\tWriteFile\x12!.computer_api.v1.WriteFileRequest\x1a\".computer_api.v1.WriteFileResponse\x12^\n" +
+	"\rListDirectory\x12%.computer_api.v1.ListDirectoryRequest\x1a&.computer_api.v1.ListDirectoryResponse\x12R\n" +
+	"\tGetUserId\x12!.computer_api.v1.GetUserIdRequest\x1a\".computer_api.v1.GetUserIdResponse\x12U\n" +
+	"\n" +
+	"GetGroupId\x12\".computer_api.v1.GetGroupIdRequest\x1a#.computer_api.v1.GetGroupIdResponse2\x1a\n" +
 	"\x18GraphicalComputerServiceB\xe8\x01\n" +
 	"\x13com.computer_api.v1B\rComputerProtoP\x01Zigithub.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/gen/computer_api/v1;computer_apiv1\xa2\x02\x03CXX\xaa\x02\x0eComputerApi.V1\xca\x02\x0eComputerApi\\V1\xe2\x02\x1aComputerApi\\V1\\GPBMetadata\xea\x02\x0fComputerApi::V1b\x06proto3"
 
@@ -417,29 +1514,63 @@ func file_computer_api_v1_computer_proto_rawDescGZIP() []byte {
 }
 
 var file_computer_api_v1_computer_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_computer_api_v1_computer_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_computer_api_v1_computer_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_computer_api_v1_computer_proto_goTypes = []any{
-	(ComputerType)(0),               // 0: computer_api.v1.ComputerType
-	(*CreateComputerRequest)(nil),   // 1: computer_api.v1.CreateComputerRequest
-	(*CreateComputerResponse)(nil),  // 2: computer_api.v1.CreateComputerResponse
-	(*GetComputerInfoRequest)(nil),  // 3: computer_api.v1.GetComputerInfoRequest
-	(*GetComputerInfoResponse)(nil), // 4: computer_api.v1.GetComputerInfoResponse
-	(*DeleteComputerRequest)(nil),   // 5: computer_api.v1.DeleteComputerRequest
-	(*DeleteComputerResponse)(nil),  // 6: computer_api.v1.DeleteComputerResponse
+	(ComputerType)(0),                    // 0: computer_api.v1.ComputerType
+	(*CreateComputerRequest)(nil),        // 1: computer_api.v1.CreateComputerRequest
+	(*CreateComputerResponse)(nil),       // 2: computer_api.v1.CreateComputerResponse
+	(*GetComputerInfoRequest)(nil),       // 3: computer_api.v1.GetComputerInfoRequest
+	(*GetComputerInfoResponse)(nil),      // 4: computer_api.v1.GetComputerInfoResponse
+	(*DeleteComputerRequest)(nil),        // 5: computer_api.v1.DeleteComputerRequest
+	(*DeleteComputerResponse)(nil),       // 6: computer_api.v1.DeleteComputerResponse
+	(*ExecuteRequest)(nil),               // 7: computer_api.v1.ExecuteRequest
+	(*ExecutionResult)(nil),              // 8: computer_api.v1.ExecutionResult
+	(*ExecuteResponse)(nil),              // 9: computer_api.v1.ExecuteResponse
+	(*ReadFileRequest)(nil),              // 10: computer_api.v1.ReadFileRequest
+	(*ReadFileResponse)(nil),             // 11: computer_api.v1.ReadFileResponse
+	(*WriteFileRequest)(nil),             // 12: computer_api.v1.WriteFileRequest
+	(*SuccessWriteResponse)(nil),         // 13: computer_api.v1.SuccessWriteResponse
+	(*WriteFileResponse)(nil),            // 14: computer_api.v1.WriteFileResponse
+	(*ListDirectoryRequest)(nil),         // 15: computer_api.v1.ListDirectoryRequest
+	(*SuccessListDirectoryResponse)(nil), // 16: computer_api.v1.SuccessListDirectoryResponse
+	(*ListDirectoryResponse)(nil),        // 17: computer_api.v1.ListDirectoryResponse
+	(*GetUserIdRequest)(nil),             // 18: computer_api.v1.GetUserIdRequest
+	(*GetUserIdResponse)(nil),            // 19: computer_api.v1.GetUserIdResponse
+	(*GetGroupIdRequest)(nil),            // 20: computer_api.v1.GetGroupIdRequest
+	(*GetGroupIdResponse)(nil),           // 21: computer_api.v1.GetGroupIdResponse
+	nil,                                  // 22: computer_api.v1.ExecuteRequest.EnvVarsEntry
+	(*durationpb.Duration)(nil),          // 23: google.protobuf.Duration
 }
 var file_computer_api_v1_computer_proto_depIdxs = []int32{
-	0, // 0: computer_api.v1.GetComputerInfoResponse.type:type_name -> computer_api.v1.ComputerType
-	1, // 1: computer_api.v1.ComputerProviderService.CreateComputer:input_type -> computer_api.v1.CreateComputerRequest
-	3, // 2: computer_api.v1.ComputerProviderService.GetComputerInfo:input_type -> computer_api.v1.GetComputerInfoRequest
-	5, // 3: computer_api.v1.ComputerProviderService.DeleteComputer:input_type -> computer_api.v1.DeleteComputerRequest
-	2, // 4: computer_api.v1.ComputerProviderService.CreateComputer:output_type -> computer_api.v1.CreateComputerResponse
-	4, // 5: computer_api.v1.ComputerProviderService.GetComputerInfo:output_type -> computer_api.v1.GetComputerInfoResponse
-	6, // 6: computer_api.v1.ComputerProviderService.DeleteComputer:output_type -> computer_api.v1.DeleteComputerResponse
-	4, // [4:7] is the sub-list for method output_type
-	1, // [1:4] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	0,  // 0: computer_api.v1.GetComputerInfoResponse.type:type_name -> computer_api.v1.ComputerType
+	22, // 1: computer_api.v1.ExecuteRequest.env_vars:type_name -> computer_api.v1.ExecuteRequest.EnvVarsEntry
+	23, // 2: computer_api.v1.ExecuteRequest.wait_delay:type_name -> google.protobuf.Duration
+	8,  // 3: computer_api.v1.ExecuteResponse.exec_result:type_name -> computer_api.v1.ExecutionResult
+	13, // 4: computer_api.v1.WriteFileResponse.resp:type_name -> computer_api.v1.SuccessWriteResponse
+	16, // 5: computer_api.v1.ListDirectoryResponse.response:type_name -> computer_api.v1.SuccessListDirectoryResponse
+	1,  // 6: computer_api.v1.ComputerProviderService.CreateComputer:input_type -> computer_api.v1.CreateComputerRequest
+	3,  // 7: computer_api.v1.ComputerProviderService.GetComputerInfo:input_type -> computer_api.v1.GetComputerInfoRequest
+	5,  // 8: computer_api.v1.ComputerProviderService.DeleteComputer:input_type -> computer_api.v1.DeleteComputerRequest
+	7,  // 9: computer_api.v1.BasicComputerService.Execute:input_type -> computer_api.v1.ExecuteRequest
+	10, // 10: computer_api.v1.BasicComputerService.ReadFile:input_type -> computer_api.v1.ReadFileRequest
+	12, // 11: computer_api.v1.BasicComputerService.WriteFile:input_type -> computer_api.v1.WriteFileRequest
+	15, // 12: computer_api.v1.BasicComputerService.ListDirectory:input_type -> computer_api.v1.ListDirectoryRequest
+	18, // 13: computer_api.v1.BasicComputerService.GetUserId:input_type -> computer_api.v1.GetUserIdRequest
+	20, // 14: computer_api.v1.BasicComputerService.GetGroupId:input_type -> computer_api.v1.GetGroupIdRequest
+	2,  // 15: computer_api.v1.ComputerProviderService.CreateComputer:output_type -> computer_api.v1.CreateComputerResponse
+	4,  // 16: computer_api.v1.ComputerProviderService.GetComputerInfo:output_type -> computer_api.v1.GetComputerInfoResponse
+	6,  // 17: computer_api.v1.ComputerProviderService.DeleteComputer:output_type -> computer_api.v1.DeleteComputerResponse
+	9,  // 18: computer_api.v1.BasicComputerService.Execute:output_type -> computer_api.v1.ExecuteResponse
+	11, // 19: computer_api.v1.BasicComputerService.ReadFile:output_type -> computer_api.v1.ReadFileResponse
+	14, // 20: computer_api.v1.BasicComputerService.WriteFile:output_type -> computer_api.v1.WriteFileResponse
+	17, // 21: computer_api.v1.BasicComputerService.ListDirectory:output_type -> computer_api.v1.ListDirectoryResponse
+	19, // 22: computer_api.v1.BasicComputerService.GetUserId:output_type -> computer_api.v1.GetUserIdResponse
+	21, // 23: computer_api.v1.BasicComputerService.GetGroupId:output_type -> computer_api.v1.GetGroupIdResponse
+	15, // [15:24] is the sub-list for method output_type
+	6,  // [6:15] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_computer_api_v1_computer_proto_init() }
@@ -451,13 +1582,40 @@ func file_computer_api_v1_computer_proto_init() {
 		(*CreateComputerResponse_ErrorMessage)(nil),
 		(*CreateComputerResponse_SessionId)(nil),
 	}
+	file_computer_api_v1_computer_proto_msgTypes[6].OneofWrappers = []any{}
+	file_computer_api_v1_computer_proto_msgTypes[8].OneofWrappers = []any{
+		(*ExecuteResponse_ErrorMessage)(nil),
+		(*ExecuteResponse_ExecResult)(nil),
+	}
+	file_computer_api_v1_computer_proto_msgTypes[9].OneofWrappers = []any{}
+	file_computer_api_v1_computer_proto_msgTypes[10].OneofWrappers = []any{
+		(*ReadFileResponse_ErrorMessage)(nil),
+		(*ReadFileResponse_Content)(nil),
+	}
+	file_computer_api_v1_computer_proto_msgTypes[11].OneofWrappers = []any{}
+	file_computer_api_v1_computer_proto_msgTypes[13].OneofWrappers = []any{
+		(*WriteFileResponse_ErrorMessage)(nil),
+		(*WriteFileResponse_Resp)(nil),
+	}
+	file_computer_api_v1_computer_proto_msgTypes[16].OneofWrappers = []any{
+		(*ListDirectoryResponse_ErrorMessage)(nil),
+		(*ListDirectoryResponse_Response)(nil),
+	}
+	file_computer_api_v1_computer_proto_msgTypes[18].OneofWrappers = []any{
+		(*GetUserIdResponse_ErrorMessage)(nil),
+		(*GetUserIdResponse_UserId)(nil),
+	}
+	file_computer_api_v1_computer_proto_msgTypes[20].OneofWrappers = []any{
+		(*GetGroupIdResponse_ErrorMessage)(nil),
+		(*GetGroupIdResponse_GroupId)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_computer_api_v1_computer_proto_rawDesc), len(file_computer_api_v1_computer_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   6,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   3,
 		},

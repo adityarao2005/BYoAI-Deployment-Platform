@@ -257,7 +257,7 @@ func (computer *DockerComputer) Execute(ctx context.Context, execInput ExecInput
 
 		var args []string
 		if execInput.ShellArgs != nil {
-			args = append(args, *execInput.ShellArgs...)
+			args = append(args, execInput.ShellArgs...)
 		} else {
 			args = append(args, "-c")
 		}
@@ -268,7 +268,7 @@ func (computer *DockerComputer) Execute(ctx context.Context, execInput ExecInput
 	// build environment variables in KEY=VALUE format
 	var env []string
 	if execInput.Env != nil {
-		for _, e := range *execInput.Env {
+		for _, e := range execInput.Env {
 			env = append(env, fmt.Sprintf("%s=%s", e.Name, e.Value))
 		}
 	}

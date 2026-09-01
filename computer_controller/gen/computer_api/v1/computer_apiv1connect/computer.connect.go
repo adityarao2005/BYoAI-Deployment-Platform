@@ -46,6 +46,24 @@ const (
 	// ComputerProviderServiceDeleteComputerProcedure is the fully-qualified name of the
 	// ComputerProviderService's DeleteComputer RPC.
 	ComputerProviderServiceDeleteComputerProcedure = "/computer_api.v1.ComputerProviderService/DeleteComputer"
+	// BasicComputerServiceExecuteProcedure is the fully-qualified name of the BasicComputerService's
+	// Execute RPC.
+	BasicComputerServiceExecuteProcedure = "/computer_api.v1.BasicComputerService/Execute"
+	// BasicComputerServiceReadFileProcedure is the fully-qualified name of the BasicComputerService's
+	// ReadFile RPC.
+	BasicComputerServiceReadFileProcedure = "/computer_api.v1.BasicComputerService/ReadFile"
+	// BasicComputerServiceWriteFileProcedure is the fully-qualified name of the BasicComputerService's
+	// WriteFile RPC.
+	BasicComputerServiceWriteFileProcedure = "/computer_api.v1.BasicComputerService/WriteFile"
+	// BasicComputerServiceListDirectoryProcedure is the fully-qualified name of the
+	// BasicComputerService's ListDirectory RPC.
+	BasicComputerServiceListDirectoryProcedure = "/computer_api.v1.BasicComputerService/ListDirectory"
+	// BasicComputerServiceGetUserIdProcedure is the fully-qualified name of the BasicComputerService's
+	// GetUserId RPC.
+	BasicComputerServiceGetUserIdProcedure = "/computer_api.v1.BasicComputerService/GetUserId"
+	// BasicComputerServiceGetGroupIdProcedure is the fully-qualified name of the BasicComputerService's
+	// GetGroupId RPC.
+	BasicComputerServiceGetGroupIdProcedure = "/computer_api.v1.BasicComputerService/GetGroupId"
 )
 
 // ComputerProviderServiceClient is a client for the computer_api.v1.ComputerProviderService
@@ -174,6 +192,12 @@ func (UnimplementedComputerProviderServiceHandler) DeleteComputer(context.Contex
 
 // BasicComputerServiceClient is a client for the computer_api.v1.BasicComputerService service.
 type BasicComputerServiceClient interface {
+	Execute(context.Context, *connect.Request[v1.ExecuteRequest]) (*connect.Response[v1.ExecuteResponse], error)
+	ReadFile(context.Context, *connect.Request[v1.ReadFileRequest]) (*connect.Response[v1.ReadFileResponse], error)
+	WriteFile(context.Context, *connect.Request[v1.WriteFileRequest]) (*connect.Response[v1.WriteFileResponse], error)
+	ListDirectory(context.Context, *connect.Request[v1.ListDirectoryRequest]) (*connect.Response[v1.ListDirectoryResponse], error)
+	GetUserId(context.Context, *connect.Request[v1.GetUserIdRequest]) (*connect.Response[v1.GetUserIdResponse], error)
+	GetGroupId(context.Context, *connect.Request[v1.GetGroupIdRequest]) (*connect.Response[v1.GetGroupIdResponse], error)
 }
 
 // NewBasicComputerServiceClient constructs a client for the computer_api.v1.BasicComputerService
@@ -184,16 +208,97 @@ type BasicComputerServiceClient interface {
 // The URL supplied here should be the base URL for the Connect or gRPC server (for example,
 // http://api.acme.com or https://acme.com/grpc).
 func NewBasicComputerServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) BasicComputerServiceClient {
-	return &basicComputerServiceClient{}
+	baseURL = strings.TrimRight(baseURL, "/")
+	basicComputerServiceMethods := v1.File_computer_api_v1_computer_proto.Services().ByName("BasicComputerService").Methods()
+	return &basicComputerServiceClient{
+		execute: connect.NewClient[v1.ExecuteRequest, v1.ExecuteResponse](
+			httpClient,
+			baseURL+BasicComputerServiceExecuteProcedure,
+			connect.WithSchema(basicComputerServiceMethods.ByName("Execute")),
+			connect.WithClientOptions(opts...),
+		),
+		readFile: connect.NewClient[v1.ReadFileRequest, v1.ReadFileResponse](
+			httpClient,
+			baseURL+BasicComputerServiceReadFileProcedure,
+			connect.WithSchema(basicComputerServiceMethods.ByName("ReadFile")),
+			connect.WithClientOptions(opts...),
+		),
+		writeFile: connect.NewClient[v1.WriteFileRequest, v1.WriteFileResponse](
+			httpClient,
+			baseURL+BasicComputerServiceWriteFileProcedure,
+			connect.WithSchema(basicComputerServiceMethods.ByName("WriteFile")),
+			connect.WithClientOptions(opts...),
+		),
+		listDirectory: connect.NewClient[v1.ListDirectoryRequest, v1.ListDirectoryResponse](
+			httpClient,
+			baseURL+BasicComputerServiceListDirectoryProcedure,
+			connect.WithSchema(basicComputerServiceMethods.ByName("ListDirectory")),
+			connect.WithClientOptions(opts...),
+		),
+		getUserId: connect.NewClient[v1.GetUserIdRequest, v1.GetUserIdResponse](
+			httpClient,
+			baseURL+BasicComputerServiceGetUserIdProcedure,
+			connect.WithSchema(basicComputerServiceMethods.ByName("GetUserId")),
+			connect.WithClientOptions(opts...),
+		),
+		getGroupId: connect.NewClient[v1.GetGroupIdRequest, v1.GetGroupIdResponse](
+			httpClient,
+			baseURL+BasicComputerServiceGetGroupIdProcedure,
+			connect.WithSchema(basicComputerServiceMethods.ByName("GetGroupId")),
+			connect.WithClientOptions(opts...),
+		),
+	}
 }
 
 // basicComputerServiceClient implements BasicComputerServiceClient.
 type basicComputerServiceClient struct {
+	execute       *connect.Client[v1.ExecuteRequest, v1.ExecuteResponse]
+	readFile      *connect.Client[v1.ReadFileRequest, v1.ReadFileResponse]
+	writeFile     *connect.Client[v1.WriteFileRequest, v1.WriteFileResponse]
+	listDirectory *connect.Client[v1.ListDirectoryRequest, v1.ListDirectoryResponse]
+	getUserId     *connect.Client[v1.GetUserIdRequest, v1.GetUserIdResponse]
+	getGroupId    *connect.Client[v1.GetGroupIdRequest, v1.GetGroupIdResponse]
+}
+
+// Execute calls computer_api.v1.BasicComputerService.Execute.
+func (c *basicComputerServiceClient) Execute(ctx context.Context, req *connect.Request[v1.ExecuteRequest]) (*connect.Response[v1.ExecuteResponse], error) {
+	return c.execute.CallUnary(ctx, req)
+}
+
+// ReadFile calls computer_api.v1.BasicComputerService.ReadFile.
+func (c *basicComputerServiceClient) ReadFile(ctx context.Context, req *connect.Request[v1.ReadFileRequest]) (*connect.Response[v1.ReadFileResponse], error) {
+	return c.readFile.CallUnary(ctx, req)
+}
+
+// WriteFile calls computer_api.v1.BasicComputerService.WriteFile.
+func (c *basicComputerServiceClient) WriteFile(ctx context.Context, req *connect.Request[v1.WriteFileRequest]) (*connect.Response[v1.WriteFileResponse], error) {
+	return c.writeFile.CallUnary(ctx, req)
+}
+
+// ListDirectory calls computer_api.v1.BasicComputerService.ListDirectory.
+func (c *basicComputerServiceClient) ListDirectory(ctx context.Context, req *connect.Request[v1.ListDirectoryRequest]) (*connect.Response[v1.ListDirectoryResponse], error) {
+	return c.listDirectory.CallUnary(ctx, req)
+}
+
+// GetUserId calls computer_api.v1.BasicComputerService.GetUserId.
+func (c *basicComputerServiceClient) GetUserId(ctx context.Context, req *connect.Request[v1.GetUserIdRequest]) (*connect.Response[v1.GetUserIdResponse], error) {
+	return c.getUserId.CallUnary(ctx, req)
+}
+
+// GetGroupId calls computer_api.v1.BasicComputerService.GetGroupId.
+func (c *basicComputerServiceClient) GetGroupId(ctx context.Context, req *connect.Request[v1.GetGroupIdRequest]) (*connect.Response[v1.GetGroupIdResponse], error) {
+	return c.getGroupId.CallUnary(ctx, req)
 }
 
 // BasicComputerServiceHandler is an implementation of the computer_api.v1.BasicComputerService
 // service.
 type BasicComputerServiceHandler interface {
+	Execute(context.Context, *connect.Request[v1.ExecuteRequest]) (*connect.Response[v1.ExecuteResponse], error)
+	ReadFile(context.Context, *connect.Request[v1.ReadFileRequest]) (*connect.Response[v1.ReadFileResponse], error)
+	WriteFile(context.Context, *connect.Request[v1.WriteFileRequest]) (*connect.Response[v1.WriteFileResponse], error)
+	ListDirectory(context.Context, *connect.Request[v1.ListDirectoryRequest]) (*connect.Response[v1.ListDirectoryResponse], error)
+	GetUserId(context.Context, *connect.Request[v1.GetUserIdRequest]) (*connect.Response[v1.GetUserIdResponse], error)
+	GetGroupId(context.Context, *connect.Request[v1.GetGroupIdRequest]) (*connect.Response[v1.GetGroupIdResponse], error)
 }
 
 // NewBasicComputerServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -202,8 +307,57 @@ type BasicComputerServiceHandler interface {
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
 func NewBasicComputerServiceHandler(svc BasicComputerServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
+	basicComputerServiceMethods := v1.File_computer_api_v1_computer_proto.Services().ByName("BasicComputerService").Methods()
+	basicComputerServiceExecuteHandler := connect.NewUnaryHandler(
+		BasicComputerServiceExecuteProcedure,
+		svc.Execute,
+		connect.WithSchema(basicComputerServiceMethods.ByName("Execute")),
+		connect.WithHandlerOptions(opts...),
+	)
+	basicComputerServiceReadFileHandler := connect.NewUnaryHandler(
+		BasicComputerServiceReadFileProcedure,
+		svc.ReadFile,
+		connect.WithSchema(basicComputerServiceMethods.ByName("ReadFile")),
+		connect.WithHandlerOptions(opts...),
+	)
+	basicComputerServiceWriteFileHandler := connect.NewUnaryHandler(
+		BasicComputerServiceWriteFileProcedure,
+		svc.WriteFile,
+		connect.WithSchema(basicComputerServiceMethods.ByName("WriteFile")),
+		connect.WithHandlerOptions(opts...),
+	)
+	basicComputerServiceListDirectoryHandler := connect.NewUnaryHandler(
+		BasicComputerServiceListDirectoryProcedure,
+		svc.ListDirectory,
+		connect.WithSchema(basicComputerServiceMethods.ByName("ListDirectory")),
+		connect.WithHandlerOptions(opts...),
+	)
+	basicComputerServiceGetUserIdHandler := connect.NewUnaryHandler(
+		BasicComputerServiceGetUserIdProcedure,
+		svc.GetUserId,
+		connect.WithSchema(basicComputerServiceMethods.ByName("GetUserId")),
+		connect.WithHandlerOptions(opts...),
+	)
+	basicComputerServiceGetGroupIdHandler := connect.NewUnaryHandler(
+		BasicComputerServiceGetGroupIdProcedure,
+		svc.GetGroupId,
+		connect.WithSchema(basicComputerServiceMethods.ByName("GetGroupId")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/computer_api.v1.BasicComputerService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case BasicComputerServiceExecuteProcedure:
+			basicComputerServiceExecuteHandler.ServeHTTP(w, r)
+		case BasicComputerServiceReadFileProcedure:
+			basicComputerServiceReadFileHandler.ServeHTTP(w, r)
+		case BasicComputerServiceWriteFileProcedure:
+			basicComputerServiceWriteFileHandler.ServeHTTP(w, r)
+		case BasicComputerServiceListDirectoryProcedure:
+			basicComputerServiceListDirectoryHandler.ServeHTTP(w, r)
+		case BasicComputerServiceGetUserIdProcedure:
+			basicComputerServiceGetUserIdHandler.ServeHTTP(w, r)
+		case BasicComputerServiceGetGroupIdProcedure:
+			basicComputerServiceGetGroupIdHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -212,6 +366,30 @@ func NewBasicComputerServiceHandler(svc BasicComputerServiceHandler, opts ...con
 
 // UnimplementedBasicComputerServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedBasicComputerServiceHandler struct{}
+
+func (UnimplementedBasicComputerServiceHandler) Execute(context.Context, *connect.Request[v1.ExecuteRequest]) (*connect.Response[v1.ExecuteResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.BasicComputerService.Execute is not implemented"))
+}
+
+func (UnimplementedBasicComputerServiceHandler) ReadFile(context.Context, *connect.Request[v1.ReadFileRequest]) (*connect.Response[v1.ReadFileResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.BasicComputerService.ReadFile is not implemented"))
+}
+
+func (UnimplementedBasicComputerServiceHandler) WriteFile(context.Context, *connect.Request[v1.WriteFileRequest]) (*connect.Response[v1.WriteFileResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.BasicComputerService.WriteFile is not implemented"))
+}
+
+func (UnimplementedBasicComputerServiceHandler) ListDirectory(context.Context, *connect.Request[v1.ListDirectoryRequest]) (*connect.Response[v1.ListDirectoryResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.BasicComputerService.ListDirectory is not implemented"))
+}
+
+func (UnimplementedBasicComputerServiceHandler) GetUserId(context.Context, *connect.Request[v1.GetUserIdRequest]) (*connect.Response[v1.GetUserIdResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.BasicComputerService.GetUserId is not implemented"))
+}
+
+func (UnimplementedBasicComputerServiceHandler) GetGroupId(context.Context, *connect.Request[v1.GetGroupIdRequest]) (*connect.Response[v1.GetGroupIdResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.BasicComputerService.GetGroupId is not implemented"))
+}
 
 // GraphicalComputerServiceClient is a client for the computer_api.v1.GraphicalComputerService
 // service.

@@ -69,7 +69,7 @@ func (c *DockerGraphicalComputer) executeGraphical(ctx context.Context, command 
 	env := []EnvVar{{Name: "DISPLAY", Value: c.display}}
 	return c.Execute(ctx, ExecInput{
 		Command: command,
-		Env:     &env,
+		Env:     env,
 	})
 }
 
@@ -215,7 +215,7 @@ func (c *DockerGraphicalComputer) SetClipboard(ctx context.Context, text string)
 	return func() error {
 		result, err := c.Execute(ctx, ExecInput{
 			Command: "xclip -selection clipboard",
-			Env:     &env,
+			Env:     env,
 			Stdin:   &stdin,
 		})
 		if err != nil {

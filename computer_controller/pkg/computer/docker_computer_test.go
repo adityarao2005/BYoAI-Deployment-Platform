@@ -126,7 +126,7 @@ func TestDockerComputerExecute(t *testing.T) {
 		input := ExecInput{
 			Command: "echo $MY_TEST_VAR && pwd",
 			Cwd:     &cwd,
-			Env:     &env,
+			Env:     env,
 		}
 
 		res, err := comp.Execute(ctx, input)

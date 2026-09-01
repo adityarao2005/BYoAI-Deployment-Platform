@@ -5,13 +5,15 @@
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
 import { enumDesc, fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
 import { file_buf_validate_validate } from "../../buf/validate/validate_pb";
+import type { Duration } from "@bufbuild/protobuf/wkt";
+import { file_google_protobuf_duration } from "@bufbuild/protobuf/wkt";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file computer_api/v1/computer.proto.
  */
 export const file_computer_api_v1_computer: GenFile = /*@__PURE__*/
-  fileDesc("Ch5jb21wdXRlcl9hcGkvdjEvY29tcHV0ZXIucHJvdG8SD2NvbXB1dGVyX2FwaS52MSIyChVDcmVhdGVDb21wdXRlclJlcXVlc3QSGQoFaW1hZ2UYASABKAlCCrpIB3IFEAEY/wEiUQoWQ3JlYXRlQ29tcHV0ZXJSZXNwb25zZRIXCg1lcnJvcl9tZXNzYWdlGAEgASgJSAASFAoKc2Vzc2lvbl9pZBgCIAEoCUgAQggKBnJlc3VsdCI4ChZHZXRDb21wdXRlckluZm9SZXF1ZXN0Eh4KCnNlc3Npb25faWQYASABKAlCCrpIB3IFEAEY/wEiRgoXR2V0Q29tcHV0ZXJJbmZvUmVzcG9uc2USKwoEdHlwZRgBIAEoDjIdLmNvbXB1dGVyX2FwaS52MS5Db21wdXRlclR5cGUiNwoVRGVsZXRlQ29tcHV0ZXJSZXF1ZXN0Eh4KCnNlc3Npb25faWQYASABKAlCCrpIB3IFEAEY/wEiGAoWRGVsZXRlQ29tcHV0ZXJSZXNwb25zZSpmCgxDb21wdXRlclR5cGUSHQoZQ09NUFVURVJfVFlQRV9VTlNQRUNJRklFRBAAEhoKFkNPTVBVVEVSX1RZUEVfSEVBRExFU1MQARIbChdDT01QVVRFUl9UWVBFX0dSQVBISUNBTBACMsUCChdDb21wdXRlclByb3ZpZGVyU2VydmljZRJhCg5DcmVhdGVDb21wdXRlchImLmNvbXB1dGVyX2FwaS52MS5DcmVhdGVDb21wdXRlclJlcXVlc3QaJy5jb21wdXRlcl9hcGkudjEuQ3JlYXRlQ29tcHV0ZXJSZXNwb25zZRJkCg9HZXRDb21wdXRlckluZm8SJy5jb21wdXRlcl9hcGkudjEuR2V0Q29tcHV0ZXJJbmZvUmVxdWVzdBooLmNvbXB1dGVyX2FwaS52MS5HZXRDb21wdXRlckluZm9SZXNwb25zZRJhCg5EZWxldGVDb21wdXRlchImLmNvbXB1dGVyX2FwaS52MS5EZWxldGVDb21wdXRlclJlcXVlc3QaJy5jb21wdXRlcl9hcGkudjEuRGVsZXRlQ29tcHV0ZXJSZXNwb25zZTIWChRCYXNpY0NvbXB1dGVyU2VydmljZTIaChhHcmFwaGljYWxDb21wdXRlclNlcnZpY2VC6AEKE2NvbS5jb21wdXRlcl9hcGkudjFCDUNvbXB1dGVyUHJvdG9QAVppZ2l0aHViLmNvbS9hZGl0eWFyYW8yMDA1L0JZb0FJLURlcGxveW1lbnQtUGxhdGZvcm0vY29tcHV0ZXJfY29udHJvbGxlci9nZW4vY29tcHV0ZXJfYXBpL3YxO2NvbXB1dGVyX2FwaXYxogIDQ1hYqgIOQ29tcHV0ZXJBcGkuVjHKAg5Db21wdXRlckFwaVxWMeICGkNvbXB1dGVyQXBpXFYxXEdQQk1ldGFkYXRh6gIPQ29tcHV0ZXJBcGk6OlYxYgZwcm90bzM", [file_buf_validate_validate]);
+  fileDesc("Ch5jb21wdXRlcl9hcGkvdjEvY29tcHV0ZXIucHJvdG8SD2NvbXB1dGVyX2FwaS52MSIyChVDcmVhdGVDb21wdXRlclJlcXVlc3QSGQoFaW1hZ2UYASABKAlCCrpIB3IFEAEY/wEiUQoWQ3JlYXRlQ29tcHV0ZXJSZXNwb25zZRIXCg1lcnJvcl9tZXNzYWdlGAEgASgJSAASFAoKc2Vzc2lvbl9pZBgCIAEoCUgAQggKBnJlc3VsdCI4ChZHZXRDb21wdXRlckluZm9SZXF1ZXN0Eh4KCnNlc3Npb25faWQYASABKAlCCrpIB3IFEAEY/wEiRgoXR2V0Q29tcHV0ZXJJbmZvUmVzcG9uc2USKwoEdHlwZRgBIAEoDjIdLmNvbXB1dGVyX2FwaS52MS5Db21wdXRlclR5cGUiNwoVRGVsZXRlQ29tcHV0ZXJSZXF1ZXN0Eh4KCnNlc3Npb25faWQYASABKAlCCrpIB3IFEAEY/wEiGAoWRGVsZXRlQ29tcHV0ZXJSZXNwb25zZSLSAgoORXhlY3V0ZVJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRIPCgdjb21tYW5kGAIgASgJEhAKA2N3ZBgDIAEoCUgAiAEBEj4KCGVudl92YXJzGAQgAygLMiwuY29tcHV0ZXJfYXBpLnYxLkV4ZWN1dGVSZXF1ZXN0LkVudlZhcnNFbnRyeRISCgVzdGRpbhgFIAEoCUgBiAEBEhIKBXNoZWxsGAYgASgJSAKIAQESEgoKc2hlbGxfYXJncxgHIAMoCRIyCgp3YWl0X2RlbGF5GAggASgLMhkuZ29vZ2xlLnByb3RvYnVmLkR1cmF0aW9uSAOIAQEaLgoMRW52VmFyc0VudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAFCBgoEX2N3ZEIICgZfc3RkaW5CCAoGX3NoZWxsQg0KC193YWl0X2RlbGF5IkQKD0V4ZWN1dGlvblJlc3VsdBIRCglleGl0X2NvZGUYASABKAUSDgoGc3Rkb3V0GAIgASgJEg4KBnN0ZGVychgDIAEoCSJtCg9FeGVjdXRlUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEjcKC2V4ZWNfcmVzdWx0GAIgASgLMiAuY29tcHV0ZXJfYXBpLnYxLkV4ZWN1dGlvblJlc3VsdEgAQggKBnJlc3VsdCJxCg9SZWFkRmlsZVJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRIMCgRwYXRoGAIgASgJEhMKBm9mZnNldBgDIAEoA0gAiAEBEhIKBWxpbWl0GAQgASgFSAGIAQFCCQoHX29mZnNldEIICgZfbGltaXQiSAoQUmVhZEZpbGVSZXNwb25zZRIXCg1lcnJvcl9tZXNzYWdlGAEgASgJSAASEQoHY29udGVudBgCIAEoDEgAQggKBnJlc3VsdCJlChBXcml0ZUZpbGVSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkSDAoEcGF0aBgCIAEoCRIPCgdjb250ZW50GAMgASgMEhMKBmFwcGVuZBgEIAEoCEgAiAEBQgkKB19hcHBlbmQiFgoUU3VjY2Vzc1dyaXRlUmVzcG9uc2UibQoRV3JpdGVGaWxlUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEjUKBHJlc3AYAiABKAsyJS5jb21wdXRlcl9hcGkudjEuU3VjY2Vzc1dyaXRlUmVzcG9uc2VIAEIICgZyZXN1bHQiOAoUTGlzdERpcmVjdG9yeVJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRIMCgRwYXRoGAIgASgJIi0KHFN1Y2Nlc3NMaXN0RGlyZWN0b3J5UmVzcG9uc2USDQoFZmlsZXMYASADKAkifQoVTGlzdERpcmVjdG9yeVJlc3BvbnNlEhcKDWVycm9yX21lc3NhZ2UYASABKAlIABJBCghyZXNwb25zZRgCIAEoCzItLmNvbXB1dGVyX2FwaS52MS5TdWNjZXNzTGlzdERpcmVjdG9yeVJlc3BvbnNlSABCCAoGcmVzdWx0IiYKEEdldFVzZXJJZFJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCSJJChFHZXRVc2VySWRSZXNwb25zZRIXCg1lcnJvcl9tZXNzYWdlGAEgASgJSAASEQoHdXNlcl9pZBgCIAEoCUgAQggKBnJlc3VsdCInChFHZXRHcm91cElkUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJIksKEkdldEdyb3VwSWRSZXNwb25zZRIXCg1lcnJvcl9tZXNzYWdlGAEgASgJSAASEgoIZ3JvdXBfaWQYAiABKAlIAEIICgZyZXN1bHQqZgoMQ29tcHV0ZXJUeXBlEh0KGUNPTVBVVEVSX1RZUEVfVU5TUEVDSUZJRUQQABIaChZDT01QVVRFUl9UWVBFX0hFQURMRVNTEAESGwoXQ09NUFVURVJfVFlQRV9HUkFQSElDQUwQAjLFAgoXQ29tcHV0ZXJQcm92aWRlclNlcnZpY2USYQoOQ3JlYXRlQ29tcHV0ZXISJi5jb21wdXRlcl9hcGkudjEuQ3JlYXRlQ29tcHV0ZXJSZXF1ZXN0GicuY29tcHV0ZXJfYXBpLnYxLkNyZWF0ZUNvbXB1dGVyUmVzcG9uc2USZAoPR2V0Q29tcHV0ZXJJbmZvEicuY29tcHV0ZXJfYXBpLnYxLkdldENvbXB1dGVySW5mb1JlcXVlc3QaKC5jb21wdXRlcl9hcGkudjEuR2V0Q29tcHV0ZXJJbmZvUmVzcG9uc2USYQoORGVsZXRlQ29tcHV0ZXISJi5jb21wdXRlcl9hcGkudjEuRGVsZXRlQ29tcHV0ZXJSZXF1ZXN0GicuY29tcHV0ZXJfYXBpLnYxLkRlbGV0ZUNvbXB1dGVyUmVzcG9uc2UylAQKFEJhc2ljQ29tcHV0ZXJTZXJ2aWNlEkwKB0V4ZWN1dGUSHy5jb21wdXRlcl9hcGkudjEuRXhlY3V0ZVJlcXVlc3QaIC5jb21wdXRlcl9hcGkudjEuRXhlY3V0ZVJlc3BvbnNlEk8KCFJlYWRGaWxlEiAuY29tcHV0ZXJfYXBpLnYxLlJlYWRGaWxlUmVxdWVzdBohLmNvbXB1dGVyX2FwaS52MS5SZWFkRmlsZVJlc3BvbnNlElIKCVdyaXRlRmlsZRIhLmNvbXB1dGVyX2FwaS52MS5Xcml0ZUZpbGVSZXF1ZXN0GiIuY29tcHV0ZXJfYXBpLnYxLldyaXRlRmlsZVJlc3BvbnNlEl4KDUxpc3REaXJlY3RvcnkSJS5jb21wdXRlcl9hcGkudjEuTGlzdERpcmVjdG9yeVJlcXVlc3QaJi5jb21wdXRlcl9hcGkudjEuTGlzdERpcmVjdG9yeVJlc3BvbnNlElIKCUdldFVzZXJJZBIhLmNvbXB1dGVyX2FwaS52MS5HZXRVc2VySWRSZXF1ZXN0GiIuY29tcHV0ZXJfYXBpLnYxLkdldFVzZXJJZFJlc3BvbnNlElUKCkdldEdyb3VwSWQSIi5jb21wdXRlcl9hcGkudjEuR2V0R3JvdXBJZFJlcXVlc3QaIy5jb21wdXRlcl9hcGkudjEuR2V0R3JvdXBJZFJlc3BvbnNlMhoKGEdyYXBoaWNhbENvbXB1dGVyU2VydmljZULoAQoTY29tLmNvbXB1dGVyX2FwaS52MUINQ29tcHV0ZXJQcm90b1ABWmlnaXRodWIuY29tL2FkaXR5YXJhbzIwMDUvQllvQUktRGVwbG95bWVudC1QbGF0Zm9ybS9jb21wdXRlcl9jb250cm9sbGVyL2dlbi9jb21wdXRlcl9hcGkvdjE7Y29tcHV0ZXJfYXBpdjGiAgNDWFiqAg5Db21wdXRlckFwaS5WMcoCDkNvbXB1dGVyQXBpXFYx4gIaQ29tcHV0ZXJBcGlcVjFcR1BCTWV0YWRhdGHqAg9Db21wdXRlckFwaTo6VjFiBnByb3RvMw", [file_buf_validate_validate, file_google_protobuf_duration]);
 
 /**
  * create computer request
@@ -130,6 +132,423 @@ export const DeleteComputerResponseSchema: GenMessage<DeleteComputerResponse> = 
   messageDesc(file_computer_api_v1_computer, 5);
 
 /**
+ * execute
+ *
+ * @generated from message computer_api.v1.ExecuteRequest
+ */
+export type ExecuteRequest = Message<"computer_api.v1.ExecuteRequest"> & {
+  /**
+   * @generated from field: string session_id = 1;
+   */
+  sessionId: string;
+
+  /**
+   * @generated from field: string command = 2;
+   */
+  command: string;
+
+  /**
+   * @generated from field: optional string cwd = 3;
+   */
+  cwd?: string | undefined;
+
+  /**
+   * @generated from field: map<string, string> env_vars = 4;
+   */
+  envVars: { [key: string]: string };
+
+  /**
+   * @generated from field: optional string stdin = 5;
+   */
+  stdin?: string | undefined;
+
+  /**
+   * @generated from field: optional string shell = 6;
+   */
+  shell?: string | undefined;
+
+  /**
+   * @generated from field: repeated string shell_args = 7;
+   */
+  shellArgs: string[];
+
+  /**
+   * @generated from field: optional google.protobuf.Duration wait_delay = 8;
+   */
+  waitDelay?: Duration | undefined;
+};
+
+/**
+ * Describes the message computer_api.v1.ExecuteRequest.
+ * Use `create(ExecuteRequestSchema)` to create a new message.
+ */
+export const ExecuteRequestSchema: GenMessage<ExecuteRequest> = /*@__PURE__*/
+  messageDesc(file_computer_api_v1_computer, 6);
+
+/**
+ * @generated from message computer_api.v1.ExecutionResult
+ */
+export type ExecutionResult = Message<"computer_api.v1.ExecutionResult"> & {
+  /**
+   * @generated from field: int32 exit_code = 1;
+   */
+  exitCode: number;
+
+  /**
+   * @generated from field: string stdout = 2;
+   */
+  stdout: string;
+
+  /**
+   * @generated from field: string stderr = 3;
+   */
+  stderr: string;
+};
+
+/**
+ * Describes the message computer_api.v1.ExecutionResult.
+ * Use `create(ExecutionResultSchema)` to create a new message.
+ */
+export const ExecutionResultSchema: GenMessage<ExecutionResult> = /*@__PURE__*/
+  messageDesc(file_computer_api_v1_computer, 7);
+
+/**
+ * @generated from message computer_api.v1.ExecuteResponse
+ */
+export type ExecuteResponse = Message<"computer_api.v1.ExecuteResponse"> & {
+  /**
+   * @generated from oneof computer_api.v1.ExecuteResponse.result
+   */
+  result: {
+    /**
+     * @generated from field: string error_message = 1;
+     */
+    value: string;
+    case: "errorMessage";
+  } | {
+    /**
+     * @generated from field: computer_api.v1.ExecutionResult exec_result = 2;
+     */
+    value: ExecutionResult;
+    case: "execResult";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message computer_api.v1.ExecuteResponse.
+ * Use `create(ExecuteResponseSchema)` to create a new message.
+ */
+export const ExecuteResponseSchema: GenMessage<ExecuteResponse> = /*@__PURE__*/
+  messageDesc(file_computer_api_v1_computer, 8);
+
+/**
+ * read file
+ *
+ * @generated from message computer_api.v1.ReadFileRequest
+ */
+export type ReadFileRequest = Message<"computer_api.v1.ReadFileRequest"> & {
+  /**
+   * @generated from field: string session_id = 1;
+   */
+  sessionId: string;
+
+  /**
+   * @generated from field: string path = 2;
+   */
+  path: string;
+
+  /**
+   * optional byte offset (e.g start at byte 1024)
+   *
+   * @generated from field: optional int64 offset = 3;
+   */
+  offset?: bigint | undefined;
+
+  /**
+   * Optional byte limit (e.g. read max 4096 bytes)
+   *
+   * @generated from field: optional int32 limit = 4;
+   */
+  limit?: number | undefined;
+};
+
+/**
+ * Describes the message computer_api.v1.ReadFileRequest.
+ * Use `create(ReadFileRequestSchema)` to create a new message.
+ */
+export const ReadFileRequestSchema: GenMessage<ReadFileRequest> = /*@__PURE__*/
+  messageDesc(file_computer_api_v1_computer, 9);
+
+/**
+ * @generated from message computer_api.v1.ReadFileResponse
+ */
+export type ReadFileResponse = Message<"computer_api.v1.ReadFileResponse"> & {
+  /**
+   * @generated from oneof computer_api.v1.ReadFileResponse.result
+   */
+  result: {
+    /**
+     * @generated from field: string error_message = 1;
+     */
+    value: string;
+    case: "errorMessage";
+  } | {
+    /**
+     * @generated from field: bytes content = 2;
+     */
+    value: Uint8Array;
+    case: "content";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message computer_api.v1.ReadFileResponse.
+ * Use `create(ReadFileResponseSchema)` to create a new message.
+ */
+export const ReadFileResponseSchema: GenMessage<ReadFileResponse> = /*@__PURE__*/
+  messageDesc(file_computer_api_v1_computer, 10);
+
+/**
+ * write file
+ *
+ * @generated from message computer_api.v1.WriteFileRequest
+ */
+export type WriteFileRequest = Message<"computer_api.v1.WriteFileRequest"> & {
+  /**
+   * @generated from field: string session_id = 1;
+   */
+  sessionId: string;
+
+  /**
+   * @generated from field: string path = 2;
+   */
+  path: string;
+
+  /**
+   * @generated from field: bytes content = 3;
+   */
+  content: Uint8Array;
+
+  /**
+   * @generated from field: optional bool append = 4;
+   */
+  append?: boolean | undefined;
+};
+
+/**
+ * Describes the message computer_api.v1.WriteFileRequest.
+ * Use `create(WriteFileRequestSchema)` to create a new message.
+ */
+export const WriteFileRequestSchema: GenMessage<WriteFileRequest> = /*@__PURE__*/
+  messageDesc(file_computer_api_v1_computer, 11);
+
+/**
+ * @generated from message computer_api.v1.SuccessWriteResponse
+ */
+export type SuccessWriteResponse = Message<"computer_api.v1.SuccessWriteResponse"> & {
+};
+
+/**
+ * Describes the message computer_api.v1.SuccessWriteResponse.
+ * Use `create(SuccessWriteResponseSchema)` to create a new message.
+ */
+export const SuccessWriteResponseSchema: GenMessage<SuccessWriteResponse> = /*@__PURE__*/
+  messageDesc(file_computer_api_v1_computer, 12);
+
+/**
+ * @generated from message computer_api.v1.WriteFileResponse
+ */
+export type WriteFileResponse = Message<"computer_api.v1.WriteFileResponse"> & {
+  /**
+   * @generated from oneof computer_api.v1.WriteFileResponse.result
+   */
+  result: {
+    /**
+     * @generated from field: string error_message = 1;
+     */
+    value: string;
+    case: "errorMessage";
+  } | {
+    /**
+     * @generated from field: computer_api.v1.SuccessWriteResponse resp = 2;
+     */
+    value: SuccessWriteResponse;
+    case: "resp";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message computer_api.v1.WriteFileResponse.
+ * Use `create(WriteFileResponseSchema)` to create a new message.
+ */
+export const WriteFileResponseSchema: GenMessage<WriteFileResponse> = /*@__PURE__*/
+  messageDesc(file_computer_api_v1_computer, 13);
+
+/**
+ * @generated from message computer_api.v1.ListDirectoryRequest
+ */
+export type ListDirectoryRequest = Message<"computer_api.v1.ListDirectoryRequest"> & {
+  /**
+   * @generated from field: string session_id = 1;
+   */
+  sessionId: string;
+
+  /**
+   * @generated from field: string path = 2;
+   */
+  path: string;
+};
+
+/**
+ * Describes the message computer_api.v1.ListDirectoryRequest.
+ * Use `create(ListDirectoryRequestSchema)` to create a new message.
+ */
+export const ListDirectoryRequestSchema: GenMessage<ListDirectoryRequest> = /*@__PURE__*/
+  messageDesc(file_computer_api_v1_computer, 14);
+
+/**
+ * @generated from message computer_api.v1.SuccessListDirectoryResponse
+ */
+export type SuccessListDirectoryResponse = Message<"computer_api.v1.SuccessListDirectoryResponse"> & {
+  /**
+   * @generated from field: repeated string files = 1;
+   */
+  files: string[];
+};
+
+/**
+ * Describes the message computer_api.v1.SuccessListDirectoryResponse.
+ * Use `create(SuccessListDirectoryResponseSchema)` to create a new message.
+ */
+export const SuccessListDirectoryResponseSchema: GenMessage<SuccessListDirectoryResponse> = /*@__PURE__*/
+  messageDesc(file_computer_api_v1_computer, 15);
+
+/**
+ * @generated from message computer_api.v1.ListDirectoryResponse
+ */
+export type ListDirectoryResponse = Message<"computer_api.v1.ListDirectoryResponse"> & {
+  /**
+   * @generated from oneof computer_api.v1.ListDirectoryResponse.result
+   */
+  result: {
+    /**
+     * @generated from field: string error_message = 1;
+     */
+    value: string;
+    case: "errorMessage";
+  } | {
+    /**
+     * @generated from field: computer_api.v1.SuccessListDirectoryResponse response = 2;
+     */
+    value: SuccessListDirectoryResponse;
+    case: "response";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message computer_api.v1.ListDirectoryResponse.
+ * Use `create(ListDirectoryResponseSchema)` to create a new message.
+ */
+export const ListDirectoryResponseSchema: GenMessage<ListDirectoryResponse> = /*@__PURE__*/
+  messageDesc(file_computer_api_v1_computer, 16);
+
+/**
+ * Get User Id request
+ *
+ * @generated from message computer_api.v1.GetUserIdRequest
+ */
+export type GetUserIdRequest = Message<"computer_api.v1.GetUserIdRequest"> & {
+  /**
+   * @generated from field: string session_id = 1;
+   */
+  sessionId: string;
+};
+
+/**
+ * Describes the message computer_api.v1.GetUserIdRequest.
+ * Use `create(GetUserIdRequestSchema)` to create a new message.
+ */
+export const GetUserIdRequestSchema: GenMessage<GetUserIdRequest> = /*@__PURE__*/
+  messageDesc(file_computer_api_v1_computer, 17);
+
+/**
+ * @generated from message computer_api.v1.GetUserIdResponse
+ */
+export type GetUserIdResponse = Message<"computer_api.v1.GetUserIdResponse"> & {
+  /**
+   * @generated from oneof computer_api.v1.GetUserIdResponse.result
+   */
+  result: {
+    /**
+     * @generated from field: string error_message = 1;
+     */
+    value: string;
+    case: "errorMessage";
+  } | {
+    /**
+     * @generated from field: string user_id = 2;
+     */
+    value: string;
+    case: "userId";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message computer_api.v1.GetUserIdResponse.
+ * Use `create(GetUserIdResponseSchema)` to create a new message.
+ */
+export const GetUserIdResponseSchema: GenMessage<GetUserIdResponse> = /*@__PURE__*/
+  messageDesc(file_computer_api_v1_computer, 18);
+
+/**
+ * Get Group Id request
+ *
+ * @generated from message computer_api.v1.GetGroupIdRequest
+ */
+export type GetGroupIdRequest = Message<"computer_api.v1.GetGroupIdRequest"> & {
+  /**
+   * @generated from field: string session_id = 1;
+   */
+  sessionId: string;
+};
+
+/**
+ * Describes the message computer_api.v1.GetGroupIdRequest.
+ * Use `create(GetGroupIdRequestSchema)` to create a new message.
+ */
+export const GetGroupIdRequestSchema: GenMessage<GetGroupIdRequest> = /*@__PURE__*/
+  messageDesc(file_computer_api_v1_computer, 19);
+
+/**
+ * @generated from message computer_api.v1.GetGroupIdResponse
+ */
+export type GetGroupIdResponse = Message<"computer_api.v1.GetGroupIdResponse"> & {
+  /**
+   * @generated from oneof computer_api.v1.GetGroupIdResponse.result
+   */
+  result: {
+    /**
+     * @generated from field: string error_message = 1;
+     */
+    value: string;
+    case: "errorMessage";
+  } | {
+    /**
+     * @generated from field: string group_id = 2;
+     */
+    value: string;
+    case: "groupId";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message computer_api.v1.GetGroupIdResponse.
+ * Use `create(GetGroupIdResponseSchema)` to create a new message.
+ */
+export const GetGroupIdResponseSchema: GenMessage<GetGroupIdResponse> = /*@__PURE__*/
+  messageDesc(file_computer_api_v1_computer, 20);
+
+/**
  * @generated from enum computer_api.v1.ComputerType
  */
 export enum ComputerType {
@@ -190,6 +609,54 @@ export const ComputerProviderService: GenService<{
  * @generated from service computer_api.v1.BasicComputerService
  */
 export const BasicComputerService: GenService<{
+  /**
+   * @generated from rpc computer_api.v1.BasicComputerService.Execute
+   */
+  execute: {
+    methodKind: "unary";
+    input: typeof ExecuteRequestSchema;
+    output: typeof ExecuteResponseSchema;
+  },
+  /**
+   * @generated from rpc computer_api.v1.BasicComputerService.ReadFile
+   */
+  readFile: {
+    methodKind: "unary";
+    input: typeof ReadFileRequestSchema;
+    output: typeof ReadFileResponseSchema;
+  },
+  /**
+   * @generated from rpc computer_api.v1.BasicComputerService.WriteFile
+   */
+  writeFile: {
+    methodKind: "unary";
+    input: typeof WriteFileRequestSchema;
+    output: typeof WriteFileResponseSchema;
+  },
+  /**
+   * @generated from rpc computer_api.v1.BasicComputerService.ListDirectory
+   */
+  listDirectory: {
+    methodKind: "unary";
+    input: typeof ListDirectoryRequestSchema;
+    output: typeof ListDirectoryResponseSchema;
+  },
+  /**
+   * @generated from rpc computer_api.v1.BasicComputerService.GetUserId
+   */
+  getUserId: {
+    methodKind: "unary";
+    input: typeof GetUserIdRequestSchema;
+    output: typeof GetUserIdResponseSchema;
+  },
+  /**
+   * @generated from rpc computer_api.v1.BasicComputerService.GetGroupId
+   */
+  getGroupId: {
+    methodKind: "unary";
+    input: typeof GetGroupIdRequestSchema;
+    output: typeof GetGroupIdResponseSchema;
+  },
 }> = /*@__PURE__*/
   serviceDesc(file_computer_api_v1_computer, 1);
 

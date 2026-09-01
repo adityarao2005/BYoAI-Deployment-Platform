@@ -3,6 +3,7 @@ syntax = "proto3";
 package computer_api.v1;
 
 import "buf/validate/validate.proto";
+import "google/protobuf/duration.proto";
 
 // create computer request
 message CreateComputerRequest {
@@ -54,10 +55,115 @@ service ComputerProviderService {
     rpc DeleteComputer(DeleteComputerRequest) returns (DeleteComputerResponse);
 }
 
-// headless computer service
+/// headless computer service
+
+// execute
+message ExecuteRequest {
+    string session_id = 1;
+    string command = 2;
+    optional string cwd = 3;
+    map<string, string> env_vars = 4;
+    optional string stdin = 5;
+    optional string shell = 6;
+    repeated string shell_args = 7;
+    optional google.protobuf.Duration wait_delay = 8;
+}
+
+message ExecutionResult {
+    int32 exit_code = 1;
+    string stdout = 2;
+    string stderr = 3; 
+}
+
+message ExecuteResponse {
+    oneof result {
+        string error_message = 1;
+        ExecutionResult exec_result = 2;
+    }
+}
+
+// read file
+message ReadFileRequest {
+    string session_id = 1;
+    string path = 2;
+    optional int64 offset = 3; // optional byte offset (e.g start at byte 1024)
+    optional int32 limit = 4; // Optional byte limit (e.g. read max 4096 bytes)
+}
+
+message ReadFileResponse {
+    oneof result {
+        string error_message = 1;
+        bytes content = 2;
+    }
+}
+
+// write file
+message WriteFileRequest {
+    string session_id = 1;
+    string path = 2;
+    bytes content = 3;
+    optional bool append = 4;
+}
+
+message SuccessWriteResponse {
+}
+
+message WriteFileResponse {
+    oneof result {
+        string error_message = 1;
+        SuccessWriteResponse resp = 2;
+    }
+}
+
+// list files
+
+message ListDirectoryRequest {
+    string session_id = 1;
+    string path = 2;
+}
+
+message SuccessListDirectoryResponse {
+    repeated string files = 1;
+}
+
+message ListDirectoryResponse {
+    oneof result {
+        string error_message = 1;
+        SuccessListDirectoryResponse response = 2;
+    }
+}
+
+// Get User Id request
+message GetUserIdRequest {
+    string session_id = 1;
+}
+
+message GetUserIdResponse {
+    oneof result {
+        string error_message = 1;
+        string user_id = 2;
+    }
+}
+
+// Get Group Id request
+message GetGroupIdRequest {
+    string session_id = 1;
+}
+
+message GetGroupIdResponse {
+    oneof result {
+        string error_message = 1;
+        string group_id = 2;
+    }
+}
 
 service BasicComputerService {
-
+    rpc Execute(ExecuteRequest) returns (ExecuteResponse);
+    rpc ReadFile(ReadFileRequest) returns (ReadFileResponse);
+    rpc WriteFile(WriteFileRequest) returns (WriteFileResponse);
+    rpc ListDirectory(ListDirectoryRequest) returns (ListDirectoryResponse);
+    rpc GetUserId(GetUserIdRequest) returns (GetUserIdResponse);
+    rpc GetGroupId(GetGroupIdRequest) returns (GetGroupIdResponse);
 }
 
 

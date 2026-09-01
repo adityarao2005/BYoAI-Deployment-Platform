@@ -65,7 +65,7 @@ func setupDockerGraphicalComputer(t *testing.T) (IGraphicalComputer, func()) {
 	for time.Now().Before(deadline) {
 		result, execErr := comp.Execute(ctx, ExecInput{
 			Command: "xdotool getdisplaygeometry",
-			Env:     &[]EnvVar{{Name: "DISPLAY", Value: ":99"}},
+			Env:     []EnvVar{{Name: "DISPLAY", Value: ":99"}},
 		})
 		if execErr == nil && result.ExitCode == 0 {
 			break

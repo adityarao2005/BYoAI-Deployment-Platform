@@ -32,7 +32,7 @@ func (computer LocalComputer) Execute(ctx context.Context, execInput ExecInput) 
 
 		var args []string
 		if execInput.ShellArgs != nil {
-			args = append(args, *execInput.ShellArgs...)
+			args = append(args, execInput.ShellArgs...)
 		} else {
 			args = append(args, "-c")
 		}
@@ -47,7 +47,7 @@ func (computer LocalComputer) Execute(ctx context.Context, execInput ExecInput) 
 
 	// for each environment variable, append it to the environment of the command
 	if execInput.Env != nil {
-		env := *execInput.Env
+		env := execInput.Env
 
 		for _, value := range env {
 			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", value.Name, value.Value))

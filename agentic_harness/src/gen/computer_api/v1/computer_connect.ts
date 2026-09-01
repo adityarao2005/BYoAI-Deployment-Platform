@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { CreateComputerRequest, CreateComputerResponse, DeleteComputerRequest, DeleteComputerResponse, GetComputerInfoRequest, GetComputerInfoResponse } from "./computer_pb.js";
+import { CreateComputerRequest, CreateComputerResponse, DeleteComputerRequest, DeleteComputerResponse, ExecuteRequest, ExecuteResponse, GetComputerInfoRequest, GetComputerInfoResponse, GetGroupIdRequest, GetGroupIdResponse, GetUserIdRequest, GetUserIdResponse, ListDirectoryRequest, ListDirectoryResponse, ReadFileRequest, ReadFileResponse, WriteFileRequest, WriteFileResponse } from "./computer_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -48,6 +48,60 @@ export const ComputerProviderService = {
 export const BasicComputerService = {
   typeName: "computer_api.v1.BasicComputerService",
   methods: {
+    /**
+     * @generated from rpc computer_api.v1.BasicComputerService.Execute
+     */
+    execute: {
+      name: "Execute",
+      I: ExecuteRequest,
+      O: ExecuteResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc computer_api.v1.BasicComputerService.ReadFile
+     */
+    readFile: {
+      name: "ReadFile",
+      I: ReadFileRequest,
+      O: ReadFileResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc computer_api.v1.BasicComputerService.WriteFile
+     */
+    writeFile: {
+      name: "WriteFile",
+      I: WriteFileRequest,
+      O: WriteFileResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc computer_api.v1.BasicComputerService.ListDirectory
+     */
+    listDirectory: {
+      name: "ListDirectory",
+      I: ListDirectoryRequest,
+      O: ListDirectoryResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc computer_api.v1.BasicComputerService.GetUserId
+     */
+    getUserId: {
+      name: "GetUserId",
+      I: GetUserIdRequest,
+      O: GetUserIdResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc computer_api.v1.BasicComputerService.GetGroupId
+     */
+    getGroupId: {
+      name: "GetGroupId",
+      I: GetGroupIdRequest,
+      O: GetGroupIdResponse,
+      kind: MethodKind.Unary,
+    },
   }
 } as const;
 
