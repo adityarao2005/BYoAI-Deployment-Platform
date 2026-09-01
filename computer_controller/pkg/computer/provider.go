@@ -15,6 +15,8 @@ func GetComputerProvider(server_config *config.ServerConfig) (IComputerProvider,
 
 	switch server_config.Type {
 	case config.TypeLocal:
+		fmt.Printf("warning: computer provider chosen by configuration in computer.yaml detected as Local. Local computers are not best practice if not used carefully and not sandboxed properly. Consider yourself warned.")
+
 		return LocalComputerProvider{}, nil
 
 	case config.TypeDocker:

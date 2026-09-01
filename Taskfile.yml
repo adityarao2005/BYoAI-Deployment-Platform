@@ -28,17 +28,33 @@ tasks:
       - task: local_models:stop_gemma4_server
   unit_test:
     desc: Test the agentic harness and computer controller
-    cmds:
-      - task: agentic_harness:unit_test
-      - task: computer_controller:test
+    deps:
+      - agentic_harness:unit_test
+      - computer_controller:test
   build:
     desc: Builds agentic harness and computer controller
-    cmds:
-      - task: agentic_harness:build
-      - task: computer_controller:build
+    deps:
+      - unit_test
+      - computer_controller:build
+      - agentic_harness:build
   generate_proto:
     desc: Generate protobuf stubs
+    run: once
+    sources:
+      - 'computer_api/**/*.proto'
+      - buf.yaml
+      - buf.gen.yaml
+      - buf.lock
+    generates:
+      - 'computer_controller/gen/**/*'
+      - 'agentic_harness/src/gen/**/*'
     cmds:
       - buf dep update
       - buf lint
       - buf generate
+
+  build_container_images:
+    desc: Builds the container images
+    deps:
+      - build
+      - computer_controller:build_container_images

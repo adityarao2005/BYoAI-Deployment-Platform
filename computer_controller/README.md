@@ -142,3 +142,42 @@ cd computer_controller
 task docker_test
 # equivalent to: DOCKER_INTEGRATION_TEST=1 go test -v ./...
 ```
+
+---
+
+## Container Images & Security Sandbox
+
+Multi-stage Docker targets are provided in `docker/Dockerfile` with strict user isolation:
+
+### Target Matrix
+
+| Target Name | Type | Base OS | Exec User | Workspace & Permissions |
+| --- | --- | --- | --- | --- |
+| `local-scratch` | `local` | `scratch` | `65532:65532` | Minimal static image; `/workspace` workdir; `/app/computer.yaml` read-only. |
+| `local-alpine` | `local` | `alpine:latest` | `10001:10001` | Alpine base; `/workspace` workdir (`0755`); `/app/computer.yaml` read-only (`0444`). |
+| `local-debian` | `local` | `debian:bookworm-slim` | `10001:10001` | Debian base; `/workspace` workdir (`0755`); `/app/computer.yaml` read-only (`0444`). |
+| `local-redhat` | `local` | `ubi9-minimal` | `10001:10001` | RedHat UBI9 minimal; `/workspace` workdir (`0755`); `/app/computer.yaml` read-only (`0444`). |
+| `docker-podman-redhat` | `docker` | `quay.io/podman/stable` | `10001:10001` | Podman RedHat image; read-only system/app dirs; connects via `DOCKER_HOST`. |
+| `docker-podman-debian` | `docker` | `debian:bookworm-slim` | `10001:10001` | Debian + Podman CLI; read-only system/app dirs; connects via `DOCKER_HOST`. |
+| `docker-podman-alpine` | `docker` | `alpine:latest` | `10001:10001` | Alpine + Podman CLI; read-only system/app dirs; connects via `DOCKER_HOST`. |
+
+### Building Container Images
+
+Build all images:
+```bash
+cd computer_controller
+task build_container_images
+```
+
+Build a specific target image using `task`:
+```bash
+task build_container_image TARGET=local-alpine
+task build_container_image TARGET=local-debian
+task build_container_image TARGET=docker-podman-redhat
+```
+
+Or using `docker build`:
+```bash
+docker build -f docker/Dockerfile --target local-alpine -t computer-controller:local-alpine .
+```
+
