@@ -167,8 +167,247 @@ service BasicComputerService {
 }
 
 
-// graphical computer service
+/// graphical computer service
+
+// capture screenshot
+message CaptureScreenshotRequest {
+    string session_id = 1;
+    optional int32 x = 2;
+    optional int32 y = 3;
+    optional int32 width = 4;
+    optional int32 height = 5;
+}
+
+message SuccessCaptureScreenshotResponse {
+    bytes image_data = 1;
+}
+
+message CaptureScreenshotResponse {
+    oneof result {
+        string error_message = 1;
+        SuccessCaptureScreenshotResponse response = 2;
+    }
+}
+
+// click
+
+message ClickRequest {
+    string session_id = 1;
+    int32 x = 2;
+    int32 y = 3;
+    optional string button = 4;
+}
+
+message SuccessClickResponse {
+}
+
+message ClickResponse {
+    oneof result {
+        string error_message = 1;
+        SuccessClickResponse response = 2;
+    }
+}
+
+// typing 
+
+message TypeRequest {
+    string session_id = 1;
+    string text = 2;
+}
+
+message SuccessTypeResponse {
+}
+
+message TypeResponse {
+    oneof result {
+        string error_message = 1;
+        SuccessTypeResponse response = 2;
+    }
+}
+
+// press key
+
+message PressKeyRequest {
+    string session_id = 1;
+    string key = 2;
+}
+
+message SuccessPressKeyResponse {
+}
+
+message PressKeyResponse {
+    oneof result {
+        string error_message = 1;
+        SuccessPressKeyResponse response = 2;
+    }
+}
+
+// release key
+
+message ReleaseKeyRequest {
+    string session_id = 1;
+    string key = 2;
+}
+
+message SuccessReleaseKeyResponse {
+}
+
+message ReleaseKeyResponse {
+    oneof result {
+        string error_message = 1;
+        SuccessReleaseKeyResponse response = 2;
+    }
+}
+
+// press and hold
+
+message PressAndHoldKeyRequest {
+    string session_id = 1;
+    string key = 2;
+}
+
+message SuccessPressAndHoldKeyResponse {
+}
+
+message PressAndHoldKeyResponse {
+    oneof result {
+        string error_message = 1;
+        SuccessPressAndHoldKeyResponse response = 2;
+    }
+}
+
+// release all
+
+message ReleaseAllKeysRequest {
+    string session_id = 1;
+}
+
+message SuccessReleaseAllKeysResponse {
+}
+
+message ReleaseAllKeysResponse {
+    oneof result {
+        string error_message = 1;
+        SuccessReleaseAllKeysResponse response = 2;
+    }
+}
+
+// drag
+
+message DragRequest {
+    string session_id = 1;
+    int32 x1 = 2;
+    int32 y1 = 3;
+    int32 x2 = 4;
+    int32 y2 = 5;
+}
+
+message SuccessDragResponse {
+}
+
+message DragResponse {
+    oneof result {
+        string error_message = 1;
+        SuccessDragResponse response = 2;
+    }
+}
+
+// move mouse
+
+message MoveMouseToRequest {
+    string session_id = 1;
+    int32 x = 2;
+    int32 y = 3;
+}
+
+message SuccessMoveMouseToResponse {
+}
+
+message MoveMouseToResponse {
+    oneof result {
+        string error_message = 1;
+        SuccessMoveMouseToResponse response = 2;
+    }
+}
+
+// scroll
+
+message ScrollRequest {
+    string session_id = 1;
+    int32 dx = 2;
+    int32 dy = 3;
+}
+
+message SuccessScrollResponse {
+}
+
+message ScrollResponse {
+    oneof result {
+        string error_message = 1;
+        SuccessScrollResponse response = 2;
+    }
+}
+
+// get clipboard
+
+message GetClipboardRequest {
+    string session_id = 1;
+}
+
+message GetClipboardResponse {
+    oneof result {
+        string error_message = 1;
+        string text = 2;
+    }
+}
+
+// set clipboard
+
+message SetClipboardRequest {
+    string session_id = 1;
+    string text = 2;
+}
+
+message SuccessSetClipboardResponse {
+}
+
+message SetClipboardResponse {
+    oneof result {
+        string error_message = 1;
+        SuccessSetClipboardResponse response = 2;
+    }
+}
+
+// get screen size
+
+message GetScreenSizeRequest {
+    string session_id = 1;
+}
+
+message ScreenSize {
+    int32 width = 1;
+    int32 height = 2;
+}
+
+message GetScreenSizeResponse {
+    oneof result {
+        string error_message = 1;
+        ScreenSize response = 2;
+    }
+}
 
 service GraphicalComputerService {
-    
+    rpc CaptureScreenshot(CaptureScreenshotRequest) returns (CaptureScreenshotResponse);
+    rpc Click(ClickRequest) returns (ClickResponse);
+    rpc Type(TypeRequest) returns (TypeResponse);
+    rpc PressKey(PressKeyRequest) returns (PressKeyResponse);
+    rpc ReleaseKey(ReleaseKeyRequest) returns (ReleaseKeyResponse);
+    rpc PressAndHoldKey(PressAndHoldKeyRequest) returns (PressAndHoldKeyResponse);
+    rpc ReleaseAllKeys(ReleaseAllKeysRequest) returns (ReleaseAllKeysResponse);
+    rpc Drag(DragRequest) returns (DragResponse);
+    rpc MoveMouseTo(MoveMouseToRequest) returns (MoveMouseToResponse);
+    rpc Scroll(ScrollRequest) returns (ScrollResponse);
+    rpc GetClipboard(GetClipboardRequest) returns (GetClipboardResponse);
+    rpc SetClipboard(SetClipboardRequest) returns (SetClipboardResponse);
+    rpc GetScreenSize(GetScreenSizeRequest) returns (GetScreenSizeResponse);
 }

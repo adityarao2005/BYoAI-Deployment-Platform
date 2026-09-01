@@ -1382,6 +1382,2261 @@ func (*GetGroupIdResponse_ErrorMessage) isGetGroupIdResponse_Result() {}
 
 func (*GetGroupIdResponse_GroupId) isGetGroupIdResponse_Result() {}
 
+// capture screenshot
+type CaptureScreenshotRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	X             *int32                 `protobuf:"varint,2,opt,name=x,proto3,oneof" json:"x,omitempty"`
+	Y             *int32                 `protobuf:"varint,3,opt,name=y,proto3,oneof" json:"y,omitempty"`
+	Width         *int32                 `protobuf:"varint,4,opt,name=width,proto3,oneof" json:"width,omitempty"`
+	Height        *int32                 `protobuf:"varint,5,opt,name=height,proto3,oneof" json:"height,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CaptureScreenshotRequest) Reset() {
+	*x = CaptureScreenshotRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CaptureScreenshotRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CaptureScreenshotRequest) ProtoMessage() {}
+
+func (x *CaptureScreenshotRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CaptureScreenshotRequest.ProtoReflect.Descriptor instead.
+func (*CaptureScreenshotRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *CaptureScreenshotRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *CaptureScreenshotRequest) GetX() int32 {
+	if x != nil && x.X != nil {
+		return *x.X
+	}
+	return 0
+}
+
+func (x *CaptureScreenshotRequest) GetY() int32 {
+	if x != nil && x.Y != nil {
+		return *x.Y
+	}
+	return 0
+}
+
+func (x *CaptureScreenshotRequest) GetWidth() int32 {
+	if x != nil && x.Width != nil {
+		return *x.Width
+	}
+	return 0
+}
+
+func (x *CaptureScreenshotRequest) GetHeight() int32 {
+	if x != nil && x.Height != nil {
+		return *x.Height
+	}
+	return 0
+}
+
+type SuccessCaptureScreenshotResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ImageData     []byte                 `protobuf:"bytes,1,opt,name=image_data,json=imageData,proto3" json:"image_data,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessCaptureScreenshotResponse) Reset() {
+	*x = SuccessCaptureScreenshotResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessCaptureScreenshotResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessCaptureScreenshotResponse) ProtoMessage() {}
+
+func (x *SuccessCaptureScreenshotResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessCaptureScreenshotResponse.ProtoReflect.Descriptor instead.
+func (*SuccessCaptureScreenshotResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *SuccessCaptureScreenshotResponse) GetImageData() []byte {
+	if x != nil {
+		return x.ImageData
+	}
+	return nil
+}
+
+type CaptureScreenshotResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*CaptureScreenshotResponse_ErrorMessage
+	//	*CaptureScreenshotResponse_Response
+	Result        isCaptureScreenshotResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CaptureScreenshotResponse) Reset() {
+	*x = CaptureScreenshotResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CaptureScreenshotResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CaptureScreenshotResponse) ProtoMessage() {}
+
+func (x *CaptureScreenshotResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CaptureScreenshotResponse.ProtoReflect.Descriptor instead.
+func (*CaptureScreenshotResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *CaptureScreenshotResponse) GetResult() isCaptureScreenshotResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *CaptureScreenshotResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*CaptureScreenshotResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *CaptureScreenshotResponse) GetResponse() *SuccessCaptureScreenshotResponse {
+	if x != nil {
+		if x, ok := x.Result.(*CaptureScreenshotResponse_Response); ok {
+			return x.Response
+		}
+	}
+	return nil
+}
+
+type isCaptureScreenshotResponse_Result interface {
+	isCaptureScreenshotResponse_Result()
+}
+
+type CaptureScreenshotResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type CaptureScreenshotResponse_Response struct {
+	Response *SuccessCaptureScreenshotResponse `protobuf:"bytes,2,opt,name=response,proto3,oneof"`
+}
+
+func (*CaptureScreenshotResponse_ErrorMessage) isCaptureScreenshotResponse_Result() {}
+
+func (*CaptureScreenshotResponse_Response) isCaptureScreenshotResponse_Result() {}
+
+type ClickRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	X             int32                  `protobuf:"varint,2,opt,name=x,proto3" json:"x,omitempty"`
+	Y             int32                  `protobuf:"varint,3,opt,name=y,proto3" json:"y,omitempty"`
+	Button        *string                `protobuf:"bytes,4,opt,name=button,proto3,oneof" json:"button,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClickRequest) Reset() {
+	*x = ClickRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClickRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClickRequest) ProtoMessage() {}
+
+func (x *ClickRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClickRequest.ProtoReflect.Descriptor instead.
+func (*ClickRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *ClickRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *ClickRequest) GetX() int32 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *ClickRequest) GetY() int32 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+func (x *ClickRequest) GetButton() string {
+	if x != nil && x.Button != nil {
+		return *x.Button
+	}
+	return ""
+}
+
+type SuccessClickResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessClickResponse) Reset() {
+	*x = SuccessClickResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessClickResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessClickResponse) ProtoMessage() {}
+
+func (x *SuccessClickResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessClickResponse.ProtoReflect.Descriptor instead.
+func (*SuccessClickResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{25}
+}
+
+type ClickResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*ClickResponse_ErrorMessage
+	//	*ClickResponse_Response
+	Result        isClickResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClickResponse) Reset() {
+	*x = ClickResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClickResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClickResponse) ProtoMessage() {}
+
+func (x *ClickResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClickResponse.ProtoReflect.Descriptor instead.
+func (*ClickResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *ClickResponse) GetResult() isClickResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *ClickResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*ClickResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *ClickResponse) GetResponse() *SuccessClickResponse {
+	if x != nil {
+		if x, ok := x.Result.(*ClickResponse_Response); ok {
+			return x.Response
+		}
+	}
+	return nil
+}
+
+type isClickResponse_Result interface {
+	isClickResponse_Result()
+}
+
+type ClickResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type ClickResponse_Response struct {
+	Response *SuccessClickResponse `protobuf:"bytes,2,opt,name=response,proto3,oneof"`
+}
+
+func (*ClickResponse_ErrorMessage) isClickResponse_Result() {}
+
+func (*ClickResponse_Response) isClickResponse_Result() {}
+
+type TypeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	Text          string                 `protobuf:"bytes,2,opt,name=text,proto3" json:"text,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TypeRequest) Reset() {
+	*x = TypeRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TypeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TypeRequest) ProtoMessage() {}
+
+func (x *TypeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TypeRequest.ProtoReflect.Descriptor instead.
+func (*TypeRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *TypeRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *TypeRequest) GetText() string {
+	if x != nil {
+		return x.Text
+	}
+	return ""
+}
+
+type SuccessTypeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessTypeResponse) Reset() {
+	*x = SuccessTypeResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessTypeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessTypeResponse) ProtoMessage() {}
+
+func (x *SuccessTypeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessTypeResponse.ProtoReflect.Descriptor instead.
+func (*SuccessTypeResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{28}
+}
+
+type TypeResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*TypeResponse_ErrorMessage
+	//	*TypeResponse_Response
+	Result        isTypeResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TypeResponse) Reset() {
+	*x = TypeResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TypeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TypeResponse) ProtoMessage() {}
+
+func (x *TypeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TypeResponse.ProtoReflect.Descriptor instead.
+func (*TypeResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *TypeResponse) GetResult() isTypeResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *TypeResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*TypeResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *TypeResponse) GetResponse() *SuccessTypeResponse {
+	if x != nil {
+		if x, ok := x.Result.(*TypeResponse_Response); ok {
+			return x.Response
+		}
+	}
+	return nil
+}
+
+type isTypeResponse_Result interface {
+	isTypeResponse_Result()
+}
+
+type TypeResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type TypeResponse_Response struct {
+	Response *SuccessTypeResponse `protobuf:"bytes,2,opt,name=response,proto3,oneof"`
+}
+
+func (*TypeResponse_ErrorMessage) isTypeResponse_Result() {}
+
+func (*TypeResponse_Response) isTypeResponse_Result() {}
+
+type PressKeyRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	Key           string                 `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PressKeyRequest) Reset() {
+	*x = PressKeyRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PressKeyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PressKeyRequest) ProtoMessage() {}
+
+func (x *PressKeyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PressKeyRequest.ProtoReflect.Descriptor instead.
+func (*PressKeyRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *PressKeyRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *PressKeyRequest) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+type SuccessPressKeyResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessPressKeyResponse) Reset() {
+	*x = SuccessPressKeyResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessPressKeyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessPressKeyResponse) ProtoMessage() {}
+
+func (x *SuccessPressKeyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessPressKeyResponse.ProtoReflect.Descriptor instead.
+func (*SuccessPressKeyResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{31}
+}
+
+type PressKeyResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*PressKeyResponse_ErrorMessage
+	//	*PressKeyResponse_Response
+	Result        isPressKeyResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PressKeyResponse) Reset() {
+	*x = PressKeyResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PressKeyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PressKeyResponse) ProtoMessage() {}
+
+func (x *PressKeyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PressKeyResponse.ProtoReflect.Descriptor instead.
+func (*PressKeyResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *PressKeyResponse) GetResult() isPressKeyResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *PressKeyResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*PressKeyResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *PressKeyResponse) GetResponse() *SuccessPressKeyResponse {
+	if x != nil {
+		if x, ok := x.Result.(*PressKeyResponse_Response); ok {
+			return x.Response
+		}
+	}
+	return nil
+}
+
+type isPressKeyResponse_Result interface {
+	isPressKeyResponse_Result()
+}
+
+type PressKeyResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type PressKeyResponse_Response struct {
+	Response *SuccessPressKeyResponse `protobuf:"bytes,2,opt,name=response,proto3,oneof"`
+}
+
+func (*PressKeyResponse_ErrorMessage) isPressKeyResponse_Result() {}
+
+func (*PressKeyResponse_Response) isPressKeyResponse_Result() {}
+
+type ReleaseKeyRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	Key           string                 `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReleaseKeyRequest) Reset() {
+	*x = ReleaseKeyRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReleaseKeyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReleaseKeyRequest) ProtoMessage() {}
+
+func (x *ReleaseKeyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReleaseKeyRequest.ProtoReflect.Descriptor instead.
+func (*ReleaseKeyRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *ReleaseKeyRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *ReleaseKeyRequest) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+type SuccessReleaseKeyResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessReleaseKeyResponse) Reset() {
+	*x = SuccessReleaseKeyResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessReleaseKeyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessReleaseKeyResponse) ProtoMessage() {}
+
+func (x *SuccessReleaseKeyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessReleaseKeyResponse.ProtoReflect.Descriptor instead.
+func (*SuccessReleaseKeyResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{34}
+}
+
+type ReleaseKeyResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*ReleaseKeyResponse_ErrorMessage
+	//	*ReleaseKeyResponse_Response
+	Result        isReleaseKeyResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReleaseKeyResponse) Reset() {
+	*x = ReleaseKeyResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReleaseKeyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReleaseKeyResponse) ProtoMessage() {}
+
+func (x *ReleaseKeyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReleaseKeyResponse.ProtoReflect.Descriptor instead.
+func (*ReleaseKeyResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *ReleaseKeyResponse) GetResult() isReleaseKeyResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *ReleaseKeyResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*ReleaseKeyResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *ReleaseKeyResponse) GetResponse() *SuccessReleaseKeyResponse {
+	if x != nil {
+		if x, ok := x.Result.(*ReleaseKeyResponse_Response); ok {
+			return x.Response
+		}
+	}
+	return nil
+}
+
+type isReleaseKeyResponse_Result interface {
+	isReleaseKeyResponse_Result()
+}
+
+type ReleaseKeyResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type ReleaseKeyResponse_Response struct {
+	Response *SuccessReleaseKeyResponse `protobuf:"bytes,2,opt,name=response,proto3,oneof"`
+}
+
+func (*ReleaseKeyResponse_ErrorMessage) isReleaseKeyResponse_Result() {}
+
+func (*ReleaseKeyResponse_Response) isReleaseKeyResponse_Result() {}
+
+type PressAndHoldKeyRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	Key           string                 `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PressAndHoldKeyRequest) Reset() {
+	*x = PressAndHoldKeyRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[36]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PressAndHoldKeyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PressAndHoldKeyRequest) ProtoMessage() {}
+
+func (x *PressAndHoldKeyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[36]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PressAndHoldKeyRequest.ProtoReflect.Descriptor instead.
+func (*PressAndHoldKeyRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *PressAndHoldKeyRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *PressAndHoldKeyRequest) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+type SuccessPressAndHoldKeyResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessPressAndHoldKeyResponse) Reset() {
+	*x = SuccessPressAndHoldKeyResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[37]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessPressAndHoldKeyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessPressAndHoldKeyResponse) ProtoMessage() {}
+
+func (x *SuccessPressAndHoldKeyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[37]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessPressAndHoldKeyResponse.ProtoReflect.Descriptor instead.
+func (*SuccessPressAndHoldKeyResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{37}
+}
+
+type PressAndHoldKeyResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*PressAndHoldKeyResponse_ErrorMessage
+	//	*PressAndHoldKeyResponse_Response
+	Result        isPressAndHoldKeyResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PressAndHoldKeyResponse) Reset() {
+	*x = PressAndHoldKeyResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[38]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PressAndHoldKeyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PressAndHoldKeyResponse) ProtoMessage() {}
+
+func (x *PressAndHoldKeyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[38]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PressAndHoldKeyResponse.ProtoReflect.Descriptor instead.
+func (*PressAndHoldKeyResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{38}
+}
+
+func (x *PressAndHoldKeyResponse) GetResult() isPressAndHoldKeyResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *PressAndHoldKeyResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*PressAndHoldKeyResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *PressAndHoldKeyResponse) GetResponse() *SuccessPressAndHoldKeyResponse {
+	if x != nil {
+		if x, ok := x.Result.(*PressAndHoldKeyResponse_Response); ok {
+			return x.Response
+		}
+	}
+	return nil
+}
+
+type isPressAndHoldKeyResponse_Result interface {
+	isPressAndHoldKeyResponse_Result()
+}
+
+type PressAndHoldKeyResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type PressAndHoldKeyResponse_Response struct {
+	Response *SuccessPressAndHoldKeyResponse `protobuf:"bytes,2,opt,name=response,proto3,oneof"`
+}
+
+func (*PressAndHoldKeyResponse_ErrorMessage) isPressAndHoldKeyResponse_Result() {}
+
+func (*PressAndHoldKeyResponse_Response) isPressAndHoldKeyResponse_Result() {}
+
+type ReleaseAllKeysRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReleaseAllKeysRequest) Reset() {
+	*x = ReleaseAllKeysRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[39]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReleaseAllKeysRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReleaseAllKeysRequest) ProtoMessage() {}
+
+func (x *ReleaseAllKeysRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[39]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReleaseAllKeysRequest.ProtoReflect.Descriptor instead.
+func (*ReleaseAllKeysRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{39}
+}
+
+func (x *ReleaseAllKeysRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+type SuccessReleaseAllKeysResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessReleaseAllKeysResponse) Reset() {
+	*x = SuccessReleaseAllKeysResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[40]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessReleaseAllKeysResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessReleaseAllKeysResponse) ProtoMessage() {}
+
+func (x *SuccessReleaseAllKeysResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[40]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessReleaseAllKeysResponse.ProtoReflect.Descriptor instead.
+func (*SuccessReleaseAllKeysResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{40}
+}
+
+type ReleaseAllKeysResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*ReleaseAllKeysResponse_ErrorMessage
+	//	*ReleaseAllKeysResponse_Response
+	Result        isReleaseAllKeysResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReleaseAllKeysResponse) Reset() {
+	*x = ReleaseAllKeysResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[41]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReleaseAllKeysResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReleaseAllKeysResponse) ProtoMessage() {}
+
+func (x *ReleaseAllKeysResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[41]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReleaseAllKeysResponse.ProtoReflect.Descriptor instead.
+func (*ReleaseAllKeysResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{41}
+}
+
+func (x *ReleaseAllKeysResponse) GetResult() isReleaseAllKeysResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *ReleaseAllKeysResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*ReleaseAllKeysResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *ReleaseAllKeysResponse) GetResponse() *SuccessReleaseAllKeysResponse {
+	if x != nil {
+		if x, ok := x.Result.(*ReleaseAllKeysResponse_Response); ok {
+			return x.Response
+		}
+	}
+	return nil
+}
+
+type isReleaseAllKeysResponse_Result interface {
+	isReleaseAllKeysResponse_Result()
+}
+
+type ReleaseAllKeysResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type ReleaseAllKeysResponse_Response struct {
+	Response *SuccessReleaseAllKeysResponse `protobuf:"bytes,2,opt,name=response,proto3,oneof"`
+}
+
+func (*ReleaseAllKeysResponse_ErrorMessage) isReleaseAllKeysResponse_Result() {}
+
+func (*ReleaseAllKeysResponse_Response) isReleaseAllKeysResponse_Result() {}
+
+type DragRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	X1            int32                  `protobuf:"varint,2,opt,name=x1,proto3" json:"x1,omitempty"`
+	Y1            int32                  `protobuf:"varint,3,opt,name=y1,proto3" json:"y1,omitempty"`
+	X2            int32                  `protobuf:"varint,4,opt,name=x2,proto3" json:"x2,omitempty"`
+	Y2            int32                  `protobuf:"varint,5,opt,name=y2,proto3" json:"y2,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DragRequest) Reset() {
+	*x = DragRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[42]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DragRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DragRequest) ProtoMessage() {}
+
+func (x *DragRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[42]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DragRequest.ProtoReflect.Descriptor instead.
+func (*DragRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{42}
+}
+
+func (x *DragRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *DragRequest) GetX1() int32 {
+	if x != nil {
+		return x.X1
+	}
+	return 0
+}
+
+func (x *DragRequest) GetY1() int32 {
+	if x != nil {
+		return x.Y1
+	}
+	return 0
+}
+
+func (x *DragRequest) GetX2() int32 {
+	if x != nil {
+		return x.X2
+	}
+	return 0
+}
+
+func (x *DragRequest) GetY2() int32 {
+	if x != nil {
+		return x.Y2
+	}
+	return 0
+}
+
+type SuccessDragResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessDragResponse) Reset() {
+	*x = SuccessDragResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[43]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessDragResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessDragResponse) ProtoMessage() {}
+
+func (x *SuccessDragResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[43]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessDragResponse.ProtoReflect.Descriptor instead.
+func (*SuccessDragResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{43}
+}
+
+type DragResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*DragResponse_ErrorMessage
+	//	*DragResponse_Response
+	Result        isDragResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DragResponse) Reset() {
+	*x = DragResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[44]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DragResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DragResponse) ProtoMessage() {}
+
+func (x *DragResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[44]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DragResponse.ProtoReflect.Descriptor instead.
+func (*DragResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{44}
+}
+
+func (x *DragResponse) GetResult() isDragResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *DragResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*DragResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *DragResponse) GetResponse() *SuccessDragResponse {
+	if x != nil {
+		if x, ok := x.Result.(*DragResponse_Response); ok {
+			return x.Response
+		}
+	}
+	return nil
+}
+
+type isDragResponse_Result interface {
+	isDragResponse_Result()
+}
+
+type DragResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type DragResponse_Response struct {
+	Response *SuccessDragResponse `protobuf:"bytes,2,opt,name=response,proto3,oneof"`
+}
+
+func (*DragResponse_ErrorMessage) isDragResponse_Result() {}
+
+func (*DragResponse_Response) isDragResponse_Result() {}
+
+type MoveMouseToRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	X             int32                  `protobuf:"varint,2,opt,name=x,proto3" json:"x,omitempty"`
+	Y             int32                  `protobuf:"varint,3,opt,name=y,proto3" json:"y,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MoveMouseToRequest) Reset() {
+	*x = MoveMouseToRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[45]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MoveMouseToRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MoveMouseToRequest) ProtoMessage() {}
+
+func (x *MoveMouseToRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[45]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MoveMouseToRequest.ProtoReflect.Descriptor instead.
+func (*MoveMouseToRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{45}
+}
+
+func (x *MoveMouseToRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *MoveMouseToRequest) GetX() int32 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *MoveMouseToRequest) GetY() int32 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+type SuccessMoveMouseToResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessMoveMouseToResponse) Reset() {
+	*x = SuccessMoveMouseToResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[46]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessMoveMouseToResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessMoveMouseToResponse) ProtoMessage() {}
+
+func (x *SuccessMoveMouseToResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[46]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessMoveMouseToResponse.ProtoReflect.Descriptor instead.
+func (*SuccessMoveMouseToResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{46}
+}
+
+type MoveMouseToResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*MoveMouseToResponse_ErrorMessage
+	//	*MoveMouseToResponse_Response
+	Result        isMoveMouseToResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MoveMouseToResponse) Reset() {
+	*x = MoveMouseToResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[47]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MoveMouseToResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MoveMouseToResponse) ProtoMessage() {}
+
+func (x *MoveMouseToResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[47]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MoveMouseToResponse.ProtoReflect.Descriptor instead.
+func (*MoveMouseToResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{47}
+}
+
+func (x *MoveMouseToResponse) GetResult() isMoveMouseToResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *MoveMouseToResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*MoveMouseToResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *MoveMouseToResponse) GetResponse() *SuccessMoveMouseToResponse {
+	if x != nil {
+		if x, ok := x.Result.(*MoveMouseToResponse_Response); ok {
+			return x.Response
+		}
+	}
+	return nil
+}
+
+type isMoveMouseToResponse_Result interface {
+	isMoveMouseToResponse_Result()
+}
+
+type MoveMouseToResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type MoveMouseToResponse_Response struct {
+	Response *SuccessMoveMouseToResponse `protobuf:"bytes,2,opt,name=response,proto3,oneof"`
+}
+
+func (*MoveMouseToResponse_ErrorMessage) isMoveMouseToResponse_Result() {}
+
+func (*MoveMouseToResponse_Response) isMoveMouseToResponse_Result() {}
+
+type ScrollRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	Dx            int32                  `protobuf:"varint,2,opt,name=dx,proto3" json:"dx,omitempty"`
+	Dy            int32                  `protobuf:"varint,3,opt,name=dy,proto3" json:"dy,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ScrollRequest) Reset() {
+	*x = ScrollRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[48]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ScrollRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ScrollRequest) ProtoMessage() {}
+
+func (x *ScrollRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[48]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ScrollRequest.ProtoReflect.Descriptor instead.
+func (*ScrollRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{48}
+}
+
+func (x *ScrollRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *ScrollRequest) GetDx() int32 {
+	if x != nil {
+		return x.Dx
+	}
+	return 0
+}
+
+func (x *ScrollRequest) GetDy() int32 {
+	if x != nil {
+		return x.Dy
+	}
+	return 0
+}
+
+type SuccessScrollResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessScrollResponse) Reset() {
+	*x = SuccessScrollResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[49]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessScrollResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessScrollResponse) ProtoMessage() {}
+
+func (x *SuccessScrollResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[49]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessScrollResponse.ProtoReflect.Descriptor instead.
+func (*SuccessScrollResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{49}
+}
+
+type ScrollResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*ScrollResponse_ErrorMessage
+	//	*ScrollResponse_Response
+	Result        isScrollResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ScrollResponse) Reset() {
+	*x = ScrollResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[50]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ScrollResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ScrollResponse) ProtoMessage() {}
+
+func (x *ScrollResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[50]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ScrollResponse.ProtoReflect.Descriptor instead.
+func (*ScrollResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{50}
+}
+
+func (x *ScrollResponse) GetResult() isScrollResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *ScrollResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*ScrollResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *ScrollResponse) GetResponse() *SuccessScrollResponse {
+	if x != nil {
+		if x, ok := x.Result.(*ScrollResponse_Response); ok {
+			return x.Response
+		}
+	}
+	return nil
+}
+
+type isScrollResponse_Result interface {
+	isScrollResponse_Result()
+}
+
+type ScrollResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type ScrollResponse_Response struct {
+	Response *SuccessScrollResponse `protobuf:"bytes,2,opt,name=response,proto3,oneof"`
+}
+
+func (*ScrollResponse_ErrorMessage) isScrollResponse_Result() {}
+
+func (*ScrollResponse_Response) isScrollResponse_Result() {}
+
+type GetClipboardRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetClipboardRequest) Reset() {
+	*x = GetClipboardRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[51]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetClipboardRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetClipboardRequest) ProtoMessage() {}
+
+func (x *GetClipboardRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[51]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetClipboardRequest.ProtoReflect.Descriptor instead.
+func (*GetClipboardRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{51}
+}
+
+func (x *GetClipboardRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+type GetClipboardResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*GetClipboardResponse_ErrorMessage
+	//	*GetClipboardResponse_Text
+	Result        isGetClipboardResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetClipboardResponse) Reset() {
+	*x = GetClipboardResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[52]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetClipboardResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetClipboardResponse) ProtoMessage() {}
+
+func (x *GetClipboardResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[52]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetClipboardResponse.ProtoReflect.Descriptor instead.
+func (*GetClipboardResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{52}
+}
+
+func (x *GetClipboardResponse) GetResult() isGetClipboardResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *GetClipboardResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*GetClipboardResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *GetClipboardResponse) GetText() string {
+	if x != nil {
+		if x, ok := x.Result.(*GetClipboardResponse_Text); ok {
+			return x.Text
+		}
+	}
+	return ""
+}
+
+type isGetClipboardResponse_Result interface {
+	isGetClipboardResponse_Result()
+}
+
+type GetClipboardResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type GetClipboardResponse_Text struct {
+	Text string `protobuf:"bytes,2,opt,name=text,proto3,oneof"`
+}
+
+func (*GetClipboardResponse_ErrorMessage) isGetClipboardResponse_Result() {}
+
+func (*GetClipboardResponse_Text) isGetClipboardResponse_Result() {}
+
+type SetClipboardRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	Text          string                 `protobuf:"bytes,2,opt,name=text,proto3" json:"text,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetClipboardRequest) Reset() {
+	*x = SetClipboardRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[53]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetClipboardRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetClipboardRequest) ProtoMessage() {}
+
+func (x *SetClipboardRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[53]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetClipboardRequest.ProtoReflect.Descriptor instead.
+func (*SetClipboardRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{53}
+}
+
+func (x *SetClipboardRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *SetClipboardRequest) GetText() string {
+	if x != nil {
+		return x.Text
+	}
+	return ""
+}
+
+type SuccessSetClipboardResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SuccessSetClipboardResponse) Reset() {
+	*x = SuccessSetClipboardResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[54]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SuccessSetClipboardResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SuccessSetClipboardResponse) ProtoMessage() {}
+
+func (x *SuccessSetClipboardResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[54]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SuccessSetClipboardResponse.ProtoReflect.Descriptor instead.
+func (*SuccessSetClipboardResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{54}
+}
+
+type SetClipboardResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*SetClipboardResponse_ErrorMessage
+	//	*SetClipboardResponse_Response
+	Result        isSetClipboardResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetClipboardResponse) Reset() {
+	*x = SetClipboardResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[55]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetClipboardResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetClipboardResponse) ProtoMessage() {}
+
+func (x *SetClipboardResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[55]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetClipboardResponse.ProtoReflect.Descriptor instead.
+func (*SetClipboardResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{55}
+}
+
+func (x *SetClipboardResponse) GetResult() isSetClipboardResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *SetClipboardResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*SetClipboardResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *SetClipboardResponse) GetResponse() *SuccessSetClipboardResponse {
+	if x != nil {
+		if x, ok := x.Result.(*SetClipboardResponse_Response); ok {
+			return x.Response
+		}
+	}
+	return nil
+}
+
+type isSetClipboardResponse_Result interface {
+	isSetClipboardResponse_Result()
+}
+
+type SetClipboardResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type SetClipboardResponse_Response struct {
+	Response *SuccessSetClipboardResponse `protobuf:"bytes,2,opt,name=response,proto3,oneof"`
+}
+
+func (*SetClipboardResponse_ErrorMessage) isSetClipboardResponse_Result() {}
+
+func (*SetClipboardResponse_Response) isSetClipboardResponse_Result() {}
+
+type GetScreenSizeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetScreenSizeRequest) Reset() {
+	*x = GetScreenSizeRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[56]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetScreenSizeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetScreenSizeRequest) ProtoMessage() {}
+
+func (x *GetScreenSizeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[56]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetScreenSizeRequest.ProtoReflect.Descriptor instead.
+func (*GetScreenSizeRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{56}
+}
+
+func (x *GetScreenSizeRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+type ScreenSize struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Width         int32                  `protobuf:"varint,1,opt,name=width,proto3" json:"width,omitempty"`
+	Height        int32                  `protobuf:"varint,2,opt,name=height,proto3" json:"height,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ScreenSize) Reset() {
+	*x = ScreenSize{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[57]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ScreenSize) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ScreenSize) ProtoMessage() {}
+
+func (x *ScreenSize) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[57]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ScreenSize.ProtoReflect.Descriptor instead.
+func (*ScreenSize) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{57}
+}
+
+func (x *ScreenSize) GetWidth() int32 {
+	if x != nil {
+		return x.Width
+	}
+	return 0
+}
+
+func (x *ScreenSize) GetHeight() int32 {
+	if x != nil {
+		return x.Height
+	}
+	return 0
+}
+
+type GetScreenSizeResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*GetScreenSizeResponse_ErrorMessage
+	//	*GetScreenSizeResponse_Response
+	Result        isGetScreenSizeResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetScreenSizeResponse) Reset() {
+	*x = GetScreenSizeResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[58]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetScreenSizeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetScreenSizeResponse) ProtoMessage() {}
+
+func (x *GetScreenSizeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[58]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetScreenSizeResponse.ProtoReflect.Descriptor instead.
+func (*GetScreenSizeResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{58}
+}
+
+func (x *GetScreenSizeResponse) GetResult() isGetScreenSizeResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *GetScreenSizeResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*GetScreenSizeResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *GetScreenSizeResponse) GetResponse() *ScreenSize {
+	if x != nil {
+		if x, ok := x.Result.(*GetScreenSizeResponse_Response); ok {
+			return x.Response
+		}
+	}
+	return nil
+}
+
+type isGetScreenSizeResponse_Result interface {
+	isGetScreenSizeResponse_Result()
+}
+
+type GetScreenSizeResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type GetScreenSizeResponse_Response struct {
+	Response *ScreenSize `protobuf:"bytes,2,opt,name=response,proto3,oneof"`
+}
+
+func (*GetScreenSizeResponse_ErrorMessage) isGetScreenSizeResponse_Result() {}
+
+func (*GetScreenSizeResponse_Response) isGetScreenSizeResponse_Result() {}
+
 var File_computer_api_v1_computer_proto protoreflect.FileDescriptor
 
 const file_computer_api_v1_computer_proto_rawDesc = "" +
@@ -1481,6 +3736,139 @@ const file_computer_api_v1_computer_proto_rawDesc = "" +
 	"\x12GetGroupIdResponse\x12%\n" +
 	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12\x1b\n" +
 	"\bgroup_id\x18\x02 \x01(\tH\x00R\agroupIdB\b\n" +
+	"\x06result\"\xb8\x01\n" +
+	"\x18CaptureScreenshotRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x11\n" +
+	"\x01x\x18\x02 \x01(\x05H\x00R\x01x\x88\x01\x01\x12\x11\n" +
+	"\x01y\x18\x03 \x01(\x05H\x01R\x01y\x88\x01\x01\x12\x19\n" +
+	"\x05width\x18\x04 \x01(\x05H\x02R\x05width\x88\x01\x01\x12\x1b\n" +
+	"\x06height\x18\x05 \x01(\x05H\x03R\x06height\x88\x01\x01B\x04\n" +
+	"\x02_xB\x04\n" +
+	"\x02_yB\b\n" +
+	"\x06_widthB\t\n" +
+	"\a_height\"A\n" +
+	" SuccessCaptureScreenshotResponse\x12\x1d\n" +
+	"\n" +
+	"image_data\x18\x01 \x01(\fR\timageData\"\x9d\x01\n" +
+	"\x19CaptureScreenshotResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12O\n" +
+	"\bresponse\x18\x02 \x01(\v21.computer_api.v1.SuccessCaptureScreenshotResponseH\x00R\bresponseB\b\n" +
+	"\x06result\"q\n" +
+	"\fClickRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\f\n" +
+	"\x01x\x18\x02 \x01(\x05R\x01x\x12\f\n" +
+	"\x01y\x18\x03 \x01(\x05R\x01y\x12\x1b\n" +
+	"\x06button\x18\x04 \x01(\tH\x00R\x06button\x88\x01\x01B\t\n" +
+	"\a_button\"\x16\n" +
+	"\x14SuccessClickResponse\"\x85\x01\n" +
+	"\rClickResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12C\n" +
+	"\bresponse\x18\x02 \x01(\v2%.computer_api.v1.SuccessClickResponseH\x00R\bresponseB\b\n" +
+	"\x06result\"@\n" +
+	"\vTypeRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x12\n" +
+	"\x04text\x18\x02 \x01(\tR\x04text\"\x15\n" +
+	"\x13SuccessTypeResponse\"\x83\x01\n" +
+	"\fTypeResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12B\n" +
+	"\bresponse\x18\x02 \x01(\v2$.computer_api.v1.SuccessTypeResponseH\x00R\bresponseB\b\n" +
+	"\x06result\"B\n" +
+	"\x0fPressKeyRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x10\n" +
+	"\x03key\x18\x02 \x01(\tR\x03key\"\x19\n" +
+	"\x17SuccessPressKeyResponse\"\x8b\x01\n" +
+	"\x10PressKeyResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12F\n" +
+	"\bresponse\x18\x02 \x01(\v2(.computer_api.v1.SuccessPressKeyResponseH\x00R\bresponseB\b\n" +
+	"\x06result\"D\n" +
+	"\x11ReleaseKeyRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x10\n" +
+	"\x03key\x18\x02 \x01(\tR\x03key\"\x1b\n" +
+	"\x19SuccessReleaseKeyResponse\"\x8f\x01\n" +
+	"\x12ReleaseKeyResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12H\n" +
+	"\bresponse\x18\x02 \x01(\v2*.computer_api.v1.SuccessReleaseKeyResponseH\x00R\bresponseB\b\n" +
+	"\x06result\"I\n" +
+	"\x16PressAndHoldKeyRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x10\n" +
+	"\x03key\x18\x02 \x01(\tR\x03key\" \n" +
+	"\x1eSuccessPressAndHoldKeyResponse\"\x99\x01\n" +
+	"\x17PressAndHoldKeyResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12M\n" +
+	"\bresponse\x18\x02 \x01(\v2/.computer_api.v1.SuccessPressAndHoldKeyResponseH\x00R\bresponseB\b\n" +
+	"\x06result\"6\n" +
+	"\x15ReleaseAllKeysRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"\x1f\n" +
+	"\x1dSuccessReleaseAllKeysResponse\"\x97\x01\n" +
+	"\x16ReleaseAllKeysResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12L\n" +
+	"\bresponse\x18\x02 \x01(\v2..computer_api.v1.SuccessReleaseAllKeysResponseH\x00R\bresponseB\b\n" +
+	"\x06result\"l\n" +
+	"\vDragRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x0e\n" +
+	"\x02x1\x18\x02 \x01(\x05R\x02x1\x12\x0e\n" +
+	"\x02y1\x18\x03 \x01(\x05R\x02y1\x12\x0e\n" +
+	"\x02x2\x18\x04 \x01(\x05R\x02x2\x12\x0e\n" +
+	"\x02y2\x18\x05 \x01(\x05R\x02y2\"\x15\n" +
+	"\x13SuccessDragResponse\"\x83\x01\n" +
+	"\fDragResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12B\n" +
+	"\bresponse\x18\x02 \x01(\v2$.computer_api.v1.SuccessDragResponseH\x00R\bresponseB\b\n" +
+	"\x06result\"O\n" +
+	"\x12MoveMouseToRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\f\n" +
+	"\x01x\x18\x02 \x01(\x05R\x01x\x12\f\n" +
+	"\x01y\x18\x03 \x01(\x05R\x01y\"\x1c\n" +
+	"\x1aSuccessMoveMouseToResponse\"\x91\x01\n" +
+	"\x13MoveMouseToResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12I\n" +
+	"\bresponse\x18\x02 \x01(\v2+.computer_api.v1.SuccessMoveMouseToResponseH\x00R\bresponseB\b\n" +
+	"\x06result\"N\n" +
+	"\rScrollRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x0e\n" +
+	"\x02dx\x18\x02 \x01(\x05R\x02dx\x12\x0e\n" +
+	"\x02dy\x18\x03 \x01(\x05R\x02dy\"\x17\n" +
+	"\x15SuccessScrollResponse\"\x87\x01\n" +
+	"\x0eScrollResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12D\n" +
+	"\bresponse\x18\x02 \x01(\v2&.computer_api.v1.SuccessScrollResponseH\x00R\bresponseB\b\n" +
+	"\x06result\"4\n" +
+	"\x13GetClipboardRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"]\n" +
+	"\x14GetClipboardResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12\x14\n" +
+	"\x04text\x18\x02 \x01(\tH\x00R\x04textB\b\n" +
+	"\x06result\"H\n" +
+	"\x13SetClipboardRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x12\n" +
+	"\x04text\x18\x02 \x01(\tR\x04text\"\x1d\n" +
+	"\x1bSuccessSetClipboardResponse\"\x93\x01\n" +
+	"\x14SetClipboardResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12J\n" +
+	"\bresponse\x18\x02 \x01(\v2,.computer_api.v1.SuccessSetClipboardResponseH\x00R\bresponseB\b\n" +
+	"\x06result\"5\n" +
+	"\x14GetScreenSizeRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\":\n" +
+	"\n" +
+	"ScreenSize\x12\x14\n" +
+	"\x05width\x18\x01 \x01(\x05R\x05width\x12\x16\n" +
+	"\x06height\x18\x02 \x01(\x05R\x06height\"\x83\x01\n" +
+	"\x15GetScreenSizeResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x129\n" +
+	"\bresponse\x18\x02 \x01(\v2\x1b.computer_api.v1.ScreenSizeH\x00R\bresponseB\b\n" +
 	"\x06result*f\n" +
 	"\fComputerType\x12\x1d\n" +
 	"\x19COMPUTER_TYPE_UNSPECIFIED\x10\x00\x12\x1a\n" +
@@ -1497,8 +3885,22 @@ const file_computer_api_v1_computer_proto_rawDesc = "" +
 	"\rListDirectory\x12%.computer_api.v1.ListDirectoryRequest\x1a&.computer_api.v1.ListDirectoryResponse\x12R\n" +
 	"\tGetUserId\x12!.computer_api.v1.GetUserIdRequest\x1a\".computer_api.v1.GetUserIdResponse\x12U\n" +
 	"\n" +
-	"GetGroupId\x12\".computer_api.v1.GetGroupIdRequest\x1a#.computer_api.v1.GetGroupIdResponse2\x1a\n" +
-	"\x18GraphicalComputerServiceB\xe8\x01\n" +
+	"GetGroupId\x12\".computer_api.v1.GetGroupIdRequest\x1a#.computer_api.v1.GetGroupIdResponse2\x88\t\n" +
+	"\x18GraphicalComputerService\x12j\n" +
+	"\x11CaptureScreenshot\x12).computer_api.v1.CaptureScreenshotRequest\x1a*.computer_api.v1.CaptureScreenshotResponse\x12F\n" +
+	"\x05Click\x12\x1d.computer_api.v1.ClickRequest\x1a\x1e.computer_api.v1.ClickResponse\x12C\n" +
+	"\x04Type\x12\x1c.computer_api.v1.TypeRequest\x1a\x1d.computer_api.v1.TypeResponse\x12O\n" +
+	"\bPressKey\x12 .computer_api.v1.PressKeyRequest\x1a!.computer_api.v1.PressKeyResponse\x12U\n" +
+	"\n" +
+	"ReleaseKey\x12\".computer_api.v1.ReleaseKeyRequest\x1a#.computer_api.v1.ReleaseKeyResponse\x12d\n" +
+	"\x0fPressAndHoldKey\x12'.computer_api.v1.PressAndHoldKeyRequest\x1a(.computer_api.v1.PressAndHoldKeyResponse\x12a\n" +
+	"\x0eReleaseAllKeys\x12&.computer_api.v1.ReleaseAllKeysRequest\x1a'.computer_api.v1.ReleaseAllKeysResponse\x12C\n" +
+	"\x04Drag\x12\x1c.computer_api.v1.DragRequest\x1a\x1d.computer_api.v1.DragResponse\x12X\n" +
+	"\vMoveMouseTo\x12#.computer_api.v1.MoveMouseToRequest\x1a$.computer_api.v1.MoveMouseToResponse\x12I\n" +
+	"\x06Scroll\x12\x1e.computer_api.v1.ScrollRequest\x1a\x1f.computer_api.v1.ScrollResponse\x12[\n" +
+	"\fGetClipboard\x12$.computer_api.v1.GetClipboardRequest\x1a%.computer_api.v1.GetClipboardResponse\x12[\n" +
+	"\fSetClipboard\x12$.computer_api.v1.SetClipboardRequest\x1a%.computer_api.v1.SetClipboardResponse\x12^\n" +
+	"\rGetScreenSize\x12%.computer_api.v1.GetScreenSizeRequest\x1a&.computer_api.v1.GetScreenSizeResponseB\xe8\x01\n" +
 	"\x13com.computer_api.v1B\rComputerProtoP\x01Zigithub.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/gen/computer_api/v1;computer_apiv1\xa2\x02\x03CXX\xaa\x02\x0eComputerApi.V1\xca\x02\x0eComputerApi\\V1\xe2\x02\x1aComputerApi\\V1\\GPBMetadata\xea\x02\x0fComputerApi::V1b\x06proto3"
 
 var (
@@ -1514,63 +3916,139 @@ func file_computer_api_v1_computer_proto_rawDescGZIP() []byte {
 }
 
 var file_computer_api_v1_computer_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_computer_api_v1_computer_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
+var file_computer_api_v1_computer_proto_msgTypes = make([]protoimpl.MessageInfo, 60)
 var file_computer_api_v1_computer_proto_goTypes = []any{
-	(ComputerType)(0),                    // 0: computer_api.v1.ComputerType
-	(*CreateComputerRequest)(nil),        // 1: computer_api.v1.CreateComputerRequest
-	(*CreateComputerResponse)(nil),       // 2: computer_api.v1.CreateComputerResponse
-	(*GetComputerInfoRequest)(nil),       // 3: computer_api.v1.GetComputerInfoRequest
-	(*GetComputerInfoResponse)(nil),      // 4: computer_api.v1.GetComputerInfoResponse
-	(*DeleteComputerRequest)(nil),        // 5: computer_api.v1.DeleteComputerRequest
-	(*DeleteComputerResponse)(nil),       // 6: computer_api.v1.DeleteComputerResponse
-	(*ExecuteRequest)(nil),               // 7: computer_api.v1.ExecuteRequest
-	(*ExecutionResult)(nil),              // 8: computer_api.v1.ExecutionResult
-	(*ExecuteResponse)(nil),              // 9: computer_api.v1.ExecuteResponse
-	(*ReadFileRequest)(nil),              // 10: computer_api.v1.ReadFileRequest
-	(*ReadFileResponse)(nil),             // 11: computer_api.v1.ReadFileResponse
-	(*WriteFileRequest)(nil),             // 12: computer_api.v1.WriteFileRequest
-	(*SuccessWriteResponse)(nil),         // 13: computer_api.v1.SuccessWriteResponse
-	(*WriteFileResponse)(nil),            // 14: computer_api.v1.WriteFileResponse
-	(*ListDirectoryRequest)(nil),         // 15: computer_api.v1.ListDirectoryRequest
-	(*SuccessListDirectoryResponse)(nil), // 16: computer_api.v1.SuccessListDirectoryResponse
-	(*ListDirectoryResponse)(nil),        // 17: computer_api.v1.ListDirectoryResponse
-	(*GetUserIdRequest)(nil),             // 18: computer_api.v1.GetUserIdRequest
-	(*GetUserIdResponse)(nil),            // 19: computer_api.v1.GetUserIdResponse
-	(*GetGroupIdRequest)(nil),            // 20: computer_api.v1.GetGroupIdRequest
-	(*GetGroupIdResponse)(nil),           // 21: computer_api.v1.GetGroupIdResponse
-	nil,                                  // 22: computer_api.v1.ExecuteRequest.EnvVarsEntry
-	(*durationpb.Duration)(nil),          // 23: google.protobuf.Duration
+	(ComputerType)(0),                        // 0: computer_api.v1.ComputerType
+	(*CreateComputerRequest)(nil),            // 1: computer_api.v1.CreateComputerRequest
+	(*CreateComputerResponse)(nil),           // 2: computer_api.v1.CreateComputerResponse
+	(*GetComputerInfoRequest)(nil),           // 3: computer_api.v1.GetComputerInfoRequest
+	(*GetComputerInfoResponse)(nil),          // 4: computer_api.v1.GetComputerInfoResponse
+	(*DeleteComputerRequest)(nil),            // 5: computer_api.v1.DeleteComputerRequest
+	(*DeleteComputerResponse)(nil),           // 6: computer_api.v1.DeleteComputerResponse
+	(*ExecuteRequest)(nil),                   // 7: computer_api.v1.ExecuteRequest
+	(*ExecutionResult)(nil),                  // 8: computer_api.v1.ExecutionResult
+	(*ExecuteResponse)(nil),                  // 9: computer_api.v1.ExecuteResponse
+	(*ReadFileRequest)(nil),                  // 10: computer_api.v1.ReadFileRequest
+	(*ReadFileResponse)(nil),                 // 11: computer_api.v1.ReadFileResponse
+	(*WriteFileRequest)(nil),                 // 12: computer_api.v1.WriteFileRequest
+	(*SuccessWriteResponse)(nil),             // 13: computer_api.v1.SuccessWriteResponse
+	(*WriteFileResponse)(nil),                // 14: computer_api.v1.WriteFileResponse
+	(*ListDirectoryRequest)(nil),             // 15: computer_api.v1.ListDirectoryRequest
+	(*SuccessListDirectoryResponse)(nil),     // 16: computer_api.v1.SuccessListDirectoryResponse
+	(*ListDirectoryResponse)(nil),            // 17: computer_api.v1.ListDirectoryResponse
+	(*GetUserIdRequest)(nil),                 // 18: computer_api.v1.GetUserIdRequest
+	(*GetUserIdResponse)(nil),                // 19: computer_api.v1.GetUserIdResponse
+	(*GetGroupIdRequest)(nil),                // 20: computer_api.v1.GetGroupIdRequest
+	(*GetGroupIdResponse)(nil),               // 21: computer_api.v1.GetGroupIdResponse
+	(*CaptureScreenshotRequest)(nil),         // 22: computer_api.v1.CaptureScreenshotRequest
+	(*SuccessCaptureScreenshotResponse)(nil), // 23: computer_api.v1.SuccessCaptureScreenshotResponse
+	(*CaptureScreenshotResponse)(nil),        // 24: computer_api.v1.CaptureScreenshotResponse
+	(*ClickRequest)(nil),                     // 25: computer_api.v1.ClickRequest
+	(*SuccessClickResponse)(nil),             // 26: computer_api.v1.SuccessClickResponse
+	(*ClickResponse)(nil),                    // 27: computer_api.v1.ClickResponse
+	(*TypeRequest)(nil),                      // 28: computer_api.v1.TypeRequest
+	(*SuccessTypeResponse)(nil),              // 29: computer_api.v1.SuccessTypeResponse
+	(*TypeResponse)(nil),                     // 30: computer_api.v1.TypeResponse
+	(*PressKeyRequest)(nil),                  // 31: computer_api.v1.PressKeyRequest
+	(*SuccessPressKeyResponse)(nil),          // 32: computer_api.v1.SuccessPressKeyResponse
+	(*PressKeyResponse)(nil),                 // 33: computer_api.v1.PressKeyResponse
+	(*ReleaseKeyRequest)(nil),                // 34: computer_api.v1.ReleaseKeyRequest
+	(*SuccessReleaseKeyResponse)(nil),        // 35: computer_api.v1.SuccessReleaseKeyResponse
+	(*ReleaseKeyResponse)(nil),               // 36: computer_api.v1.ReleaseKeyResponse
+	(*PressAndHoldKeyRequest)(nil),           // 37: computer_api.v1.PressAndHoldKeyRequest
+	(*SuccessPressAndHoldKeyResponse)(nil),   // 38: computer_api.v1.SuccessPressAndHoldKeyResponse
+	(*PressAndHoldKeyResponse)(nil),          // 39: computer_api.v1.PressAndHoldKeyResponse
+	(*ReleaseAllKeysRequest)(nil),            // 40: computer_api.v1.ReleaseAllKeysRequest
+	(*SuccessReleaseAllKeysResponse)(nil),    // 41: computer_api.v1.SuccessReleaseAllKeysResponse
+	(*ReleaseAllKeysResponse)(nil),           // 42: computer_api.v1.ReleaseAllKeysResponse
+	(*DragRequest)(nil),                      // 43: computer_api.v1.DragRequest
+	(*SuccessDragResponse)(nil),              // 44: computer_api.v1.SuccessDragResponse
+	(*DragResponse)(nil),                     // 45: computer_api.v1.DragResponse
+	(*MoveMouseToRequest)(nil),               // 46: computer_api.v1.MoveMouseToRequest
+	(*SuccessMoveMouseToResponse)(nil),       // 47: computer_api.v1.SuccessMoveMouseToResponse
+	(*MoveMouseToResponse)(nil),              // 48: computer_api.v1.MoveMouseToResponse
+	(*ScrollRequest)(nil),                    // 49: computer_api.v1.ScrollRequest
+	(*SuccessScrollResponse)(nil),            // 50: computer_api.v1.SuccessScrollResponse
+	(*ScrollResponse)(nil),                   // 51: computer_api.v1.ScrollResponse
+	(*GetClipboardRequest)(nil),              // 52: computer_api.v1.GetClipboardRequest
+	(*GetClipboardResponse)(nil),             // 53: computer_api.v1.GetClipboardResponse
+	(*SetClipboardRequest)(nil),              // 54: computer_api.v1.SetClipboardRequest
+	(*SuccessSetClipboardResponse)(nil),      // 55: computer_api.v1.SuccessSetClipboardResponse
+	(*SetClipboardResponse)(nil),             // 56: computer_api.v1.SetClipboardResponse
+	(*GetScreenSizeRequest)(nil),             // 57: computer_api.v1.GetScreenSizeRequest
+	(*ScreenSize)(nil),                       // 58: computer_api.v1.ScreenSize
+	(*GetScreenSizeResponse)(nil),            // 59: computer_api.v1.GetScreenSizeResponse
+	nil,                                      // 60: computer_api.v1.ExecuteRequest.EnvVarsEntry
+	(*durationpb.Duration)(nil),              // 61: google.protobuf.Duration
 }
 var file_computer_api_v1_computer_proto_depIdxs = []int32{
 	0,  // 0: computer_api.v1.GetComputerInfoResponse.type:type_name -> computer_api.v1.ComputerType
-	22, // 1: computer_api.v1.ExecuteRequest.env_vars:type_name -> computer_api.v1.ExecuteRequest.EnvVarsEntry
-	23, // 2: computer_api.v1.ExecuteRequest.wait_delay:type_name -> google.protobuf.Duration
+	60, // 1: computer_api.v1.ExecuteRequest.env_vars:type_name -> computer_api.v1.ExecuteRequest.EnvVarsEntry
+	61, // 2: computer_api.v1.ExecuteRequest.wait_delay:type_name -> google.protobuf.Duration
 	8,  // 3: computer_api.v1.ExecuteResponse.exec_result:type_name -> computer_api.v1.ExecutionResult
 	13, // 4: computer_api.v1.WriteFileResponse.resp:type_name -> computer_api.v1.SuccessWriteResponse
 	16, // 5: computer_api.v1.ListDirectoryResponse.response:type_name -> computer_api.v1.SuccessListDirectoryResponse
-	1,  // 6: computer_api.v1.ComputerProviderService.CreateComputer:input_type -> computer_api.v1.CreateComputerRequest
-	3,  // 7: computer_api.v1.ComputerProviderService.GetComputerInfo:input_type -> computer_api.v1.GetComputerInfoRequest
-	5,  // 8: computer_api.v1.ComputerProviderService.DeleteComputer:input_type -> computer_api.v1.DeleteComputerRequest
-	7,  // 9: computer_api.v1.BasicComputerService.Execute:input_type -> computer_api.v1.ExecuteRequest
-	10, // 10: computer_api.v1.BasicComputerService.ReadFile:input_type -> computer_api.v1.ReadFileRequest
-	12, // 11: computer_api.v1.BasicComputerService.WriteFile:input_type -> computer_api.v1.WriteFileRequest
-	15, // 12: computer_api.v1.BasicComputerService.ListDirectory:input_type -> computer_api.v1.ListDirectoryRequest
-	18, // 13: computer_api.v1.BasicComputerService.GetUserId:input_type -> computer_api.v1.GetUserIdRequest
-	20, // 14: computer_api.v1.BasicComputerService.GetGroupId:input_type -> computer_api.v1.GetGroupIdRequest
-	2,  // 15: computer_api.v1.ComputerProviderService.CreateComputer:output_type -> computer_api.v1.CreateComputerResponse
-	4,  // 16: computer_api.v1.ComputerProviderService.GetComputerInfo:output_type -> computer_api.v1.GetComputerInfoResponse
-	6,  // 17: computer_api.v1.ComputerProviderService.DeleteComputer:output_type -> computer_api.v1.DeleteComputerResponse
-	9,  // 18: computer_api.v1.BasicComputerService.Execute:output_type -> computer_api.v1.ExecuteResponse
-	11, // 19: computer_api.v1.BasicComputerService.ReadFile:output_type -> computer_api.v1.ReadFileResponse
-	14, // 20: computer_api.v1.BasicComputerService.WriteFile:output_type -> computer_api.v1.WriteFileResponse
-	17, // 21: computer_api.v1.BasicComputerService.ListDirectory:output_type -> computer_api.v1.ListDirectoryResponse
-	19, // 22: computer_api.v1.BasicComputerService.GetUserId:output_type -> computer_api.v1.GetUserIdResponse
-	21, // 23: computer_api.v1.BasicComputerService.GetGroupId:output_type -> computer_api.v1.GetGroupIdResponse
-	15, // [15:24] is the sub-list for method output_type
-	6,  // [6:15] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	23, // 6: computer_api.v1.CaptureScreenshotResponse.response:type_name -> computer_api.v1.SuccessCaptureScreenshotResponse
+	26, // 7: computer_api.v1.ClickResponse.response:type_name -> computer_api.v1.SuccessClickResponse
+	29, // 8: computer_api.v1.TypeResponse.response:type_name -> computer_api.v1.SuccessTypeResponse
+	32, // 9: computer_api.v1.PressKeyResponse.response:type_name -> computer_api.v1.SuccessPressKeyResponse
+	35, // 10: computer_api.v1.ReleaseKeyResponse.response:type_name -> computer_api.v1.SuccessReleaseKeyResponse
+	38, // 11: computer_api.v1.PressAndHoldKeyResponse.response:type_name -> computer_api.v1.SuccessPressAndHoldKeyResponse
+	41, // 12: computer_api.v1.ReleaseAllKeysResponse.response:type_name -> computer_api.v1.SuccessReleaseAllKeysResponse
+	44, // 13: computer_api.v1.DragResponse.response:type_name -> computer_api.v1.SuccessDragResponse
+	47, // 14: computer_api.v1.MoveMouseToResponse.response:type_name -> computer_api.v1.SuccessMoveMouseToResponse
+	50, // 15: computer_api.v1.ScrollResponse.response:type_name -> computer_api.v1.SuccessScrollResponse
+	55, // 16: computer_api.v1.SetClipboardResponse.response:type_name -> computer_api.v1.SuccessSetClipboardResponse
+	58, // 17: computer_api.v1.GetScreenSizeResponse.response:type_name -> computer_api.v1.ScreenSize
+	1,  // 18: computer_api.v1.ComputerProviderService.CreateComputer:input_type -> computer_api.v1.CreateComputerRequest
+	3,  // 19: computer_api.v1.ComputerProviderService.GetComputerInfo:input_type -> computer_api.v1.GetComputerInfoRequest
+	5,  // 20: computer_api.v1.ComputerProviderService.DeleteComputer:input_type -> computer_api.v1.DeleteComputerRequest
+	7,  // 21: computer_api.v1.BasicComputerService.Execute:input_type -> computer_api.v1.ExecuteRequest
+	10, // 22: computer_api.v1.BasicComputerService.ReadFile:input_type -> computer_api.v1.ReadFileRequest
+	12, // 23: computer_api.v1.BasicComputerService.WriteFile:input_type -> computer_api.v1.WriteFileRequest
+	15, // 24: computer_api.v1.BasicComputerService.ListDirectory:input_type -> computer_api.v1.ListDirectoryRequest
+	18, // 25: computer_api.v1.BasicComputerService.GetUserId:input_type -> computer_api.v1.GetUserIdRequest
+	20, // 26: computer_api.v1.BasicComputerService.GetGroupId:input_type -> computer_api.v1.GetGroupIdRequest
+	22, // 27: computer_api.v1.GraphicalComputerService.CaptureScreenshot:input_type -> computer_api.v1.CaptureScreenshotRequest
+	25, // 28: computer_api.v1.GraphicalComputerService.Click:input_type -> computer_api.v1.ClickRequest
+	28, // 29: computer_api.v1.GraphicalComputerService.Type:input_type -> computer_api.v1.TypeRequest
+	31, // 30: computer_api.v1.GraphicalComputerService.PressKey:input_type -> computer_api.v1.PressKeyRequest
+	34, // 31: computer_api.v1.GraphicalComputerService.ReleaseKey:input_type -> computer_api.v1.ReleaseKeyRequest
+	37, // 32: computer_api.v1.GraphicalComputerService.PressAndHoldKey:input_type -> computer_api.v1.PressAndHoldKeyRequest
+	40, // 33: computer_api.v1.GraphicalComputerService.ReleaseAllKeys:input_type -> computer_api.v1.ReleaseAllKeysRequest
+	43, // 34: computer_api.v1.GraphicalComputerService.Drag:input_type -> computer_api.v1.DragRequest
+	46, // 35: computer_api.v1.GraphicalComputerService.MoveMouseTo:input_type -> computer_api.v1.MoveMouseToRequest
+	49, // 36: computer_api.v1.GraphicalComputerService.Scroll:input_type -> computer_api.v1.ScrollRequest
+	52, // 37: computer_api.v1.GraphicalComputerService.GetClipboard:input_type -> computer_api.v1.GetClipboardRequest
+	54, // 38: computer_api.v1.GraphicalComputerService.SetClipboard:input_type -> computer_api.v1.SetClipboardRequest
+	57, // 39: computer_api.v1.GraphicalComputerService.GetScreenSize:input_type -> computer_api.v1.GetScreenSizeRequest
+	2,  // 40: computer_api.v1.ComputerProviderService.CreateComputer:output_type -> computer_api.v1.CreateComputerResponse
+	4,  // 41: computer_api.v1.ComputerProviderService.GetComputerInfo:output_type -> computer_api.v1.GetComputerInfoResponse
+	6,  // 42: computer_api.v1.ComputerProviderService.DeleteComputer:output_type -> computer_api.v1.DeleteComputerResponse
+	9,  // 43: computer_api.v1.BasicComputerService.Execute:output_type -> computer_api.v1.ExecuteResponse
+	11, // 44: computer_api.v1.BasicComputerService.ReadFile:output_type -> computer_api.v1.ReadFileResponse
+	14, // 45: computer_api.v1.BasicComputerService.WriteFile:output_type -> computer_api.v1.WriteFileResponse
+	17, // 46: computer_api.v1.BasicComputerService.ListDirectory:output_type -> computer_api.v1.ListDirectoryResponse
+	19, // 47: computer_api.v1.BasicComputerService.GetUserId:output_type -> computer_api.v1.GetUserIdResponse
+	21, // 48: computer_api.v1.BasicComputerService.GetGroupId:output_type -> computer_api.v1.GetGroupIdResponse
+	24, // 49: computer_api.v1.GraphicalComputerService.CaptureScreenshot:output_type -> computer_api.v1.CaptureScreenshotResponse
+	27, // 50: computer_api.v1.GraphicalComputerService.Click:output_type -> computer_api.v1.ClickResponse
+	30, // 51: computer_api.v1.GraphicalComputerService.Type:output_type -> computer_api.v1.TypeResponse
+	33, // 52: computer_api.v1.GraphicalComputerService.PressKey:output_type -> computer_api.v1.PressKeyResponse
+	36, // 53: computer_api.v1.GraphicalComputerService.ReleaseKey:output_type -> computer_api.v1.ReleaseKeyResponse
+	39, // 54: computer_api.v1.GraphicalComputerService.PressAndHoldKey:output_type -> computer_api.v1.PressAndHoldKeyResponse
+	42, // 55: computer_api.v1.GraphicalComputerService.ReleaseAllKeys:output_type -> computer_api.v1.ReleaseAllKeysResponse
+	45, // 56: computer_api.v1.GraphicalComputerService.Drag:output_type -> computer_api.v1.DragResponse
+	48, // 57: computer_api.v1.GraphicalComputerService.MoveMouseTo:output_type -> computer_api.v1.MoveMouseToResponse
+	51, // 58: computer_api.v1.GraphicalComputerService.Scroll:output_type -> computer_api.v1.ScrollResponse
+	53, // 59: computer_api.v1.GraphicalComputerService.GetClipboard:output_type -> computer_api.v1.GetClipboardResponse
+	56, // 60: computer_api.v1.GraphicalComputerService.SetClipboard:output_type -> computer_api.v1.SetClipboardResponse
+	59, // 61: computer_api.v1.GraphicalComputerService.GetScreenSize:output_type -> computer_api.v1.GetScreenSizeResponse
+	40, // [40:62] is the sub-list for method output_type
+	18, // [18:40] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
 func init() { file_computer_api_v1_computer_proto_init() }
@@ -1609,13 +4087,67 @@ func file_computer_api_v1_computer_proto_init() {
 		(*GetGroupIdResponse_ErrorMessage)(nil),
 		(*GetGroupIdResponse_GroupId)(nil),
 	}
+	file_computer_api_v1_computer_proto_msgTypes[21].OneofWrappers = []any{}
+	file_computer_api_v1_computer_proto_msgTypes[23].OneofWrappers = []any{
+		(*CaptureScreenshotResponse_ErrorMessage)(nil),
+		(*CaptureScreenshotResponse_Response)(nil),
+	}
+	file_computer_api_v1_computer_proto_msgTypes[24].OneofWrappers = []any{}
+	file_computer_api_v1_computer_proto_msgTypes[26].OneofWrappers = []any{
+		(*ClickResponse_ErrorMessage)(nil),
+		(*ClickResponse_Response)(nil),
+	}
+	file_computer_api_v1_computer_proto_msgTypes[29].OneofWrappers = []any{
+		(*TypeResponse_ErrorMessage)(nil),
+		(*TypeResponse_Response)(nil),
+	}
+	file_computer_api_v1_computer_proto_msgTypes[32].OneofWrappers = []any{
+		(*PressKeyResponse_ErrorMessage)(nil),
+		(*PressKeyResponse_Response)(nil),
+	}
+	file_computer_api_v1_computer_proto_msgTypes[35].OneofWrappers = []any{
+		(*ReleaseKeyResponse_ErrorMessage)(nil),
+		(*ReleaseKeyResponse_Response)(nil),
+	}
+	file_computer_api_v1_computer_proto_msgTypes[38].OneofWrappers = []any{
+		(*PressAndHoldKeyResponse_ErrorMessage)(nil),
+		(*PressAndHoldKeyResponse_Response)(nil),
+	}
+	file_computer_api_v1_computer_proto_msgTypes[41].OneofWrappers = []any{
+		(*ReleaseAllKeysResponse_ErrorMessage)(nil),
+		(*ReleaseAllKeysResponse_Response)(nil),
+	}
+	file_computer_api_v1_computer_proto_msgTypes[44].OneofWrappers = []any{
+		(*DragResponse_ErrorMessage)(nil),
+		(*DragResponse_Response)(nil),
+	}
+	file_computer_api_v1_computer_proto_msgTypes[47].OneofWrappers = []any{
+		(*MoveMouseToResponse_ErrorMessage)(nil),
+		(*MoveMouseToResponse_Response)(nil),
+	}
+	file_computer_api_v1_computer_proto_msgTypes[50].OneofWrappers = []any{
+		(*ScrollResponse_ErrorMessage)(nil),
+		(*ScrollResponse_Response)(nil),
+	}
+	file_computer_api_v1_computer_proto_msgTypes[52].OneofWrappers = []any{
+		(*GetClipboardResponse_ErrorMessage)(nil),
+		(*GetClipboardResponse_Text)(nil),
+	}
+	file_computer_api_v1_computer_proto_msgTypes[55].OneofWrappers = []any{
+		(*SetClipboardResponse_ErrorMessage)(nil),
+		(*SetClipboardResponse_Response)(nil),
+	}
+	file_computer_api_v1_computer_proto_msgTypes[58].OneofWrappers = []any{
+		(*GetScreenSizeResponse_ErrorMessage)(nil),
+		(*GetScreenSizeResponse_Response)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_computer_api_v1_computer_proto_rawDesc), len(file_computer_api_v1_computer_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   22,
+			NumMessages:   60,
 			NumExtensions: 0,
 			NumServices:   3,
 		},

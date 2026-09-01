@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { CreateComputerRequest, CreateComputerResponse, DeleteComputerRequest, DeleteComputerResponse, ExecuteRequest, ExecuteResponse, GetComputerInfoRequest, GetComputerInfoResponse, GetGroupIdRequest, GetGroupIdResponse, GetUserIdRequest, GetUserIdResponse, ListDirectoryRequest, ListDirectoryResponse, ReadFileRequest, ReadFileResponse, WriteFileRequest, WriteFileResponse } from "./computer_pb.js";
+import { CaptureScreenshotRequest, CaptureScreenshotResponse, ClickRequest, ClickResponse, CreateComputerRequest, CreateComputerResponse, DeleteComputerRequest, DeleteComputerResponse, DragRequest, DragResponse, ExecuteRequest, ExecuteResponse, GetClipboardRequest, GetClipboardResponse, GetComputerInfoRequest, GetComputerInfoResponse, GetGroupIdRequest, GetGroupIdResponse, GetScreenSizeRequest, GetScreenSizeResponse, GetUserIdRequest, GetUserIdResponse, ListDirectoryRequest, ListDirectoryResponse, MoveMouseToRequest, MoveMouseToResponse, PressAndHoldKeyRequest, PressAndHoldKeyResponse, PressKeyRequest, PressKeyResponse, ReadFileRequest, ReadFileResponse, ReleaseAllKeysRequest, ReleaseAllKeysResponse, ReleaseKeyRequest, ReleaseKeyResponse, ScrollRequest, ScrollResponse, SetClipboardRequest, SetClipboardResponse, TypeRequest, TypeResponse, WriteFileRequest, WriteFileResponse } from "./computer_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -111,6 +111,123 @@ export const BasicComputerService = {
 export const GraphicalComputerService = {
   typeName: "computer_api.v1.GraphicalComputerService",
   methods: {
+    /**
+     * @generated from rpc computer_api.v1.GraphicalComputerService.CaptureScreenshot
+     */
+    captureScreenshot: {
+      name: "CaptureScreenshot",
+      I: CaptureScreenshotRequest,
+      O: CaptureScreenshotResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc computer_api.v1.GraphicalComputerService.Click
+     */
+    click: {
+      name: "Click",
+      I: ClickRequest,
+      O: ClickResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc computer_api.v1.GraphicalComputerService.Type
+     */
+    type: {
+      name: "Type",
+      I: TypeRequest,
+      O: TypeResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc computer_api.v1.GraphicalComputerService.PressKey
+     */
+    pressKey: {
+      name: "PressKey",
+      I: PressKeyRequest,
+      O: PressKeyResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc computer_api.v1.GraphicalComputerService.ReleaseKey
+     */
+    releaseKey: {
+      name: "ReleaseKey",
+      I: ReleaseKeyRequest,
+      O: ReleaseKeyResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc computer_api.v1.GraphicalComputerService.PressAndHoldKey
+     */
+    pressAndHoldKey: {
+      name: "PressAndHoldKey",
+      I: PressAndHoldKeyRequest,
+      O: PressAndHoldKeyResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc computer_api.v1.GraphicalComputerService.ReleaseAllKeys
+     */
+    releaseAllKeys: {
+      name: "ReleaseAllKeys",
+      I: ReleaseAllKeysRequest,
+      O: ReleaseAllKeysResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc computer_api.v1.GraphicalComputerService.Drag
+     */
+    drag: {
+      name: "Drag",
+      I: DragRequest,
+      O: DragResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc computer_api.v1.GraphicalComputerService.MoveMouseTo
+     */
+    moveMouseTo: {
+      name: "MoveMouseTo",
+      I: MoveMouseToRequest,
+      O: MoveMouseToResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc computer_api.v1.GraphicalComputerService.Scroll
+     */
+    scroll: {
+      name: "Scroll",
+      I: ScrollRequest,
+      O: ScrollResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc computer_api.v1.GraphicalComputerService.GetClipboard
+     */
+    getClipboard: {
+      name: "GetClipboard",
+      I: GetClipboardRequest,
+      O: GetClipboardResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc computer_api.v1.GraphicalComputerService.SetClipboard
+     */
+    setClipboard: {
+      name: "SetClipboard",
+      I: SetClipboardRequest,
+      O: SetClipboardResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc computer_api.v1.GraphicalComputerService.GetScreenSize
+     */
+    getScreenSize: {
+      name: "GetScreenSize",
+      I: GetScreenSizeRequest,
+      O: GetScreenSizeResponse,
+      kind: MethodKind.Unary,
+    },
   }
 } as const;
 

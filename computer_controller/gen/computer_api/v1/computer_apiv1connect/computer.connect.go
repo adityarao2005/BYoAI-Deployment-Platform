@@ -64,6 +64,45 @@ const (
 	// BasicComputerServiceGetGroupIdProcedure is the fully-qualified name of the BasicComputerService's
 	// GetGroupId RPC.
 	BasicComputerServiceGetGroupIdProcedure = "/computer_api.v1.BasicComputerService/GetGroupId"
+	// GraphicalComputerServiceCaptureScreenshotProcedure is the fully-qualified name of the
+	// GraphicalComputerService's CaptureScreenshot RPC.
+	GraphicalComputerServiceCaptureScreenshotProcedure = "/computer_api.v1.GraphicalComputerService/CaptureScreenshot"
+	// GraphicalComputerServiceClickProcedure is the fully-qualified name of the
+	// GraphicalComputerService's Click RPC.
+	GraphicalComputerServiceClickProcedure = "/computer_api.v1.GraphicalComputerService/Click"
+	// GraphicalComputerServiceTypeProcedure is the fully-qualified name of the
+	// GraphicalComputerService's Type RPC.
+	GraphicalComputerServiceTypeProcedure = "/computer_api.v1.GraphicalComputerService/Type"
+	// GraphicalComputerServicePressKeyProcedure is the fully-qualified name of the
+	// GraphicalComputerService's PressKey RPC.
+	GraphicalComputerServicePressKeyProcedure = "/computer_api.v1.GraphicalComputerService/PressKey"
+	// GraphicalComputerServiceReleaseKeyProcedure is the fully-qualified name of the
+	// GraphicalComputerService's ReleaseKey RPC.
+	GraphicalComputerServiceReleaseKeyProcedure = "/computer_api.v1.GraphicalComputerService/ReleaseKey"
+	// GraphicalComputerServicePressAndHoldKeyProcedure is the fully-qualified name of the
+	// GraphicalComputerService's PressAndHoldKey RPC.
+	GraphicalComputerServicePressAndHoldKeyProcedure = "/computer_api.v1.GraphicalComputerService/PressAndHoldKey"
+	// GraphicalComputerServiceReleaseAllKeysProcedure is the fully-qualified name of the
+	// GraphicalComputerService's ReleaseAllKeys RPC.
+	GraphicalComputerServiceReleaseAllKeysProcedure = "/computer_api.v1.GraphicalComputerService/ReleaseAllKeys"
+	// GraphicalComputerServiceDragProcedure is the fully-qualified name of the
+	// GraphicalComputerService's Drag RPC.
+	GraphicalComputerServiceDragProcedure = "/computer_api.v1.GraphicalComputerService/Drag"
+	// GraphicalComputerServiceMoveMouseToProcedure is the fully-qualified name of the
+	// GraphicalComputerService's MoveMouseTo RPC.
+	GraphicalComputerServiceMoveMouseToProcedure = "/computer_api.v1.GraphicalComputerService/MoveMouseTo"
+	// GraphicalComputerServiceScrollProcedure is the fully-qualified name of the
+	// GraphicalComputerService's Scroll RPC.
+	GraphicalComputerServiceScrollProcedure = "/computer_api.v1.GraphicalComputerService/Scroll"
+	// GraphicalComputerServiceGetClipboardProcedure is the fully-qualified name of the
+	// GraphicalComputerService's GetClipboard RPC.
+	GraphicalComputerServiceGetClipboardProcedure = "/computer_api.v1.GraphicalComputerService/GetClipboard"
+	// GraphicalComputerServiceSetClipboardProcedure is the fully-qualified name of the
+	// GraphicalComputerService's SetClipboard RPC.
+	GraphicalComputerServiceSetClipboardProcedure = "/computer_api.v1.GraphicalComputerService/SetClipboard"
+	// GraphicalComputerServiceGetScreenSizeProcedure is the fully-qualified name of the
+	// GraphicalComputerService's GetScreenSize RPC.
+	GraphicalComputerServiceGetScreenSizeProcedure = "/computer_api.v1.GraphicalComputerService/GetScreenSize"
 )
 
 // ComputerProviderServiceClient is a client for the computer_api.v1.ComputerProviderService
@@ -394,6 +433,19 @@ func (UnimplementedBasicComputerServiceHandler) GetGroupId(context.Context, *con
 // GraphicalComputerServiceClient is a client for the computer_api.v1.GraphicalComputerService
 // service.
 type GraphicalComputerServiceClient interface {
+	CaptureScreenshot(context.Context, *connect.Request[v1.CaptureScreenshotRequest]) (*connect.Response[v1.CaptureScreenshotResponse], error)
+	Click(context.Context, *connect.Request[v1.ClickRequest]) (*connect.Response[v1.ClickResponse], error)
+	Type(context.Context, *connect.Request[v1.TypeRequest]) (*connect.Response[v1.TypeResponse], error)
+	PressKey(context.Context, *connect.Request[v1.PressKeyRequest]) (*connect.Response[v1.PressKeyResponse], error)
+	ReleaseKey(context.Context, *connect.Request[v1.ReleaseKeyRequest]) (*connect.Response[v1.ReleaseKeyResponse], error)
+	PressAndHoldKey(context.Context, *connect.Request[v1.PressAndHoldKeyRequest]) (*connect.Response[v1.PressAndHoldKeyResponse], error)
+	ReleaseAllKeys(context.Context, *connect.Request[v1.ReleaseAllKeysRequest]) (*connect.Response[v1.ReleaseAllKeysResponse], error)
+	Drag(context.Context, *connect.Request[v1.DragRequest]) (*connect.Response[v1.DragResponse], error)
+	MoveMouseTo(context.Context, *connect.Request[v1.MoveMouseToRequest]) (*connect.Response[v1.MoveMouseToResponse], error)
+	Scroll(context.Context, *connect.Request[v1.ScrollRequest]) (*connect.Response[v1.ScrollResponse], error)
+	GetClipboard(context.Context, *connect.Request[v1.GetClipboardRequest]) (*connect.Response[v1.GetClipboardResponse], error)
+	SetClipboard(context.Context, *connect.Request[v1.SetClipboardRequest]) (*connect.Response[v1.SetClipboardResponse], error)
+	GetScreenSize(context.Context, *connect.Request[v1.GetScreenSizeRequest]) (*connect.Response[v1.GetScreenSizeResponse], error)
 }
 
 // NewGraphicalComputerServiceClient constructs a client for the
@@ -404,16 +456,188 @@ type GraphicalComputerServiceClient interface {
 // The URL supplied here should be the base URL for the Connect or gRPC server (for example,
 // http://api.acme.com or https://acme.com/grpc).
 func NewGraphicalComputerServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) GraphicalComputerServiceClient {
-	return &graphicalComputerServiceClient{}
+	baseURL = strings.TrimRight(baseURL, "/")
+	graphicalComputerServiceMethods := v1.File_computer_api_v1_computer_proto.Services().ByName("GraphicalComputerService").Methods()
+	return &graphicalComputerServiceClient{
+		captureScreenshot: connect.NewClient[v1.CaptureScreenshotRequest, v1.CaptureScreenshotResponse](
+			httpClient,
+			baseURL+GraphicalComputerServiceCaptureScreenshotProcedure,
+			connect.WithSchema(graphicalComputerServiceMethods.ByName("CaptureScreenshot")),
+			connect.WithClientOptions(opts...),
+		),
+		click: connect.NewClient[v1.ClickRequest, v1.ClickResponse](
+			httpClient,
+			baseURL+GraphicalComputerServiceClickProcedure,
+			connect.WithSchema(graphicalComputerServiceMethods.ByName("Click")),
+			connect.WithClientOptions(opts...),
+		),
+		_type: connect.NewClient[v1.TypeRequest, v1.TypeResponse](
+			httpClient,
+			baseURL+GraphicalComputerServiceTypeProcedure,
+			connect.WithSchema(graphicalComputerServiceMethods.ByName("Type")),
+			connect.WithClientOptions(opts...),
+		),
+		pressKey: connect.NewClient[v1.PressKeyRequest, v1.PressKeyResponse](
+			httpClient,
+			baseURL+GraphicalComputerServicePressKeyProcedure,
+			connect.WithSchema(graphicalComputerServiceMethods.ByName("PressKey")),
+			connect.WithClientOptions(opts...),
+		),
+		releaseKey: connect.NewClient[v1.ReleaseKeyRequest, v1.ReleaseKeyResponse](
+			httpClient,
+			baseURL+GraphicalComputerServiceReleaseKeyProcedure,
+			connect.WithSchema(graphicalComputerServiceMethods.ByName("ReleaseKey")),
+			connect.WithClientOptions(opts...),
+		),
+		pressAndHoldKey: connect.NewClient[v1.PressAndHoldKeyRequest, v1.PressAndHoldKeyResponse](
+			httpClient,
+			baseURL+GraphicalComputerServicePressAndHoldKeyProcedure,
+			connect.WithSchema(graphicalComputerServiceMethods.ByName("PressAndHoldKey")),
+			connect.WithClientOptions(opts...),
+		),
+		releaseAllKeys: connect.NewClient[v1.ReleaseAllKeysRequest, v1.ReleaseAllKeysResponse](
+			httpClient,
+			baseURL+GraphicalComputerServiceReleaseAllKeysProcedure,
+			connect.WithSchema(graphicalComputerServiceMethods.ByName("ReleaseAllKeys")),
+			connect.WithClientOptions(opts...),
+		),
+		drag: connect.NewClient[v1.DragRequest, v1.DragResponse](
+			httpClient,
+			baseURL+GraphicalComputerServiceDragProcedure,
+			connect.WithSchema(graphicalComputerServiceMethods.ByName("Drag")),
+			connect.WithClientOptions(opts...),
+		),
+		moveMouseTo: connect.NewClient[v1.MoveMouseToRequest, v1.MoveMouseToResponse](
+			httpClient,
+			baseURL+GraphicalComputerServiceMoveMouseToProcedure,
+			connect.WithSchema(graphicalComputerServiceMethods.ByName("MoveMouseTo")),
+			connect.WithClientOptions(opts...),
+		),
+		scroll: connect.NewClient[v1.ScrollRequest, v1.ScrollResponse](
+			httpClient,
+			baseURL+GraphicalComputerServiceScrollProcedure,
+			connect.WithSchema(graphicalComputerServiceMethods.ByName("Scroll")),
+			connect.WithClientOptions(opts...),
+		),
+		getClipboard: connect.NewClient[v1.GetClipboardRequest, v1.GetClipboardResponse](
+			httpClient,
+			baseURL+GraphicalComputerServiceGetClipboardProcedure,
+			connect.WithSchema(graphicalComputerServiceMethods.ByName("GetClipboard")),
+			connect.WithClientOptions(opts...),
+		),
+		setClipboard: connect.NewClient[v1.SetClipboardRequest, v1.SetClipboardResponse](
+			httpClient,
+			baseURL+GraphicalComputerServiceSetClipboardProcedure,
+			connect.WithSchema(graphicalComputerServiceMethods.ByName("SetClipboard")),
+			connect.WithClientOptions(opts...),
+		),
+		getScreenSize: connect.NewClient[v1.GetScreenSizeRequest, v1.GetScreenSizeResponse](
+			httpClient,
+			baseURL+GraphicalComputerServiceGetScreenSizeProcedure,
+			connect.WithSchema(graphicalComputerServiceMethods.ByName("GetScreenSize")),
+			connect.WithClientOptions(opts...),
+		),
+	}
 }
 
 // graphicalComputerServiceClient implements GraphicalComputerServiceClient.
 type graphicalComputerServiceClient struct {
+	captureScreenshot *connect.Client[v1.CaptureScreenshotRequest, v1.CaptureScreenshotResponse]
+	click             *connect.Client[v1.ClickRequest, v1.ClickResponse]
+	_type             *connect.Client[v1.TypeRequest, v1.TypeResponse]
+	pressKey          *connect.Client[v1.PressKeyRequest, v1.PressKeyResponse]
+	releaseKey        *connect.Client[v1.ReleaseKeyRequest, v1.ReleaseKeyResponse]
+	pressAndHoldKey   *connect.Client[v1.PressAndHoldKeyRequest, v1.PressAndHoldKeyResponse]
+	releaseAllKeys    *connect.Client[v1.ReleaseAllKeysRequest, v1.ReleaseAllKeysResponse]
+	drag              *connect.Client[v1.DragRequest, v1.DragResponse]
+	moveMouseTo       *connect.Client[v1.MoveMouseToRequest, v1.MoveMouseToResponse]
+	scroll            *connect.Client[v1.ScrollRequest, v1.ScrollResponse]
+	getClipboard      *connect.Client[v1.GetClipboardRequest, v1.GetClipboardResponse]
+	setClipboard      *connect.Client[v1.SetClipboardRequest, v1.SetClipboardResponse]
+	getScreenSize     *connect.Client[v1.GetScreenSizeRequest, v1.GetScreenSizeResponse]
+}
+
+// CaptureScreenshot calls computer_api.v1.GraphicalComputerService.CaptureScreenshot.
+func (c *graphicalComputerServiceClient) CaptureScreenshot(ctx context.Context, req *connect.Request[v1.CaptureScreenshotRequest]) (*connect.Response[v1.CaptureScreenshotResponse], error) {
+	return c.captureScreenshot.CallUnary(ctx, req)
+}
+
+// Click calls computer_api.v1.GraphicalComputerService.Click.
+func (c *graphicalComputerServiceClient) Click(ctx context.Context, req *connect.Request[v1.ClickRequest]) (*connect.Response[v1.ClickResponse], error) {
+	return c.click.CallUnary(ctx, req)
+}
+
+// Type calls computer_api.v1.GraphicalComputerService.Type.
+func (c *graphicalComputerServiceClient) Type(ctx context.Context, req *connect.Request[v1.TypeRequest]) (*connect.Response[v1.TypeResponse], error) {
+	return c._type.CallUnary(ctx, req)
+}
+
+// PressKey calls computer_api.v1.GraphicalComputerService.PressKey.
+func (c *graphicalComputerServiceClient) PressKey(ctx context.Context, req *connect.Request[v1.PressKeyRequest]) (*connect.Response[v1.PressKeyResponse], error) {
+	return c.pressKey.CallUnary(ctx, req)
+}
+
+// ReleaseKey calls computer_api.v1.GraphicalComputerService.ReleaseKey.
+func (c *graphicalComputerServiceClient) ReleaseKey(ctx context.Context, req *connect.Request[v1.ReleaseKeyRequest]) (*connect.Response[v1.ReleaseKeyResponse], error) {
+	return c.releaseKey.CallUnary(ctx, req)
+}
+
+// PressAndHoldKey calls computer_api.v1.GraphicalComputerService.PressAndHoldKey.
+func (c *graphicalComputerServiceClient) PressAndHoldKey(ctx context.Context, req *connect.Request[v1.PressAndHoldKeyRequest]) (*connect.Response[v1.PressAndHoldKeyResponse], error) {
+	return c.pressAndHoldKey.CallUnary(ctx, req)
+}
+
+// ReleaseAllKeys calls computer_api.v1.GraphicalComputerService.ReleaseAllKeys.
+func (c *graphicalComputerServiceClient) ReleaseAllKeys(ctx context.Context, req *connect.Request[v1.ReleaseAllKeysRequest]) (*connect.Response[v1.ReleaseAllKeysResponse], error) {
+	return c.releaseAllKeys.CallUnary(ctx, req)
+}
+
+// Drag calls computer_api.v1.GraphicalComputerService.Drag.
+func (c *graphicalComputerServiceClient) Drag(ctx context.Context, req *connect.Request[v1.DragRequest]) (*connect.Response[v1.DragResponse], error) {
+	return c.drag.CallUnary(ctx, req)
+}
+
+// MoveMouseTo calls computer_api.v1.GraphicalComputerService.MoveMouseTo.
+func (c *graphicalComputerServiceClient) MoveMouseTo(ctx context.Context, req *connect.Request[v1.MoveMouseToRequest]) (*connect.Response[v1.MoveMouseToResponse], error) {
+	return c.moveMouseTo.CallUnary(ctx, req)
+}
+
+// Scroll calls computer_api.v1.GraphicalComputerService.Scroll.
+func (c *graphicalComputerServiceClient) Scroll(ctx context.Context, req *connect.Request[v1.ScrollRequest]) (*connect.Response[v1.ScrollResponse], error) {
+	return c.scroll.CallUnary(ctx, req)
+}
+
+// GetClipboard calls computer_api.v1.GraphicalComputerService.GetClipboard.
+func (c *graphicalComputerServiceClient) GetClipboard(ctx context.Context, req *connect.Request[v1.GetClipboardRequest]) (*connect.Response[v1.GetClipboardResponse], error) {
+	return c.getClipboard.CallUnary(ctx, req)
+}
+
+// SetClipboard calls computer_api.v1.GraphicalComputerService.SetClipboard.
+func (c *graphicalComputerServiceClient) SetClipboard(ctx context.Context, req *connect.Request[v1.SetClipboardRequest]) (*connect.Response[v1.SetClipboardResponse], error) {
+	return c.setClipboard.CallUnary(ctx, req)
+}
+
+// GetScreenSize calls computer_api.v1.GraphicalComputerService.GetScreenSize.
+func (c *graphicalComputerServiceClient) GetScreenSize(ctx context.Context, req *connect.Request[v1.GetScreenSizeRequest]) (*connect.Response[v1.GetScreenSizeResponse], error) {
+	return c.getScreenSize.CallUnary(ctx, req)
 }
 
 // GraphicalComputerServiceHandler is an implementation of the
 // computer_api.v1.GraphicalComputerService service.
 type GraphicalComputerServiceHandler interface {
+	CaptureScreenshot(context.Context, *connect.Request[v1.CaptureScreenshotRequest]) (*connect.Response[v1.CaptureScreenshotResponse], error)
+	Click(context.Context, *connect.Request[v1.ClickRequest]) (*connect.Response[v1.ClickResponse], error)
+	Type(context.Context, *connect.Request[v1.TypeRequest]) (*connect.Response[v1.TypeResponse], error)
+	PressKey(context.Context, *connect.Request[v1.PressKeyRequest]) (*connect.Response[v1.PressKeyResponse], error)
+	ReleaseKey(context.Context, *connect.Request[v1.ReleaseKeyRequest]) (*connect.Response[v1.ReleaseKeyResponse], error)
+	PressAndHoldKey(context.Context, *connect.Request[v1.PressAndHoldKeyRequest]) (*connect.Response[v1.PressAndHoldKeyResponse], error)
+	ReleaseAllKeys(context.Context, *connect.Request[v1.ReleaseAllKeysRequest]) (*connect.Response[v1.ReleaseAllKeysResponse], error)
+	Drag(context.Context, *connect.Request[v1.DragRequest]) (*connect.Response[v1.DragResponse], error)
+	MoveMouseTo(context.Context, *connect.Request[v1.MoveMouseToRequest]) (*connect.Response[v1.MoveMouseToResponse], error)
+	Scroll(context.Context, *connect.Request[v1.ScrollRequest]) (*connect.Response[v1.ScrollResponse], error)
+	GetClipboard(context.Context, *connect.Request[v1.GetClipboardRequest]) (*connect.Response[v1.GetClipboardResponse], error)
+	SetClipboard(context.Context, *connect.Request[v1.SetClipboardRequest]) (*connect.Response[v1.SetClipboardResponse], error)
+	GetScreenSize(context.Context, *connect.Request[v1.GetScreenSizeRequest]) (*connect.Response[v1.GetScreenSizeResponse], error)
 }
 
 // NewGraphicalComputerServiceHandler builds an HTTP handler from the service implementation. It
@@ -422,8 +646,113 @@ type GraphicalComputerServiceHandler interface {
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
 func NewGraphicalComputerServiceHandler(svc GraphicalComputerServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
+	graphicalComputerServiceMethods := v1.File_computer_api_v1_computer_proto.Services().ByName("GraphicalComputerService").Methods()
+	graphicalComputerServiceCaptureScreenshotHandler := connect.NewUnaryHandler(
+		GraphicalComputerServiceCaptureScreenshotProcedure,
+		svc.CaptureScreenshot,
+		connect.WithSchema(graphicalComputerServiceMethods.ByName("CaptureScreenshot")),
+		connect.WithHandlerOptions(opts...),
+	)
+	graphicalComputerServiceClickHandler := connect.NewUnaryHandler(
+		GraphicalComputerServiceClickProcedure,
+		svc.Click,
+		connect.WithSchema(graphicalComputerServiceMethods.ByName("Click")),
+		connect.WithHandlerOptions(opts...),
+	)
+	graphicalComputerServiceTypeHandler := connect.NewUnaryHandler(
+		GraphicalComputerServiceTypeProcedure,
+		svc.Type,
+		connect.WithSchema(graphicalComputerServiceMethods.ByName("Type")),
+		connect.WithHandlerOptions(opts...),
+	)
+	graphicalComputerServicePressKeyHandler := connect.NewUnaryHandler(
+		GraphicalComputerServicePressKeyProcedure,
+		svc.PressKey,
+		connect.WithSchema(graphicalComputerServiceMethods.ByName("PressKey")),
+		connect.WithHandlerOptions(opts...),
+	)
+	graphicalComputerServiceReleaseKeyHandler := connect.NewUnaryHandler(
+		GraphicalComputerServiceReleaseKeyProcedure,
+		svc.ReleaseKey,
+		connect.WithSchema(graphicalComputerServiceMethods.ByName("ReleaseKey")),
+		connect.WithHandlerOptions(opts...),
+	)
+	graphicalComputerServicePressAndHoldKeyHandler := connect.NewUnaryHandler(
+		GraphicalComputerServicePressAndHoldKeyProcedure,
+		svc.PressAndHoldKey,
+		connect.WithSchema(graphicalComputerServiceMethods.ByName("PressAndHoldKey")),
+		connect.WithHandlerOptions(opts...),
+	)
+	graphicalComputerServiceReleaseAllKeysHandler := connect.NewUnaryHandler(
+		GraphicalComputerServiceReleaseAllKeysProcedure,
+		svc.ReleaseAllKeys,
+		connect.WithSchema(graphicalComputerServiceMethods.ByName("ReleaseAllKeys")),
+		connect.WithHandlerOptions(opts...),
+	)
+	graphicalComputerServiceDragHandler := connect.NewUnaryHandler(
+		GraphicalComputerServiceDragProcedure,
+		svc.Drag,
+		connect.WithSchema(graphicalComputerServiceMethods.ByName("Drag")),
+		connect.WithHandlerOptions(opts...),
+	)
+	graphicalComputerServiceMoveMouseToHandler := connect.NewUnaryHandler(
+		GraphicalComputerServiceMoveMouseToProcedure,
+		svc.MoveMouseTo,
+		connect.WithSchema(graphicalComputerServiceMethods.ByName("MoveMouseTo")),
+		connect.WithHandlerOptions(opts...),
+	)
+	graphicalComputerServiceScrollHandler := connect.NewUnaryHandler(
+		GraphicalComputerServiceScrollProcedure,
+		svc.Scroll,
+		connect.WithSchema(graphicalComputerServiceMethods.ByName("Scroll")),
+		connect.WithHandlerOptions(opts...),
+	)
+	graphicalComputerServiceGetClipboardHandler := connect.NewUnaryHandler(
+		GraphicalComputerServiceGetClipboardProcedure,
+		svc.GetClipboard,
+		connect.WithSchema(graphicalComputerServiceMethods.ByName("GetClipboard")),
+		connect.WithHandlerOptions(opts...),
+	)
+	graphicalComputerServiceSetClipboardHandler := connect.NewUnaryHandler(
+		GraphicalComputerServiceSetClipboardProcedure,
+		svc.SetClipboard,
+		connect.WithSchema(graphicalComputerServiceMethods.ByName("SetClipboard")),
+		connect.WithHandlerOptions(opts...),
+	)
+	graphicalComputerServiceGetScreenSizeHandler := connect.NewUnaryHandler(
+		GraphicalComputerServiceGetScreenSizeProcedure,
+		svc.GetScreenSize,
+		connect.WithSchema(graphicalComputerServiceMethods.ByName("GetScreenSize")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/computer_api.v1.GraphicalComputerService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case GraphicalComputerServiceCaptureScreenshotProcedure:
+			graphicalComputerServiceCaptureScreenshotHandler.ServeHTTP(w, r)
+		case GraphicalComputerServiceClickProcedure:
+			graphicalComputerServiceClickHandler.ServeHTTP(w, r)
+		case GraphicalComputerServiceTypeProcedure:
+			graphicalComputerServiceTypeHandler.ServeHTTP(w, r)
+		case GraphicalComputerServicePressKeyProcedure:
+			graphicalComputerServicePressKeyHandler.ServeHTTP(w, r)
+		case GraphicalComputerServiceReleaseKeyProcedure:
+			graphicalComputerServiceReleaseKeyHandler.ServeHTTP(w, r)
+		case GraphicalComputerServicePressAndHoldKeyProcedure:
+			graphicalComputerServicePressAndHoldKeyHandler.ServeHTTP(w, r)
+		case GraphicalComputerServiceReleaseAllKeysProcedure:
+			graphicalComputerServiceReleaseAllKeysHandler.ServeHTTP(w, r)
+		case GraphicalComputerServiceDragProcedure:
+			graphicalComputerServiceDragHandler.ServeHTTP(w, r)
+		case GraphicalComputerServiceMoveMouseToProcedure:
+			graphicalComputerServiceMoveMouseToHandler.ServeHTTP(w, r)
+		case GraphicalComputerServiceScrollProcedure:
+			graphicalComputerServiceScrollHandler.ServeHTTP(w, r)
+		case GraphicalComputerServiceGetClipboardProcedure:
+			graphicalComputerServiceGetClipboardHandler.ServeHTTP(w, r)
+		case GraphicalComputerServiceSetClipboardProcedure:
+			graphicalComputerServiceSetClipboardHandler.ServeHTTP(w, r)
+		case GraphicalComputerServiceGetScreenSizeProcedure:
+			graphicalComputerServiceGetScreenSizeHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -432,3 +761,55 @@ func NewGraphicalComputerServiceHandler(svc GraphicalComputerServiceHandler, opt
 
 // UnimplementedGraphicalComputerServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedGraphicalComputerServiceHandler struct{}
+
+func (UnimplementedGraphicalComputerServiceHandler) CaptureScreenshot(context.Context, *connect.Request[v1.CaptureScreenshotRequest]) (*connect.Response[v1.CaptureScreenshotResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.GraphicalComputerService.CaptureScreenshot is not implemented"))
+}
+
+func (UnimplementedGraphicalComputerServiceHandler) Click(context.Context, *connect.Request[v1.ClickRequest]) (*connect.Response[v1.ClickResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.GraphicalComputerService.Click is not implemented"))
+}
+
+func (UnimplementedGraphicalComputerServiceHandler) Type(context.Context, *connect.Request[v1.TypeRequest]) (*connect.Response[v1.TypeResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.GraphicalComputerService.Type is not implemented"))
+}
+
+func (UnimplementedGraphicalComputerServiceHandler) PressKey(context.Context, *connect.Request[v1.PressKeyRequest]) (*connect.Response[v1.PressKeyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.GraphicalComputerService.PressKey is not implemented"))
+}
+
+func (UnimplementedGraphicalComputerServiceHandler) ReleaseKey(context.Context, *connect.Request[v1.ReleaseKeyRequest]) (*connect.Response[v1.ReleaseKeyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.GraphicalComputerService.ReleaseKey is not implemented"))
+}
+
+func (UnimplementedGraphicalComputerServiceHandler) PressAndHoldKey(context.Context, *connect.Request[v1.PressAndHoldKeyRequest]) (*connect.Response[v1.PressAndHoldKeyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.GraphicalComputerService.PressAndHoldKey is not implemented"))
+}
+
+func (UnimplementedGraphicalComputerServiceHandler) ReleaseAllKeys(context.Context, *connect.Request[v1.ReleaseAllKeysRequest]) (*connect.Response[v1.ReleaseAllKeysResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.GraphicalComputerService.ReleaseAllKeys is not implemented"))
+}
+
+func (UnimplementedGraphicalComputerServiceHandler) Drag(context.Context, *connect.Request[v1.DragRequest]) (*connect.Response[v1.DragResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.GraphicalComputerService.Drag is not implemented"))
+}
+
+func (UnimplementedGraphicalComputerServiceHandler) MoveMouseTo(context.Context, *connect.Request[v1.MoveMouseToRequest]) (*connect.Response[v1.MoveMouseToResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.GraphicalComputerService.MoveMouseTo is not implemented"))
+}
+
+func (UnimplementedGraphicalComputerServiceHandler) Scroll(context.Context, *connect.Request[v1.ScrollRequest]) (*connect.Response[v1.ScrollResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.GraphicalComputerService.Scroll is not implemented"))
+}
+
+func (UnimplementedGraphicalComputerServiceHandler) GetClipboard(context.Context, *connect.Request[v1.GetClipboardRequest]) (*connect.Response[v1.GetClipboardResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.GraphicalComputerService.GetClipboard is not implemented"))
+}
+
+func (UnimplementedGraphicalComputerServiceHandler) SetClipboard(context.Context, *connect.Request[v1.SetClipboardRequest]) (*connect.Response[v1.SetClipboardResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.GraphicalComputerService.SetClipboard is not implemented"))
+}
+
+func (UnimplementedGraphicalComputerServiceHandler) GetScreenSize(context.Context, *connect.Request[v1.GetScreenSizeRequest]) (*connect.Response[v1.GetScreenSizeResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.GraphicalComputerService.GetScreenSize is not implemented"))
+}
