@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package computer_api.v1;
+
+import "buf/validate/validate.proto";
+
+service ComputerProviderService {
+
+}
+
+service BasicComputerService {
+
+}
+
+service GraphicalComputerService {
+    
+}
