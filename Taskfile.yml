@@ -29,13 +29,11 @@ tasks:
   unit_test:
     desc: Test the agentic harness and computer controller
     deps:
-      - generate_proto
       - agentic_harness:unit_test
       - computer_controller:test
   build:
     desc: Builds agentic harness and computer controller
     deps:
-      - generate_proto
       - unit_test
       - computer_controller:build
       - agentic_harness:build
