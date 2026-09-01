@@ -67,8 +67,7 @@ func (s *ComputerProviderService) DeleteComputer(
 	return connect.NewResponse(&computer_apiv1.DeleteComputerResponse{}), nil
 }
 
-func CreateComputerProviderServiceHandler(mux *http.ServeMux) {
-	provider := computer.GetComputerProvider()
+func CreateComputerProviderServiceHandler(mux *http.ServeMux, provider computer.IComputerProvider) {
 	svc := &ComputerProviderService{provider: provider}
 	path, handler := computer_apiv1connect.NewComputerProviderServiceHandler(
 		svc,

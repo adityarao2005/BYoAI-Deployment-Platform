@@ -411,8 +411,7 @@ func (s *GraphicComputerService) GetScreenSize(
 	}), nil
 }
 
-func CreateGraphicComputerServiceHandler(mux *http.ServeMux) {
-	provider := computer.GetComputerProvider()
+func CreateGraphicComputerServiceHandler(mux *http.ServeMux, provider computer.IComputerProvider) {
 	svc := &GraphicComputerService{provider: provider}
 	path, handler := computer_apiv1connect.NewGraphicalComputerServiceHandler(
 		svc,

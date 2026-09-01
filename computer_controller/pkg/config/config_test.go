@@ -22,6 +22,18 @@ type: local
 		}
 	})
 
+	t.Run("Invalid Local Config with Spec", func(t *testing.T) {
+		yamlData := []byte(`
+type: local
+spec:
+  host: "localhost"
+`)
+		_, err := LoadConfig(yamlData)
+		if err == nil {
+			t.Fatal("expected error when local type provides spec, got nil")
+		}
+	})
+
 	t.Run("Valid Docker Config with Full Spec", func(t *testing.T) {
 		yamlData := []byte(`
 type: docker
@@ -29,7 +41,6 @@ spec:
   host: "unix:///var/run/docker.sock"
   apiVersion: "1.41"
   certPath: "/etc/docker/certs"
-  tlsVerify: true
   imagePullPolicy: "Always"
   reapIdleContainersAfter: "10m"
 `)
@@ -55,18 +66,15 @@ spec:
 		if dockerSpec.CertPath != "/etc/docker/certs" {
 			t.Errorf("expected CertPath %q, got %q", "/etc/docker/certs", dockerSpec.CertPath)
 		}
-		if !dockerSpec.TLSVerify {
-			t.Errorf("expected TLSVerify to be true")
-		}
-		if dockerSpec.ImagePullPolicy != "Always" {
-			t.Errorf("expected ImagePullPolicy %q, got %q", "Always", dockerSpec.ImagePullPolicy)
+		if dockerSpec.ImagePullPolicy != Always {
+			t.Errorf("expected ImagePullPolicy %q, got %q", Always, dockerSpec.ImagePullPolicy)
 		}
 		if dockerSpec.ReapIdleContainersAfter != 10*time.Minute {
 			t.Errorf("expected ReapIdleContainersAfter %v, got %v", 10*time.Minute, dockerSpec.ReapIdleContainersAfter)
 		}
 	})
 
-	t.Run("Valid Docker Config with Omitted Spec", func(t *testing.T) {
+	t.Run("Valid Docker Config with Omitted Spec (Defaults ImagePullPolicy)", func(t *testing.T) {
 		yamlData := []byte(`
 type: docker
 `)
@@ -81,8 +89,20 @@ type: docker
 		if !ok {
 			t.Fatalf("expected Spec to be DockerSpec, got %T", cfg.Spec)
 		}
-		if dockerSpec != (DockerSpec{}) {
-			t.Errorf("expected empty DockerSpec, got %+v", dockerSpec)
+		if dockerSpec.ImagePullPolicy != IfNotPresent {
+			t.Errorf("expected default ImagePullPolicy %q, got %q", IfNotPresent, dockerSpec.ImagePullPolicy)
+		}
+	})
+
+	t.Run("Invalid Docker Spec ImagePullPolicy", func(t *testing.T) {
+		yamlData := []byte(`
+type: docker
+spec:
+  imagePullPolicy: "InvalidPolicy"
+`)
+		_, err := LoadConfig(yamlData)
+		if err == nil {
+			t.Fatal("expected error for invalid imagePullPolicy, got nil")
 		}
 	})
 

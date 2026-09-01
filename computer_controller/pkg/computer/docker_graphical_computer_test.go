@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/config"
 )
 
 const graphicalTestImage = "byoai-test-graphical:latest"
@@ -34,7 +36,7 @@ func setupDockerGraphicalComputer(t *testing.T) (IGraphicalComputer, func()) {
 	buildGraphicalTestImage(t)
 
 	provider, err := GetDockerComputerProvider(DockerComputerProviderProps{
-		pullMode: Never, // we just built it locally
+		pullPolicy: config.Never, // we just built it locally
 	})
 	if err != nil {
 		t.Fatalf("failed to create DockerComputerProvider: %v", err)
@@ -124,7 +126,7 @@ func TestGetComputerReturnsGraphicalForDisplayImage(t *testing.T) {
 	buildGraphicalTestImage(t)
 
 	provider, err := GetDockerComputerProvider(DockerComputerProviderProps{
-		pullMode: Never,
+		pullPolicy: config.Never,
 	})
 	if err != nil {
 		t.Fatalf("failed to create provider: %v", err)
@@ -422,7 +424,7 @@ func BenchmarkDockerGraphicalScreenshot(b *testing.B) {
 		b.Fatalf("failed to build graphical test image: %v", err)
 	}
 
-	provider, err := GetDockerComputerProvider(DockerComputerProviderProps{pullMode: Never})
+	provider, err := GetDockerComputerProvider(DockerComputerProviderProps{pullPolicy: config.Never})
 	if err != nil {
 		b.Fatalf("failed to create provider: %v", err)
 	}

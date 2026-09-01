@@ -15,22 +15,33 @@ TypeScript-based harness with `pnpm` and `vitest`.
 ### Computer Controller (`computer_controller/`)
 Golang-based daemon service providing remote execution primitives for AI Agents:
 - **ConnectRPC & HTTP streaming** protocol support (`connectrpc.com/connect`).
-- **Pluggable Authentication**: mTLS, Bearer Token, API Key, and Basic Auth.
+- **YAML-driven Provider Architecture**: Supports `local` host execution and `docker` container sandboxing configured via `computer.yaml`.
 - **Task Primitives**: Command execution (unary & streaming), filesystem read/write/list, GUI capabilities check.
-- **Session Lifecycle & Cleanup**: Heartbeat keepalives, idle timeout sweeps, and automatic workspace directory cleanup.
+- **Session Lifecycle & Cleanup**: Heartbeat keepalives, idle container sweeps, and automatic workspace directory cleanup.
+
+For detailed configuration schema, build, run, and test guides, see [computer_controller/README.md](computer_controller/README.md).
 
 ## Getting Started
 
 ### Task Commands
 Run unified commands from the root using `task`:
 
+- **Build All**: `task build`
 - **Run Harness**: `task run_harness`
 - **Run Unit Tests**: `task unit_test`
 - **Run Integration Tests**: `task integration_test`
 
 ### Computer Controller Commands
+Ensure a valid `computer.yaml` file exists in `computer_controller/`:
+
+```yaml
+type: local
+```
+
+Then run:
 ```bash
 cd computer_controller
-go run ./cmd/controller   # Start service
-go test -v ./...           # Run unit tests
+task run             # Start service (or: go run ./cmd/controller)
+task test            # Run unit tests (or: go test -v ./...)
+task docker_test     # Run Docker integration tests
 ```

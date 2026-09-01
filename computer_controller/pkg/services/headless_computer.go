@@ -252,8 +252,7 @@ func (s *BasicComputerService) GetGroupId(
 	}), nil
 }
 
-func CreateBasicComputerServiceHandler(mux *http.ServeMux) {
-	provider := computer.GetComputerProvider()
+func CreateBasicComputerServiceHandler(mux *http.ServeMux, provider computer.IComputerProvider) {
 	svc := &BasicComputerService{provider: provider}
 	path, handler := computer_apiv1connect.NewBasicComputerServiceHandler(
 		svc,

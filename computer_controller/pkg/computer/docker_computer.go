@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/config"
 	"github.com/moby/moby/api/pkg/stdcopy"
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
@@ -26,25 +27,17 @@ type DockerComputerProvider struct {
 	// map from user generated session id to docker container id
 	computers map[string]string
 	// pull options
-	pullOption ImagePullOptions
+	pullPolicy config.ImagePullPolicy
 }
 
-// image pull options, default being if not present
-type ImagePullOptions int
-
-const (
-	IfNotPresent ImagePullOptions = iota
-	Always
-	Never
-)
-
 type DockerComputerProviderProps struct {
-	pullMode ImagePullOptions
+	pullPolicy config.ImagePullPolicy
+	ops        []client.Opt
 }
 
 // Retrieve a computer provider from the environment variable
 func GetDockerComputerProvider(props DockerComputerProviderProps) (IComputerProvider, error) {
-	apiClient, err := client.New(client.FromEnv)
+	apiClient, err := client.New(props.ops...)
 
 	if err != nil {
 		return nil, err
@@ -54,7 +47,7 @@ func GetDockerComputerProvider(props DockerComputerProviderProps) (IComputerProv
 		sync.RWMutex{},
 		apiClient,
 		make(map[string]string),
-		props.pullMode,
+		props.pullPolicy,
 	}, nil
 }
 
@@ -63,8 +56,8 @@ var pullGroup singleflight.Group
 func (provider *DockerComputerProvider) pullImage(ctx context.Context, image string) error {
 
 	// switch case
-	switch provider.pullOption {
-	case Always:
+	switch provider.pullPolicy {
+	case config.Always:
 		// try pulling image
 		out, err := provider.apiClient.ImagePull(ctx, image, client.ImagePullOptions{})
 		// return error if not nil
@@ -75,7 +68,7 @@ func (provider *DockerComputerProvider) pullImage(ctx context.Context, image str
 
 		// copy image container logs
 		io.Copy(os.Stdout, out)
-	case IfNotPresent:
+	case config.IfNotPresent:
 		// use singleFlight
 		_, err := provider.apiClient.ImageInspect(ctx, image)
 
@@ -103,7 +96,7 @@ func (provider *DockerComputerProvider) pullImage(ctx context.Context, image str
 			return fmt.Errorf("failed to pull image %s: %w", image, err)
 		}
 
-	case Never:
+	case config.Never:
 	}
 
 	return nil
