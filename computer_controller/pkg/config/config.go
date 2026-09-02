@@ -39,9 +39,41 @@ type Spec interface {
 
 func (DockerSpec) isSpec() {}
 
+type TlsConfig struct {
+	TlsCertificate         string `yaml:"tlsCertificate,omitempty"`
+	TlsCertificateKey      string `yaml:"tlsCertificateKey,omitempty"`
+	TlsTrustedCertificates string `yaml:"tlsTrustedCertificates,omitempty"`
+}
+
+func (t TlsConfig) IsEnabled() bool {
+	return t.TlsCertificate != "" || t.TlsCertificateKey != ""
+}
+
+func (t TlsConfig) IsMTLSEnabled() bool {
+	return t.TlsTrustedCertificates != ""
+}
+
+type ServerSecurityConfig struct {
+	ApiKey string    `yaml:"apiKey,omitempty"`
+	Tls    TlsConfig `yaml:"tls,omitempty"`
+}
+
+func (s ServerSecurityConfig) HasAPIKey() bool {
+	return s.ApiKey != ""
+}
+
+func (s ServerSecurityConfig) HasTLS() bool {
+	return s.Tls.IsEnabled()
+}
+
+func (s ServerSecurityConfig) HasMTLS() bool {
+	return s.Tls.IsMTLSEnabled()
+}
+
 type ServerNetworkConfig struct {
-	Host string `yaml:"host,omitempty"`
-	Port int    `yaml:"port,omitempty"`
+	Host     string               `yaml:"host,omitempty"`
+	Port     int                  `yaml:"port,omitempty"`
+	Security ServerSecurityConfig `yaml:"security,omitempty"`
 }
 
 func (s ServerNetworkConfig) Address() string {
@@ -74,6 +106,24 @@ func (c *ServerConfig) UnmarshalYAML(value *yaml.Node) error {
 	} else if raw.Server.Port < 1 || raw.Server.Port > 65535 {
 		return fmt.Errorf("invalid server port %d: must be between 1 and 65535", raw.Server.Port)
 	}
+
+	sec := raw.Server.Security
+	sec.ApiKey = os.ExpandEnv(sec.ApiKey)
+	sec.Tls.TlsCertificate = os.ExpandEnv(sec.Tls.TlsCertificate)
+	sec.Tls.TlsCertificateKey = os.ExpandEnv(sec.Tls.TlsCertificateKey)
+	sec.Tls.TlsTrustedCertificates = os.ExpandEnv(sec.Tls.TlsTrustedCertificates)
+
+	if sec.Tls.TlsCertificate != "" && sec.Tls.TlsCertificateKey == "" {
+		return fmt.Errorf("tlsCertificate is specified but tlsCertificateKey is missing")
+	}
+	if sec.Tls.TlsCertificateKey != "" && sec.Tls.TlsCertificate == "" {
+		return fmt.Errorf("tlsCertificateKey is specified but tlsCertificate is missing")
+	}
+	if sec.Tls.TlsTrustedCertificates != "" && (sec.Tls.TlsCertificate == "" || sec.Tls.TlsCertificateKey == "") {
+		return fmt.Errorf("tlsTrustedCertificates (mTLS) requires both tlsCertificate and tlsCertificateKey to be specified")
+	}
+
+	raw.Server.Security = sec
 
 	c.Type = raw.Type
 	c.Server = raw.Server

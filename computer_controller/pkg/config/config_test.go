@@ -183,4 +183,121 @@ invalid_yaml: [
 		spec := DockerSpec{}
 		spec.isSpec()
 	})
+
+	t.Run("Omitted Security Config", func(t *testing.T) {
+		yamlData := []byte(`
+type: local
+server:
+  host: "localhost"
+  port: 8080
+`)
+		cfg, err := LoadConfig(yamlData)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if cfg.Server.Security.HasAPIKey() {
+			t.Error("expected HasAPIKey() to be false")
+		}
+		if cfg.Server.Security.HasTLS() {
+			t.Error("expected HasTLS() to be false")
+		}
+		if cfg.Server.Security.HasMTLS() {
+			t.Error("expected HasMTLS() to be false")
+		}
+	})
+
+	t.Run("Valid Security Config with API Key and Env Var Expansion", func(t *testing.T) {
+		t.Setenv("TEST_CC_API_KEY", "super-secret-token")
+
+		yamlData := []byte(`
+type: local
+server:
+  security:
+    apiKey: "${TEST_CC_API_KEY}"
+`)
+		cfg, err := LoadConfig(yamlData)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if !cfg.Server.Security.HasAPIKey() {
+			t.Error("expected HasAPIKey() to be true")
+		}
+		if cfg.Server.Security.ApiKey != "super-secret-token" {
+			t.Errorf("expected ApiKey %q, got %q", "super-secret-token", cfg.Server.Security.ApiKey)
+		}
+		if cfg.Server.Security.HasTLS() {
+			t.Error("expected HasTLS() to be false")
+		}
+	})
+
+	t.Run("Valid Security Config with TLS and mTLS", func(t *testing.T) {
+		yamlData := []byte(`
+type: local
+server:
+  security:
+    apiKey: "my-key"
+    tls:
+      tlsCertificate: "/path/to/cert.pem"
+      tlsCertificateKey: "/path/to/key.pem"
+      tlsTrustedCertificates: "/path/to/ca.pem"
+`)
+		cfg, err := LoadConfig(yamlData)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if !cfg.Server.Security.HasAPIKey() {
+			t.Error("expected HasAPIKey() to be true")
+		}
+		if !cfg.Server.Security.HasTLS() {
+			t.Error("expected HasTLS() to be true")
+		}
+		if !cfg.Server.Security.HasMTLS() {
+			t.Error("expected HasMTLS() to be true")
+		}
+		if cfg.Server.Security.Tls.TlsCertificate != "/path/to/cert.pem" {
+			t.Errorf("expected tlsCertificate %q, got %q", "/path/to/cert.pem", cfg.Server.Security.Tls.TlsCertificate)
+		}
+	})
+
+	t.Run("Invalid Security Config - TLS Cert missing Key", func(t *testing.T) {
+		yamlData := []byte(`
+type: local
+server:
+  security:
+    tls:
+      tlsCertificate: "/path/to/cert.pem"
+`)
+		_, err := LoadConfig(yamlData)
+		if err == nil {
+			t.Fatal("expected error for missing tlsCertificateKey, got nil")
+		}
+	})
+
+	t.Run("Invalid Security Config - TLS Key missing Cert", func(t *testing.T) {
+		yamlData := []byte(`
+type: local
+server:
+  security:
+    tls:
+      tlsCertificateKey: "/path/to/key.pem"
+`)
+		_, err := LoadConfig(yamlData)
+		if err == nil {
+			t.Fatal("expected error for missing tlsCertificate, got nil")
+		}
+	})
+
+	t.Run("Invalid Security Config - mTLS without TLS Certs", func(t *testing.T) {
+		yamlData := []byte(`
+type: local
+server:
+  security:
+    tls:
+      tlsTrustedCertificates: "/path/to/ca.pem"
+`)
+		_, err := LoadConfig(yamlData)
+		if err == nil {
+			t.Fatal("expected error for mTLS without server cert/key, got nil")
+		}
+	})
 }
