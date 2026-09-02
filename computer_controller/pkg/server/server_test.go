@@ -2,9 +2,22 @@ package server_test
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/tls"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
+	"math/big"
+	"net"
+	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 
 	"connectrpc.com/connect"
 
@@ -275,6 +288,255 @@ func TestServerConnectRPCIntegration(t *testing.T) {
 		}
 		if gidResp.Msg.GetGroupId() == "" {
 			t.Fatalf("expected non-empty GroupId, got error: %v", gidResp.Msg.GetErrorMessage())
+		}
+	})
+}
+
+func generateTestCertificates(t *testing.T, dir string) (certFile, keyFile, caFile, clientCertFile, clientKeyFile string) {
+	t.Helper()
+
+	// 1. Generate CA key & cert
+	caPrivKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatalf("failed to generate CA private key: %v", err)
+	}
+
+	caTemplate := x509.Certificate{
+		SerialNumber:          big.NewInt(1),
+		Subject:               pkix.Name{CommonName: "Test CA"},
+		NotBefore:             time.Now().Add(-1 * time.Hour),
+		NotAfter:              time.Now().Add(24 * time.Hour),
+		IsCA:                  true,
+		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
+		BasicConstraintsValid: true,
+	}
+
+	caCertBytes, err := x509.CreateCertificate(rand.Reader, &caTemplate, &caTemplate, &caPrivKey.PublicKey, caPrivKey)
+	if err != nil {
+		t.Fatalf("failed to create CA certificate: %v", err)
+	}
+
+	caFile = filepath.Join(dir, "ca.crt")
+	caPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: caCertBytes})
+	if err := os.WriteFile(caFile, caPEM, 0644); err != nil {
+		t.Fatalf("failed to write CA cert: %v", err)
+	}
+
+	// 2. Generate Server key & cert (signed by CA)
+	serverPrivKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatalf("failed to generate server key: %v", err)
+	}
+
+	serverTemplate := x509.Certificate{
+		SerialNumber: big.NewInt(2),
+		Subject:      pkix.Name{CommonName: "127.0.0.1"},
+		NotBefore:    time.Now().Add(-1 * time.Hour),
+		NotAfter:     time.Now().Add(24 * time.Hour),
+		KeyUsage:     x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		IPAddresses:  []net.IP{net.ParseIP("127.0.0.1")},
+		DNSNames:     []string{"localhost"},
+	}
+
+	serverCertBytes, err := x509.CreateCertificate(rand.Reader, &serverTemplate, &caTemplate, &serverPrivKey.PublicKey, caPrivKey)
+	if err != nil {
+		t.Fatalf("failed to create server certificate: %v", err)
+	}
+
+	certFile = filepath.Join(dir, "server.crt")
+	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: serverCertBytes})
+	if err := os.WriteFile(certFile, certPEM, 0644); err != nil {
+		t.Fatalf("failed to write server cert: %v", err)
+	}
+
+	keyFile = filepath.Join(dir, "server.key")
+	serverKeyBytes, err := x509.MarshalECPrivateKey(serverPrivKey)
+	if err != nil {
+		t.Fatalf("failed to marshal server key: %v", err)
+	}
+	keyPEM := pem.EncodeToMemory(&pem.Block{Type: "EC PRIVATE KEY", Bytes: serverKeyBytes})
+	if err := os.WriteFile(keyFile, keyPEM, 0600); err != nil {
+		t.Fatalf("failed to write server key: %v", err)
+	}
+
+	// 3. Generate Client key & cert (signed by CA)
+	clientPrivKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatalf("failed to generate client key: %v", err)
+	}
+
+	clientTemplate := x509.Certificate{
+		SerialNumber: big.NewInt(3),
+		Subject:      pkix.Name{CommonName: "Test Client"},
+		NotBefore:    time.Now().Add(-1 * time.Hour),
+		NotAfter:     time.Now().Add(24 * time.Hour),
+		KeyUsage:     x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+	}
+
+	clientCertBytes, err := x509.CreateCertificate(rand.Reader, &clientTemplate, &caTemplate, &clientPrivKey.PublicKey, caPrivKey)
+	if err != nil {
+		t.Fatalf("failed to create client certificate: %v", err)
+	}
+
+	clientCertFile = filepath.Join(dir, "client.crt")
+	clientCertPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: clientCertBytes})
+	if err := os.WriteFile(clientCertFile, clientCertPEM, 0644); err != nil {
+		t.Fatalf("failed to write client cert: %v", err)
+	}
+
+	clientKeyFile = filepath.Join(dir, "client.key")
+	clientKeyBytes, err := x509.MarshalECPrivateKey(clientPrivKey)
+	if err != nil {
+		t.Fatalf("failed to marshal client key: %v", err)
+	}
+	clientKeyPEM := pem.EncodeToMemory(&pem.Block{Type: "EC PRIVATE KEY", Bytes: clientKeyBytes})
+	if err := os.WriteFile(clientKeyFile, clientKeyPEM, 0600); err != nil {
+		t.Fatalf("failed to write client key: %v", err)
+	}
+
+	return certFile, keyFile, caFile, clientCertFile, clientKeyFile
+}
+
+func TestServerTLSAndMTLS(t *testing.T) {
+	tempDir := t.TempDir()
+	certFile, keyFile, caFile, clientCertFile, clientKeyFile := generateTestCertificates(t, tempDir)
+
+	cfg := &config.ServerConfig{
+		Type: config.TypeLocal,
+		Server: config.ServerNetworkConfig{
+			Security: config.ServerSecurityConfig{
+				Tls: config.TlsConfig{
+					TlsCertificate:         certFile,
+					TlsCertificateKey:      keyFile,
+					TlsTrustedCertificates: caFile,
+				},
+			},
+		},
+	}
+
+	handler, err := server.NewServerHandler(cfg)
+	if err != nil {
+		t.Fatalf("failed to create server handler: %v", err)
+	}
+
+	serverCert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+		t.Fatalf("failed to load server key pair: %v", err)
+	}
+
+	caPool := x509.NewCertPool()
+	caPEM, err := os.ReadFile(caFile)
+	if err != nil {
+		t.Fatalf("failed to read CA cert file: %v", err)
+	}
+	if ok := caPool.AppendCertsFromPEM(caPEM); !ok {
+		t.Fatal("failed to append CA cert to pool")
+	}
+
+	ctx := context.Background()
+
+	t.Run("HTTP Client hitting TLS Server returns error", func(t *testing.T) {
+		ts := httptest.NewUnstartedServer(handler)
+		ts.TLS = &tls.Config{
+			Certificates: []tls.Certificate{serverCert},
+		}
+		ts.StartTLS()
+		defer ts.Close()
+
+		plainHTTPClient := &http.Client{}
+		httpURL := strings.Replace(ts.URL, "https://", "http://", 1)
+		client := computer_apiv1connect.NewBasicComputerServiceClient(plainHTTPClient, httpURL)
+
+		_, err := client.GetUserId(ctx, connect.NewRequest(&computer_apiv1.GetUserIdRequest{SessionId: "0"}))
+		if err == nil {
+			t.Fatal("expected error when plain HTTP client hits TLS server, got nil")
+		}
+	})
+
+	t.Run("HTTPS Client hitting TLS Server succeeds", func(t *testing.T) {
+		ts := httptest.NewUnstartedServer(handler)
+		ts.TLS = &tls.Config{
+			Certificates: []tls.Certificate{serverCert},
+		}
+		ts.StartTLS()
+		defer ts.Close()
+
+		tlsClient := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs: caPool,
+				},
+			},
+		}
+		client := computer_apiv1connect.NewBasicComputerServiceClient(tlsClient, ts.URL)
+
+		resp, err := client.GetUserId(ctx, connect.NewRequest(&computer_apiv1.GetUserIdRequest{SessionId: "0"}))
+		if err != nil {
+			t.Fatalf("expected HTTPS request to succeed, got: %v", err)
+		}
+		if resp.Msg.GetUserId() == "" {
+			t.Fatal("expected non-empty UserId")
+		}
+	})
+
+	t.Run("mTLS Server without client cert returns error", func(t *testing.T) {
+		ts := httptest.NewUnstartedServer(handler)
+		ts.TLS = &tls.Config{
+			Certificates: []tls.Certificate{serverCert},
+			ClientAuth:   tls.RequireAndVerifyClientCert,
+			ClientCAs:    caPool,
+		}
+		ts.StartTLS()
+		defer ts.Close()
+
+		noCertClient := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs: caPool,
+				},
+			},
+		}
+		client := computer_apiv1connect.NewBasicComputerServiceClient(noCertClient, ts.URL)
+
+		_, err := client.GetUserId(ctx, connect.NewRequest(&computer_apiv1.GetUserIdRequest{SessionId: "0"}))
+		if err == nil {
+			t.Fatal("expected error when client sends no certificate to mTLS server, got nil")
+		}
+	})
+
+	t.Run("mTLS Server with valid client cert succeeds", func(t *testing.T) {
+		ts := httptest.NewUnstartedServer(handler)
+		ts.TLS = &tls.Config{
+			Certificates: []tls.Certificate{serverCert},
+			ClientAuth:   tls.RequireAndVerifyClientCert,
+			ClientCAs:    caPool,
+		}
+		ts.StartTLS()
+		defer ts.Close()
+
+		clientCert, err := tls.LoadX509KeyPair(clientCertFile, clientKeyFile)
+		if err != nil {
+			t.Fatalf("failed to load client key pair: %v", err)
+		}
+
+		mTLSClient := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs:      caPool,
+					Certificates: []tls.Certificate{clientCert},
+				},
+			},
+		}
+		client := computer_apiv1connect.NewBasicComputerServiceClient(mTLSClient, ts.URL)
+
+		resp, err := client.GetUserId(ctx, connect.NewRequest(&computer_apiv1.GetUserIdRequest{SessionId: "0"}))
+		if err != nil {
+			t.Fatalf("expected mTLS request with valid client cert to succeed, got: %v", err)
+		}
+		if resp.Msg.GetUserId() == "" {
+			t.Fatal("expected non-empty UserId")
 		}
 	})
 }
