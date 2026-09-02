@@ -3,6 +3,7 @@ package computer
 import (
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/config"
 	"github.com/moby/moby/client"
@@ -12,6 +13,9 @@ func GetComputerProvider(server_config *config.ServerConfig) (IComputerProvider,
 	if server_config == nil {
 		return nil, fmt.Errorf("server_config cannot be nil")
 	}
+
+	var baseProvider IComputerProvider
+	var idleTimeout time.Duration
 
 	switch server_config.Type {
 	case config.TypeLocal:
@@ -40,12 +44,19 @@ func GetComputerProvider(server_config *config.ServerConfig) (IComputerProvider,
 			))
 		}
 
-		return GetDockerComputerProvider(DockerComputerProviderProps{
+		dp, err := GetDockerComputerProvider(DockerComputerProviderProps{
 			pullPolicy: spec.ImagePullPolicy,
 			ops:        opts,
 		})
+		if err != nil {
+			return nil, err
+		}
+		baseProvider = dp
+		idleTimeout = spec.ReapIdleContainersAfter
 
 	default:
 		return nil, fmt.Errorf("unsupported computer type: %q", server_config.Type)
 	}
+
+	return NewReaperProvider(baseProvider, idleTimeout), nil
 }
