@@ -1,8 +1,11 @@
 package server
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/computer"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/config"
@@ -35,17 +38,52 @@ func RunServer() {
 		log.Fatalf("unable to create computer provider: %v", err)
 	}
 
-	protocols := new(http.Protocols)
-
-	// TODO: make a way to allow encrypted HTTP 2 by passing in TLS certs
-	protocols.SetHTTP1(true)
-	protocols.SetUnencryptedHTTP2(true)
-
 	server := http.Server{
-		Addr:      server_config.Server.Address(),
-		Handler:   handler,
-		Protocols: protocols,
+		Addr:    server_config.Server.Address(),
+		Handler: handler,
 	}
 
-	server.ListenAndServe()
+	// handle TLS
+	if server_config.Server.Security.HasTLS() {
+		// handle TLS
+		tlsConfig := &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		}
+
+		// if mTLS add client auth and client CAs
+		if server_config.Server.Security.HasMTLS() {
+			caFilePath := server_config.Server.Security.Tls.TlsTrustedCertificates
+			caBytes, err := os.ReadFile(caFilePath)
+			if err != nil {
+				log.Fatalf("failed to read ca cert %q: %v", caFilePath, err)
+			}
+
+			ca := x509.NewCertPool()
+			if ok := ca.AppendCertsFromPEM(caBytes); !ok {
+				log.Fatalf("failed to parse ca cert %q", caFilePath)
+			}
+
+			tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
+			tlsConfig.ClientCAs = ca
+		}
+
+		server.TLSConfig = tlsConfig
+
+		if err := server.ListenAndServeTLS(
+			server_config.Server.Security.Tls.TlsCertificate,
+			server_config.Server.Security.Tls.TlsCertificateKey,
+		); err != nil {
+			log.Fatalf("failed to start TLS server: %v", err)
+		}
+	} else {
+		// Non-TLS: Enable HTTP/1.1 and unencrypted HTTP/2 (h2c)
+		protocols := new(http.Protocols)
+		protocols.SetHTTP1(true)
+		protocols.SetUnencryptedHTTP2(true)
+		server.Protocols = protocols
+
+		if err := server.ListenAndServe(); err != nil {
+			log.Fatalf("failed to start HTTP server: %v", err)
+		}
+	}
 }

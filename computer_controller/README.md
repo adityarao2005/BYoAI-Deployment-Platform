@@ -24,6 +24,22 @@ The Computer Controller server loads its configuration from a YAML file named `c
 | --- | --- | --- | --- |
 | `host` | String | `"localhost"` | Listening host IP or hostname (e.g. `"localhost"`, `"0.0.0.0"`). |
 | `port` | Integer | `8080` | Listening port number (1-65535). |
+| `security` | Object | Optional | Security settings (`apiKey` and `tls`). |
+
+#### Security Settings (`server.security`)
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `apiKey` | String | `""` | Bearer token for authentication. Supports environment variable expansion (e.g., `"${CC_API_KEY}"`). |
+| `tls` | Object | Optional | TLS server configuration (`tlsCertificate`, `tlsCertificateKey`, `tlsTrustedCertificates`). |
+
+##### TLS Settings (`server.security.tls`)
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `tlsCertificate` | String | `""` | Path to TLS certificate PEM file. Requires `tlsCertificateKey`. |
+| `tlsCertificateKey` | String | `""` | Path to TLS certificate private key PEM file. |
+| `tlsTrustedCertificates` | String | `""` | Path to CA bundle file for mTLS client verification. Enables mTLS when specified. |
 
 ---
 
@@ -37,6 +53,12 @@ type: local
 server:
   host: "localhost"
   port: 8080
+  security:
+    apiKey: "${CC_API_KEY}"
+    tls:
+      tlsCertificate: "/path/to/server.crt"
+      tlsCertificateKey: "/path/to/server.key"
+      tlsTrustedCertificates: "/path/to/ca.crt"
 ```
 
 ---
