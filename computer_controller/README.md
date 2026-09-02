@@ -93,6 +93,24 @@ spec:
 
 ---
 
+## Container/Pod Idle Reaping & Graceful Shutdown Hook
+
+The Computer Controller features an engine-agnostic `ReaperProvider` implementing the **Single Responsibility Principle (SRP)** to handle container/pod lifecycle cleanup independently of the underlying provider (Docker, Kubernetes, etc.).
+
+### When Reaping Occurs
+
+Reaping is triggered under two specific conditions:
+
+1. **Inactivity Timeout (Idle Reaping)**:
+   - **Activity Touch Points**: Every ConnectRPC request targeting a session (`Execute`, `ReadFile`, `WriteFile`, `ListDirectory`, `CaptureScreenshot`, `Click`, `Type`, `GetComputerInfo`, etc.) automatically updates the session's `lastActivity` timestamp to `time.Now()`.
+   - **Sweep Schedule**: A background worker thread runs periodically (every `reapIdleContainersAfter / 2`, capped at max 10 seconds).
+   - **Reap Trigger**: During each sweep, the reaper compares `time.Since(lastActivity)` for each session. If the inactivity duration equals or exceeds `reapIdleContainersAfter` (e.g., `"10m"`), the session is marked expired and the reaper invokes `DeleteComputer(ctx, sessionID)` to destroy the underlying container/pod.
+   - **Client Error**: Subsequent RPC requests attempting to access a reaped session receive an explicit error: `"computer not found for sessionId ... (it may have been reaped due to inactivity or deleted)"`.
+
+2. **Server Shutdown Hook (Process Termination)**:
+   - **Signal Trigger**: Upon receiving an OS termination signal (`SIGINT` or `SIGTERM`), `RunServer()` intercepts the signal.
+   - **Purge Execution**: Before process exit, `RunServer()` calls `reaper.Stop(shutdownCtx)`, which immediately stops the background ticker loop and iterates over **all currently active sessions**, calling `DeleteComputer(ctx, sessionID)` to delete all running sandboxes/pods across all sessions.
+
 ## Building
 
 You can build the Computer Controller binary using `task` or Go tools:
