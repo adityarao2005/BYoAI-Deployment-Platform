@@ -3,9 +3,11 @@ package server
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/computer"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/config"
@@ -13,6 +15,10 @@ import (
 )
 
 func NewServerHandler(server_config *config.ServerConfig) (http.Handler, error) {
+	if server_config == nil {
+		return nil, fmt.Errorf("server_config cannot be nil")
+	}
+
 	mux := http.NewServeMux()
 
 	computer_provider, err := computer.GetComputerProvider(server_config)
@@ -24,7 +30,27 @@ func NewServerHandler(server_config *config.ServerConfig) (http.Handler, error) 
 	services.CreateBasicComputerServiceHandler(mux, computer_provider)
 	services.CreateGraphicComputerServiceHandler(mux, computer_provider)
 
-	return mux, nil
+	var handler http.Handler = mux
+
+	if server_config.Server.Security.HasAPIKey() {
+		handler = apiKeyAuthMiddleware(server_config.Server.Security.ApiKey, handler)
+	}
+
+	return handler, nil
+}
+
+func apiKeyAuthMiddleware(expectedKey string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+
+		if authHeader == "" || token != expectedKey {
+			http.Error(w, "Unauthorized: invalid or missing API key", http.StatusUnauthorized)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func RunServer() {

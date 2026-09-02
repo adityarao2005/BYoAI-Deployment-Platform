@@ -540,3 +540,62 @@ func TestServerTLSAndMTLS(t *testing.T) {
 		}
 	})
 }
+
+func TestServerAPIKeyAuth(t *testing.T) {
+	apiKey := "test-secret-key-123"
+
+	cfg := &config.ServerConfig{
+		Type: config.TypeLocal,
+		Server: config.ServerNetworkConfig{
+			Security: config.ServerSecurityConfig{
+				ApiKey: apiKey,
+			},
+		},
+	}
+
+	handler, err := server.NewServerHandler(cfg)
+	if err != nil {
+		t.Fatalf("failed to create server handler: %v", err)
+	}
+
+	ts := httptest.NewServer(handler)
+	defer ts.Close()
+
+	ctx := context.Background()
+	client := computer_apiv1connect.NewBasicComputerServiceClient(ts.Client(), ts.URL)
+
+	t.Run("Missing Authorization Header returns error", func(t *testing.T) {
+		req := connect.NewRequest(&computer_apiv1.GetUserIdRequest{SessionId: "0"})
+		_, err := client.GetUserId(ctx, req)
+		if err == nil {
+			t.Fatal("expected error for missing API key, got nil")
+		}
+		if connect.CodeOf(err) != connect.CodeUnauthenticated {
+			t.Errorf("expected CodeUnauthenticated, got %v", connect.CodeOf(err))
+		}
+	})
+
+	t.Run("Invalid API Key returns error", func(t *testing.T) {
+		req := connect.NewRequest(&computer_apiv1.GetUserIdRequest{SessionId: "0"})
+		req.Header().Set("Authorization", "Bearer wrong-key")
+		_, err := client.GetUserId(ctx, req)
+		if err == nil {
+			t.Fatal("expected error for invalid API key, got nil")
+		}
+		if connect.CodeOf(err) != connect.CodeUnauthenticated {
+			t.Errorf("expected CodeUnauthenticated, got %v", connect.CodeOf(err))
+		}
+	})
+
+	t.Run("Valid API Key succeeds", func(t *testing.T) {
+		req := connect.NewRequest(&computer_apiv1.GetUserIdRequest{SessionId: "0"})
+		req.Header().Set("Authorization", "Bearer "+apiKey)
+		resp, err := client.GetUserId(ctx, req)
+		if err != nil {
+			t.Fatalf("expected request with valid API key to succeed, got: %v", err)
+		}
+		if resp.Msg.GetUserId() == "" {
+			t.Fatal("expected non-empty UserId")
+		}
+	})
+}
