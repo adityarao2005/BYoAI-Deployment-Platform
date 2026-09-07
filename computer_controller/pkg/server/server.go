@@ -45,13 +45,9 @@ func NewServerHandlerAndProvider(server_config *config.ServerConfig) (http.Handl
 }
 
 func NewServerHandler(server_config *config.ServerConfig) (http.Handler, error) {
-	handler, provider, err := NewServerHandlerAndProvider(server_config)
+	handler, _, err := NewServerHandlerAndProvider(server_config)
 	if err != nil {
 		return nil, err
-	}
-
-	if reaper, ok := provider.(*computer.ReaperProvider); ok {
-		reaper.Start(context.Background())
 	}
 
 	return handler, nil
@@ -77,13 +73,9 @@ func RunServer() {
 		log.Fatalf("unable to load computer.yaml: %v", err)
 	}
 
-	handler, computerProvider, err := NewServerHandlerAndProvider(server_config)
+	handler, _, err := NewServerHandlerAndProvider(server_config)
 	if err != nil {
 		log.Fatalf("unable to create computer provider: %v", err)
-	}
-
-	if reaper, ok := computerProvider.(*computer.ReaperProvider); ok {
-		reaper.Start(context.Background())
 	}
 
 	server := http.Server{
@@ -99,12 +91,6 @@ func RunServer() {
 		log.Println("Received termination signal, shutting down server...")
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
-
-		if reaper, ok := computerProvider.(*computer.ReaperProvider); ok {
-			if err := reaper.Stop(shutdownCtx); err != nil {
-				log.Printf("error stopping reaper during shutdown: %v", err)
-			}
-		}
 
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			log.Printf("error shutting down server: %v", err)

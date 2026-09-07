@@ -149,7 +149,7 @@ func (provider *DockerComputerProvider) GetComputer(ctx context.Context, session
 
 	// if not exists
 	if !exists {
-		return nil, fmt.Errorf("computer not found for sessionId %s (it may have been reaped due to inactivity or deleted)", sessionId)
+		return nil, fmt.Errorf("computer not found for sessionId %s (or deleted)", sessionId)
 	}
 
 	// Detect if the container supports graphics via DISPLAY env var.

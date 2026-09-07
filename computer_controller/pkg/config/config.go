@@ -5,7 +5,6 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"time"
 
 	"go.yaml.in/yaml/v3"
 )
@@ -26,11 +25,10 @@ const (
 )
 
 type DockerSpec struct {
-	Host                    string          `yaml:"host,omitempty"`
-	APIVersion              string          `yaml:"apiVersion,omitempty"`
-	CertPath                string          `yaml:"certPath,omitempty"`
-	ImagePullPolicy         ImagePullPolicy `yaml:"imagePullPolicy,omitempty"`
-	ReapIdleContainersAfter time.Duration   `yaml:"reapIdleContainersAfter,omitempty"`
+	Host            string          `yaml:"host,omitempty"`
+	APIVersion      string          `yaml:"apiVersion,omitempty"`
+	CertPath        string          `yaml:"certPath,omitempty"`
+	ImagePullPolicy ImagePullPolicy `yaml:"imagePullPolicy,omitempty"`
 }
 
 type Spec interface {

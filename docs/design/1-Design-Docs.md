@@ -46,13 +46,10 @@ The **Computer Controller** is a Golang-based service running inside target sand
 - **Provider Architecture & Configuration**:
   - Configured at runtime via `computer.yaml` in the server's working directory (`config.LoadConfigFromFile()`). Supports optional `server.host` and `server.port` overrides.
   - **Local Provider (`type: local`)**: Host-level execution engine without container virtualization.
-  - **Docker Provider (`type: docker`)**: Containerized sandbox lifecycle management, supporting custom Docker host endpoints, API versions, TLS certificate directories, configurable image pull policies (`IfNotPresent`, `Always`, `Never`), and background idle container reaping (`reapIdleContainersAfter`).
-- **Session, Reaping & Graceful Shutdown**: 
+  - **Docker Provider (`type: docker`)**: Containerized sandbox lifecycle management, supporting custom Docker host endpoints, API versions, TLS certificate directories, and configurable image pull policies (`IfNotPresent`, `Always`, `Never`).
+- **Session & Capability Detection**: 
   - Dynamic capability detection (`has_display`, display size, supported features).
-  - **Single Responsibility Principle (SRP) Reaper**: Engine-agnostic `ReaperProvider` decorator wrapping `IComputerProvider` (Docker, Kubernetes, local).
-  - **Reaping Trigger Points**:
-    - *Inactivity Sweep*: Every ConnectRPC request targeting a session (`Execute`, `ReadFile`, `WriteFile`, `Click`, `Type`, `GetComputerInfo`) touches the session's activity timestamp (`Touch()`). A background worker ticker periodically evaluates `time.Since(lastActivity) >= reapIdleContainersAfter`; if matched, `DeleteComputer(ctx, sessionID)` is called to destroy the sandbox/pod.
-    - *Shutdown Purge*: Upon process termination signals (`SIGINT`/`SIGTERM`), `reaper.Stop()` is executed to purge all currently active containers/pods across all sessions before server exit.
+  - Explicit session lifecycle management with `CreateComputer`, `GetComputer`, and `DeleteComputer` RPC endpoints.
 - **Execution Primitives**: Synchronous and streaming shell command execution, file read/write/list, and GUI interaction hooks.
 
 The admins working on building their AI Agents can either manage it via Kubernetes or through the admin console.

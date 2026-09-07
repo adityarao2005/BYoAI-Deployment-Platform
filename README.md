@@ -17,7 +17,7 @@ Golang-based daemon service providing remote execution primitives for AI Agents:
 - **ConnectRPC & HTTP streaming** protocol support (`connectrpc.com/connect`).
 - **YAML-driven Provider Architecture**: Supports `local` host execution and `docker` container sandboxing configured via `computer.yaml`.
 - **Task Primitives**: Command execution (unary & streaming), filesystem read/write/list, GUI capabilities check.
-- **Session Lifecycle & Cleanup**: Heartbeat keepalives, idle container sweeps, and automatic workspace directory cleanup.
+- **Session Lifecycle**: Sandbox container creation, capability detection, and session-based computer primitives.
 
 For detailed configuration schema, build, run, and test guides, see [computer_controller/README.md](computer_controller/README.md).
 
