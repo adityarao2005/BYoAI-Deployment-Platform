@@ -1,4 +1,3 @@
-import { arraySync } from "node:stream/iter";
 import z from "zod";
 
 export const BaseToolProviderConfigSchema = z.object({
@@ -45,19 +44,21 @@ export const OpenAPIToolProviderConfigSchema = BaseToolProviderConfigSchema.exte
 
 export type OpenAPIToolProviderConfig = z.infer<typeof OpenAPIToolProviderConfigSchema>;
 
-export const ComputerUseToolProviderConfigSchema = z.object({
-    type: z.literal("computer"),
-    provider: z.discriminatedUnion("type", [
-        z.object({
+export const LocalComputerUseToolProviderConfigSchema = z.object({
             type: z.literal("local"),
             enableGUIToolsIfAvailable: z.boolean()
-        }),
-        z.object({
+        });
+
+export type LocalComputerUseToolProviderConfig = z.infer<typeof LocalComputerUseToolProviderConfigSchema>
+
+export const RemoteComputerUseToolProviderConfigSchema = z.object({
             type: z.literal("remote"),
             // if we want to have at least support for GUI clients even tho our image doesn't have it: this allows
             enableGUIToolsIfAvailable: z.boolean().default(false),
             url: z.string(), // computer controller connectrpc base url
             image: z.string(), // docker image
+
+            // TODO: when we work on the on getting user based & session based rbac stuff when we rework the agent harness to be event driven, we need to add a new computerLifetime argument with options for "server", "user", "session"
 
             // security configuration, either apikey auth or mtls
             security: z.object({
@@ -113,6 +114,14 @@ export const ComputerUseToolProviderConfigSchema = z.object({
             // env file
             envFile: z.string()
         })
+
+export type RemoteComputerUseToolProviderConfig = z.infer<typeof RemoteComputerUseToolProviderConfigSchema>
+
+export const ComputerUseToolProviderConfigSchema = z.object({
+    type: z.literal("computer"),
+    provider: z.discriminatedUnion("type", [
+        LocalComputerUseToolProviderConfigSchema,
+        RemoteComputerUseToolProviderConfigSchema
     ])
 })
 

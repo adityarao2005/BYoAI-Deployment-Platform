@@ -5,7 +5,7 @@ import { buildToolsFromSpec } from "./builder";
 
 export class OpenAPIToolProvider implements ToolProvider {
     config: OpenAPIToolProviderConfig;
-    private cachedTools: Promise<Tool[]> | null = null;
+    private cachedTools: Tool[] | null = null;
 
     constructor(config: OpenAPIToolProviderConfig) {
         this.config = config;
@@ -13,10 +13,8 @@ export class OpenAPIToolProvider implements ToolProvider {
 
     private async loadTools(): Promise<Tool[]> {
         if (!this.cachedTools) {
-            this.cachedTools = (async () => {
-                const doc = (await parseSpecURL(this.config.specUrl)) as Record<string, any>;
-                return buildToolsFromSpec(doc, this.config);
-            })();
+            const doc = (await parseSpecURL(this.config.specUrl)) as Record<string, any>;
+            this.cachedTools = buildToolsFromSpec(doc, this.config);
         }
         return this.cachedTools;
     }
