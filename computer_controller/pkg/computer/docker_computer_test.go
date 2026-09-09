@@ -398,5 +398,16 @@ func TestDockerComputerNetworkRules(t *testing.T) {
 		if err == nil && resIP.ExitCode == 0 {
 			t.Errorf("expected direct IP connection to fail on internal network, but it succeeded")
 		}
+
+		// 3. Verify ALL_PROXY (SOCKS5) environment variable was injected
+		resSocks, err := comp.Execute(ctx, ExecInput{
+			Command: "echo $ALL_PROXY",
+		})
+		if err != nil {
+			t.Fatalf("failed to check ALL_PROXY: %v", err)
+		}
+		if !bytes.Contains([]byte(resSocks.Stdout), []byte("socks5://host.docker.internal")) {
+			t.Errorf("expected ALL_PROXY to contain socks5://host.docker.internal, got %q", resSocks.Stdout)
+		}
 	})
 }

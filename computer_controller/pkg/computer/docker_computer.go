@@ -170,18 +170,29 @@ func (provider *DockerComputerProvider) CreateComputer(ctx context.Context, conf
 		}
 		egressProxy = proxy
 
-		_, portStr, err := net.SplitHostPort(proxy.Addr())
-		if err == nil {
-			proxyURL := fmt.Sprintf("http://host.docker.internal:%s", portStr)
+		_, httpPortStr, errHTTP := net.SplitHostPort(proxy.Addr())
+		_, socksPortStr, errSocks := net.SplitHostPort(proxy.SocksAddr())
+
+		if errHTTP == nil {
+			proxyURL := fmt.Sprintf("http://host.docker.internal:%s", httpPortStr)
 			envs = append(envs,
 				fmt.Sprintf("HTTP_PROXY=%s", proxyURL),
 				fmt.Sprintf("HTTPS_PROXY=%s", proxyURL),
 				fmt.Sprintf("http_proxy=%s", proxyURL),
 				fmt.Sprintf("https_proxy=%s", proxyURL),
-				"NO_PROXY=localhost,127.0.0.1",
-				"no_proxy=localhost,127.0.0.1",
 			)
 		}
+		if errSocks == nil {
+			socksURL := fmt.Sprintf("socks5://host.docker.internal:%s", socksPortStr)
+			envs = append(envs,
+				fmt.Sprintf("ALL_PROXY=%s", socksURL),
+				fmt.Sprintf("all_proxy=%s", socksURL),
+			)
+		}
+		envs = append(envs,
+			"NO_PROXY=localhost,127.0.0.1",
+			"no_proxy=localhost,127.0.0.1",
+		)
 
 		if hostConfig == nil {
 			hostConfig = &container.HostConfig{}

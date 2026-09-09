@@ -264,3 +264,99 @@ func TestEgressProxy_CONNECT(t *testing.T) {
 		}
 	})
 }
+
+func TestEgressProxy_SOCKS5(t *testing.T) {
+	// Start a backend TCP test server
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("socks5 backend response"))
+	}))
+	defer backend.Close()
+
+	backendURL, _ := url.Parse(backend.URL)
+	host, portStr, _ := net.SplitHostPort(backendURL.Host)
+	var port int
+	fmt.Sscanf(portStr, "%d", &port)
+
+	t.Run("Allowed SOCKS5 Connect", func(t *testing.T) {
+		engine := NewRuleEngine([]string{backendURL.Host}, nil)
+		proxy, err := NewEgressProxy("127.0.0.1:0", engine)
+		if err != nil {
+			t.Fatalf("failed to start egress proxy: %v", err)
+		}
+		defer proxy.Close()
+
+		conn, err := net.Dial("tcp", proxy.SocksAddr())
+		if err != nil {
+			t.Fatalf("failed to connect to SOCKS5 proxy: %v", err)
+		}
+		defer conn.Close()
+
+		// 1. Send SOCKS5 greeting [0x05 (ver), 1 (methods), 0x00 (no auth)]
+		_, err = conn.Write([]byte{0x05, 0x01, 0x00})
+		if err != nil {
+			t.Fatalf("failed to write SOCKS5 greeting: %v", err)
+		}
+
+		resp := make([]byte, 2)
+		if _, err := io.ReadFull(conn, resp); err != nil {
+			t.Fatalf("failed to read SOCKS5 greeting response: %v", err)
+		}
+		if resp[0] != 0x05 || resp[1] != 0x00 {
+			t.Fatalf("expected SOCKS5 handshake success [5 0], got %v", resp)
+		}
+
+		// 2. Send SOCKS5 CONNECT request for domain
+		req := []byte{0x05, 0x01, 0x00, 0x03, byte(len(host))}
+		req = append(req, []byte(host)...)
+		req = append(req, byte(port>>8), byte(port&0xff))
+
+		if _, err := conn.Write(req); err != nil {
+			t.Fatalf("failed to write SOCKS5 connect request: %v", err)
+		}
+
+		connectResp := make([]byte, 10)
+		if _, err := io.ReadFull(conn, connectResp); err != nil {
+			t.Fatalf("failed to read SOCKS5 connect response: %v", err)
+		}
+		if connectResp[1] != 0x00 { // 0x00 = success
+			t.Errorf("expected SOCKS5 CONNECT success (0x00), got status code 0x%02x", connectResp[1])
+		}
+	})
+
+	t.Run("Denied SOCKS5 Connect", func(t *testing.T) {
+		engine := NewRuleEngine(nil, []string{backendURL.Host})
+		proxy, err := NewEgressProxy("127.0.0.1:0", engine)
+		if err != nil {
+			t.Fatalf("failed to start egress proxy: %v", err)
+		}
+		defer proxy.Close()
+
+		conn, err := net.Dial("tcp", proxy.SocksAddr())
+		if err != nil {
+			t.Fatalf("failed to connect to SOCKS5 proxy: %v", err)
+		}
+		defer conn.Close()
+
+		// Send SOCKS5 greeting
+		_, _ = conn.Write([]byte{0x05, 0x01, 0x00})
+		resp := make([]byte, 2)
+		_, _ = io.ReadFull(conn, resp)
+
+		// Send CONNECT request for denied host
+		req := []byte{0x05, 0x01, 0x00, 0x03, byte(len(host))}
+		req = append(req, []byte(host)...)
+		req = append(req, byte(port>>8), byte(port&0xff))
+
+		_, _ = conn.Write(req)
+
+		connectResp := make([]byte, 10)
+		_, err = io.ReadFull(conn, connectResp)
+		if err != nil && err != io.EOF {
+			t.Fatalf("failed to read SOCKS5 connect response: %v", err)
+		}
+		if connectResp[1] != 0x02 { // 0x02 = connection not allowed by ruleset
+			t.Errorf("expected SOCKS5 ruleset error (0x02), got 0x%02x", connectResp[1])
+		}
+	})
+}
