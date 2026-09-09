@@ -104,29 +104,38 @@ func (provider *DockerComputerProvider) pullImage(ctx context.Context, image str
 	return nil
 }
 
+func buildDockerEnv(env map[string]string) []string {
+	var envs []string
+	for k, v := range env {
+		envs = append(envs, fmt.Sprintf("%s=%s", k, v))
+	}
+	return envs
+}
+
+func buildDockerHostConfig(res *ComputerResourceConfig) *container.HostConfig {
+	hostConfig := &container.HostConfig{}
+	if res != nil {
+		if res.CPU != "" {
+			if cpuFloat, err := strconv.ParseFloat(res.CPU, 64); err == nil {
+				hostConfig.Resources.NanoCPUs = int64(cpuFloat * 1e9)
+			}
+		}
+		if res.Memory != "" {
+			if memBytes, err := units.RAMInBytes(res.Memory); err == nil {
+				hostConfig.Resources.Memory = memBytes
+			}
+		}
+	}
+	return hostConfig
+}
+
 func (provider *DockerComputerProvider) CreateComputer(ctx context.Context, config ComputerConfig) (string, error) {
 
 	// pull the image
 	provider.pullImage(ctx, config.Image)
 
-	var envs []string
-	for k, v := range config.Environment {
-		envs = append(envs, fmt.Sprintf("%s=%s", k, v))
-	}
-
-	hostConfig := &container.HostConfig{}
-	if config.Resources != nil {
-		if config.Resources.CPU != "" {
-			if cpuFloat, err := strconv.ParseFloat(config.Resources.CPU, 64); err == nil {
-				hostConfig.Resources.NanoCPUs = int64(cpuFloat * 1e9)
-			}
-		}
-		if config.Resources.Memory != "" {
-			if memBytes, err := units.RAMInBytes(config.Resources.Memory); err == nil {
-				hostConfig.Resources.Memory = memBytes
-			}
-		}
-	}
+	envs := buildDockerEnv(config.Environment)
+	hostConfig := buildDockerHostConfig(config.Resources)
 
 	// create the container, resp contains container id
 	// override CMD with "sleep infinity" to keep the container alive as a sandbox

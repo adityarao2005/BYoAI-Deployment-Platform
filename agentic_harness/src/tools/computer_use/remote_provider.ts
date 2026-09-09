@@ -351,6 +351,104 @@ export class ConnectRemoteComputer implements GraphicalComputer {
     }
 }
 
+async function loadCertOrFile(pathOrContent: string): Promise<string | Buffer> {
+    try {
+        const stat = await fs.promises.stat(pathOrContent);
+        if (stat.isFile()) {
+            return await fs.promises.readFile(pathOrContent);
+        }
+    } catch {
+        // Not a valid file path, treat as raw PEM string content
+    }
+    return pathOrContent;
+}
+
+/**
+ * Helper to build ConnectRPC Transport options (interceptors for auth, nodeOptions for mTLS/certs).
+ */
+export async function buildTransportOptions(
+    config: RemoteComputerUseToolProviderConfig
+): Promise<ConnectTransportOptions> {
+    const interceptors: Interceptor[] = [];
+
+    if (config.security?.apiKey) {
+        const apiKey = config.security.apiKey;
+        interceptors.push((next) => async (req) => {
+            req.header.set("Authorization", `Bearer ${apiKey}`);
+            return await next(req);
+        });
+    }
+
+    const options: ConnectTransportOptions = {
+        baseUrl: config.url,
+        httpVersion: "2",
+        interceptors,
+    };
+
+    if (config.security?.mtls?.clientCert) {
+        const certData = await loadCertOrFile(config.security.mtls.clientCert);
+        const nodeOptions: SecureClientSessionOptions = {
+            cert: certData,
+        };
+
+        if (config.security.mtls.clientKey) {
+            nodeOptions.key = await loadCertOrFile(config.security.mtls.clientKey);
+        }
+
+        if (config.security.mtls.caCert) {
+            nodeOptions.ca = await loadCertOrFile(config.security.mtls.caCert);
+        } else {
+            // Fallback: If caCert is omitted, use clientCert as ca so full-chain PEM bundles work automatically
+            nodeOptions.ca = certData;
+        }
+
+        options.nodeOptions = nodeOptions;
+    }
+
+    return options;
+}
+
+/**
+ * Asynchronously loads .env file if specified and merges with environment config (config.environment takes priority).
+ */
+export async function resolveEnvironmentConfig(
+    config: RemoteComputerUseToolProviderConfig
+): Promise<Record<string, string>> {
+    let envFromFile: Record<string, string> = {};
+    if (config.envFile) {
+        try {
+            const fileContent = await fs.promises.readFile(config.envFile, "utf-8");
+            envFromFile = dotenv.parse(fileContent);
+        } catch (err: any) {
+            throw new Error(`Failed to read env file ${config.envFile}: ${err.message}`);
+        }
+    }
+
+    return {
+        ...envFromFile,
+        ...(config.environment || {}),
+    };
+}
+
+/**
+ * Maps resource config into protobuf ComputerResourceConfig format.
+ */
+export function buildResourceConfig(
+    config: RemoteComputerUseToolProviderConfig
+): { cpu?: string; memory?: string } | undefined {
+    if (!config.resources) {
+        return undefined;
+    }
+    const result: { cpu?: string; memory?: string } = {};
+    if (config.resources.cpu !== undefined) {
+        result.cpu = String(config.resources.cpu);
+    }
+    if (config.resources.memory !== undefined) {
+        result.memory = config.resources.memory;
+    }
+    return result;
+}
+
 export class RemoteComputerUseToolProvider extends ComputerUseToolProvider {
     transport: Transport | null = null;
     config: RemoteComputerUseToolProviderConfig;
@@ -365,63 +463,14 @@ export class RemoteComputerUseToolProvider extends ComputerUseToolProvider {
     }
 
     async createTools(): Promise<Tool[]> {
-        const interceptors: Interceptor[] = [];
-        if (this.config.security?.apiKey) {
-            const apiKey = this.config.security.apiKey;
-            interceptors.push((next) => async (req) => {
-                req.header.set("Authorization", `Bearer ${apiKey}`);
-                return await next(req);
-            });
-        }
-
-        let options: ConnectTransportOptions = {
-            baseUrl: this.config.url,
-            httpVersion: "2",
-            interceptors,
-        }
-
-        if (this.config.security?.mtls?.clientCert) {
-            const certPathOrContent = this.config.security.mtls.clientCert;
-            const nodeOptions: SecureClientSessionOptions = {}
-            try {
-                const stat = await fs.promises.stat(certPathOrContent);
-                if (stat.isFile()) {
-                    nodeOptions.cert = await fs.promises.readFile(certPathOrContent);
-                } else {
-                    nodeOptions.cert = certPathOrContent;
-                }
-            } catch {
-                nodeOptions.cert = certPathOrContent;
-            }
-            options = { ...options, nodeOptions }
-        }
-
-        this.transport = createConnectTransport(options);
+        const transportOptions = await buildTransportOptions(this.config);
+        this.transport = createConnectTransport(transportOptions);
 
         this.computerProviderService = createClient(ComputerProviderService, this.transport);
         this.basicComputerService = createClient(BasicComputerService, this.transport);
 
-        let envFromFile: Record<string, string> = {};
-        if (this.config.envFile) {
-            try {
-                const fileContent = await fs.promises.readFile(this.config.envFile, "utf-8");
-                envFromFile = dotenv.parse(fileContent);
-            } catch (err: any) {
-                throw new Error(`Failed to read env file ${this.config.envFile}: ${err.message}`);
-            }
-        }
-
-        const environment: Record<string, string> = {
-            ...envFromFile,
-            ...(this.config.environment || {}),
-        };
-
-        const resources = this.config.resources
-            ? {
-                cpu: this.config.resources.cpu !== undefined ? String(this.config.resources.cpu) : undefined,
-                memory: this.config.resources.memory,
-            }
-            : undefined;
+        const environment = await resolveEnvironmentConfig(this.config);
+        const resources = buildResourceConfig(this.config);
 
         // create the computer
         const createResponse = await this.computerProviderService.createComputer({

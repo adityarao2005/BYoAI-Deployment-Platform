@@ -253,7 +253,9 @@ toolProviders:
       security:
         apiKey: "remote-secret"
         mtls:
-          clientCert: "/path/to/cert.pem"
+          clientCert: "/path/to/cert.pem"  # Client cert file path or full-chain PEM
+          clientKey: "/path/to/key.pem"    # Optional client private key file path or PEM
+          caCert: "/path/to/ca.pem"        # Optional CA cert file (defaults to clientCert if omitted for full-chain certs)
       networkRules:
         allowedHosts: "*"             # Wildcard string or array of allowed outbound hosts
         deniedHosts: []
@@ -289,7 +291,7 @@ toolProviders:
 | `remote` | `image` | String | Yes | Docker image name | **Implemented** |
 | `remote` | `enableGUIToolsIfAvailable` | Boolean | Optional | Enables GUI tools for graphical computer containers | **Implemented** |
 | `remote` | `envFile` | String | Yes | Path to `.env` file | **Implemented** |
-| `remote` | `security` | Object | Optional | Authentication options (`apiKey`, `mtls.clientCert`) | **Implemented** |
+| `remote` | `security` | Object | Optional | Auth options (`apiKey`, `mtls.clientCert`, `mtls.clientKey`, `mtls.caCert`) | **Implemented** |
 | `remote` | `networkRules` | Object | Optional | Egress rules (`allowedHosts`, `deniedHosts`) | **Implemented** |
 | `remote` | `resources` | Object | Optional | Container limits (`cpu`, `memory`) | **Implemented** |
 | `remote` | `environment` | Array/Object | Optional | Environment variables array or key-value dictionary | **Implemented** |

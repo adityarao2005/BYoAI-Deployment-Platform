@@ -64,7 +64,9 @@ export const RemoteComputerUseToolProviderConfigSchema = z.object({
             security: z.object({
                 apiKey: z.string().optional(),
                 mtls: z.object({
-                    clientCert: z.string()
+                    clientCert: z.string(),
+                    clientKey: z.string(),
+                    caCert: z.string().optional()
                 }).optional()
             }).optional(),
 

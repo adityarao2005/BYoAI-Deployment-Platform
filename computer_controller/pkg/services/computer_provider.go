@@ -16,23 +16,27 @@ type ComputerProviderService struct {
 	provider computer.IComputerProvider
 }
 
+func toComputerConfig(req *computer_apiv1.CreateComputerRequest) computer.ComputerConfig {
+	var resources *computer.ComputerResourceConfig
+	if req.GetResources() != nil {
+		resources = &computer.ComputerResourceConfig{
+			CPU:    req.GetResources().GetCpu(),
+			Memory: req.GetResources().GetMemory(),
+		}
+	}
+
+	return computer.ComputerConfig{
+		Image:       req.GetImage(),
+		Resources:   resources,
+		Environment: req.GetEnvironment(),
+	}
+}
+
 func (s *ComputerProviderService) CreateComputer(
 	ctx context.Context,
 	req *connect.Request[computer_apiv1.CreateComputerRequest],
 ) (*connect.Response[computer_apiv1.CreateComputerResponse], error) {
-	var resources *computer.ComputerResourceConfig
-	if req.Msg.GetResources() != nil {
-		resources = &computer.ComputerResourceConfig{
-			CPU:    req.Msg.GetResources().GetCpu(),
-			Memory: req.Msg.GetResources().GetMemory(),
-		}
-	}
-
-	sessionID, err := s.provider.CreateComputer(ctx, computer.ComputerConfig{
-		Image:       req.Msg.GetImage(),
-		Resources:   resources,
-		Environment: req.Msg.GetEnvironment(),
-	})
+	sessionID, err := s.provider.CreateComputer(ctx, toComputerConfig(req.Msg))
 	if err != nil {
 		return connect.NewResponse(&computer_apiv1.CreateComputerResponse{
 			Result: &computer_apiv1.CreateComputerResponse_ErrorMessage{
