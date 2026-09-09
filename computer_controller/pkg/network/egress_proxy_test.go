@@ -236,4 +236,31 @@ func TestEgressProxy_CONNECT(t *testing.T) {
 	if !strings.Contains(respLineDenied, "403") {
 		t.Errorf("expected 403 Forbidden for denied CONNECT, got %q", respLineDenied)
 	}
+
+	// 3. Real internet domain blocked CONNECT request test (e.g. google.com:443)
+	t.Run("Blocked Public Domain google.com", func(t *testing.T) {
+		engine := NewRuleEngine([]string{"httpbin.org"}, []string{"google.com", "*.google.com"})
+		proxy, err := NewEgressProxy("127.0.0.1:0", engine)
+		if err != nil {
+			t.Fatalf("failed to start egress proxy: %v", err)
+		}
+		defer proxy.Close()
+
+		conn, err := net.Dial("tcp", proxy.Addr())
+		if err != nil {
+			t.Fatalf("failed to connect to proxy: %v", err)
+		}
+		defer conn.Close()
+
+		target := "google.com:443"
+		fmt.Fprintf(conn, "CONNECT %s HTTP/1.1\r\nHost: %s\r\n\r\n", target, target)
+		reader := bufio.NewReader(conn)
+		respLine, err := reader.ReadString('\n')
+		if err != nil {
+			t.Fatalf("failed to read CONNECT response from proxy: %v", err)
+		}
+		if !strings.Contains(respLine, "403") {
+			t.Errorf("expected 403 Forbidden for blocked google.com CONNECT request, got %q", respLine)
+		}
+	})
 }
