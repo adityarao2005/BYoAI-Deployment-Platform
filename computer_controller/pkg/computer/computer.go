@@ -93,10 +93,35 @@ type IGraphicalComputer interface {
 	GetScreenSize(ctx context.Context) (int, int, error)
 }
 
+// Security configuration for a computer instance
+type ComputerSecurityConfig struct {
+	APIKey string
+}
+
+// Resource limits configuration for a computer instance
+type ComputerResourceConfig struct {
+	CPU    string
+	Memory string
+}
+
+// Network egress firewall configuration for a computer instance
+type NetworkRules struct {
+	AllowedHosts []string
+	DeniedHosts  []string
+}
+
 // computer configuration for creating a computer
 type ComputerConfig struct {
 	// docker image to use
 	Image string
+	// security configuration
+	Security *ComputerSecurityConfig
+	// resource limits
+	Resources *ComputerResourceConfig
+	// environment variables
+	Environment map[string]string
+	// network rules
+	NetworkRules *NetworkRules
 }
 
 // provides the computer

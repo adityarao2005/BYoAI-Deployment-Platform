@@ -65,7 +65,7 @@ server:
 
 ### 2. Docker Mode (`type: docker`)
 
-Manages sandboxed Docker containers for execution. Supports custom daemon sockets, TLS authentication, image pull policies, and container idle reaping.
+Manages sandboxed Docker containers for execution. Supports custom daemon sockets, TLS authentication, and image pull policies.
 
 #### Docker Spec Fields (`spec`)
 
@@ -75,7 +75,6 @@ Manages sandboxed Docker containers for execution. Supports custom daemon socket
 | `apiVersion` | String | `""` | Docker API version string (e.g. `"1.41"`). |
 | `certPath` | String | `""` | Directory path containing TLS certs (`ca.pem`, `cert.pem`, `key.pem`). |
 | `imagePullPolicy` | String | `"IfNotPresent"` | Container image pull policy. Must be one of `IfNotPresent`, `Always`, or `Never`. |
-| `reapIdleContainersAfter` | Duration | `0s` (Disabled) | Inactivity duration before idle containers are reaped (e.g. `"10m"`, `"1h"`). |
 
 #### Example `computer.yaml`
 ```yaml
@@ -88,28 +87,26 @@ spec:
   apiVersion: "1.41"
   certPath: "/etc/docker/certs"
   imagePullPolicy: "IfNotPresent"
-  reapIdleContainersAfter: "10m"
 ```
 
 ---
 
-## Container/Pod Idle Reaping & Graceful Shutdown Hook
+### Network Access Control & Egress Firewalling (Docker Mode)
 
-The Computer Controller features an engine-agnostic `ReaperProvider` implementing the **Single Responsibility Principle (SRP)** to handle container/pod lifecycle cleanup independently of the underlying provider (Docker, Kubernetes, etc.).
+When `CreateComputer` is invoked with `networkRules` (`allowedHosts` and/or `deniedHosts`), the Computer Controller enforces non-root container network sandboxing:
 
-### When Reaping Occurs
+1. **Internal Bridge Network (`Internal: true`)**:
+   - Each session with network rules creates an isolated internal Docker bridge network (`byoai-net-<session_id>`) with **no default internet gateway**.
+   - Direct IP connection attempts (`curl http://1.1.1.1` or raw TCP sockets) fail instantly with `Network is unreachable`.
+2. **Embedded User-Space Egress Proxy (HTTP, HTTPS & SOCKS5)**:
+   - An in-process Go HTTP/CONNECT and RFC 1928 SOCKS5 proxy server (`EgressProxy`) runs on the host bound to the bridge network interface.
+   - Container environment variables (`HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`, `all_proxy`) route web and raw TCP traffic (PostgreSQL, DB2, SSH, Redis) through `host.docker.internal:<proxy_port>`.
+   - Host rules support exact hostnames (`api.openai.com`), domain wildcards (`*.github.com`), individual IPs (`1.1.1.1`), and CIDR subnets (`10.0.0.0/8`). `deniedHosts` takes priority over `allowedHosts`.
+3. **Non-Root & Image-Agnostic**:
+   - Requires **no host `root` privileges or `sudo`** (compatible with Rootless Docker, Rootless Podman, and unprivileged host users).
+   - Compatible with any container image, including `FROM scratch` or minimal images (no binaries or `iptables` required inside the container).
 
-Reaping is triggered under two specific conditions:
-
-1. **Inactivity Timeout (Idle Reaping)**:
-   - **Activity Touch Points**: Every ConnectRPC request targeting a session (`Execute`, `ReadFile`, `WriteFile`, `ListDirectory`, `CaptureScreenshot`, `Click`, `Type`, `GetComputerInfo`, etc.) automatically updates the session's `lastActivity` timestamp to `time.Now()`.
-   - **Sweep Schedule**: A background worker thread runs periodically (every `reapIdleContainersAfter / 2`, capped at max 10 seconds).
-   - **Reap Trigger**: During each sweep, the reaper compares `time.Since(lastActivity)` for each session. If the inactivity duration equals or exceeds `reapIdleContainersAfter` (e.g., `"10m"`), the session is marked expired and the reaper invokes `DeleteComputer(ctx, sessionID)` to destroy the underlying container/pod.
-   - **Client Error**: Subsequent RPC requests attempting to access a reaped session receive an explicit error: `"computer not found for sessionId ... (it may have been reaped due to inactivity or deleted)"`.
-
-2. **Server Shutdown Hook (Process Termination)**:
-   - **Signal Trigger**: Upon receiving an OS termination signal (`SIGINT` or `SIGTERM`), `RunServer()` intercepts the signal.
-   - **Purge Execution**: Before process exit, `RunServer()` calls `reaper.Stop(shutdownCtx)`, which immediately stops the background ticker loop and iterates over **all currently active sessions**, calling `DeleteComputer(ctx, sessionID)` to delete all running sandboxes/pods across all sessions.
+---
 
 ## Building
 

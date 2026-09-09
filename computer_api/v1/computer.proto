@@ -5,12 +5,26 @@ package computer_api.v1;
 import "buf/validate/validate.proto";
 import "google/protobuf/duration.proto";
 
+
+message ComputerResourceConfig {
+    optional string cpu = 1;
+    optional string memory = 2;
+}
+
+message NetworkRules {
+    repeated string allowed_hosts = 1;
+    repeated string denied_hosts = 2;
+}
+
 // create computer request
 message CreateComputerRequest {
     string image = 1 [(buf.validate.field).string ={
         min_len: 1
         max_len: 255
     }];
+    optional ComputerResourceConfig resources = 3;
+    map<string, string> environment = 4;
+    optional NetworkRules network_rules = 5;
 }
 
 message CreateComputerResponse {

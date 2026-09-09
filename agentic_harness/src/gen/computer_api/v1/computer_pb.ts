@@ -13,7 +13,51 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file computer_api/v1/computer.proto.
  */
 export const file_computer_api_v1_computer: GenFile = /*@__PURE__*/
-  fileDesc("Ch5jb21wdXRlcl9hcGkvdjEvY29tcHV0ZXIucHJvdG8SD2NvbXB1dGVyX2FwaS52MSIyChVDcmVhdGVDb21wdXRlclJlcXVlc3QSGQoFaW1hZ2UYASABKAlCCrpIB3IFEAEY/wEiUQoWQ3JlYXRlQ29tcHV0ZXJSZXNwb25zZRIXCg1lcnJvcl9tZXNzYWdlGAEgASgJSAASFAoKc2Vzc2lvbl9pZBgCIAEoCUgAQggKBnJlc3VsdCI4ChZHZXRDb21wdXRlckluZm9SZXF1ZXN0Eh4KCnNlc3Npb25faWQYASABKAlCCrpIB3IFEAEY/wEiRgoXR2V0Q29tcHV0ZXJJbmZvUmVzcG9uc2USKwoEdHlwZRgBIAEoDjIdLmNvbXB1dGVyX2FwaS52MS5Db21wdXRlclR5cGUiNwoVRGVsZXRlQ29tcHV0ZXJSZXF1ZXN0Eh4KCnNlc3Npb25faWQYASABKAlCCrpIB3IFEAEY/wEiGAoWRGVsZXRlQ29tcHV0ZXJSZXNwb25zZSLSAgoORXhlY3V0ZVJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRIPCgdjb21tYW5kGAIgASgJEhAKA2N3ZBgDIAEoCUgAiAEBEj4KCGVudl92YXJzGAQgAygLMiwuY29tcHV0ZXJfYXBpLnYxLkV4ZWN1dGVSZXF1ZXN0LkVudlZhcnNFbnRyeRISCgVzdGRpbhgFIAEoCUgBiAEBEhIKBXNoZWxsGAYgASgJSAKIAQESEgoKc2hlbGxfYXJncxgHIAMoCRIyCgp3YWl0X2RlbGF5GAggASgLMhkuZ29vZ2xlLnByb3RvYnVmLkR1cmF0aW9uSAOIAQEaLgoMRW52VmFyc0VudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAFCBgoEX2N3ZEIICgZfc3RkaW5CCAoGX3NoZWxsQg0KC193YWl0X2RlbGF5IkQKD0V4ZWN1dGlvblJlc3VsdBIRCglleGl0X2NvZGUYASABKAUSDgoGc3Rkb3V0GAIgASgJEg4KBnN0ZGVychgDIAEoCSJtCg9FeGVjdXRlUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEjcKC2V4ZWNfcmVzdWx0GAIgASgLMiAuY29tcHV0ZXJfYXBpLnYxLkV4ZWN1dGlvblJlc3VsdEgAQggKBnJlc3VsdCJxCg9SZWFkRmlsZVJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRIMCgRwYXRoGAIgASgJEhMKBm9mZnNldBgDIAEoA0gAiAEBEhIKBWxpbWl0GAQgASgFSAGIAQFCCQoHX29mZnNldEIICgZfbGltaXQiSAoQUmVhZEZpbGVSZXNwb25zZRIXCg1lcnJvcl9tZXNzYWdlGAEgASgJSAASEQoHY29udGVudBgCIAEoDEgAQggKBnJlc3VsdCJlChBXcml0ZUZpbGVSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkSDAoEcGF0aBgCIAEoCRIPCgdjb250ZW50GAMgASgMEhMKBmFwcGVuZBgEIAEoCEgAiAEBQgkKB19hcHBlbmQiFgoUU3VjY2Vzc1dyaXRlUmVzcG9uc2UibQoRV3JpdGVGaWxlUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEjUKBHJlc3AYAiABKAsyJS5jb21wdXRlcl9hcGkudjEuU3VjY2Vzc1dyaXRlUmVzcG9uc2VIAEIICgZyZXN1bHQiOAoUTGlzdERpcmVjdG9yeVJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRIMCgRwYXRoGAIgASgJIi0KHFN1Y2Nlc3NMaXN0RGlyZWN0b3J5UmVzcG9uc2USDQoFZmlsZXMYASADKAkifQoVTGlzdERpcmVjdG9yeVJlc3BvbnNlEhcKDWVycm9yX21lc3NhZ2UYASABKAlIABJBCghyZXNwb25zZRgCIAEoCzItLmNvbXB1dGVyX2FwaS52MS5TdWNjZXNzTGlzdERpcmVjdG9yeVJlc3BvbnNlSABCCAoGcmVzdWx0IiYKEEdldFVzZXJJZFJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCSJJChFHZXRVc2VySWRSZXNwb25zZRIXCg1lcnJvcl9tZXNzYWdlGAEgASgJSAASEQoHdXNlcl9pZBgCIAEoCUgAQggKBnJlc3VsdCInChFHZXRHcm91cElkUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJIksKEkdldEdyb3VwSWRSZXNwb25zZRIXCg1lcnJvcl9tZXNzYWdlGAEgASgJSAASEgoIZ3JvdXBfaWQYAiABKAlIAEIICgZyZXN1bHQimAEKGENhcHR1cmVTY3JlZW5zaG90UmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJEg4KAXgYAiABKAVIAIgBARIOCgF5GAMgASgFSAGIAQESEgoFd2lkdGgYBCABKAVIAogBARITCgZoZWlnaHQYBSABKAVIA4gBAUIECgJfeEIECgJfeUIICgZfd2lkdGhCCQoHX2hlaWdodCI2CiBTdWNjZXNzQ2FwdHVyZVNjcmVlbnNob3RSZXNwb25zZRISCgppbWFnZV9kYXRhGAEgASgMIoUBChlDYXB0dXJlU2NyZWVuc2hvdFJlc3BvbnNlEhcKDWVycm9yX21lc3NhZ2UYASABKAlIABJFCghyZXNwb25zZRgCIAEoCzIxLmNvbXB1dGVyX2FwaS52MS5TdWNjZXNzQ2FwdHVyZVNjcmVlbnNob3RSZXNwb25zZUgAQggKBnJlc3VsdCJYCgxDbGlja1JlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRIJCgF4GAIgASgFEgkKAXkYAyABKAUSEwoGYnV0dG9uGAQgASgJSACIAQFCCQoHX2J1dHRvbiIWChRTdWNjZXNzQ2xpY2tSZXNwb25zZSJtCg1DbGlja1Jlc3BvbnNlEhcKDWVycm9yX21lc3NhZ2UYASABKAlIABI5CghyZXNwb25zZRgCIAEoCzIlLmNvbXB1dGVyX2FwaS52MS5TdWNjZXNzQ2xpY2tSZXNwb25zZUgAQggKBnJlc3VsdCIvCgtUeXBlUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJEgwKBHRleHQYAiABKAkiFQoTU3VjY2Vzc1R5cGVSZXNwb25zZSJrCgxUeXBlUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEjgKCHJlc3BvbnNlGAIgASgLMiQuY29tcHV0ZXJfYXBpLnYxLlN1Y2Nlc3NUeXBlUmVzcG9uc2VIAEIICgZyZXN1bHQiMgoPUHJlc3NLZXlSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkSCwoDa2V5GAIgASgJIhkKF1N1Y2Nlc3NQcmVzc0tleVJlc3BvbnNlInMKEFByZXNzS2V5UmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEjwKCHJlc3BvbnNlGAIgASgLMiguY29tcHV0ZXJfYXBpLnYxLlN1Y2Nlc3NQcmVzc0tleVJlc3BvbnNlSABCCAoGcmVzdWx0IjQKEVJlbGVhc2VLZXlSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkSCwoDa2V5GAIgASgJIhsKGVN1Y2Nlc3NSZWxlYXNlS2V5UmVzcG9uc2UidwoSUmVsZWFzZUtleVJlc3BvbnNlEhcKDWVycm9yX21lc3NhZ2UYASABKAlIABI+CghyZXNwb25zZRgCIAEoCzIqLmNvbXB1dGVyX2FwaS52MS5TdWNjZXNzUmVsZWFzZUtleVJlc3BvbnNlSABCCAoGcmVzdWx0IjkKFlByZXNzQW5kSG9sZEtleVJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRILCgNrZXkYAiABKAkiIAoeU3VjY2Vzc1ByZXNzQW5kSG9sZEtleVJlc3BvbnNlIoEBChdQcmVzc0FuZEhvbGRLZXlSZXNwb25zZRIXCg1lcnJvcl9tZXNzYWdlGAEgASgJSAASQwoIcmVzcG9uc2UYAiABKAsyLy5jb21wdXRlcl9hcGkudjEuU3VjY2Vzc1ByZXNzQW5kSG9sZEtleVJlc3BvbnNlSABCCAoGcmVzdWx0IisKFVJlbGVhc2VBbGxLZXlzUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJIh8KHVN1Y2Nlc3NSZWxlYXNlQWxsS2V5c1Jlc3BvbnNlIn8KFlJlbGVhc2VBbGxLZXlzUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEkIKCHJlc3BvbnNlGAIgASgLMi4uY29tcHV0ZXJfYXBpLnYxLlN1Y2Nlc3NSZWxlYXNlQWxsS2V5c1Jlc3BvbnNlSABCCAoGcmVzdWx0IlEKC0RyYWdSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkSCgoCeDEYAiABKAUSCgoCeTEYAyABKAUSCgoCeDIYBCABKAUSCgoCeTIYBSABKAUiFQoTU3VjY2Vzc0RyYWdSZXNwb25zZSJrCgxEcmFnUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEjgKCHJlc3BvbnNlGAIgASgLMiQuY29tcHV0ZXJfYXBpLnYxLlN1Y2Nlc3NEcmFnUmVzcG9uc2VIAEIICgZyZXN1bHQiPgoSTW92ZU1vdXNlVG9SZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkSCQoBeBgCIAEoBRIJCgF5GAMgASgFIhwKGlN1Y2Nlc3NNb3ZlTW91c2VUb1Jlc3BvbnNlInkKE01vdmVNb3VzZVRvUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEj8KCHJlc3BvbnNlGAIgASgLMisuY29tcHV0ZXJfYXBpLnYxLlN1Y2Nlc3NNb3ZlTW91c2VUb1Jlc3BvbnNlSABCCAoGcmVzdWx0IjsKDVNjcm9sbFJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRIKCgJkeBgCIAEoBRIKCgJkeRgDIAEoBSIXChVTdWNjZXNzU2Nyb2xsUmVzcG9uc2UibwoOU2Nyb2xsUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEjoKCHJlc3BvbnNlGAIgASgLMiYuY29tcHV0ZXJfYXBpLnYxLlN1Y2Nlc3NTY3JvbGxSZXNwb25zZUgAQggKBnJlc3VsdCIpChNHZXRDbGlwYm9hcmRSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkiSQoUR2V0Q2xpcGJvYXJkUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEg4KBHRleHQYAiABKAlIAEIICgZyZXN1bHQiNwoTU2V0Q2xpcGJvYXJkUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJEgwKBHRleHQYAiABKAkiHQobU3VjY2Vzc1NldENsaXBib2FyZFJlc3BvbnNlInsKFFNldENsaXBib2FyZFJlc3BvbnNlEhcKDWVycm9yX21lc3NhZ2UYASABKAlIABJACghyZXNwb25zZRgCIAEoCzIsLmNvbXB1dGVyX2FwaS52MS5TdWNjZXNzU2V0Q2xpcGJvYXJkUmVzcG9uc2VIAEIICgZyZXN1bHQiKgoUR2V0U2NyZWVuU2l6ZVJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCSIrCgpTY3JlZW5TaXplEg0KBXdpZHRoGAEgASgFEg4KBmhlaWdodBgCIAEoBSJrChVHZXRTY3JlZW5TaXplUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEi8KCHJlc3BvbnNlGAIgASgLMhsuY29tcHV0ZXJfYXBpLnYxLlNjcmVlblNpemVIAEIICgZyZXN1bHQqZgoMQ29tcHV0ZXJUeXBlEh0KGUNPTVBVVEVSX1RZUEVfVU5TUEVDSUZJRUQQABIaChZDT01QVVRFUl9UWVBFX0hFQURMRVNTEAESGwoXQ09NUFVURVJfVFlQRV9HUkFQSElDQUwQAjLFAgoXQ29tcHV0ZXJQcm92aWRlclNlcnZpY2USYQoOQ3JlYXRlQ29tcHV0ZXISJi5jb21wdXRlcl9hcGkudjEuQ3JlYXRlQ29tcHV0ZXJSZXF1ZXN0GicuY29tcHV0ZXJfYXBpLnYxLkNyZWF0ZUNvbXB1dGVyUmVzcG9uc2USZAoPR2V0Q29tcHV0ZXJJbmZvEicuY29tcHV0ZXJfYXBpLnYxLkdldENvbXB1dGVySW5mb1JlcXVlc3QaKC5jb21wdXRlcl9hcGkudjEuR2V0Q29tcHV0ZXJJbmZvUmVzcG9uc2USYQoORGVsZXRlQ29tcHV0ZXISJi5jb21wdXRlcl9hcGkudjEuRGVsZXRlQ29tcHV0ZXJSZXF1ZXN0GicuY29tcHV0ZXJfYXBpLnYxLkRlbGV0ZUNvbXB1dGVyUmVzcG9uc2UylAQKFEJhc2ljQ29tcHV0ZXJTZXJ2aWNlEkwKB0V4ZWN1dGUSHy5jb21wdXRlcl9hcGkudjEuRXhlY3V0ZVJlcXVlc3QaIC5jb21wdXRlcl9hcGkudjEuRXhlY3V0ZVJlc3BvbnNlEk8KCFJlYWRGaWxlEiAuY29tcHV0ZXJfYXBpLnYxLlJlYWRGaWxlUmVxdWVzdBohLmNvbXB1dGVyX2FwaS52MS5SZWFkRmlsZVJlc3BvbnNlElIKCVdyaXRlRmlsZRIhLmNvbXB1dGVyX2FwaS52MS5Xcml0ZUZpbGVSZXF1ZXN0GiIuY29tcHV0ZXJfYXBpLnYxLldyaXRlRmlsZVJlc3BvbnNlEl4KDUxpc3REaXJlY3RvcnkSJS5jb21wdXRlcl9hcGkudjEuTGlzdERpcmVjdG9yeVJlcXVlc3QaJi5jb21wdXRlcl9hcGkudjEuTGlzdERpcmVjdG9yeVJlc3BvbnNlElIKCUdldFVzZXJJZBIhLmNvbXB1dGVyX2FwaS52MS5HZXRVc2VySWRSZXF1ZXN0GiIuY29tcHV0ZXJfYXBpLnYxLkdldFVzZXJJZFJlc3BvbnNlElUKCkdldEdyb3VwSWQSIi5jb21wdXRlcl9hcGkudjEuR2V0R3JvdXBJZFJlcXVlc3QaIy5jb21wdXRlcl9hcGkudjEuR2V0R3JvdXBJZFJlc3BvbnNlMogJChhHcmFwaGljYWxDb21wdXRlclNlcnZpY2USagoRQ2FwdHVyZVNjcmVlbnNob3QSKS5jb21wdXRlcl9hcGkudjEuQ2FwdHVyZVNjcmVlbnNob3RSZXF1ZXN0GiouY29tcHV0ZXJfYXBpLnYxLkNhcHR1cmVTY3JlZW5zaG90UmVzcG9uc2USRgoFQ2xpY2sSHS5jb21wdXRlcl9hcGkudjEuQ2xpY2tSZXF1ZXN0Gh4uY29tcHV0ZXJfYXBpLnYxLkNsaWNrUmVzcG9uc2USQwoEVHlwZRIcLmNvbXB1dGVyX2FwaS52MS5UeXBlUmVxdWVzdBodLmNvbXB1dGVyX2FwaS52MS5UeXBlUmVzcG9uc2USTwoIUHJlc3NLZXkSIC5jb21wdXRlcl9hcGkudjEuUHJlc3NLZXlSZXF1ZXN0GiEuY29tcHV0ZXJfYXBpLnYxLlByZXNzS2V5UmVzcG9uc2USVQoKUmVsZWFzZUtleRIiLmNvbXB1dGVyX2FwaS52MS5SZWxlYXNlS2V5UmVxdWVzdBojLmNvbXB1dGVyX2FwaS52MS5SZWxlYXNlS2V5UmVzcG9uc2USZAoPUHJlc3NBbmRIb2xkS2V5EicuY29tcHV0ZXJfYXBpLnYxLlByZXNzQW5kSG9sZEtleVJlcXVlc3QaKC5jb21wdXRlcl9hcGkudjEuUHJlc3NBbmRIb2xkS2V5UmVzcG9uc2USYQoOUmVsZWFzZUFsbEtleXMSJi5jb21wdXRlcl9hcGkudjEuUmVsZWFzZUFsbEtleXNSZXF1ZXN0GicuY29tcHV0ZXJfYXBpLnYxLlJlbGVhc2VBbGxLZXlzUmVzcG9uc2USQwoERHJhZxIcLmNvbXB1dGVyX2FwaS52MS5EcmFnUmVxdWVzdBodLmNvbXB1dGVyX2FwaS52MS5EcmFnUmVzcG9uc2USWAoLTW92ZU1vdXNlVG8SIy5jb21wdXRlcl9hcGkudjEuTW92ZU1vdXNlVG9SZXF1ZXN0GiQuY29tcHV0ZXJfYXBpLnYxLk1vdmVNb3VzZVRvUmVzcG9uc2USSQoGU2Nyb2xsEh4uY29tcHV0ZXJfYXBpLnYxLlNjcm9sbFJlcXVlc3QaHy5jb21wdXRlcl9hcGkudjEuU2Nyb2xsUmVzcG9uc2USWwoMR2V0Q2xpcGJvYXJkEiQuY29tcHV0ZXJfYXBpLnYxLkdldENsaXBib2FyZFJlcXVlc3QaJS5jb21wdXRlcl9hcGkudjEuR2V0Q2xpcGJvYXJkUmVzcG9uc2USWwoMU2V0Q2xpcGJvYXJkEiQuY29tcHV0ZXJfYXBpLnYxLlNldENsaXBib2FyZFJlcXVlc3QaJS5jb21wdXRlcl9hcGkudjEuU2V0Q2xpcGJvYXJkUmVzcG9uc2USXgoNR2V0U2NyZWVuU2l6ZRIlLmNvbXB1dGVyX2FwaS52MS5HZXRTY3JlZW5TaXplUmVxdWVzdBomLmNvbXB1dGVyX2FwaS52MS5HZXRTY3JlZW5TaXplUmVzcG9uc2VC6AEKE2NvbS5jb21wdXRlcl9hcGkudjFCDUNvbXB1dGVyUHJvdG9QAVppZ2l0aHViLmNvbS9hZGl0eWFyYW8yMDA1L0JZb0FJLURlcGxveW1lbnQtUGxhdGZvcm0vY29tcHV0ZXJfY29udHJvbGxlci9nZW4vY29tcHV0ZXJfYXBpL3YxO2NvbXB1dGVyX2FwaXYxogIDQ1hYqgIOQ29tcHV0ZXJBcGkuVjHKAg5Db21wdXRlckFwaVxWMeICGkNvbXB1dGVyQXBpXFYxXEdQQk1ldGFkYXRh6gIPQ29tcHV0ZXJBcGk6OlYxYgZwcm90bzM", [file_buf_validate_validate, file_google_protobuf_duration]);
+  fileDesc("Ch5jb21wdXRlcl9hcGkvdjEvY29tcHV0ZXIucHJvdG8SD2NvbXB1dGVyX2FwaS52MSJSChZDb21wdXRlclJlc291cmNlQ29uZmlnEhAKA2NwdRgBIAEoCUgAiAEBEhMKBm1lbW9yeRgCIAEoCUgBiAEBQgYKBF9jcHVCCQoHX21lbW9yeSI7CgxOZXR3b3JrUnVsZXMSFQoNYWxsb3dlZF9ob3N0cxgBIAMoCRIUCgxkZW5pZWRfaG9zdHMYAiADKAki0AIKFUNyZWF0ZUNvbXB1dGVyUmVxdWVzdBIZCgVpbWFnZRgBIAEoCUIKukgHcgUQARj/ARI/CglyZXNvdXJjZXMYAyABKAsyJy5jb21wdXRlcl9hcGkudjEuQ29tcHV0ZXJSZXNvdXJjZUNvbmZpZ0gAiAEBEkwKC2Vudmlyb25tZW50GAQgAygLMjcuY29tcHV0ZXJfYXBpLnYxLkNyZWF0ZUNvbXB1dGVyUmVxdWVzdC5FbnZpcm9ubWVudEVudHJ5EjkKDW5ldHdvcmtfcnVsZXMYBSABKAsyHS5jb21wdXRlcl9hcGkudjEuTmV0d29ya1J1bGVzSAGIAQEaMgoQRW52aXJvbm1lbnRFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBQgwKCl9yZXNvdXJjZXNCEAoOX25ldHdvcmtfcnVsZXMiUQoWQ3JlYXRlQ29tcHV0ZXJSZXNwb25zZRIXCg1lcnJvcl9tZXNzYWdlGAEgASgJSAASFAoKc2Vzc2lvbl9pZBgCIAEoCUgAQggKBnJlc3VsdCI4ChZHZXRDb21wdXRlckluZm9SZXF1ZXN0Eh4KCnNlc3Npb25faWQYASABKAlCCrpIB3IFEAEY/wEiRgoXR2V0Q29tcHV0ZXJJbmZvUmVzcG9uc2USKwoEdHlwZRgBIAEoDjIdLmNvbXB1dGVyX2FwaS52MS5Db21wdXRlclR5cGUiNwoVRGVsZXRlQ29tcHV0ZXJSZXF1ZXN0Eh4KCnNlc3Npb25faWQYASABKAlCCrpIB3IFEAEY/wEiGAoWRGVsZXRlQ29tcHV0ZXJSZXNwb25zZSLSAgoORXhlY3V0ZVJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRIPCgdjb21tYW5kGAIgASgJEhAKA2N3ZBgDIAEoCUgAiAEBEj4KCGVudl92YXJzGAQgAygLMiwuY29tcHV0ZXJfYXBpLnYxLkV4ZWN1dGVSZXF1ZXN0LkVudlZhcnNFbnRyeRISCgVzdGRpbhgFIAEoCUgBiAEBEhIKBXNoZWxsGAYgASgJSAKIAQESEgoKc2hlbGxfYXJncxgHIAMoCRIyCgp3YWl0X2RlbGF5GAggASgLMhkuZ29vZ2xlLnByb3RvYnVmLkR1cmF0aW9uSAOIAQEaLgoMRW52VmFyc0VudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAFCBgoEX2N3ZEIICgZfc3RkaW5CCAoGX3NoZWxsQg0KC193YWl0X2RlbGF5IkQKD0V4ZWN1dGlvblJlc3VsdBIRCglleGl0X2NvZGUYASABKAUSDgoGc3Rkb3V0GAIgASgJEg4KBnN0ZGVychgDIAEoCSJtCg9FeGVjdXRlUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEjcKC2V4ZWNfcmVzdWx0GAIgASgLMiAuY29tcHV0ZXJfYXBpLnYxLkV4ZWN1dGlvblJlc3VsdEgAQggKBnJlc3VsdCJxCg9SZWFkRmlsZVJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRIMCgRwYXRoGAIgASgJEhMKBm9mZnNldBgDIAEoA0gAiAEBEhIKBWxpbWl0GAQgASgFSAGIAQFCCQoHX29mZnNldEIICgZfbGltaXQiSAoQUmVhZEZpbGVSZXNwb25zZRIXCg1lcnJvcl9tZXNzYWdlGAEgASgJSAASEQoHY29udGVudBgCIAEoDEgAQggKBnJlc3VsdCJlChBXcml0ZUZpbGVSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkSDAoEcGF0aBgCIAEoCRIPCgdjb250ZW50GAMgASgMEhMKBmFwcGVuZBgEIAEoCEgAiAEBQgkKB19hcHBlbmQiFgoUU3VjY2Vzc1dyaXRlUmVzcG9uc2UibQoRV3JpdGVGaWxlUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEjUKBHJlc3AYAiABKAsyJS5jb21wdXRlcl9hcGkudjEuU3VjY2Vzc1dyaXRlUmVzcG9uc2VIAEIICgZyZXN1bHQiOAoUTGlzdERpcmVjdG9yeVJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRIMCgRwYXRoGAIgASgJIi0KHFN1Y2Nlc3NMaXN0RGlyZWN0b3J5UmVzcG9uc2USDQoFZmlsZXMYASADKAkifQoVTGlzdERpcmVjdG9yeVJlc3BvbnNlEhcKDWVycm9yX21lc3NhZ2UYASABKAlIABJBCghyZXNwb25zZRgCIAEoCzItLmNvbXB1dGVyX2FwaS52MS5TdWNjZXNzTGlzdERpcmVjdG9yeVJlc3BvbnNlSABCCAoGcmVzdWx0IiYKEEdldFVzZXJJZFJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCSJJChFHZXRVc2VySWRSZXNwb25zZRIXCg1lcnJvcl9tZXNzYWdlGAEgASgJSAASEQoHdXNlcl9pZBgCIAEoCUgAQggKBnJlc3VsdCInChFHZXRHcm91cElkUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJIksKEkdldEdyb3VwSWRSZXNwb25zZRIXCg1lcnJvcl9tZXNzYWdlGAEgASgJSAASEgoIZ3JvdXBfaWQYAiABKAlIAEIICgZyZXN1bHQimAEKGENhcHR1cmVTY3JlZW5zaG90UmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJEg4KAXgYAiABKAVIAIgBARIOCgF5GAMgASgFSAGIAQESEgoFd2lkdGgYBCABKAVIAogBARITCgZoZWlnaHQYBSABKAVIA4gBAUIECgJfeEIECgJfeUIICgZfd2lkdGhCCQoHX2hlaWdodCI2CiBTdWNjZXNzQ2FwdHVyZVNjcmVlbnNob3RSZXNwb25zZRISCgppbWFnZV9kYXRhGAEgASgMIoUBChlDYXB0dXJlU2NyZWVuc2hvdFJlc3BvbnNlEhcKDWVycm9yX21lc3NhZ2UYASABKAlIABJFCghyZXNwb25zZRgCIAEoCzIxLmNvbXB1dGVyX2FwaS52MS5TdWNjZXNzQ2FwdHVyZVNjcmVlbnNob3RSZXNwb25zZUgAQggKBnJlc3VsdCJYCgxDbGlja1JlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRIJCgF4GAIgASgFEgkKAXkYAyABKAUSEwoGYnV0dG9uGAQgASgJSACIAQFCCQoHX2J1dHRvbiIWChRTdWNjZXNzQ2xpY2tSZXNwb25zZSJtCg1DbGlja1Jlc3BvbnNlEhcKDWVycm9yX21lc3NhZ2UYASABKAlIABI5CghyZXNwb25zZRgCIAEoCzIlLmNvbXB1dGVyX2FwaS52MS5TdWNjZXNzQ2xpY2tSZXNwb25zZUgAQggKBnJlc3VsdCIvCgtUeXBlUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJEgwKBHRleHQYAiABKAkiFQoTU3VjY2Vzc1R5cGVSZXNwb25zZSJrCgxUeXBlUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEjgKCHJlc3BvbnNlGAIgASgLMiQuY29tcHV0ZXJfYXBpLnYxLlN1Y2Nlc3NUeXBlUmVzcG9uc2VIAEIICgZyZXN1bHQiMgoPUHJlc3NLZXlSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkSCwoDa2V5GAIgASgJIhkKF1N1Y2Nlc3NQcmVzc0tleVJlc3BvbnNlInMKEFByZXNzS2V5UmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEjwKCHJlc3BvbnNlGAIgASgLMiguY29tcHV0ZXJfYXBpLnYxLlN1Y2Nlc3NQcmVzc0tleVJlc3BvbnNlSABCCAoGcmVzdWx0IjQKEVJlbGVhc2VLZXlSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkSCwoDa2V5GAIgASgJIhsKGVN1Y2Nlc3NSZWxlYXNlS2V5UmVzcG9uc2UidwoSUmVsZWFzZUtleVJlc3BvbnNlEhcKDWVycm9yX21lc3NhZ2UYASABKAlIABI+CghyZXNwb25zZRgCIAEoCzIqLmNvbXB1dGVyX2FwaS52MS5TdWNjZXNzUmVsZWFzZUtleVJlc3BvbnNlSABCCAoGcmVzdWx0IjkKFlByZXNzQW5kSG9sZEtleVJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRILCgNrZXkYAiABKAkiIAoeU3VjY2Vzc1ByZXNzQW5kSG9sZEtleVJlc3BvbnNlIoEBChdQcmVzc0FuZEhvbGRLZXlSZXNwb25zZRIXCg1lcnJvcl9tZXNzYWdlGAEgASgJSAASQwoIcmVzcG9uc2UYAiABKAsyLy5jb21wdXRlcl9hcGkudjEuU3VjY2Vzc1ByZXNzQW5kSG9sZEtleVJlc3BvbnNlSABCCAoGcmVzdWx0IisKFVJlbGVhc2VBbGxLZXlzUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJIh8KHVN1Y2Nlc3NSZWxlYXNlQWxsS2V5c1Jlc3BvbnNlIn8KFlJlbGVhc2VBbGxLZXlzUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEkIKCHJlc3BvbnNlGAIgASgLMi4uY29tcHV0ZXJfYXBpLnYxLlN1Y2Nlc3NSZWxlYXNlQWxsS2V5c1Jlc3BvbnNlSABCCAoGcmVzdWx0IlEKC0RyYWdSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkSCgoCeDEYAiABKAUSCgoCeTEYAyABKAUSCgoCeDIYBCABKAUSCgoCeTIYBSABKAUiFQoTU3VjY2Vzc0RyYWdSZXNwb25zZSJrCgxEcmFnUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEjgKCHJlc3BvbnNlGAIgASgLMiQuY29tcHV0ZXJfYXBpLnYxLlN1Y2Nlc3NEcmFnUmVzcG9uc2VIAEIICgZyZXN1bHQiPgoSTW92ZU1vdXNlVG9SZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkSCQoBeBgCIAEoBRIJCgF5GAMgASgFIhwKGlN1Y2Nlc3NNb3ZlTW91c2VUb1Jlc3BvbnNlInkKE01vdmVNb3VzZVRvUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEj8KCHJlc3BvbnNlGAIgASgLMisuY29tcHV0ZXJfYXBpLnYxLlN1Y2Nlc3NNb3ZlTW91c2VUb1Jlc3BvbnNlSABCCAoGcmVzdWx0IjsKDVNjcm9sbFJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCRIKCgJkeBgCIAEoBRIKCgJkeRgDIAEoBSIXChVTdWNjZXNzU2Nyb2xsUmVzcG9uc2UibwoOU2Nyb2xsUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEjoKCHJlc3BvbnNlGAIgASgLMiYuY29tcHV0ZXJfYXBpLnYxLlN1Y2Nlc3NTY3JvbGxSZXNwb25zZUgAQggKBnJlc3VsdCIpChNHZXRDbGlwYm9hcmRSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkiSQoUR2V0Q2xpcGJvYXJkUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEg4KBHRleHQYAiABKAlIAEIICgZyZXN1bHQiNwoTU2V0Q2xpcGJvYXJkUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJEgwKBHRleHQYAiABKAkiHQobU3VjY2Vzc1NldENsaXBib2FyZFJlc3BvbnNlInsKFFNldENsaXBib2FyZFJlc3BvbnNlEhcKDWVycm9yX21lc3NhZ2UYASABKAlIABJACghyZXNwb25zZRgCIAEoCzIsLmNvbXB1dGVyX2FwaS52MS5TdWNjZXNzU2V0Q2xpcGJvYXJkUmVzcG9uc2VIAEIICgZyZXN1bHQiKgoUR2V0U2NyZWVuU2l6ZVJlcXVlc3QSEgoKc2Vzc2lvbl9pZBgBIAEoCSIrCgpTY3JlZW5TaXplEg0KBXdpZHRoGAEgASgFEg4KBmhlaWdodBgCIAEoBSJrChVHZXRTY3JlZW5TaXplUmVzcG9uc2USFwoNZXJyb3JfbWVzc2FnZRgBIAEoCUgAEi8KCHJlc3BvbnNlGAIgASgLMhsuY29tcHV0ZXJfYXBpLnYxLlNjcmVlblNpemVIAEIICgZyZXN1bHQqZgoMQ29tcHV0ZXJUeXBlEh0KGUNPTVBVVEVSX1RZUEVfVU5TUEVDSUZJRUQQABIaChZDT01QVVRFUl9UWVBFX0hFQURMRVNTEAESGwoXQ09NUFVURVJfVFlQRV9HUkFQSElDQUwQAjLFAgoXQ29tcHV0ZXJQcm92aWRlclNlcnZpY2USYQoOQ3JlYXRlQ29tcHV0ZXISJi5jb21wdXRlcl9hcGkudjEuQ3JlYXRlQ29tcHV0ZXJSZXF1ZXN0GicuY29tcHV0ZXJfYXBpLnYxLkNyZWF0ZUNvbXB1dGVyUmVzcG9uc2USZAoPR2V0Q29tcHV0ZXJJbmZvEicuY29tcHV0ZXJfYXBpLnYxLkdldENvbXB1dGVySW5mb1JlcXVlc3QaKC5jb21wdXRlcl9hcGkudjEuR2V0Q29tcHV0ZXJJbmZvUmVzcG9uc2USYQoORGVsZXRlQ29tcHV0ZXISJi5jb21wdXRlcl9hcGkudjEuRGVsZXRlQ29tcHV0ZXJSZXF1ZXN0GicuY29tcHV0ZXJfYXBpLnYxLkRlbGV0ZUNvbXB1dGVyUmVzcG9uc2UylAQKFEJhc2ljQ29tcHV0ZXJTZXJ2aWNlEkwKB0V4ZWN1dGUSHy5jb21wdXRlcl9hcGkudjEuRXhlY3V0ZVJlcXVlc3QaIC5jb21wdXRlcl9hcGkudjEuRXhlY3V0ZVJlc3BvbnNlEk8KCFJlYWRGaWxlEiAuY29tcHV0ZXJfYXBpLnYxLlJlYWRGaWxlUmVxdWVzdBohLmNvbXB1dGVyX2FwaS52MS5SZWFkRmlsZVJlc3BvbnNlElIKCVdyaXRlRmlsZRIhLmNvbXB1dGVyX2FwaS52MS5Xcml0ZUZpbGVSZXF1ZXN0GiIuY29tcHV0ZXJfYXBpLnYxLldyaXRlRmlsZVJlc3BvbnNlEl4KDUxpc3REaXJlY3RvcnkSJS5jb21wdXRlcl9hcGkudjEuTGlzdERpcmVjdG9yeVJlcXVlc3QaJi5jb21wdXRlcl9hcGkudjEuTGlzdERpcmVjdG9yeVJlc3BvbnNlElIKCUdldFVzZXJJZBIhLmNvbXB1dGVyX2FwaS52MS5HZXRVc2VySWRSZXF1ZXN0GiIuY29tcHV0ZXJfYXBpLnYxLkdldFVzZXJJZFJlc3BvbnNlElUKCkdldEdyb3VwSWQSIi5jb21wdXRlcl9hcGkudjEuR2V0R3JvdXBJZFJlcXVlc3QaIy5jb21wdXRlcl9hcGkudjEuR2V0R3JvdXBJZFJlc3BvbnNlMogJChhHcmFwaGljYWxDb21wdXRlclNlcnZpY2USagoRQ2FwdHVyZVNjcmVlbnNob3QSKS5jb21wdXRlcl9hcGkudjEuQ2FwdHVyZVNjcmVlbnNob3RSZXF1ZXN0GiouY29tcHV0ZXJfYXBpLnYxLkNhcHR1cmVTY3JlZW5zaG90UmVzcG9uc2USRgoFQ2xpY2sSHS5jb21wdXRlcl9hcGkudjEuQ2xpY2tSZXF1ZXN0Gh4uY29tcHV0ZXJfYXBpLnYxLkNsaWNrUmVzcG9uc2USQwoEVHlwZRIcLmNvbXB1dGVyX2FwaS52MS5UeXBlUmVxdWVzdBodLmNvbXB1dGVyX2FwaS52MS5UeXBlUmVzcG9uc2USTwoIUHJlc3NLZXkSIC5jb21wdXRlcl9hcGkudjEuUHJlc3NLZXlSZXF1ZXN0GiEuY29tcHV0ZXJfYXBpLnYxLlByZXNzS2V5UmVzcG9uc2USVQoKUmVsZWFzZUtleRIiLmNvbXB1dGVyX2FwaS52MS5SZWxlYXNlS2V5UmVxdWVzdBojLmNvbXB1dGVyX2FwaS52MS5SZWxlYXNlS2V5UmVzcG9uc2USZAoPUHJlc3NBbmRIb2xkS2V5EicuY29tcHV0ZXJfYXBpLnYxLlByZXNzQW5kSG9sZEtleVJlcXVlc3QaKC5jb21wdXRlcl9hcGkudjEuUHJlc3NBbmRIb2xkS2V5UmVzcG9uc2USYQoOUmVsZWFzZUFsbEtleXMSJi5jb21wdXRlcl9hcGkudjEuUmVsZWFzZUFsbEtleXNSZXF1ZXN0GicuY29tcHV0ZXJfYXBpLnYxLlJlbGVhc2VBbGxLZXlzUmVzcG9uc2USQwoERHJhZxIcLmNvbXB1dGVyX2FwaS52MS5EcmFnUmVxdWVzdBodLmNvbXB1dGVyX2FwaS52MS5EcmFnUmVzcG9uc2USWAoLTW92ZU1vdXNlVG8SIy5jb21wdXRlcl9hcGkudjEuTW92ZU1vdXNlVG9SZXF1ZXN0GiQuY29tcHV0ZXJfYXBpLnYxLk1vdmVNb3VzZVRvUmVzcG9uc2USSQoGU2Nyb2xsEh4uY29tcHV0ZXJfYXBpLnYxLlNjcm9sbFJlcXVlc3QaHy5jb21wdXRlcl9hcGkudjEuU2Nyb2xsUmVzcG9uc2USWwoMR2V0Q2xpcGJvYXJkEiQuY29tcHV0ZXJfYXBpLnYxLkdldENsaXBib2FyZFJlcXVlc3QaJS5jb21wdXRlcl9hcGkudjEuR2V0Q2xpcGJvYXJkUmVzcG9uc2USWwoMU2V0Q2xpcGJvYXJkEiQuY29tcHV0ZXJfYXBpLnYxLlNldENsaXBib2FyZFJlcXVlc3QaJS5jb21wdXRlcl9hcGkudjEuU2V0Q2xpcGJvYXJkUmVzcG9uc2USXgoNR2V0U2NyZWVuU2l6ZRIlLmNvbXB1dGVyX2FwaS52MS5HZXRTY3JlZW5TaXplUmVxdWVzdBomLmNvbXB1dGVyX2FwaS52MS5HZXRTY3JlZW5TaXplUmVzcG9uc2VC6AEKE2NvbS5jb21wdXRlcl9hcGkudjFCDUNvbXB1dGVyUHJvdG9QAVppZ2l0aHViLmNvbS9hZGl0eWFyYW8yMDA1L0JZb0FJLURlcGxveW1lbnQtUGxhdGZvcm0vY29tcHV0ZXJfY29udHJvbGxlci9nZW4vY29tcHV0ZXJfYXBpL3YxO2NvbXB1dGVyX2FwaXYxogIDQ1hYqgIOQ29tcHV0ZXJBcGkuVjHKAg5Db21wdXRlckFwaVxWMeICGkNvbXB1dGVyQXBpXFYxXEdQQk1ldGFkYXRh6gIPQ29tcHV0ZXJBcGk6OlYxYgZwcm90bzM", [file_buf_validate_validate, file_google_protobuf_duration]);
+
+/**
+ * @generated from message computer_api.v1.ComputerResourceConfig
+ */
+export type ComputerResourceConfig = Message<"computer_api.v1.ComputerResourceConfig"> & {
+  /**
+   * @generated from field: optional string cpu = 1;
+   */
+  cpu?: string | undefined;
+
+  /**
+   * @generated from field: optional string memory = 2;
+   */
+  memory?: string | undefined;
+};
+
+/**
+ * Describes the message computer_api.v1.ComputerResourceConfig.
+ * Use `create(ComputerResourceConfigSchema)` to create a new message.
+ */
+export const ComputerResourceConfigSchema: GenMessage<ComputerResourceConfig> = /*@__PURE__*/
+  messageDesc(file_computer_api_v1_computer, 0);
+
+/**
+ * @generated from message computer_api.v1.NetworkRules
+ */
+export type NetworkRules = Message<"computer_api.v1.NetworkRules"> & {
+  /**
+   * @generated from field: repeated string allowed_hosts = 1;
+   */
+  allowedHosts: string[];
+
+  /**
+   * @generated from field: repeated string denied_hosts = 2;
+   */
+  deniedHosts: string[];
+};
+
+/**
+ * Describes the message computer_api.v1.NetworkRules.
+ * Use `create(NetworkRulesSchema)` to create a new message.
+ */
+export const NetworkRulesSchema: GenMessage<NetworkRules> = /*@__PURE__*/
+  messageDesc(file_computer_api_v1_computer, 1);
 
 /**
  * create computer request
@@ -25,6 +69,21 @@ export type CreateComputerRequest = Message<"computer_api.v1.CreateComputerReque
    * @generated from field: string image = 1;
    */
   image: string;
+
+  /**
+   * @generated from field: optional computer_api.v1.ComputerResourceConfig resources = 3;
+   */
+  resources?: ComputerResourceConfig | undefined;
+
+  /**
+   * @generated from field: map<string, string> environment = 4;
+   */
+  environment: { [key: string]: string };
+
+  /**
+   * @generated from field: optional computer_api.v1.NetworkRules network_rules = 5;
+   */
+  networkRules?: NetworkRules | undefined;
 };
 
 /**
@@ -32,7 +91,7 @@ export type CreateComputerRequest = Message<"computer_api.v1.CreateComputerReque
  * Use `create(CreateComputerRequestSchema)` to create a new message.
  */
 export const CreateComputerRequestSchema: GenMessage<CreateComputerRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 0);
+  messageDesc(file_computer_api_v1_computer, 2);
 
 /**
  * @generated from message computer_api.v1.CreateComputerResponse
@@ -61,7 +120,7 @@ export type CreateComputerResponse = Message<"computer_api.v1.CreateComputerResp
  * Use `create(CreateComputerResponseSchema)` to create a new message.
  */
 export const CreateComputerResponseSchema: GenMessage<CreateComputerResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 1);
+  messageDesc(file_computer_api_v1_computer, 3);
 
 /**
  * computer info
@@ -80,7 +139,7 @@ export type GetComputerInfoRequest = Message<"computer_api.v1.GetComputerInfoReq
  * Use `create(GetComputerInfoRequestSchema)` to create a new message.
  */
 export const GetComputerInfoRequestSchema: GenMessage<GetComputerInfoRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 2);
+  messageDesc(file_computer_api_v1_computer, 4);
 
 /**
  * @generated from message computer_api.v1.GetComputerInfoResponse
@@ -97,7 +156,7 @@ export type GetComputerInfoResponse = Message<"computer_api.v1.GetComputerInfoRe
  * Use `create(GetComputerInfoResponseSchema)` to create a new message.
  */
 export const GetComputerInfoResponseSchema: GenMessage<GetComputerInfoResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 3);
+  messageDesc(file_computer_api_v1_computer, 5);
 
 /**
  * delete computer request
@@ -116,7 +175,7 @@ export type DeleteComputerRequest = Message<"computer_api.v1.DeleteComputerReque
  * Use `create(DeleteComputerRequestSchema)` to create a new message.
  */
 export const DeleteComputerRequestSchema: GenMessage<DeleteComputerRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 4);
+  messageDesc(file_computer_api_v1_computer, 6);
 
 /**
  * @generated from message computer_api.v1.DeleteComputerResponse
@@ -129,7 +188,7 @@ export type DeleteComputerResponse = Message<"computer_api.v1.DeleteComputerResp
  * Use `create(DeleteComputerResponseSchema)` to create a new message.
  */
 export const DeleteComputerResponseSchema: GenMessage<DeleteComputerResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 5);
+  messageDesc(file_computer_api_v1_computer, 7);
 
 /**
  * execute
@@ -183,7 +242,7 @@ export type ExecuteRequest = Message<"computer_api.v1.ExecuteRequest"> & {
  * Use `create(ExecuteRequestSchema)` to create a new message.
  */
 export const ExecuteRequestSchema: GenMessage<ExecuteRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 6);
+  messageDesc(file_computer_api_v1_computer, 8);
 
 /**
  * @generated from message computer_api.v1.ExecutionResult
@@ -210,7 +269,7 @@ export type ExecutionResult = Message<"computer_api.v1.ExecutionResult"> & {
  * Use `create(ExecutionResultSchema)` to create a new message.
  */
 export const ExecutionResultSchema: GenMessage<ExecutionResult> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 7);
+  messageDesc(file_computer_api_v1_computer, 9);
 
 /**
  * @generated from message computer_api.v1.ExecuteResponse
@@ -239,7 +298,7 @@ export type ExecuteResponse = Message<"computer_api.v1.ExecuteResponse"> & {
  * Use `create(ExecuteResponseSchema)` to create a new message.
  */
 export const ExecuteResponseSchema: GenMessage<ExecuteResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 8);
+  messageDesc(file_computer_api_v1_computer, 10);
 
 /**
  * read file
@@ -277,7 +336,7 @@ export type ReadFileRequest = Message<"computer_api.v1.ReadFileRequest"> & {
  * Use `create(ReadFileRequestSchema)` to create a new message.
  */
 export const ReadFileRequestSchema: GenMessage<ReadFileRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 9);
+  messageDesc(file_computer_api_v1_computer, 11);
 
 /**
  * @generated from message computer_api.v1.ReadFileResponse
@@ -306,7 +365,7 @@ export type ReadFileResponse = Message<"computer_api.v1.ReadFileResponse"> & {
  * Use `create(ReadFileResponseSchema)` to create a new message.
  */
 export const ReadFileResponseSchema: GenMessage<ReadFileResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 10);
+  messageDesc(file_computer_api_v1_computer, 12);
 
 /**
  * write file
@@ -340,7 +399,7 @@ export type WriteFileRequest = Message<"computer_api.v1.WriteFileRequest"> & {
  * Use `create(WriteFileRequestSchema)` to create a new message.
  */
 export const WriteFileRequestSchema: GenMessage<WriteFileRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 11);
+  messageDesc(file_computer_api_v1_computer, 13);
 
 /**
  * @generated from message computer_api.v1.SuccessWriteResponse
@@ -353,7 +412,7 @@ export type SuccessWriteResponse = Message<"computer_api.v1.SuccessWriteResponse
  * Use `create(SuccessWriteResponseSchema)` to create a new message.
  */
 export const SuccessWriteResponseSchema: GenMessage<SuccessWriteResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 12);
+  messageDesc(file_computer_api_v1_computer, 14);
 
 /**
  * @generated from message computer_api.v1.WriteFileResponse
@@ -382,7 +441,7 @@ export type WriteFileResponse = Message<"computer_api.v1.WriteFileResponse"> & {
  * Use `create(WriteFileResponseSchema)` to create a new message.
  */
 export const WriteFileResponseSchema: GenMessage<WriteFileResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 13);
+  messageDesc(file_computer_api_v1_computer, 15);
 
 /**
  * @generated from message computer_api.v1.ListDirectoryRequest
@@ -404,7 +463,7 @@ export type ListDirectoryRequest = Message<"computer_api.v1.ListDirectoryRequest
  * Use `create(ListDirectoryRequestSchema)` to create a new message.
  */
 export const ListDirectoryRequestSchema: GenMessage<ListDirectoryRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 14);
+  messageDesc(file_computer_api_v1_computer, 16);
 
 /**
  * @generated from message computer_api.v1.SuccessListDirectoryResponse
@@ -421,7 +480,7 @@ export type SuccessListDirectoryResponse = Message<"computer_api.v1.SuccessListD
  * Use `create(SuccessListDirectoryResponseSchema)` to create a new message.
  */
 export const SuccessListDirectoryResponseSchema: GenMessage<SuccessListDirectoryResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 15);
+  messageDesc(file_computer_api_v1_computer, 17);
 
 /**
  * @generated from message computer_api.v1.ListDirectoryResponse
@@ -450,7 +509,7 @@ export type ListDirectoryResponse = Message<"computer_api.v1.ListDirectoryRespon
  * Use `create(ListDirectoryResponseSchema)` to create a new message.
  */
 export const ListDirectoryResponseSchema: GenMessage<ListDirectoryResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 16);
+  messageDesc(file_computer_api_v1_computer, 18);
 
 /**
  * Get User Id request
@@ -469,7 +528,7 @@ export type GetUserIdRequest = Message<"computer_api.v1.GetUserIdRequest"> & {
  * Use `create(GetUserIdRequestSchema)` to create a new message.
  */
 export const GetUserIdRequestSchema: GenMessage<GetUserIdRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 17);
+  messageDesc(file_computer_api_v1_computer, 19);
 
 /**
  * @generated from message computer_api.v1.GetUserIdResponse
@@ -498,7 +557,7 @@ export type GetUserIdResponse = Message<"computer_api.v1.GetUserIdResponse"> & {
  * Use `create(GetUserIdResponseSchema)` to create a new message.
  */
 export const GetUserIdResponseSchema: GenMessage<GetUserIdResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 18);
+  messageDesc(file_computer_api_v1_computer, 20);
 
 /**
  * Get Group Id request
@@ -517,7 +576,7 @@ export type GetGroupIdRequest = Message<"computer_api.v1.GetGroupIdRequest"> & {
  * Use `create(GetGroupIdRequestSchema)` to create a new message.
  */
 export const GetGroupIdRequestSchema: GenMessage<GetGroupIdRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 19);
+  messageDesc(file_computer_api_v1_computer, 21);
 
 /**
  * @generated from message computer_api.v1.GetGroupIdResponse
@@ -546,7 +605,7 @@ export type GetGroupIdResponse = Message<"computer_api.v1.GetGroupIdResponse"> &
  * Use `create(GetGroupIdResponseSchema)` to create a new message.
  */
 export const GetGroupIdResponseSchema: GenMessage<GetGroupIdResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 20);
+  messageDesc(file_computer_api_v1_computer, 22);
 
 /**
  * capture screenshot
@@ -585,7 +644,7 @@ export type CaptureScreenshotRequest = Message<"computer_api.v1.CaptureScreensho
  * Use `create(CaptureScreenshotRequestSchema)` to create a new message.
  */
 export const CaptureScreenshotRequestSchema: GenMessage<CaptureScreenshotRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 21);
+  messageDesc(file_computer_api_v1_computer, 23);
 
 /**
  * @generated from message computer_api.v1.SuccessCaptureScreenshotResponse
@@ -602,7 +661,7 @@ export type SuccessCaptureScreenshotResponse = Message<"computer_api.v1.SuccessC
  * Use `create(SuccessCaptureScreenshotResponseSchema)` to create a new message.
  */
 export const SuccessCaptureScreenshotResponseSchema: GenMessage<SuccessCaptureScreenshotResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 22);
+  messageDesc(file_computer_api_v1_computer, 24);
 
 /**
  * @generated from message computer_api.v1.CaptureScreenshotResponse
@@ -631,7 +690,7 @@ export type CaptureScreenshotResponse = Message<"computer_api.v1.CaptureScreensh
  * Use `create(CaptureScreenshotResponseSchema)` to create a new message.
  */
 export const CaptureScreenshotResponseSchema: GenMessage<CaptureScreenshotResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 23);
+  messageDesc(file_computer_api_v1_computer, 25);
 
 /**
  * @generated from message computer_api.v1.ClickRequest
@@ -663,7 +722,7 @@ export type ClickRequest = Message<"computer_api.v1.ClickRequest"> & {
  * Use `create(ClickRequestSchema)` to create a new message.
  */
 export const ClickRequestSchema: GenMessage<ClickRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 24);
+  messageDesc(file_computer_api_v1_computer, 26);
 
 /**
  * @generated from message computer_api.v1.SuccessClickResponse
@@ -676,7 +735,7 @@ export type SuccessClickResponse = Message<"computer_api.v1.SuccessClickResponse
  * Use `create(SuccessClickResponseSchema)` to create a new message.
  */
 export const SuccessClickResponseSchema: GenMessage<SuccessClickResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 25);
+  messageDesc(file_computer_api_v1_computer, 27);
 
 /**
  * @generated from message computer_api.v1.ClickResponse
@@ -705,7 +764,7 @@ export type ClickResponse = Message<"computer_api.v1.ClickResponse"> & {
  * Use `create(ClickResponseSchema)` to create a new message.
  */
 export const ClickResponseSchema: GenMessage<ClickResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 26);
+  messageDesc(file_computer_api_v1_computer, 28);
 
 /**
  * @generated from message computer_api.v1.TypeRequest
@@ -727,7 +786,7 @@ export type TypeRequest = Message<"computer_api.v1.TypeRequest"> & {
  * Use `create(TypeRequestSchema)` to create a new message.
  */
 export const TypeRequestSchema: GenMessage<TypeRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 27);
+  messageDesc(file_computer_api_v1_computer, 29);
 
 /**
  * @generated from message computer_api.v1.SuccessTypeResponse
@@ -740,7 +799,7 @@ export type SuccessTypeResponse = Message<"computer_api.v1.SuccessTypeResponse">
  * Use `create(SuccessTypeResponseSchema)` to create a new message.
  */
 export const SuccessTypeResponseSchema: GenMessage<SuccessTypeResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 28);
+  messageDesc(file_computer_api_v1_computer, 30);
 
 /**
  * @generated from message computer_api.v1.TypeResponse
@@ -769,7 +828,7 @@ export type TypeResponse = Message<"computer_api.v1.TypeResponse"> & {
  * Use `create(TypeResponseSchema)` to create a new message.
  */
 export const TypeResponseSchema: GenMessage<TypeResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 29);
+  messageDesc(file_computer_api_v1_computer, 31);
 
 /**
  * @generated from message computer_api.v1.PressKeyRequest
@@ -791,7 +850,7 @@ export type PressKeyRequest = Message<"computer_api.v1.PressKeyRequest"> & {
  * Use `create(PressKeyRequestSchema)` to create a new message.
  */
 export const PressKeyRequestSchema: GenMessage<PressKeyRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 30);
+  messageDesc(file_computer_api_v1_computer, 32);
 
 /**
  * @generated from message computer_api.v1.SuccessPressKeyResponse
@@ -804,7 +863,7 @@ export type SuccessPressKeyResponse = Message<"computer_api.v1.SuccessPressKeyRe
  * Use `create(SuccessPressKeyResponseSchema)` to create a new message.
  */
 export const SuccessPressKeyResponseSchema: GenMessage<SuccessPressKeyResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 31);
+  messageDesc(file_computer_api_v1_computer, 33);
 
 /**
  * @generated from message computer_api.v1.PressKeyResponse
@@ -833,7 +892,7 @@ export type PressKeyResponse = Message<"computer_api.v1.PressKeyResponse"> & {
  * Use `create(PressKeyResponseSchema)` to create a new message.
  */
 export const PressKeyResponseSchema: GenMessage<PressKeyResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 32);
+  messageDesc(file_computer_api_v1_computer, 34);
 
 /**
  * @generated from message computer_api.v1.ReleaseKeyRequest
@@ -855,7 +914,7 @@ export type ReleaseKeyRequest = Message<"computer_api.v1.ReleaseKeyRequest"> & {
  * Use `create(ReleaseKeyRequestSchema)` to create a new message.
  */
 export const ReleaseKeyRequestSchema: GenMessage<ReleaseKeyRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 33);
+  messageDesc(file_computer_api_v1_computer, 35);
 
 /**
  * @generated from message computer_api.v1.SuccessReleaseKeyResponse
@@ -868,7 +927,7 @@ export type SuccessReleaseKeyResponse = Message<"computer_api.v1.SuccessReleaseK
  * Use `create(SuccessReleaseKeyResponseSchema)` to create a new message.
  */
 export const SuccessReleaseKeyResponseSchema: GenMessage<SuccessReleaseKeyResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 34);
+  messageDesc(file_computer_api_v1_computer, 36);
 
 /**
  * @generated from message computer_api.v1.ReleaseKeyResponse
@@ -897,7 +956,7 @@ export type ReleaseKeyResponse = Message<"computer_api.v1.ReleaseKeyResponse"> &
  * Use `create(ReleaseKeyResponseSchema)` to create a new message.
  */
 export const ReleaseKeyResponseSchema: GenMessage<ReleaseKeyResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 35);
+  messageDesc(file_computer_api_v1_computer, 37);
 
 /**
  * @generated from message computer_api.v1.PressAndHoldKeyRequest
@@ -919,7 +978,7 @@ export type PressAndHoldKeyRequest = Message<"computer_api.v1.PressAndHoldKeyReq
  * Use `create(PressAndHoldKeyRequestSchema)` to create a new message.
  */
 export const PressAndHoldKeyRequestSchema: GenMessage<PressAndHoldKeyRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 36);
+  messageDesc(file_computer_api_v1_computer, 38);
 
 /**
  * @generated from message computer_api.v1.SuccessPressAndHoldKeyResponse
@@ -932,7 +991,7 @@ export type SuccessPressAndHoldKeyResponse = Message<"computer_api.v1.SuccessPre
  * Use `create(SuccessPressAndHoldKeyResponseSchema)` to create a new message.
  */
 export const SuccessPressAndHoldKeyResponseSchema: GenMessage<SuccessPressAndHoldKeyResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 37);
+  messageDesc(file_computer_api_v1_computer, 39);
 
 /**
  * @generated from message computer_api.v1.PressAndHoldKeyResponse
@@ -961,7 +1020,7 @@ export type PressAndHoldKeyResponse = Message<"computer_api.v1.PressAndHoldKeyRe
  * Use `create(PressAndHoldKeyResponseSchema)` to create a new message.
  */
 export const PressAndHoldKeyResponseSchema: GenMessage<PressAndHoldKeyResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 38);
+  messageDesc(file_computer_api_v1_computer, 40);
 
 /**
  * @generated from message computer_api.v1.ReleaseAllKeysRequest
@@ -978,7 +1037,7 @@ export type ReleaseAllKeysRequest = Message<"computer_api.v1.ReleaseAllKeysReque
  * Use `create(ReleaseAllKeysRequestSchema)` to create a new message.
  */
 export const ReleaseAllKeysRequestSchema: GenMessage<ReleaseAllKeysRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 39);
+  messageDesc(file_computer_api_v1_computer, 41);
 
 /**
  * @generated from message computer_api.v1.SuccessReleaseAllKeysResponse
@@ -991,7 +1050,7 @@ export type SuccessReleaseAllKeysResponse = Message<"computer_api.v1.SuccessRele
  * Use `create(SuccessReleaseAllKeysResponseSchema)` to create a new message.
  */
 export const SuccessReleaseAllKeysResponseSchema: GenMessage<SuccessReleaseAllKeysResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 40);
+  messageDesc(file_computer_api_v1_computer, 42);
 
 /**
  * @generated from message computer_api.v1.ReleaseAllKeysResponse
@@ -1020,7 +1079,7 @@ export type ReleaseAllKeysResponse = Message<"computer_api.v1.ReleaseAllKeysResp
  * Use `create(ReleaseAllKeysResponseSchema)` to create a new message.
  */
 export const ReleaseAllKeysResponseSchema: GenMessage<ReleaseAllKeysResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 41);
+  messageDesc(file_computer_api_v1_computer, 43);
 
 /**
  * @generated from message computer_api.v1.DragRequest
@@ -1057,7 +1116,7 @@ export type DragRequest = Message<"computer_api.v1.DragRequest"> & {
  * Use `create(DragRequestSchema)` to create a new message.
  */
 export const DragRequestSchema: GenMessage<DragRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 42);
+  messageDesc(file_computer_api_v1_computer, 44);
 
 /**
  * @generated from message computer_api.v1.SuccessDragResponse
@@ -1070,7 +1129,7 @@ export type SuccessDragResponse = Message<"computer_api.v1.SuccessDragResponse">
  * Use `create(SuccessDragResponseSchema)` to create a new message.
  */
 export const SuccessDragResponseSchema: GenMessage<SuccessDragResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 43);
+  messageDesc(file_computer_api_v1_computer, 45);
 
 /**
  * @generated from message computer_api.v1.DragResponse
@@ -1099,7 +1158,7 @@ export type DragResponse = Message<"computer_api.v1.DragResponse"> & {
  * Use `create(DragResponseSchema)` to create a new message.
  */
 export const DragResponseSchema: GenMessage<DragResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 44);
+  messageDesc(file_computer_api_v1_computer, 46);
 
 /**
  * @generated from message computer_api.v1.MoveMouseToRequest
@@ -1126,7 +1185,7 @@ export type MoveMouseToRequest = Message<"computer_api.v1.MoveMouseToRequest"> &
  * Use `create(MoveMouseToRequestSchema)` to create a new message.
  */
 export const MoveMouseToRequestSchema: GenMessage<MoveMouseToRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 45);
+  messageDesc(file_computer_api_v1_computer, 47);
 
 /**
  * @generated from message computer_api.v1.SuccessMoveMouseToResponse
@@ -1139,7 +1198,7 @@ export type SuccessMoveMouseToResponse = Message<"computer_api.v1.SuccessMoveMou
  * Use `create(SuccessMoveMouseToResponseSchema)` to create a new message.
  */
 export const SuccessMoveMouseToResponseSchema: GenMessage<SuccessMoveMouseToResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 46);
+  messageDesc(file_computer_api_v1_computer, 48);
 
 /**
  * @generated from message computer_api.v1.MoveMouseToResponse
@@ -1168,7 +1227,7 @@ export type MoveMouseToResponse = Message<"computer_api.v1.MoveMouseToResponse">
  * Use `create(MoveMouseToResponseSchema)` to create a new message.
  */
 export const MoveMouseToResponseSchema: GenMessage<MoveMouseToResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 47);
+  messageDesc(file_computer_api_v1_computer, 49);
 
 /**
  * @generated from message computer_api.v1.ScrollRequest
@@ -1195,7 +1254,7 @@ export type ScrollRequest = Message<"computer_api.v1.ScrollRequest"> & {
  * Use `create(ScrollRequestSchema)` to create a new message.
  */
 export const ScrollRequestSchema: GenMessage<ScrollRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 48);
+  messageDesc(file_computer_api_v1_computer, 50);
 
 /**
  * @generated from message computer_api.v1.SuccessScrollResponse
@@ -1208,7 +1267,7 @@ export type SuccessScrollResponse = Message<"computer_api.v1.SuccessScrollRespon
  * Use `create(SuccessScrollResponseSchema)` to create a new message.
  */
 export const SuccessScrollResponseSchema: GenMessage<SuccessScrollResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 49);
+  messageDesc(file_computer_api_v1_computer, 51);
 
 /**
  * @generated from message computer_api.v1.ScrollResponse
@@ -1237,7 +1296,7 @@ export type ScrollResponse = Message<"computer_api.v1.ScrollResponse"> & {
  * Use `create(ScrollResponseSchema)` to create a new message.
  */
 export const ScrollResponseSchema: GenMessage<ScrollResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 50);
+  messageDesc(file_computer_api_v1_computer, 52);
 
 /**
  * @generated from message computer_api.v1.GetClipboardRequest
@@ -1254,7 +1313,7 @@ export type GetClipboardRequest = Message<"computer_api.v1.GetClipboardRequest">
  * Use `create(GetClipboardRequestSchema)` to create a new message.
  */
 export const GetClipboardRequestSchema: GenMessage<GetClipboardRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 51);
+  messageDesc(file_computer_api_v1_computer, 53);
 
 /**
  * @generated from message computer_api.v1.GetClipboardResponse
@@ -1283,7 +1342,7 @@ export type GetClipboardResponse = Message<"computer_api.v1.GetClipboardResponse
  * Use `create(GetClipboardResponseSchema)` to create a new message.
  */
 export const GetClipboardResponseSchema: GenMessage<GetClipboardResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 52);
+  messageDesc(file_computer_api_v1_computer, 54);
 
 /**
  * @generated from message computer_api.v1.SetClipboardRequest
@@ -1305,7 +1364,7 @@ export type SetClipboardRequest = Message<"computer_api.v1.SetClipboardRequest">
  * Use `create(SetClipboardRequestSchema)` to create a new message.
  */
 export const SetClipboardRequestSchema: GenMessage<SetClipboardRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 53);
+  messageDesc(file_computer_api_v1_computer, 55);
 
 /**
  * @generated from message computer_api.v1.SuccessSetClipboardResponse
@@ -1318,7 +1377,7 @@ export type SuccessSetClipboardResponse = Message<"computer_api.v1.SuccessSetCli
  * Use `create(SuccessSetClipboardResponseSchema)` to create a new message.
  */
 export const SuccessSetClipboardResponseSchema: GenMessage<SuccessSetClipboardResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 54);
+  messageDesc(file_computer_api_v1_computer, 56);
 
 /**
  * @generated from message computer_api.v1.SetClipboardResponse
@@ -1347,7 +1406,7 @@ export type SetClipboardResponse = Message<"computer_api.v1.SetClipboardResponse
  * Use `create(SetClipboardResponseSchema)` to create a new message.
  */
 export const SetClipboardResponseSchema: GenMessage<SetClipboardResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 55);
+  messageDesc(file_computer_api_v1_computer, 57);
 
 /**
  * @generated from message computer_api.v1.GetScreenSizeRequest
@@ -1364,7 +1423,7 @@ export type GetScreenSizeRequest = Message<"computer_api.v1.GetScreenSizeRequest
  * Use `create(GetScreenSizeRequestSchema)` to create a new message.
  */
 export const GetScreenSizeRequestSchema: GenMessage<GetScreenSizeRequest> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 56);
+  messageDesc(file_computer_api_v1_computer, 58);
 
 /**
  * @generated from message computer_api.v1.ScreenSize
@@ -1386,7 +1445,7 @@ export type ScreenSize = Message<"computer_api.v1.ScreenSize"> & {
  * Use `create(ScreenSizeSchema)` to create a new message.
  */
 export const ScreenSizeSchema: GenMessage<ScreenSize> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 57);
+  messageDesc(file_computer_api_v1_computer, 59);
 
 /**
  * @generated from message computer_api.v1.GetScreenSizeResponse
@@ -1415,7 +1474,7 @@ export type GetScreenSizeResponse = Message<"computer_api.v1.GetScreenSizeRespon
  * Use `create(GetScreenSizeResponseSchema)` to create a new message.
  */
 export const GetScreenSizeResponseSchema: GenMessage<GetScreenSizeResponse> = /*@__PURE__*/
-  messageDesc(file_computer_api_v1_computer, 58);
+  messageDesc(file_computer_api_v1_computer, 60);
 
 /**
  * @generated from enum computer_api.v1.ComputerType

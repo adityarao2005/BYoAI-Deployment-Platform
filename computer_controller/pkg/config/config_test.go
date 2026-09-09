@@ -2,7 +2,6 @@ package config
 
 import (
 	"testing"
-	"time"
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -82,7 +81,6 @@ spec:
   apiVersion: "1.41"
   certPath: "/etc/docker/certs"
   imagePullPolicy: "Always"
-  reapIdleContainersAfter: "10m"
 `)
 		cfg, err := LoadConfig(yamlData)
 		if err != nil {
@@ -108,9 +106,6 @@ spec:
 		}
 		if dockerSpec.ImagePullPolicy != Always {
 			t.Errorf("expected ImagePullPolicy %q, got %q", Always, dockerSpec.ImagePullPolicy)
-		}
-		if dockerSpec.ReapIdleContainersAfter != 10*time.Minute {
-			t.Errorf("expected ReapIdleContainersAfter %v, got %v", 10*time.Minute, dockerSpec.ReapIdleContainersAfter)
 		}
 	})
 
@@ -153,18 +148,6 @@ type: unsupported_type
 		_, err := LoadConfig(yamlData)
 		if err == nil {
 			t.Fatal("expected error for unsupported computer type, got nil")
-		}
-	})
-
-	t.Run("Invalid Docker Spec Duration", func(t *testing.T) {
-		yamlData := []byte(`
-type: docker
-spec:
-  reapIdleContainersAfter: invalid_duration
-`)
-		_, err := LoadConfig(yamlData)
-		if err == nil {
-			t.Fatal("expected error for invalid docker spec, got nil")
 		}
 	})
 

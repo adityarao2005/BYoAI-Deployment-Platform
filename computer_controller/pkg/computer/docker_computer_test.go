@@ -349,3 +349,65 @@ func TestDockerComputerProviderLifecycle(t *testing.T) {
 		}
 	})
 }
+
+func TestDockerComputerNetworkRules(t *testing.T) {
+	skipIfNoDocker(t)
+
+	provider, err := GetDockerComputerProvider(DockerComputerProviderProps{
+		pullPolicy: config.IfNotPresent,
+	})
+	if err != nil {
+		t.Fatalf("failed to create provider: %v", err)
+	}
+
+	ctx := context.Background()
+
+	t.Run("Egress Proxy and Internal Network Isolation", func(t *testing.T) {
+		sessionId, err := provider.CreateComputer(ctx, ComputerConfig{
+			Image: testImage,
+			NetworkRules: &NetworkRules{
+				AllowedHosts: []string{"httpbin.org"},
+				DeniedHosts:  []string{"example.com", "1.1.1.1"},
+			},
+		})
+		if err != nil {
+			t.Fatalf("failed to create computer with network rules: %v", err)
+		}
+		defer provider.DeleteComputer(ctx, sessionId)
+
+		comp, err := provider.GetComputer(ctx, sessionId)
+		if err != nil {
+			t.Fatalf("failed to get computer: %v", err)
+		}
+
+		// 1. Verify HTTP_PROXY environment variable was injected
+		res, err := comp.Execute(ctx, ExecInput{
+			Command: "echo $HTTP_PROXY",
+		})
+		if err != nil {
+			t.Fatalf("failed to check HTTP_PROXY: %v", err)
+		}
+		if !bytes.Contains([]byte(res.Stdout), []byte("host.docker.internal")) {
+			t.Errorf("expected HTTP_PROXY to contain host.docker.internal, got %q", res.Stdout)
+		}
+
+		// 2. Verify direct raw socket / IP connections fail due to Internal: true network bridge
+		resIP, err := comp.Execute(ctx, ExecInput{
+			Command: "nc -z -w 2 1.1.1.1 80",
+		})
+		if err == nil && resIP.ExitCode == 0 {
+			t.Errorf("expected direct IP connection to fail on internal network, but it succeeded")
+		}
+
+		// 3. Verify ALL_PROXY (SOCKS5) environment variable was injected
+		resSocks, err := comp.Execute(ctx, ExecInput{
+			Command: "echo $ALL_PROXY",
+		})
+		if err != nil {
+			t.Fatalf("failed to check ALL_PROXY: %v", err)
+		}
+		if !bytes.Contains([]byte(resSocks.Stdout), []byte("socks5://host.docker.internal")) {
+			t.Errorf("expected ALL_PROXY to contain socks5://host.docker.internal, got %q", resSocks.Stdout)
+		}
+	})
+}
