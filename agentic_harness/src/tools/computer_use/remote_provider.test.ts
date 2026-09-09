@@ -234,4 +234,67 @@ describe("RemoteComputerUseToolProvider", () => {
         const screenSizeRes = await screenSizeTool!.execute({});
         expect(screenSizeRes).toEqual({ width: 1920, height: 1080 });
     });
+
+    it("passes environment and resources to createComputer RPC", async () => {
+        mockComputerProviderClient.createComputer.mockResolvedValueOnce({
+            result: { case: "sessionId", value: "session-env-1" },
+        });
+        mockComputerProviderClient.getComputerInfo.mockResolvedValueOnce({
+            type: ComputerType.HEADLESS,
+        });
+
+        const configWithEnv: RemoteComputerUseToolProviderConfig = {
+            ...remoteConfig,
+            resources: {
+                cpu: "2",
+                memory: "1GiB",
+            },
+            environment: {
+                FOO: "bar",
+                OVERRIDE_ME: "explicit_val",
+            },
+        };
+
+        const provider = new RemoteComputerUseToolProvider(configWithEnv);
+        await provider.createTools();
+
+        expect(mockComputerProviderClient.createComputer).toHaveBeenCalledWith({
+            image: "ubuntu:latest",
+            resources: { cpu: "2", memory: "1GiB" },
+            environment: { FOO: "bar", OVERRIDE_ME: "explicit_val" },
+        });
+    });
+
+    it("configures apiKey interceptor and mTLS nodeOptions on transport", async () => {
+        const { createConnectTransport } = await import("@connectrpc/connect-node");
+
+        mockComputerProviderClient.createComputer.mockResolvedValueOnce({
+            result: { case: "sessionId", value: "session-sec-1" },
+        });
+        mockComputerProviderClient.getComputerInfo.mockResolvedValueOnce({
+            type: ComputerType.HEADLESS,
+        });
+
+        const configWithSecurity: RemoteComputerUseToolProviderConfig = {
+            ...remoteConfig,
+            security: {
+                apiKey: "secret-key-xyz",
+                mtls: {
+                    clientCert: "sample-cert-content",
+                },
+            },
+        };
+
+        const provider = new RemoteComputerUseToolProvider(configWithSecurity);
+        await provider.createTools();
+
+        expect(createConnectTransport).toHaveBeenCalledWith(
+            expect.objectContaining({
+                baseUrl: "http://localhost:8080",
+                httpVersion: "2",
+                interceptors: expect.any(Array),
+                nodeOptions: { cert: "sample-cert-content" },
+            })
+        );
+    });
 });

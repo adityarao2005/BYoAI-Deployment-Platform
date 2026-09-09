@@ -3,18 +3,21 @@ package computer
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 //// Local Computer
 
 type LocalComputer struct {
 	sessionId string
+	env       map[string]string
 }
 
 /// Implements IComputer
@@ -46,12 +49,17 @@ func (computer LocalComputer) Execute(ctx context.Context, execInput ExecInput) 
 	}
 
 	// for each environment variable, append it to the environment of the command
+	var customEnvs []string
+	for k, v := range computer.env {
+		customEnvs = append(customEnvs, fmt.Sprintf("%s=%s", k, v))
+	}
 	if execInput.Env != nil {
-		env := execInput.Env
-
-		for _, value := range env {
-			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", value.Name, value.Value))
+		for _, value := range execInput.Env {
+			customEnvs = append(customEnvs, fmt.Sprintf("%s=%s", value.Name, value.Value))
 		}
+	}
+	if len(customEnvs) > 0 {
+		cmd.Env = append(os.Environ(), customEnvs...)
 	}
 
 	// set the stdin of the command
@@ -145,23 +153,64 @@ var localComputer IComputer = NewLocalGraphicalComputer("0")
 
 // local computer provider
 type LocalComputerProvider struct {
+	mu        sync.RWMutex
+	computers map[string]IComputer
 }
 
 // Creates a computer given the configuration and returns a "sessionId"
-func (provider LocalComputerProvider) CreateComputer(ctx context.Context, config ComputerConfig) (string, error) {
-	return "0", nil
+func (provider *LocalComputerProvider) CreateComputer(ctx context.Context, config ComputerConfig) (string, error) {
+	sessionID := rand.Text()
+	lc := LocalComputer{
+		sessionId: sessionID,
+		env:       config.Environment,
+	}
+
+	var comp IComputer = lc
+	if lc.SupportsGraphics() {
+		lgc := NewLocalGraphicalComputer(sessionID)
+		lgc.env = config.Environment
+		comp = lgc
+	}
+
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
+	if provider.computers == nil {
+		provider.computers = make(map[string]IComputer)
+	}
+	provider.computers[sessionID] = comp
+
+	return sessionID, nil
 }
 
 // Retrieves the computer given the "sessionId"
-func (provider LocalComputerProvider) GetComputer(ctx context.Context, sessionId string) (IComputer, error) {
-	return localComputer, nil
+func (provider *LocalComputerProvider) GetComputer(ctx context.Context, sessionId string) (IComputer, error) {
+	provider.mu.RLock()
+	comp, exists := provider.computers[sessionId]
+	provider.mu.RUnlock()
+
+	if exists {
+		return comp, nil
+	}
+
+	if sessionId == "0" {
+		return localComputer, nil
+	}
+
+	return nil, fmt.Errorf("computer not found for sessionId %s", sessionId)
 }
 
 // Removes the computer from the provider and cleans up the resources
-func (provider LocalComputerProvider) DeleteComputer(ctx context.Context, sessionId string) error {
+func (provider *LocalComputerProvider) DeleteComputer(ctx context.Context, sessionId string) error {
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
+	if provider.computers != nil {
+		delete(provider.computers, sessionId)
+	}
 	return nil
 }
 
 func CreateLocalComputerProvider() IComputerProvider {
-	return LocalComputerProvider{}
+	return &LocalComputerProvider{
+		computers: make(map[string]IComputer),
+	}
 }

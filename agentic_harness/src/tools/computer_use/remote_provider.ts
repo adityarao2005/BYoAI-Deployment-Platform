@@ -1,10 +1,12 @@
 import { RemoteComputerUseToolProviderConfig } from "@/config/tool_config";
 import { Tool } from "../tools";
-import { createConnectTransport } from "@connectrpc/connect-node";
-import { Client, createClient, Transport } from "@connectrpc/connect";
+import { ConnectTransportOptions, createConnectTransport } from "@connectrpc/connect-node";
+import { Client, createClient, Interceptor, Transport } from "@connectrpc/connect";
 import { BasicComputerService, ComputerProviderService, ComputerType, GraphicalComputerService } from "@/gen/computer_api/v1/computer_pb";
 import { ComputerUseToolProvider } from "./base_provider";
 import { buildComputerTools } from "./builder";
+import dotenv from "dotenv";
+import fs from "node:fs";
 import {
     CaptureScreenshotArgs,
     CaptureScreenshotResult,
@@ -25,6 +27,7 @@ import {
     TypeArgs,
     WriteFileArgs,
 } from "./computer";
+import { ClientSessionOptions, SecureClientSessionOptions } from "node:http2";
 
 export class ConnectRemoteComputer implements GraphicalComputer {
     constructor(
@@ -362,17 +365,69 @@ export class RemoteComputerUseToolProvider extends ComputerUseToolProvider {
     }
 
     async createTools(): Promise<Tool[]> {
-        this.transport = createConnectTransport({
+        const interceptors: Interceptor[] = [];
+        if (this.config.security?.apiKey) {
+            const apiKey = this.config.security.apiKey;
+            interceptors.push((next) => async (req) => {
+                req.header.set("Authorization", `Bearer ${apiKey}`);
+                return await next(req);
+            });
+        }
+
+        let options: ConnectTransportOptions = {
             baseUrl: this.config.url,
             httpVersion: "2",
-        });
+            interceptors,
+        }
+
+        if (this.config.security?.mtls?.clientCert) {
+            const certPathOrContent = this.config.security.mtls.clientCert;
+            const nodeOptions: SecureClientSessionOptions = {}
+            try {
+                const stat = await fs.promises.stat(certPathOrContent);
+                if (stat.isFile()) {
+                    nodeOptions.cert = await fs.promises.readFile(certPathOrContent);
+                } else {
+                    nodeOptions.cert = certPathOrContent;
+                }
+            } catch {
+                nodeOptions.cert = certPathOrContent;
+            }
+            options = { ...options, nodeOptions }
+        }
+
+        this.transport = createConnectTransport(options);
 
         this.computerProviderService = createClient(ComputerProviderService, this.transport);
         this.basicComputerService = createClient(BasicComputerService, this.transport);
 
+        let envFromFile: Record<string, string> = {};
+        if (this.config.envFile) {
+            try {
+                const fileContent = await fs.promises.readFile(this.config.envFile, "utf-8");
+                envFromFile = dotenv.parse(fileContent);
+            } catch (err: any) {
+                throw new Error(`Failed to read env file ${this.config.envFile}: ${err.message}`);
+            }
+        }
+
+        const environment: Record<string, string> = {
+            ...envFromFile,
+            ...(this.config.environment || {}),
+        };
+
+        const resources = this.config.resources
+            ? {
+                cpu: this.config.resources.cpu !== undefined ? String(this.config.resources.cpu) : undefined,
+                memory: this.config.resources.memory,
+            }
+            : undefined;
+
         // create the computer
         const createResponse = await this.computerProviderService.createComputer({
             image: this.config.image,
+            resources,
+            environment,
         });
 
         switch (createResponse.result.case) {
@@ -410,3 +465,4 @@ export class RemoteComputerUseToolProvider extends ComputerUseToolProvider {
         return buildComputerTools(remoteComputer, isGraphical);
     }
 }
+

@@ -9,10 +9,12 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/config"
+	"github.com/docker/go-units"
 	"github.com/moby/moby/api/pkg/stdcopy"
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
@@ -107,6 +109,25 @@ func (provider *DockerComputerProvider) CreateComputer(ctx context.Context, conf
 	// pull the image
 	provider.pullImage(ctx, config.Image)
 
+	var envs []string
+	for k, v := range config.Environment {
+		envs = append(envs, fmt.Sprintf("%s=%s", k, v))
+	}
+
+	hostConfig := &container.HostConfig{}
+	if config.Resources != nil {
+		if config.Resources.CPU != "" {
+			if cpuFloat, err := strconv.ParseFloat(config.Resources.CPU, 64); err == nil {
+				hostConfig.Resources.NanoCPUs = int64(cpuFloat * 1e9)
+			}
+		}
+		if config.Resources.Memory != "" {
+			if memBytes, err := units.RAMInBytes(config.Resources.Memory); err == nil {
+				hostConfig.Resources.Memory = memBytes
+			}
+		}
+	}
+
 	// create the container, resp contains container id
 	// override CMD with "sleep infinity" to keep the container alive as a sandbox
 	// for exec and copy operations. Without this, base images (e.g. alpine) exit
@@ -116,7 +137,9 @@ func (provider *DockerComputerProvider) CreateComputer(ctx context.Context, conf
 		Config: &container.Config{
 			Cmd:       []string{"sleep", "infinity"},
 			OpenStdin: true,
+			Env:       envs,
 		},
+		HostConfig: hostConfig,
 	})
 
 	if err != nil {
