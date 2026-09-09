@@ -70,8 +70,9 @@ flowchart LR
   end
 
   subgraph ToolBackends["Tool providers"]
-    X["OpenAPIToolProvider\n(currently stubbed)"]
+    X["OpenAPIToolProvider"]
     Y["load_skill provider"]
+    Z["ComputerUseToolProvider\n(Local / Remote)"]
   end
 
   A --> B --> C
@@ -102,6 +103,7 @@ flowchart LR
   J --> V
   J --> W
   K --> X
+  K --> Z
   L --> Y
 ```
 
@@ -109,7 +111,7 @@ flowchart LR
 
 - Model config entries are filtered by `brand` and registered into `modelRegistry` by `src/models/openai.ts`, `src/models/gemini.ts`, `src/models/anthropic.ts`, and `src/models/self_hosted.ts`.
 - Skill repository config entries are registered into `skillRepositoryRegistry` by `src/skills/git_skill_repo.ts` and `src/skills/zip_skill_repo.ts`.
-- Tool provider config entries are registered into `toolProviderRegistry` by `src/tools/index.ts`; `src/tools/openapi.ts` is wired in, but the provider methods are still stubs.
+- Tool provider config entries are registered into `toolProviderRegistry` by `src/tools/index.ts`; `src/tools/openapi` handles OpenAPI specs and `src/tools/computer_use` handles local/remote OS computer tools.
 - The built-in `load_skill` provider lives in `src/tools/load_skill.ts` and is attached by the `Agent` constructor, not by config.
 - `Agent.performTask()` pulls the default model, gathers all tools from all providers, validates tool call arguments, executes tools, and loops until the model stops asking for tool execution.
 
@@ -123,6 +125,7 @@ The test suite mirrors the same seams as the runtime wiring:
 - `src/skills/git_skill_repo.test.ts` and `src/skills/zip_skill_repo.test.ts` cover skill discovery, subdirectory filtering, and parsing.
 - `src/skills/git_skill_repo.integration.test.ts` and `src/skills/zip_skill_repo.integration.test.ts` cover real git and HTTP-zip loading paths.
 - `src/tools/tool_argument.test.ts` covers JSON-schema-style argument validation for tool inputs.
+- `src/tools/computer_use/*.test.ts` covers computer interface tool builders, local host OS execution (`LocalComputer`), ConnectRPC remote execution (`RemoteComputer`), and provider registration.
 - The built-in `load_skill` provider is exercised indirectly by the agent tests through `Agent.performTask()`.
 
 In practice, the unit tests validate the control flow and mapping logic, while the integration tests verify that the external adapters still work against a real git repo, a real zip payload, or a live model endpoint.

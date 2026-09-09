@@ -2,6 +2,12 @@ import { Tool } from "../tools";
 import { toolArray, toolBoolean, toolInteger, toolObject, toolString } from "../tool_argument";
 import { GraphicalComputer, HeadlessComputer } from "./computer";
 
+/**
+ * Creates Tool objects for headless computer operations.
+ *
+ * @param computer HeadlessComputer implementation
+ * @returns Array of Tool objects (execute, read_file, write_file, list_directory, get_user_id, get_group_id)
+ */
 export function createHeadlessTools(computer: HeadlessComputer): Tool[] {
     return [
         {
@@ -105,6 +111,12 @@ export function createHeadlessTools(computer: HeadlessComputer): Tool[] {
     ];
 }
 
+/**
+ * Creates Tool objects for graphical computer operations.
+ *
+ * @param computer GraphicalComputer implementation
+ * @returns Array of Tool objects (capture_screenshot, click, type, press_key, release_key, press_and_hold_key, release_all_keys, drag, move_mouse_to, scroll, get_clipboard, set_clipboard, get_screen_size)
+ */
 export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
     return [
         {
@@ -298,6 +310,13 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
     ];
 }
 
+/**
+ * Builds an array of Tool objects for a computer instance.
+ *
+ * @param computer HeadlessComputer or GraphicalComputer instance
+ * @param isGraphical Whether to include graphical GUI tools alongside headless tools
+ * @returns Combined array of Tool objects
+ */
 export function buildComputerTools(computer: HeadlessComputer, isGraphical: boolean = false): Tool[] {
     const tools = createHeadlessTools(computer);
     if (isGraphical) {

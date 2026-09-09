@@ -53,3 +53,17 @@ The **Computer Controller** is a Golang-based service running inside target sand
 - **Execution Primitives**: Synchronous and streaming shell command execution, file read/write/list, and GUI interaction hooks.
 
 The admins working on building their AI Agents can either manage it via Kubernetes or through the admin console.
+
+## Computer Use Tool Provider Architecture (`agentic_harness/src/tools/computer_use/`)
+
+The TypeScript Agent Harness integrates computer use capabilities via a decoupled provider architecture:
+- **Interfaces (`computer.ts`)**:
+  - `HeadlessComputer`: Contract for basic execution (shell execution, file read/write/list, user/group IDs).
+  - `GraphicalComputer`: Contract for desktop GUI automation (screenshot capture, mouse click/move/drag/scroll, keyboard input, clipboard management, screen geometry).
+- **Tool Transformer (`builder.ts`)**:
+  - `buildComputerTools(computer, isGraphical)`: Transforms any implementation of `HeadlessComputer` or `GraphicalComputer` into executable agent `Tool[]` objects with JSON Schema parameter validation.
+- **Providers**:
+  - `RemoteComputerUseToolProvider` (`remote_provider.ts`): Connects to remote Computer Controller instances via ConnectRPC (`BasicComputerService`, `GraphicalComputerService`, `ComputerProviderService`).
+  - `LocalComputerUseToolProvider` (`local_provider.ts`): Executes operations directly on the local host OS using Node process/filesystem APIs and Linux utilities (`xdotool`, `xclip`, `maim`, `scrot`, `import`).
+- **Registry (`registry.ts`)**:
+  - `registerComputerUseToolProvider(config)`: Reads `agent.yaml` tool provider configuration and registers the designated local or remote computer provider into `toolProviderRegistry`.
