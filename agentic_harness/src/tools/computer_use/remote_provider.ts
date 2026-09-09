@@ -31,7 +31,7 @@ export class ConnectRemoteComputer implements GraphicalComputer {
         private computerId: string,
         private basicService: Client<typeof BasicComputerService>,
         private graphicalService?: Client<typeof GraphicalComputerService>
-    ) {}
+    ) { }
 
     async execute(args: ExecuteArgs): Promise<ExecutionResult> {
         const response = await this.basicService.execute({

@@ -112,7 +112,7 @@ export const RemoteComputerUseToolProviderConfigSchema = z.object({
             }).optional(),
 
             // env file
-            envFile: z.string()
+            envFile: z.string().optional()
         })
 
 export type RemoteComputerUseToolProviderConfig = z.infer<typeof RemoteComputerUseToolProviderConfigSchema>
