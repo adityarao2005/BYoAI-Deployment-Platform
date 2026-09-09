@@ -67,3 +67,57 @@ The TypeScript Agent Harness integrates computer use capabilities via a decouple
   - `LocalComputerUseToolProvider` (`local_provider.ts`): Executes operations directly on the local host OS using Node process/filesystem APIs and Linux utilities (`xdotool`, `xclip`, `maim`, `scrot`, `import`).
 - **Registry (`registry.ts`)**:
   - `registerComputerUseToolProvider(config)`: Reads `agent.yaml` tool provider configuration and registers the designated local or remote computer provider into `toolProviderRegistry`.
+
+### Tool Provider Configuration Schema (`agent.yaml`)
+
+Tool providers are declared under the `toolProviders` key in `agent.yaml`. Supported provider types include `openapi` and `computer` (with `local` and `remote` backends).
+
+#### Example `agent.yaml` Tool Providers Configuration
+
+```yaml
+toolProviders:
+  # OpenAPI Tool Provider Configuration
+  - name: "petstore"
+    type: openapi
+    specUrl: "https://petstore.swagger.io/v2/swagger.json"
+    securityVariables:
+      type: apiKey
+      key: "my-secret-key"
+      name: "api_key"
+      location: "header"
+
+  # Computer Use Tool Provider (Local execution)
+  - type: computer
+    provider:
+      type: local
+      enableGUIToolsIfAvailable: true
+
+  # Computer Use Tool Provider (Remote sandbox via ConnectRPC)
+  - type: computer
+    provider:
+      type: remote
+      url: "http://localhost:8080"
+      image: "ubuntu:latest"
+      enableGUIToolsIfAvailable: true
+      envFile: ".env"
+      security:
+        apiKey: "agent-token"
+      resources:
+        cpu: "2"
+        memory: "4GiB"
+```
+
+#### Tool Provider Implementation Status Summary
+
+| Tool Provider | Feature / Component | Status | Details |
+|---|---|---|---|
+| **OpenAPI** | Spec Parsing & Dereferencing | **Implemented** | Supports OpenAPI 3.0/3.1 and Swagger 2.0 via `@apidevtools/swagger-parser` |
+| **OpenAPI** | Dynamic Tool Schema Builder | **Implemented** | Converts HTTP paths, parameters, and JSON request body schemas into agent `Tool` objects |
+| **OpenAPI** | HTTP Request Execution | **Implemented** | Supports `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS`, `TRACE` with parameter mapping |
+| **OpenAPI** | Authentication | **Implemented** | `apiKey` (header, query, cookie), `bearerToken`, `basicAuth`, `custom` headers/queryParams/pathParams |
+| **OpenAPI** | OAuth2 Flow | **Unimplemented** | Schema defined; interactive token retrieval flow deferred for server component |
+| **Computer Use** | Abstraction & Tool Builder | **Implemented** | `HeadlessComputer` & `GraphicalComputer` interfaces; `buildComputerTools` generates 6 basic & 13 GUI tools |
+| **Computer Use** | Remote Provider (`remote`) | **Implemented** | `RemoteComputerUseToolProvider` communicates with Computer Controller via ConnectRPC |
+| **Computer Use** | Local Provider (`local`) | **Implemented** | `LocalComputerUseToolProvider` uses Node child_process/fs and Linux utilities (`xdotool`, `xclip`, `maim`/`scrot`/`import`) |
+| **Computer Use** | Session RBAC & Lifetime | **Unimplemented** | `computerLifetime` (server, user, session) deferred to event-driven refactor |
+| **Computer Use** | Windows / macOS Local GUI | **Unimplemented** | `LocalGraphicalComputer` currently relies on Linux/X11 tools (`xdotool`, `xclip`, `maim`) |
