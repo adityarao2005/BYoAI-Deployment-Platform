@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,6 +15,7 @@ import (
 	"sync"
 
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/config"
+	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/network"
 	"github.com/docker/go-units"
 	"github.com/moby/moby/api/pkg/stdcopy"
 	"github.com/moby/moby/api/types/container"
@@ -21,13 +23,19 @@ import (
 	"golang.org/x/sync/singleflight"
 )
 
+type dockerSessionState struct {
+	containerID string
+	networkID   string
+	proxy       *network.EgressProxy
+}
+
 type DockerComputerProvider struct {
 	// mutex
 	mu sync.RWMutex
 	// docker client
 	apiClient *client.Client
-	// map from user generated session id to docker container id
-	computers map[string]string
+	// map from user generated session id to session state
+	computers map[string]dockerSessionState
 	// pull options
 	pullPolicy config.ImagePullPolicy
 }
@@ -48,7 +56,7 @@ func GetDockerComputerProvider(props DockerComputerProviderProps) (IComputerProv
 	return &DockerComputerProvider{
 		sync.RWMutex{},
 		apiClient,
-		make(map[string]string),
+		make(map[string]dockerSessionState),
 		props.pullPolicy,
 	}, nil
 }
@@ -130,12 +138,57 @@ func buildDockerHostConfig(res *ComputerResourceConfig) *container.HostConfig {
 }
 
 func (provider *DockerComputerProvider) CreateComputer(ctx context.Context, config ComputerConfig) (string, error) {
+	sessionID := rand.Text()
 
 	// pull the image
-	provider.pullImage(ctx, config.Image)
+	if err := provider.pullImage(ctx, config.Image); err != nil {
+		return "", err
+	}
 
 	envs := buildDockerEnv(config.Environment)
 	hostConfig := buildDockerHostConfig(config.Resources)
+
+	var networkID string
+	var egressProxy *network.EgressProxy
+
+	if config.NetworkRules != nil && (len(config.NetworkRules.AllowedHosts) > 0 || len(config.NetworkRules.DeniedHosts) > 0) {
+		netName := fmt.Sprintf("byoai-net-%s", sessionID)
+		netResp, err := provider.apiClient.NetworkCreate(ctx, netName, client.NetworkCreateOptions{
+			Driver:   "bridge",
+			Internal: true,
+		})
+		if err != nil {
+			return "", fmt.Errorf("failed to create internal network %s: %w", netName, err)
+		}
+		networkID = netResp.ID
+
+		ruleEngine := network.NewRuleEngine(config.NetworkRules.AllowedHosts, config.NetworkRules.DeniedHosts)
+		proxy, err := network.NewEgressProxy("0.0.0.0:0", ruleEngine)
+		if err != nil {
+			_, _ = provider.apiClient.NetworkRemove(ctx, networkID, client.NetworkRemoveOptions{})
+			return "", fmt.Errorf("failed to start egress proxy: %w", err)
+		}
+		egressProxy = proxy
+
+		_, portStr, err := net.SplitHostPort(proxy.Addr())
+		if err == nil {
+			proxyURL := fmt.Sprintf("http://host.docker.internal:%s", portStr)
+			envs = append(envs,
+				fmt.Sprintf("HTTP_PROXY=%s", proxyURL),
+				fmt.Sprintf("HTTPS_PROXY=%s", proxyURL),
+				fmt.Sprintf("http_proxy=%s", proxyURL),
+				fmt.Sprintf("https_proxy=%s", proxyURL),
+				"NO_PROXY=localhost,127.0.0.1",
+				"no_proxy=localhost,127.0.0.1",
+			)
+		}
+
+		if hostConfig == nil {
+			hostConfig = &container.HostConfig{}
+		}
+		hostConfig.NetworkMode = container.NetworkMode(netName)
+		hostConfig.ExtraHosts = append(hostConfig.ExtraHosts, "host.docker.internal:host-gateway")
+	}
 
 	// create the container, resp contains container id
 	// override CMD with "sleep infinity" to keep the container alive as a sandbox
@@ -152,6 +205,12 @@ func (provider *DockerComputerProvider) CreateComputer(ctx context.Context, conf
 	})
 
 	if err != nil {
+		if egressProxy != nil {
+			_ = egressProxy.Close()
+		}
+		if networkID != "" {
+			_, _ = provider.apiClient.NetworkRemove(ctx, networkID, client.NetworkRemoveOptions{})
+		}
 		return "", fmt.Errorf("failed to create container with image %s: %w", config.Image, err)
 	}
 
@@ -159,30 +218,40 @@ func (provider *DockerComputerProvider) CreateComputer(ctx context.Context, conf
 	_, err = provider.apiClient.ContainerStart(ctx, resp.ID, client.ContainerStartOptions{})
 
 	if err != nil {
+		if egressProxy != nil {
+			_ = egressProxy.Close()
+		}
+		if networkID != "" {
+			_, _ = provider.apiClient.NetworkRemove(ctx, networkID, client.NetworkRemoveOptions{})
+		}
+		_, _ = provider.apiClient.ContainerRemove(ctx, resp.ID, client.ContainerRemoveOptions{Force: true})
 		return "", fmt.Errorf("failed to start container %s: %w", resp.ID, err)
 	}
 
-	// generate random text for session id
-	sessionID := rand.Text()
-
-	// lock mutex, set the session id to the container id, unlock mutex
+	// lock mutex, set the session id to the session state, unlock mutex
 	provider.mu.Lock()
 	defer provider.mu.Unlock()
-	provider.computers[sessionID] = resp.ID
+	provider.computers[sessionID] = dockerSessionState{
+		containerID: resp.ID,
+		networkID:   networkID,
+		proxy:       egressProxy,
+	}
 
 	return sessionID, nil
 }
 
 func (provider *DockerComputerProvider) GetComputer(ctx context.Context, sessionId string) (IComputer, error) {
-	// Lock, grab container id and whether exists, unlock
+	// Lock, grab session state and whether exists, unlock
 	provider.mu.RLock()
-	containerId, exists := provider.computers[sessionId]
+	state, exists := provider.computers[sessionId]
 	provider.mu.RUnlock()
 
 	// if not exists
 	if !exists {
 		return nil, fmt.Errorf("computer not found for sessionId %s (or deleted)", sessionId)
 	}
+
+	containerId := state.containerID
 
 	// Detect if the container supports graphics via DISPLAY env var.
 	// If so, return a DockerGraphicalComputer that also implements IGraphicalComputer.
@@ -208,8 +277,8 @@ func (provider *DockerComputerProvider) DeleteComputer(ctx context.Context, sess
 	// acquire lock, check if session exists, if exists stop and remove container
 	provider.mu.Lock()
 
-	// grab the container id and whether it exists or not
-	containerId, exists := provider.computers[sessionId]
+	// grab the session state and whether it exists or not
+	state, exists := provider.computers[sessionId]
 
 	if !exists {
 		provider.mu.Unlock()
@@ -223,12 +292,13 @@ func (provider *DockerComputerProvider) DeleteComputer(ctx context.Context, sess
 	// container stop timeout before killing
 	// TODO: make configurable DockerComputerProviderProps
 	timeout := 10
+	containerId := state.containerID
 
 	// stop container
 	_, err := provider.apiClient.ContainerStop(ctx, containerId, client.ContainerStopOptions{Timeout: &timeout})
 
 	if err != nil {
-		return fmt.Errorf("failed to stop container: %w", err)
+		// continue cleanup despite stop error
 	}
 
 	// remove container
@@ -236,6 +306,14 @@ func (provider *DockerComputerProvider) DeleteComputer(ctx context.Context, sess
 		RemoveVolumes: true,
 		Force:         true,
 	})
+
+	if state.proxy != nil {
+		_ = state.proxy.Close()
+	}
+
+	if state.networkID != "" {
+		_, _ = provider.apiClient.NetworkRemove(ctx, state.networkID, client.NetworkRemoveOptions{})
+	}
 
 	if err != nil {
 		return fmt.Errorf("failed to remove container: %w", err)
@@ -245,6 +323,15 @@ func (provider *DockerComputerProvider) DeleteComputer(ctx context.Context, sess
 }
 
 func (provider *DockerComputerProvider) Close() error {
+	provider.mu.Lock()
+	for _, state := range provider.computers {
+		if state.proxy != nil {
+			_ = state.proxy.Close()
+		}
+	}
+	provider.computers = make(map[string]dockerSessionState)
+	provider.mu.Unlock()
+
 	return provider.apiClient.Close()
 }
 

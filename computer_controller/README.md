@@ -91,6 +91,23 @@ spec:
 
 ---
 
+### Network Access Control & Egress Firewalling (Docker Mode)
+
+When `CreateComputer` is invoked with `networkRules` (`allowedHosts` and/or `deniedHosts`), the Computer Controller enforces non-root container network sandboxing:
+
+1. **Internal Bridge Network (`Internal: true`)**:
+   - Each session with network rules creates an isolated internal Docker bridge network (`byoai-net-<session_id>`) with **no default internet gateway**.
+   - Direct IP connection attempts (`curl http://1.1.1.1` or raw TCP sockets) fail instantly with `Network is unreachable`.
+2. **Embedded User-Space Egress Proxy**:
+   - An in-process Go HTTP/CONNECT proxy (`EgressProxy`) runs on the host bound to the bridge network interface.
+   - Container environment variables (`HTTP_PROXY`, `HTTPS_PROXY`, `http_proxy`, `https_proxy`) route container web traffic through `host.docker.internal:<proxy_port>`.
+   - Host rules support exact hostnames (`api.openai.com`), domain wildcards (`*.github.com`), individual IPs (`1.1.1.1`), and CIDR subnets (`10.0.0.0/8`). `deniedHosts` takes priority over `allowedHosts`.
+3. **Non-Root & Image-Agnostic**:
+   - Requires **no host `root` privileges or `sudo`** (compatible with Rootless Docker, Rootless Podman, and unprivileged host users).
+   - Compatible with any container image, including `FROM scratch` or minimal images (no binaries or `iptables` required inside the container).
+
+---
+
 ## Building
 
 You can build the Computer Controller binary using `task` or Go tools:

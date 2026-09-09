@@ -25,10 +25,19 @@ func toComputerConfig(req *computer_apiv1.CreateComputerRequest) computer.Comput
 		}
 	}
 
+	var networkRules *computer.NetworkRules
+	if req.GetNetworkRules() != nil {
+		networkRules = &computer.NetworkRules{
+			AllowedHosts: req.GetNetworkRules().GetAllowedHosts(),
+			DeniedHosts:  req.GetNetworkRules().GetDeniedHosts(),
+		}
+	}
+
 	return computer.ComputerConfig{
-		Image:       req.GetImage(),
-		Resources:   resources,
-		Environment: req.GetEnvironment(),
+		Image:        req.GetImage(),
+		Resources:    resources,
+		Environment:  req.GetEnvironment(),
+		NetworkRules: networkRules,
 	}
 }
 

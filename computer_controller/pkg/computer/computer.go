@@ -104,6 +104,12 @@ type ComputerResourceConfig struct {
 	Memory string
 }
 
+// Network egress firewall configuration for a computer instance
+type NetworkRules struct {
+	AllowedHosts []string
+	DeniedHosts  []string
+}
+
 // computer configuration for creating a computer
 type ComputerConfig struct {
 	// docker image to use
@@ -114,6 +120,8 @@ type ComputerConfig struct {
 	Resources *ComputerResourceConfig
 	// environment variables
 	Environment map[string]string
+	// network rules
+	NetworkRules *NetworkRules
 }
 
 // provides the computer

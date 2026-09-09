@@ -449,6 +449,27 @@ export function buildResourceConfig(
     return result;
 }
 
+/**
+ * Maps network rules config into protobuf NetworkRules format.
+ */
+export function buildNetworkRulesConfig(
+    config: RemoteComputerUseToolProviderConfig
+): { allowedHosts: string[]; deniedHosts: string[] } | undefined {
+    if (!config.networkRules) {
+        return undefined;
+    }
+    const allowedHosts = Array.isArray(config.networkRules.allowedHosts)
+        ? config.networkRules.allowedHosts
+        : [config.networkRules.allowedHosts];
+    const deniedHosts = Array.isArray(config.networkRules.deniedHosts)
+        ? config.networkRules.deniedHosts
+        : [config.networkRules.deniedHosts];
+    return {
+        allowedHosts,
+        deniedHosts,
+    };
+}
+
 export class RemoteComputerUseToolProvider extends ComputerUseToolProvider {
     transport: Transport | null = null;
     config: RemoteComputerUseToolProviderConfig;
@@ -471,12 +492,14 @@ export class RemoteComputerUseToolProvider extends ComputerUseToolProvider {
 
         const environment = await resolveEnvironmentConfig(this.config);
         const resources = buildResourceConfig(this.config);
+        const networkRules = buildNetworkRulesConfig(this.config);
 
         // create the computer
         const createResponse = await this.computerProviderService.createComputer({
             image: this.config.image,
             resources,
             environment,
+            networkRules,
         });
 
         switch (createResponse.result.case) {

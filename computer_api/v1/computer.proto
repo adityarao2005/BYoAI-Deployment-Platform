@@ -11,6 +11,11 @@ message ComputerResourceConfig {
     optional string memory = 2;
 }
 
+message NetworkRules {
+    repeated string allowed_hosts = 1;
+    repeated string denied_hosts = 2;
+}
+
 // create computer request
 message CreateComputerRequest {
     string image = 1 [(buf.validate.field).string ={
@@ -19,6 +24,7 @@ message CreateComputerRequest {
     }];
     optional ComputerResourceConfig resources = 3;
     map<string, string> environment = 4;
+    optional NetworkRules network_rules = 5;
 }
 
 message CreateComputerResponse {
