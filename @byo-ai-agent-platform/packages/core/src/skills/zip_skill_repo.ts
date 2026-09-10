@@ -116,14 +116,3 @@ export class ZipSkillRepository implements SkillRepository {
         }
     }
 }
-
-
-
-export function registerZipSkillRepositories(config: SkillRepositoryConfig[]) {
-    for (const repoConfig of config) {
-        if (repoConfig.type === "zip") {
-            const zipRepo = new ZipSkillRepository(repoConfig.location, repoConfig.skillsSubdirectory, repoConfig.headers);
-            skillRepositoryRegistry.registerSkillRepository(zipRepo);
-        }
-    }
-}

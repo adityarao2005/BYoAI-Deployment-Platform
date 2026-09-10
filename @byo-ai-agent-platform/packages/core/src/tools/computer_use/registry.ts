@@ -1,9 +1,9 @@
-import { ToolProviderConfig } from "@/config/tool_config";
+import type { ToolProviderConfig } from "@/config/tool_config";
 import { ToolProvider, toolProviderRegistry } from "../tools";
 import { LocalComputerUseToolProvider } from "./local_provider";
 import { RemoteComputerUseToolProvider } from "./remote_provider";
 
-export function registerComputerUseToolProvider(config: ToolProviderConfig[]) {
+export function createComputerUseToolProvider(config: ToolProviderConfig[]): ToolProvider | null {
     const providers = [];
 
     for (const providerConfig of config) {
@@ -12,7 +12,7 @@ export function registerComputerUseToolProvider(config: ToolProviderConfig[]) {
         }
     }
 
-    if (providers.length === 0) return;
+    if (providers.length === 0) return null;
 
     if (providers.length > 1) {
         throw new Error(
@@ -21,19 +21,14 @@ export function registerComputerUseToolProvider(config: ToolProviderConfig[]) {
     }
 
     const providerConfig = providers[0];
-    if (!providerConfig) return;
+    if (!providerConfig) return null;
 
     const providerType = providerConfig.provider.type;
-    let toolProvider: ToolProvider;
     switch (providerType) {
         case "local":
-            toolProvider = new LocalComputerUseToolProvider(providerConfig.provider);
-            toolProviderRegistry.registerToolProvider(toolProvider);
-            break;
+            return new LocalComputerUseToolProvider(providerConfig.provider);
         case "remote":
-            toolProvider = new RemoteComputerUseToolProvider(providerConfig.provider);
-            toolProviderRegistry.registerToolProvider(toolProvider);
-            break;
+            return new RemoteComputerUseToolProvider(providerConfig.provider);
         default:
             throw new Error(`Unknown type provided: ${providerType}`);
     }

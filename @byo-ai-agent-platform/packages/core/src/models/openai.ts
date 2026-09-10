@@ -2,7 +2,6 @@ import OpenAI from "openai";
 import { Model, modelRegistry } from "./models";
 import { logger } from "@/logger";
 import { AssistantMessage, ModelInput, ModelInteraction, ModelMessageOutput, ToolCallRequest } from "./conversation";
-import { type AgentConfig } from "@/config/config";
 
 function toOpenAIInteraction(message: ModelInteraction[]): OpenAI.Responses.ResponseInput {
     return message.map((msg) => {
@@ -104,23 +103,5 @@ export class OpenAIModel implements Model {
             }
         }
         return output;
-    }
-}
-
-export function registerOpenAIModels(config: AgentConfig) {
-    for (const modelConfig of config.models) {
-        if (modelConfig.brand !== "openai") {
-            continue;
-        }
-
-        const { name, properties } = modelConfig;
-
-        if (!properties.apiKey) {
-            logger.warn(`Missing API key for OpenAI model: ${name}. Skipping registration.`);
-            continue;
-        }
-
-        logger.info(`Registering OpenAI model: ${name} with API key: ${properties.apiKey ? "provided" : "not provided"} and model name: ${name}`);
-        modelRegistry.registerModel(name, new OpenAIModel(name, properties.apiKey));
     }
 }

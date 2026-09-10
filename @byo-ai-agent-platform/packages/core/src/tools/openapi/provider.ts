@@ -28,12 +28,3 @@ export class OpenAPIToolProvider implements ToolProvider {
         return this.loadTools();
     }
 }
-
-export function registerOpenAPIToolProviders(config: ToolProviderConfig[]) {
-    for (const providerConfig of config) {
-        if (providerConfig.type === "openapi") {
-            const openApiProvider = new OpenAPIToolProvider(providerConfig);
-            toolProviderRegistry.registerToolProvider(openApiProvider);
-        }
-    }
-}

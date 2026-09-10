@@ -3,7 +3,6 @@ import { Model, modelRegistry } from "./models";
 import { logger } from "@/logger";
 import { ToolArgument } from "@/tools/tool_argument";
 import { ModelInput, ModelInteraction, ModelMessageOutput } from "./conversation";
-import { type AgentConfig } from "@/config/config";
 
 export function formatSchemaForGemini(arg: ToolArgument): any {
     // Deep clone to prevent mutating your core registry state
@@ -158,22 +157,3 @@ export class GeminiModel implements Model {
         return output
     }
 }
-
-export function registerGeminiModels(config: AgentConfig) {
-    for (const modelConfig of config.models) {
-        if (modelConfig.brand !== "gemini") {
-            continue;
-        }
-
-        const { name, properties } = modelConfig;
-
-        if (!properties.apiKey) {
-            logger.warn(`Missing API key for Gemini model: ${name}. Skipping registration.`);
-            continue;
-        }
-
-        logger.info(`Registering Gemini model: ${name} with API key: ${properties.apiKey ? "provided" : "not provided"} and model name: ${name}`);
-        modelRegistry.registerModel(name, new GeminiModel(name, properties.apiKey));
-    }
-}
-

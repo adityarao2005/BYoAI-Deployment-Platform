@@ -3,7 +3,6 @@ import { Model, modelRegistry } from "./models";
 import { logger } from "@/logger";
 import { ModelInput, ModelInteraction, ModelMessageOutput } from "./conversation";
 import { ChatCompletionAssistantMessageParam } from "openai/resources";
-import { type AgentConfig } from "@/config/config";
 
 function toChatCompletionInteraction(message: ModelInteraction[]): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
     return message.map((msg) => {
@@ -115,18 +114,5 @@ export class SelfHostedModel implements Model {
         }
 
         return outputs;
-    }
-}
-
-export function registerSelfHostedModels(config: AgentConfig) {
-    for (const modelConfig of config.models) {
-        if (modelConfig.brand !== "self_hosted") {
-            continue;
-        }
-
-        const { name, properties } = modelConfig;
-
-        logger.info(`Registering self-hosted model: ${name} with base URL: ${properties.baseUrl} and API key: ${properties.apiKey ? "provided" : "not provided"}`);
-        modelRegistry.registerModel(name, new SelfHostedModel(properties.baseUrl, name, properties.apiKey));
     }
 }

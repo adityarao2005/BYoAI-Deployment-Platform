@@ -171,12 +171,3 @@ export class GitSkillRepository implements SkillRepository {
         }
     }
 }
-
-export function registerGitSkillRepositories(config: SkillRepositoryConfig[]) {
-    for (const repoConfig of config) {
-        if (repoConfig.type === "git") {
-            const gitRepo = new GitSkillRepository(repoConfig.url, repoConfig.branch, repoConfig.skillsSubdirectory, repoConfig.auth);
-            skillRepositoryRegistry.registerSkillRepository(gitRepo);
-        }
-    }
-}

@@ -2,7 +2,6 @@ import { Anthropic } from "@anthropic-ai/sdk";
 import { Model, modelRegistry } from "./models";
 import { logger } from "@/logger";
 import { ModelInput, ModelInteraction, ModelMessageOutput } from "./conversation";
-import { type AgentConfig } from "@/config/config";
 
 function toAnthropicInteraction(message: ModelInteraction[]): Anthropic.Messages.MessageParam[] {
     return message.map((msg) => {
@@ -92,23 +91,5 @@ export class AnthropicModel implements Model {
         }
 
         return output;
-    }
-}
-
-export function registerAnthropicModels(config: AgentConfig) {
-    for (const modelConfig of config.models) {
-        if (modelConfig.brand !== "anthropic") {
-            continue;
-        }
-
-        const { name, properties } = modelConfig;
-
-        if (!properties.apiKey) {
-            logger.warn(`Missing API key for Anthropic model: ${name}. Skipping registration.`);
-            continue;
-        }
-
-        logger.info(`Registering Anthropic model: ${name} with API key: ${properties.apiKey ? "provided" : "not provided"} and model name: ${name}`);
-        modelRegistry.registerModel(name, new AnthropicModel(name, properties.apiKey, properties.maxTokens));
     }
 }

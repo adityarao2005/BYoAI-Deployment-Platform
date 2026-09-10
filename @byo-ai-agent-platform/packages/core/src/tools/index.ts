@@ -1,10 +1,5 @@
-import { loadConfigIfAvailable } from "@/config/config"
-import { registerOpenAPIToolProviders } from "./openapi"
-import { registerComputerUseToolProvider } from "./computer_use"
-
-const config = await loadConfigIfAvailable()
-
-if (config) {
-    registerOpenAPIToolProviders(config.toolProviders)
-    registerComputerUseToolProvider(config.toolProviders)
-}
+export * from "./tools"
+export * from "./openapi"
+export * from "./computer_use"
+export * from "./load_skill"
+export * from "./tool_argument"

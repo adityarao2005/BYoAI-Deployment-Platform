@@ -1,10 +1,10 @@
 import { logger } from "@/logger";
-import { modelRegistry } from "@/models";
-import { isToolCallRequest, ModelInteraction, ToolCallRequest, ToolCallResponse } from "@/models/conversation";
-import { SkillRepository } from "@/skills";
+import type { Model } from "@/models/models";
+import { isToolCallRequest, type ModelInteraction, type ToolCallRequest, type ToolCallResponse } from "@/models/conversation";
+import type { SkillRepository } from "@/skills";
 import { loadSkillToolProvider } from "@/tools/load_skill";
 import { validateToolArgument } from "@/tools/tool_argument";
-import { Tool, ToolProvider } from "@/tools/tools";
+import type { Tool, ToolProvider } from "@/tools/tools";
 
 async function executeTool(request: ToolCallRequest): Promise<ToolCallResponse> {
     if (!validateToolArgument(request.tool.inputSchema, request.arguments)) {
@@ -29,16 +29,19 @@ export type AgentConversation = {
 
 export class Agent {
     name: string;
+    readonly model: Model;
     readonly skillRepository: SkillRepository[];
     readonly toolProviders: ToolProvider[];
     readonly description: string;
 
     constructor(name: string,
+        model: Model,
         skillRepository: SkillRepository[],
         toolProviders: ToolProvider[],
         description: string = "You are a helpful agent.") {
         // set the values
         this.name = name;
+        this.model = model;
         this.skillRepository = skillRepository;
         this.toolProviders = toolProviders;
         this.description = description;
@@ -53,13 +56,6 @@ export class Agent {
     */
     public async performTask(input: AgentConversation): Promise<AgentConversation> {
 
-        // get the models
-        const model = modelRegistry.getDefaultModel();
-
-        if (!model) {
-            throw new Error("No model registered in the model registry. Cannot perform task.");
-        }
-
         // get the tools
         const tools = (await Promise.all(
             this.toolProviders.map((provider) =>
@@ -72,7 +68,7 @@ export class Agent {
 
         do {
             // get the output from the model
-            const output = await model.execute({
+            const output = await this.model.execute({
                 history: messages,
                 systemPrompt: await this.constructSystemPrompt(),
                 tools

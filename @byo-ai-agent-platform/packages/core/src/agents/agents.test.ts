@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { Model, modelRegistry } from "@/models/models";
+import type { Model } from "@/models/models";
 import { Agent } from "./agents";
-import { ModelInteraction, ModelMessageInput, ModelMessageOutput } from "@/models/conversation";
-import { Tool, ToolProvider } from "@/tools/tools";
+import type { ModelInteraction, ModelMessageInput, ModelMessageOutput } from "@/models/conversation";
+import type { Tool, ToolProvider } from "@/tools/tools";
 import { logger } from "@/logger";
 
 const DUMMY_MESSAGE = "Hello, I am a dummy model!"
@@ -32,11 +32,8 @@ describe("Agents Unit Test", () => {
             }
         } satisfies Model;
 
-        // register the model as mock
-        modelRegistry.registerModel("default", model)
-
-        // new agent
-        const agent = new Agent("New Agent", [], [])
+        // new agent with model injected directly
+        const agent = new Agent("New Agent", model, [], [])
 
         // perform task
         const response = await agent.performTask({
@@ -84,11 +81,8 @@ describe("Agents Unit Test", () => {
             }
         } satisfies Model;
 
-        // register the model as mock
-        modelRegistry.registerModel("default", model)
-
-        // new agent
-        const agent = new Agent("New Agent", [], [])
+        // new agent with model injected directly
+        const agent = new Agent("New Agent", model, [], [])
 
         // perform task
         const response = await agent.performTask({
@@ -182,11 +176,8 @@ describe("Agents Unit Test", () => {
             }
         } satisfies Model;
 
-        // register the model as mock
-        modelRegistry.registerModel("default", model)
-
-        // new agent
-        const agent = new Agent("New Agent", [], [weatherToolProvider])
+        // new agent with model injected directly
+        const agent = new Agent("New Agent", model, [], [weatherToolProvider])
 
         // perform task
         const response = await agent.performTask({
