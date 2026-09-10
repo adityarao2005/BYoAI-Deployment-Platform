@@ -28,12 +28,14 @@ Run commands from the repository root:
 
 ## Individual Sub-project Execution
 
-- **TypeScript Harness (`agentic_harness/`)**:
+- **Agent Platform Monorepo (`@byo-ai-agent-platform/`)**:
 
   ```bash
-  cd agentic_harness
-  pnpm test        # Run vitest
-  pnpm build       # Run tsc build
+  cd @byo-ai-agent-platform
+  task lint         # Run Biome lint
+  task typecheck    # Run tsc --noEmit
+  task test         # Run bun test
+  task build        # Run bun build across workspaces
   ```
 
 - **Python Local Models (`local_models/`)**:

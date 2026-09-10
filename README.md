@@ -9,8 +9,8 @@ View design docs in [docs/design/](docs/design/).
 ### Local Models (`local_models/`)
 Python-based local LLM server setup utilizing `uv` and Docker Compose.
 
-### Agentic Harness (`agentic_harness/`)
-TypeScript-based harness with `pnpm` and `vitest`.
+### Agent Platform (`@byo-ai-agent-platform/`)
+TypeScript-based monorepo managed with `bun`, containing the `@byo-ai-agent-platform/core` library and `@byo-ai-agent-platform/agentic-harness` application.
 
 ### Computer Controller (`computer_controller/`)
 Golang-based daemon service providing remote execution primitives for AI Agents:

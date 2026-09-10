@@ -113,7 +113,7 @@ export class GeminiModel implements Model {
             }
         });
 
-        if (!response.candidates || response.candidates.length == 0) {
+        if (!response.candidates || response.candidates.length === 0) {
             throw new Error("No output received from Gemini model response.");
         }
 
@@ -122,7 +122,7 @@ export class GeminiModel implements Model {
 
         const parts = result.content?.parts
 
-        if (!parts || parts.length == 0) {
+        if (!parts || parts.length === 0) {
             throw new Error("No content parts received from Gemini model response.");
         }
 

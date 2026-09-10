@@ -1,0 +1,81 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+tasks:
+  clean:
+    desc: Clean build outputs and dependencies
+    cmds:
+      - rm -rf packages/*/dist apps/*/dist dist node_modules packages/*/node_modules apps/*/node_modules
+
+  install:
+    desc: Install dependencies using bun
+    run: once
+    sources:
+      - package.json
+      - 'packages/*/package.json'
+      - 'apps/*/package.json'
+      - bun.lock
+    cmds:
+      - bun install
+
+  typecheck:
+    desc: Run TypeScript typechecking across all monorepo packages
+    cmds:
+      - bun run typecheck
+    deps:
+      - install
+
+  lint:
+    desc: Run Biome linter across the monorepo
+    cmds:
+      - bun run lint
+    deps:
+      - install
+
+  lint:fix:
+    desc: Run Biome linter and automatically fix issues
+    cmds:
+      - bun run lint:fix
+    deps:
+      - install
+
+  test:
+    desc: Run tests across the monorepo using bun test
+    cmds:
+      - bun test
+    deps:
+      - install
+
+  unit_test:
+    desc: Run unit tests (alias for root Taskfile compatibility)
+    cmds:
+      - task: test
+
+  full_test:
+    desc: Integration tests for agentic harness
+    cmds:
+      - SELF_HOSTED_MODEL_BASE_URL=http://localhost:8080/v1 bun test
+    deps:
+      - install
+
+  build:
+    desc: Build all packages and apps in the monorepo
+    cmds:
+      - bun run build
+    deps:
+      - install
+
+  check:
+    desc: Run linting, typechecking, and tests
+    cmds:
+      - task: lint
+      - task: typecheck
+      - task: test
+
+  run:
+    desc: Run the agentic harness application
+    cmds:
+      - bun run --filter @byo-ai-agent-platform/agentic-harness start
+    deps:
+      - build

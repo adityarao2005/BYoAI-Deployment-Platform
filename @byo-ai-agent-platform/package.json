@@ -6,5 +6,18 @@
             "packages/*",
             "apps/*"
         ]
+    },
+    "scripts": {
+        "typecheck": "bun --filter '*' typecheck",
+        "lint": "biome lint .",
+        "lint:fix": "biome lint --write .",
+        "format": "biome format --write .",
+        "test": "bun test",
+        "build": "bun --filter '*' build",
+        "check": "bun run lint && bun run typecheck && bun run test"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "2.5.13",
+        "typescript": "7.0.2"
     }
 }

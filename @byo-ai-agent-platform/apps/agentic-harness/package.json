@@ -1,8 +1,13 @@
 {
   "name": "@byo-ai-agent-platform/agentic-harness",
-  "module": "index.ts",
+  "module": "src/index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "start": "bun run src/index.ts",
+    "build": "bun run src/build.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },

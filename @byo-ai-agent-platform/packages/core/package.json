@@ -2,6 +2,10 @@
   "name": "@byo-ai-agent-platform/core",
   "module": "src/index.ts",
   "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "bun build ./src/index.ts --outdir ./dist --target=bun"
+  },
   "devDependencies": {
     "@types/adm-zip": "^0.5.8",
     "@types/bun": "latest",
