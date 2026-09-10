@@ -1,5 +1,0 @@
-onlyBuiltDependencies:
-  - '@bufbuild/buf'
-  - '@google/genai'
-  - esbuild
-  - protobufjs

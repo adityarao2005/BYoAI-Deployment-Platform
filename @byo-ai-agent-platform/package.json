@@ -1,0 +1,10 @@
+{
+    "name": "@byo-ai-agent-platform",
+    "version": "0.1.0",
+    "workspaces": {
+        "packages": [
+            "packages/*",
+            "apps/*"
+        ]
+    }
+}

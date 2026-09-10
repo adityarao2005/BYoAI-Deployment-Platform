@@ -1,8 +1,8 @@
-import "./models";
+import "@byo-ai-agent-platform/core/models";
 import { createInterface } from "node:readline/promises";
-import { Agent, AgentConversation } from "./agents/agents";
-import { skillRepositoryRegistry } from "./skills";
-import { toolProviderRegistry } from "./tools/tools";
+import { Agent, AgentConversation } from "@byo-ai-agent-platform/core/agents/agents";
+import { skillRepositoryRegistry } from "@byo-ai-agent-platform/core/skills";
+import { toolProviderRegistry } from "@byo-ai-agent-platform/core/tools";
 
 const agent = new Agent("agent",
     skillRepositoryRegistry.getAllSkillRepositories(),
