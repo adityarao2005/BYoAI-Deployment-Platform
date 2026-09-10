@@ -15,8 +15,6 @@
     "typescript": "^7"
   },
   "dependencies": {
-    "@byo-ai-agent-platform/core": "workspace:*",
-    "yaml": "^2.9.0",
-    "zod": "^4.6.1"
+    "@byo-ai-agent-platform/core": "workspace:*"
   }
 }

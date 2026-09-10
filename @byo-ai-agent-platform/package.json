@@ -16,8 +16,13 @@
         "build": "bun --filter '*' build",
         "check": "bun run lint && bun run typecheck && bun run test"
     },
+    "dependencies": {
+        "yaml": "^2.9.0",
+        "zod": "^4.6.1"
+    },
     "devDependencies": {
         "@biomejs/biome": "2.5.13",
+        "@types/bun": "latest",
         "typescript": "7.0.2"
     }
 }
