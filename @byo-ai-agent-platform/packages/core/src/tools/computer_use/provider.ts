@@ -44,8 +44,11 @@ export class ComputerUseToolProvider implements ToolProvider {
 
             // graphical toools
         case ComputerType.GRAPHICAL:
-            tools = createHeadlessTools(payload.computer)
-            tools = [...createGraphicalTools(payload.computer)]
+            tools = [
+                ...createHeadlessTools(payload.computer),
+                ...createGraphicalTools(payload.computer),
+            ];
+            break;
         }
 
         // cache the values

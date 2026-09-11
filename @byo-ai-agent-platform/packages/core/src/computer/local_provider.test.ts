@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach, afterEach, spyOn } from "bun:test";
-import { ERR_GRAPHICS_UNSUPPORTED, LocalComputer, LocalComputerUseToolProvider, LocalGraphicalComputer } from "./local_provider";
+import { ERR_GRAPHICS_UNSUPPORTED, LocalComputer, LocalComputerProvider, LocalGraphicalComputer } from "./local_provider";
+import { ComputerType } from "@/gen/computer_api/v1/computer_pb";
 
 const vi = { spyOn, restoreAllMocks: () => { } };
 import * as os from "node:os";
@@ -134,7 +135,7 @@ describe("LocalGraphicalComputer", () => {
     });
 });
 
-describe("LocalComputerUseToolProvider", () => {
+describe("LocalComputerProvider", () => {
     const originalDisplay = process.env.DISPLAY;
     const originalWayland = process.env.WAYLAND_DISPLAY;
 
@@ -151,28 +152,45 @@ describe("LocalComputerUseToolProvider", () => {
         }
     });
 
-    it("creates 6 headless tools when GUI is disabled or unsupported", async () => {
+    it("creates HEADLESS computer when GUI is disabled or unsupported", async () => {
         delete process.env.DISPLAY;
         delete process.env.WAYLAND_DISPLAY;
 
-        const provider = new LocalComputerUseToolProvider({
+        const provider = new LocalComputerProvider({
             type: "local",
             enableGUIToolsIfAvailable: false,
         });
 
-        const tools = await provider.getAllTools();
-        expect(tools).toHaveLength(6);
+        const computerId = await provider.createComputer();
+        const payload = await provider.getComputer(computerId);
+
+        expect(payload.type).toBe(ComputerType.HEADLESS);
     });
 
-    it("creates 19 graphical tools when GUI is enabled and DISPLAY is set", async () => {
+    it("creates GRAPHICAL computer when GUI is enabled and DISPLAY is set", async () => {
         process.env.DISPLAY = ":0";
 
-        const provider = new LocalComputerUseToolProvider({
+        const provider = new LocalComputerProvider({
             type: "local",
             enableGUIToolsIfAvailable: true,
         });
 
-        const tools = await provider.getAllTools();
-        expect(tools).toHaveLength(19);
+        const computerId = await provider.createComputer();
+        const payload = await provider.getComputer(computerId);
+
+        expect(payload.type).toBe(ComputerType.GRAPHICAL);
+    });
+
+    it("deletes computer and returns error for nonexistent computerId", async () => {
+        const provider = new LocalComputerProvider({
+            type: "local",
+            enableGUIToolsIfAvailable: false,
+        });
+
+        const computerId = await provider.createComputer();
+        await provider.deleteComputer(computerId);
+
+        const payload = await provider.getComputer(computerId);
+        expect(payload.type).toBe(ComputerType.UNSPECIFIED);
     });
 });

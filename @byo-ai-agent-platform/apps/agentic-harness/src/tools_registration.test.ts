@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { toolProviderRegistry } from "@byo-ai-agent-platform/core/tools";
 import type { AgentConfig } from "@byo-ai-agent-platform/core/config";
+import { Agent } from "@byo-ai-agent-platform/core/agents";
 import { registerToolProviders } from "./bootstrap";
 
 describe("Tool Provider Registration", () => {
@@ -96,5 +97,64 @@ describe("Tool Provider Registration", () => {
         };
 
         expect(() => registerToolProviders(config)).toThrow("There should only be 1 computer use tool provider declared");
+    });
+
+    it("requires agent to have computerId when getting tools from registered local provider", async () => {
+        const config: AgentConfig = {
+            models: [],
+            skillRepositories: [],
+            toolProviders: [
+                {
+                    type: "computer",
+                    provider: {
+                        type: "local",
+                        enableGUIToolsIfAvailable: false,
+                    },
+                },
+            ],
+        };
+
+        registerToolProviders(config);
+
+        const providers = toolProviderRegistry.getAllToolProviders();
+        expect(providers).toHaveLength(1);
+
+        const computerProvider = providers[0];
+        const agent = new Agent("test-agent", { execute: async () => [] }, [], []);
+
+        await expect(computerProvider.getAllTools(agent)).rejects.toThrow(
+            "The Agent is not registered with this tool provider and thus the agent does not have a computer id"
+        );
+    });
+
+    it("requires agent to have computerId when getting tools from registered remote provider", async () => {
+        const config: AgentConfig = {
+            models: [],
+            skillRepositories: [],
+            toolProviders: [
+                {
+                    type: "computer",
+                    provider: {
+                        type: "remote",
+                        url: "http://localhost:8080",
+                        image: "ubuntu:latest",
+                        enableGUIToolsIfAvailable: true,
+                        envFile: "",
+                    },
+                },
+            ],
+        };
+
+        registerToolProviders(config);
+
+        const providers = toolProviderRegistry.getAllToolProviders();
+        expect(providers).toHaveLength(1);
+
+        const computerProvider = providers[0];
+        const agent = new Agent("test-agent", { execute: async () => [] }, [], []);
+
+        await expect(computerProvider.getAllTools(agent)).rejects.toThrow(
+            "The Agent is not registered with this tool provider and thus the agent does not have a computer id"
+        );
     });
 });

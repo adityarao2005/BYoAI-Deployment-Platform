@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
-import { RemoteComputerUseToolProvider } from "./remote_provider";
+import { RemoteComputerProvider } from "./remote_provider";
 import { ComputerType } from "@/gen/computer_api/v1/computer_pb";
 import type { RemoteComputerUseToolProviderConfig } from "@/config/tool_config";
-import { Agent } from "@/agents";
 
 const mockTransport = {};
 mock.module("@connectrpc/connect-node", () => ({
@@ -11,6 +10,7 @@ mock.module("@connectrpc/connect-node", () => ({
 
 const mockComputerProviderClient = {
     createComputer: mock(),
+    deleteComputer: mock(),
     getComputerInfo: mock(),
 };
 
@@ -63,7 +63,7 @@ const vi = {
     },
 };
 
-describe("RemoteComputerUseToolProvider", () => {
+describe("RemoteComputerProvider", () => {
     const remoteConfig: RemoteComputerUseToolProviderConfig = {
         type: "remote",
         url: "http://localhost:8080",
@@ -72,89 +72,48 @@ describe("RemoteComputerUseToolProvider", () => {
         envFile: "",
     };
 
-
-    const agent = new Agent("test-agent", {
-        execute: async (_) => {
-            // dummy model.. doesn't matter to us
-            return []
-        }
-    }, [], [])
-
     beforeEach(() => {
         vi.clearAllMocks();
     });
 
-    it("creates tools for HEADLESS computer type", async () => {
+    it("creates computer and returns sessionId", async () => {
         mockComputerProviderClient.createComputer.mockResolvedValueOnce({
             result: { case: "sessionId", value: "session-123" },
         });
-        mockComputerProviderClient.getComputerInfo.mockResolvedValueOnce({
-            type: ComputerType.HEADLESS,
-        });
 
-        const provider = new RemoteComputerUseToolProvider(remoteConfig);
-        const tools = await provider.getAllTools();
+        const provider = new RemoteComputerProvider(remoteConfig);
+        await provider.init();
+        const sessionId = await provider.createComputer();
 
-        expect(tools).toHaveLength(6);
-        const toolNames = tools.map((t) => t.name);
-        expect(toolNames).toEqual([
-            "execute",
-            "read_file",
-            "write_file",
-            "list_directory",
-            "get_user_id",
-            "get_group_id",
-        ]);
+        expect(sessionId).toBe("session-123");
     });
 
-    it("creates tools for GRAPHICAL computer type", async () => {
-        mockComputerProviderClient.createComputer.mockResolvedValueOnce({
-            result: { case: "sessionId", value: "session-456" },
-        });
-        mockComputerProviderClient.getComputerInfo.mockResolvedValueOnce({
-            type: ComputerType.GRAPHICAL,
-        });
-
-        const provider = new RemoteComputerUseToolProvider(remoteConfig);
-        const tools = await provider.getAllTools();
-
-        expect(tools).toHaveLength(19);
-        const toolNames = tools.map((t) => t.name);
-        expect(toolNames).toContain("capture_screenshot");
-        expect(toolNames).toContain("click");
-        expect(toolNames).toContain("type");
-        expect(toolNames).toContain("get_screen_size");
-    });
-
-    it("throws an error when createComputer fails", async () => {
+    it("throws an error when createComputer returns errorMessage", async () => {
         mockComputerProviderClient.createComputer.mockResolvedValueOnce({
             result: { case: "errorMessage", value: "Failed to allocate container" },
         });
 
-        const provider = new RemoteComputerUseToolProvider(remoteConfig);
-        await expect(provider.getAllTools()).rejects.toThrow("Failed to allocate container");
+        const provider = new RemoteComputerProvider(remoteConfig);
+        await provider.init();
+        await expect(provider.createComputer()).rejects.toThrow("Failed to allocate container");
     });
 
-    it("throws an error when getComputerInfo returns UNSPECIFIED", async () => {
-        mockComputerProviderClient.createComputer.mockResolvedValueOnce({
-            result: { case: "sessionId", value: "session-789" },
-        });
-        mockComputerProviderClient.getComputerInfo.mockResolvedValueOnce({
-            type: ComputerType.UNSPECIFIED,
-        });
+    it("deletes computer by sessionId", async () => {
+        mockComputerProviderClient.deleteComputer.mockResolvedValueOnce({});
 
-        const provider = new RemoteComputerUseToolProvider(remoteConfig);
-        await expect(provider.getAllTools()).rejects.toThrow("Computer does not exist");
+        const provider = new RemoteComputerProvider(remoteConfig);
+        await provider.init();
+        await provider.deleteComputer("session-123");
+
+        expect(mockComputerProviderClient.deleteComputer).toHaveBeenCalledWith({
+            sessionId: "session-123",
+        });
     });
 
-    it("executes basic computer tools correctly", async () => {
-        mockComputerProviderClient.createComputer.mockResolvedValueOnce({
-            result: { case: "sessionId", value: "session-123" },
-        });
+    it("returns HEADLESS computer payload and executes operations", async () => {
         mockComputerProviderClient.getComputerInfo.mockResolvedValueOnce({
             type: ComputerType.HEADLESS,
         });
-
         mockBasicComputerClient.execute.mockResolvedValueOnce({
             result: { case: "execResult", value: { exitCode: 0, stdout: "hello", stderr: "" } },
         });
@@ -165,7 +124,7 @@ describe("RemoteComputerUseToolProvider", () => {
             result: { case: "resp", value: {} },
         });
         mockBasicComputerClient.listDirectory.mockResolvedValueOnce({
-            result: { case: "response", value: { files: ["file1.txt", "file2.txt"] } },
+            result: { case: "response", value: { files: ["file1.txt"] } },
         });
         mockBasicComputerClient.getUserId.mockResolvedValueOnce({
             result: { case: "userId", value: "1000" },
@@ -174,51 +133,37 @@ describe("RemoteComputerUseToolProvider", () => {
             result: { case: "groupId", value: "1000" },
         });
 
-        const provider = new RemoteComputerUseToolProvider(remoteConfig);
+        const provider = new RemoteComputerProvider(remoteConfig);
+        await provider.init();
 
-        const execTool = await provider.getToolByName("execute");
-        expect(execTool).toBeDefined();
-        const execRes = await execTool!.execute({ command: "echo hello" }, agent);
-        expect(execRes).toEqual({ exitCode: 0, stdout: "hello", stderr: "" });
-        expect(mockBasicComputerClient.execute).toHaveBeenCalledWith({
-            sessionId: "session-123",
-            command: "echo hello",
-            cwd: undefined,
-            envVars: {},
-            stdin: undefined,
-            shell: undefined,
-            shellArgs: [],
-        });
+        const payload = await provider.getComputer("session-123");
+        expect(payload.type).toBe(ComputerType.HEADLESS);
 
-        const readFileTool = await provider.getToolByName("read_file");
-        const readRes = await readFileTool!.execute({ path: "/tmp/foo.txt" }, agent);
-        expect(readRes).toEqual({ content: new Uint8Array([1, 2, 3]) });
+        if (payload.type === ComputerType.HEADLESS) {
+            const execRes = await payload.computer.execute({ command: "echo hello" });
+            expect(execRes).toEqual({ exitCode: 0, stdout: "hello", stderr: "" });
 
-        const writeFileTool = await provider.getToolByName("write_file");
-        const writeRes = await writeFileTool!.execute({ path: "/tmp/foo.txt", content: "bar" }, agent);
-        expect(writeRes).toEqual({ success: true });
+            const readRes = await payload.computer.readFile({ path: "/tmp/foo.txt" });
+            expect(readRes).toEqual({ content: new Uint8Array([1, 2, 3]) });
 
-        const listDirTool = await provider.getToolByName("list_directory");
-        const listRes = await listDirTool!.execute({ path: "/tmp" }, agent);
-        expect(listRes).toEqual({ files: ["file1.txt", "file2.txt"] });
+            const writeRes = await payload.computer.writeFile({ path: "/tmp/foo.txt", content: new Uint8Array([97]) });
+            expect(writeRes).toEqual({ success: true });
 
-        const userIdTool = await provider.getToolByName("get_user_id");
-        const userRes = await userIdTool!.execute({}, agent);
-        expect(userRes).toEqual({ userId: "1000" });
+            const listRes = await payload.computer.listDirectory({ path: "/tmp" });
+            expect(listRes).toEqual({ files: ["file1.txt"] });
 
-        const groupIdTool = await provider.getToolByName("get_group_id");
-        const groupRes = await groupIdTool!.execute({}, agent);
-        expect(groupRes).toEqual({ groupId: "1000" });
+            const userRes = await payload.computer.getUserId();
+            expect(userRes).toEqual({ userId: "1000" });
+
+            const groupRes = await payload.computer.getGroupId();
+            expect(groupRes).toEqual({ groupId: "1000" });
+        }
     });
 
-    it("executes graphical computer tools correctly", async () => {
-        mockComputerProviderClient.createComputer.mockResolvedValueOnce({
-            result: { case: "sessionId", value: "session-456" },
-        });
+    it("returns GRAPHICAL computer payload and executes graphical operations", async () => {
         mockComputerProviderClient.getComputerInfo.mockResolvedValueOnce({
             type: ComputerType.GRAPHICAL,
         });
-
         mockGraphicalComputerClient.click.mockResolvedValueOnce({
             result: { case: "response", value: {} },
         });
@@ -229,33 +174,39 @@ describe("RemoteComputerUseToolProvider", () => {
             result: { case: "response", value: { width: 1920, height: 1080 } },
         });
 
-        const provider = new RemoteComputerUseToolProvider(remoteConfig);
+        const provider = new RemoteComputerProvider(remoteConfig);
+        await provider.init();
 
-        const clickTool = await provider.getToolByName("click");
-        const clickRes = await clickTool!.execute({ x: 100, y: 200, button: "left" }, agent);
-        expect(clickRes).toEqual({ success: true });
-        expect(mockGraphicalComputerClient.click).toHaveBeenCalledWith({
-            sessionId: "session-456",
-            x: 100,
-            y: 200,
-            button: "left",
+        const payload = await provider.getComputer("session-456");
+        expect(payload.type).toBe(ComputerType.GRAPHICAL);
+
+        if (payload.type === ComputerType.GRAPHICAL) {
+            const clickRes = await payload.computer.click({ x: 100, y: 200, button: "left" });
+            expect(clickRes).toEqual({ success: true });
+
+            const shotRes = await payload.computer.captureScreenshot();
+            expect(shotRes).toEqual({ imageData: new Uint8Array([255, 0, 0]) });
+
+            const sizeRes = await payload.computer.getScreenSize();
+            expect(sizeRes).toEqual({ width: 1920, height: 1080 });
+        }
+    });
+
+    it("returns error payload when getComputer returns UNSPECIFIED", async () => {
+        mockComputerProviderClient.getComputerInfo.mockResolvedValueOnce({
+            type: ComputerType.UNSPECIFIED,
         });
 
-        const screenshotTool = await provider.getToolByName("capture_screenshot");
-        const screenshotRes = await screenshotTool!.execute({}, agent);
-        expect(screenshotRes).toEqual({ imageData: new Uint8Array([255, 0, 0]) });
+        const provider = new RemoteComputerProvider(remoteConfig);
+        await provider.init();
 
-        const screenSizeTool = await provider.getToolByName("get_screen_size");
-        const screenSizeRes = await screenSizeTool!.execute({}, agent);
-        expect(screenSizeRes).toEqual({ width: 1920, height: 1080 });
+        const payload = await provider.getComputer("session-789");
+        expect(payload.type).toBe(ComputerType.UNSPECIFIED);
     });
 
     it("passes environment and resources to createComputer RPC", async () => {
         mockComputerProviderClient.createComputer.mockResolvedValueOnce({
             result: { case: "sessionId", value: "session-env-1" },
-        });
-        mockComputerProviderClient.getComputerInfo.mockResolvedValueOnce({
-            type: ComputerType.HEADLESS,
         });
 
         const configWithEnv: RemoteComputerUseToolProviderConfig = {
@@ -270,8 +221,9 @@ describe("RemoteComputerUseToolProvider", () => {
             },
         };
 
-        const provider = new RemoteComputerUseToolProvider(configWithEnv);
-        await provider.createTools();
+        const provider = new RemoteComputerProvider(configWithEnv);
+        await provider.init();
+        await provider.createComputer();
 
         expect(mockComputerProviderClient.createComputer).toHaveBeenCalledWith({
             image: "ubuntu:latest",
@@ -282,13 +234,6 @@ describe("RemoteComputerUseToolProvider", () => {
 
     it("configures apiKey interceptor and mTLS nodeOptions on transport with full chain fallback", async () => {
         const { createConnectTransport } = await import("@connectrpc/connect-node");
-
-        mockComputerProviderClient.createComputer.mockResolvedValueOnce({
-            result: { case: "sessionId", value: "session-sec-1" },
-        });
-        mockComputerProviderClient.getComputerInfo.mockResolvedValueOnce({
-            type: ComputerType.HEADLESS,
-        });
 
         const configWithSecurity: RemoteComputerUseToolProviderConfig = {
             ...remoteConfig,
@@ -301,8 +246,8 @@ describe("RemoteComputerUseToolProvider", () => {
             },
         };
 
-        const provider = new RemoteComputerUseToolProvider(configWithSecurity);
-        await provider.createTools();
+        const provider = new RemoteComputerProvider(configWithSecurity);
+        await provider.init();
 
         expect(createConnectTransport).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -321,13 +266,6 @@ describe("RemoteComputerUseToolProvider", () => {
     it("configures mTLS nodeOptions with distinct clientKey and caCert", async () => {
         const { createConnectTransport } = await import("@connectrpc/connect-node");
 
-        mockComputerProviderClient.createComputer.mockResolvedValueOnce({
-            result: { case: "sessionId", value: "session-sec-2" },
-        });
-        mockComputerProviderClient.getComputerInfo.mockResolvedValueOnce({
-            type: ComputerType.HEADLESS,
-        });
-
         const configWithFullMtls: RemoteComputerUseToolProviderConfig = {
             ...remoteConfig,
             security: {
@@ -339,8 +277,8 @@ describe("RemoteComputerUseToolProvider", () => {
             },
         };
 
-        const provider = new RemoteComputerUseToolProvider(configWithFullMtls);
-        await provider.createTools();
+        const provider = new RemoteComputerProvider(configWithFullMtls);
+        await provider.init();
 
         expect(createConnectTransport).toHaveBeenCalledWith(
             expect.objectContaining({
