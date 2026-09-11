@@ -1,3 +1,5 @@
+import type { ComputerType } from "@/gen/computer_api/v1/computer_pb";
+
 /**
  * Arguments for executing a command on the computer shell.
  */
@@ -227,4 +229,43 @@ export interface GraphicalComputer extends HeadlessComputer {
     setClipboard(args: SetClipboardArgs): Promise<{ success: boolean }>;
     /** Gets screen resolution dimensions. */
     getScreenSize(): Promise<ScreenSizeResult>;
+}
+
+export type ComputerPayload = {
+    type: ComputerType.GRAPHICAL,
+    computer: GraphicalComputer
+} | {
+    type: ComputerType.HEADLESS,
+    computer: HeadlessComputer
+} | {
+    type: ComputerType.UNSPECIFIED,
+    error: string
+}
+
+/**
+ * Provides the computer for you
+ */
+export interface ComputerProvider {
+
+    /**
+     * Initializes provider
+     */
+    init(): Promise<void>;
+
+    /**
+     * Creates a computer for you, returns an id for the computer
+     */
+    createComputer(): Promise<string>;
+
+    /**
+     * Receives a computer for you
+     * @param computerId computer id
+     */
+    getComputer(computerId: string): Promise<ComputerPayload>;
+
+    /**
+     * Deletes a computer for you
+     * @param computerId computer id
+     */
+    deleteComputer(computerId: string): Promise<void>
 }

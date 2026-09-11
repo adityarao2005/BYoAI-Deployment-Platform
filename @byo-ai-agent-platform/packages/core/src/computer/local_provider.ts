@@ -1,11 +1,11 @@
 import type { LocalComputerUseToolProviderConfig } from "@/config/tool_config";
 import type { Tool } from "@/tools";
-import { ComputerUseToolProvider } from "./base_provider";
-import { buildComputerTools } from "./builder";
 import type {
     CaptureScreenshotArgs,
     CaptureScreenshotResult,
     ClickArgs,
+    ComputerPayload,
+    ComputerProvider,
     DragArgs,
     ExecuteArgs,
     ExecutionResult,
@@ -22,10 +22,12 @@ import type {
     SetClipboardArgs,
     TypeArgs,
     WriteFileArgs,
-} from "./computer";
+} from "@/computer/computer";
 import { spawn } from "node:child_process";
 import * as fs from "node:fs/promises";
 import * as process from "node:process";
+import { randomUUID } from "node:crypto";
+import { ComputerType } from "@/gen/computer_api/v1/computer_pb";
 
 export const ERR_GRAPHICS_UNSUPPORTED = "graphical interface is not supported: DISPLAY environment variable is not set";
 
@@ -393,20 +395,40 @@ export class LocalGraphicalComputer extends LocalComputer implements GraphicalCo
 /**
  * LocalComputerUseToolProvider provides computer tools for local host execution.
  */
-export class LocalComputerUseToolProvider extends ComputerUseToolProvider {
+export class LocalComputerProvider implements ComputerProvider {
     config: LocalComputerUseToolProviderConfig;
+    computers: Map<string, ComputerPayload>
 
     constructor(config: LocalComputerUseToolProviderConfig) {
-        super();
         this.config = config;
+        this.computers = new Map()
     }
 
-    async createTools(): Promise<Tool[]> {
+    async init(): Promise<void> { }
+
+    // create computer
+    async createComputer(): Promise<string> {
+        // check if it has display or if its graphical or not
         const hasDisplay = Boolean(process.env.DISPLAY || process.env.WAYLAND_DISPLAY);
         const isGraphical = this.config.enableGUIToolsIfAvailable && hasDisplay;
 
-        const computer = isGraphical ? new LocalGraphicalComputer() : new LocalComputer();
+        // create random uuid and set into the map
+        const computerId = randomUUID()
+        this.computers.set(computerId, isGraphical ?
+            { computer: new LocalGraphicalComputer(), type: ComputerType.GRAPHICAL } :
+            { computer: new LocalComputer(), type: ComputerType.HEADLESS });
 
-        return buildComputerTools(computer, isGraphical);
+        // return
+        return computerId
+    }
+
+    // delete computer
+    async deleteComputer(computerId: string): Promise<void> {
+        this.computers.delete(computerId)
+    }
+
+    // get computer
+    async getComputer(computerId: string): Promise<ComputerPayload> {
+        return this.computers.get(computerId) ?? { error: `Computer with id ${computerId} not found`, type: ComputerType.UNSPECIFIED }
     }
 }

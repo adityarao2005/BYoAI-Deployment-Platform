@@ -1,35 +1,43 @@
-import type { ToolProviderConfig } from "@/config/tool_config";
-import type { ToolProvider } from "@/tools";
-import { LocalComputerUseToolProvider } from "./local_provider";
-import { RemoteComputerUseToolProvider } from "./remote_provider";
+import { LocalComputerProvider } from "@/computer/local_provider";
+import { RemoteComputerProvider } from "@/computer/remote_provider";
+import type { ComputerProvider } from "@/computer/computer";
+import type {
+    ComputerUseToolProviderConfig,
+    LocalComputerUseToolProviderConfig,
+    RemoteComputerUseToolProviderConfig,
+} from "@/config/tool_config";
+import { ComputerUseToolProvider } from "./provider";
 
-export function createComputerUseToolProvider(config: ToolProviderConfig[]): ToolProvider | null {
-    const providers = [];
+export type ComputerProviderConfig =
+    | ComputerUseToolProviderConfig
+    | LocalComputerUseToolProviderConfig
+    | RemoteComputerUseToolProviderConfig;
 
-    for (const providerConfig of config) {
-        if (providerConfig.type === "computer") {
-            providers.push(providerConfig);
-        }
-    }
+/**
+ * Creates a ComputerProvider instance (local or remote) based on the supplied configuration.
+ */
+export function createComputerProvider(
+    config: ComputerProviderConfig
+): ComputerProvider {
+    const providerConfig = "provider" in config ? config.provider : config;
 
-    if (providers.length === 0) return null;
-
-    if (providers.length > 1) {
-        throw new Error(
-            `There should only be 1 computer use tool provider declared, currently these are the declared computer tool providers: ${providers}`
-        );
-    }
-
-    const providerConfig = providers[0];
-    if (!providerConfig) return null;
-
-    const providerType = providerConfig.provider.type;
-    switch (providerType) {
+    switch (providerConfig.type) {
         case "local":
-            return new LocalComputerUseToolProvider(providerConfig.provider);
+            return new LocalComputerProvider(providerConfig);
         case "remote":
-            return new RemoteComputerUseToolProvider(providerConfig.provider);
+            return new RemoteComputerProvider(providerConfig);
         default:
-            throw new Error(`Unknown type provided: ${providerType}`);
+            throw new Error(`Unknown computer provider type: ${(providerConfig as any).type}`);
     }
+}
+
+/**
+ * Factory method to create a ComputerUseToolProvider by first instantiating
+ * the appropriate ComputerProvider and passing it into ComputerUseToolProvider.
+ */
+export function createComputerUseToolProvider(
+    config: ComputerProviderConfig
+): ComputerUseToolProvider {
+    const computerProvider = createComputerProvider(config);
+    return new ComputerUseToolProvider(computerProvider);
 }

@@ -1,6 +1,6 @@
 import type { Tool } from "@/tools";
 import { toolArray, toolBoolean, toolInteger, toolObject, toolString } from "@/tools/tool_argument";
-import type { GraphicalComputer, HeadlessComputer } from "./computer";
+import type { GraphicalComputer, HeadlessComputer } from "../../computer/computer";
 
 /**
  * Creates Tool objects for headless computer operations.
@@ -308,20 +308,4 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
             }
         }
     ];
-}
-
-/**
- * Builds an array of Tool objects for a computer instance.
- *
- * @param computer HeadlessComputer or GraphicalComputer instance
- * @param isGraphical Whether to include graphical GUI tools alongside headless tools
- * @returns Combined array of Tool objects
- */
-export function buildComputerTools(computer: HeadlessComputer, isGraphical: boolean = false): Tool[] {
-    const tools = createHeadlessTools(computer);
-    if (isGraphical) {
-        const graphicalTools = createGraphicalTools(computer as GraphicalComputer);
-        tools.push(...graphicalTools);
-    }
-    return tools;
 }

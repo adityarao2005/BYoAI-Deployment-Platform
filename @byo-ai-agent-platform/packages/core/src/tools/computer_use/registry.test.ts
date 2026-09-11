@@ -1,63 +1,70 @@
 import { describe, expect, it } from "bun:test";
-import { createComputerUseToolProvider } from "./registry";
-import { LocalComputerUseToolProvider } from "./local_provider";
-import { RemoteComputerUseToolProvider } from "./remote_provider";
+import { createComputerProvider, createComputerUseToolProvider } from "./registry";
+import { LocalComputerProvider } from "@/computer/local_provider";
+import { RemoteComputerProvider } from "@/computer/remote_provider";
+import { ComputerUseToolProvider } from "./provider";
+
+describe("createComputerProvider", () => {
+    it("creates local computer provider", () => {
+        const provider = createComputerProvider({
+            type: "local",
+            enableGUIToolsIfAvailable: false,
+        });
+        expect(provider).toBeInstanceOf(LocalComputerProvider);
+    });
+
+    it("creates remote computer provider", () => {
+        const provider = createComputerProvider({
+            type: "remote",
+            url: "http://localhost:8080",
+            image: "ubuntu:latest",
+            enableGUIToolsIfAvailable: true,
+            envFile: "",
+        });
+        expect(provider).toBeInstanceOf(RemoteComputerProvider);
+    });
+
+    it("creates computer provider from ComputerUseToolProviderConfig", () => {
+        const provider = createComputerProvider({
+            type: "computer",
+            provider: {
+                type: "local",
+                enableGUIToolsIfAvailable: false,
+            },
+        });
+        expect(provider).toBeInstanceOf(LocalComputerProvider);
+    });
+
+    it("throws on unknown computer provider type", () => {
+        expect(() =>
+            createComputerProvider({ type: "unknown" } as any)
+        ).toThrow("Unknown computer provider type: unknown");
+    });
+});
 
 describe("createComputerUseToolProvider", () => {
-    it("returns null if no computer tool provider is configured", () => {
-        const provider = createComputerUseToolProvider([]);
-        expect(provider).toBeNull();
-    });
-
-    it("creates remote computer tool provider", () => {
-        const provider = createComputerUseToolProvider([
-            {
-                type: "computer",
-                provider: {
-                    type: "remote",
-                    url: "http://localhost:8080",
-                    image: "ubuntu:latest",
-                    enableGUIToolsIfAvailable: true,
-                    envFile: "",
-                },
+    it("creates ComputerUseToolProvider wrapping a local computer provider", () => {
+        const toolProvider = createComputerUseToolProvider({
+            type: "computer",
+            provider: {
+                type: "local",
+                enableGUIToolsIfAvailable: false,
             },
-        ]);
-
-        expect(provider).toBeInstanceOf(RemoteComputerUseToolProvider);
+        });
+        expect(toolProvider).toBeInstanceOf(ComputerUseToolProvider);
     });
 
-    it("creates local computer tool provider", () => {
-        const provider = createComputerUseToolProvider([
-            {
-                type: "computer",
-                provider: {
-                    type: "local",
-                    enableGUIToolsIfAvailable: false,
-                },
+    it("creates ComputerUseToolProvider wrapping a remote computer provider", () => {
+        const toolProvider = createComputerUseToolProvider({
+            type: "computer",
+            provider: {
+                type: "remote",
+                url: "http://localhost:8080",
+                image: "ubuntu:latest",
+                enableGUIToolsIfAvailable: true,
+                envFile: "",
             },
-        ]);
-
-        expect(provider).toBeInstanceOf(LocalComputerUseToolProvider);
-    });
-
-    it("throws if more than 1 computer tool provider is provided", () => {
-        expect(() =>
-            createComputerUseToolProvider([
-                {
-                    type: "computer",
-                    provider: { type: "local", enableGUIToolsIfAvailable: false },
-                },
-                {
-                    type: "computer",
-                    provider: {
-                        type: "remote",
-                        url: "http://localhost",
-                        image: "ubuntu",
-                        enableGUIToolsIfAvailable: true,
-                        envFile: "",
-                    },
-                },
-            ])
-        ).toThrow("There should only be 1 computer use tool provider declared");
+        });
+        expect(toolProvider).toBeInstanceOf(ComputerUseToolProvider);
     });
 });

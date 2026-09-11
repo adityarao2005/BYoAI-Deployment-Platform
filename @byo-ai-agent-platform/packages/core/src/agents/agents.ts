@@ -18,12 +18,14 @@ export class Agent {
     readonly skillRepository: SkillRepository[];
     readonly toolProviders: ToolProvider[];
     readonly description: string;
+    readonly computerId?: string
 
     constructor(name: string,
         model: Model,
         skillRepository: SkillRepository[],
         toolProviders: ToolProvider[],
-        description: string = "You are a helpful agent.") {
+        description: string = "You are a helpful agent.",
+        computerId?: string) {
         // set the values
         this.name = name;
         this.model = model;
@@ -32,6 +34,8 @@ export class Agent {
         this.description = description;
         // add the skill tool provider to the agent's tool providers
         this.toolProviders.push(loadSkillToolProvider(this));
+        // add the computer id
+        this.computerId = computerId
     }
 
     /*

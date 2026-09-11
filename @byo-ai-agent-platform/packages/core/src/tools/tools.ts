@@ -28,12 +28,12 @@ export interface ToolProvider {
      * Get the tool by name. Returns null if the tool is not found.
      * @param name name of thet tool
      */
-    getToolByName(name: string): Promise<Tool | null>;
+    getToolByName(name: string, agent: Agent): Promise<Tool | null>;
 
     /**
      * Get all the tools available in the provider.
      */
-    getAllTools(): Promise<Tool[]>;
+    getAllTools(agent: Agent): Promise<Tool[]>;
 }
 
 

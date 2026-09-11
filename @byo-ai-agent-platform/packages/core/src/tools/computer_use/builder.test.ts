@@ -1,10 +1,19 @@
 import { describe, expect, it, mock } from "bun:test";
-import { buildComputerTools, createGraphicalTools, createHeadlessTools } from "./builder";
-import type { GraphicalComputer, HeadlessComputer } from "./computer";
+import { createGraphicalTools, createHeadlessTools } from "./builder";
+import type { GraphicalComputer, HeadlessComputer } from "../../computer/computer";
+import { Agent } from "@/agents";
 
 const vi = { fn: mock };
 
 describe("computer tool builder", () => {
+
+    const agent = new Agent("test-agent", {
+        execute: async (_) => {
+            // dummy model.. doesn't matter to us
+            return []
+        }
+    }, [], [])
+
     const mockHeadlessComputer: HeadlessComputer = {
         execute: vi.fn().mockResolvedValue({ exitCode: 0, stdout: "output", stderr: "" }),
         readFile: vi.fn().mockResolvedValue({ content: new Uint8Array([65, 66]) }),
@@ -36,7 +45,7 @@ describe("computer tool builder", () => {
         expect(tools).toHaveLength(6);
 
         const execTool = tools.find((t) => t.name === "execute")!;
-        const res = await execTool.execute({ command: "ls" });
+        const res = await execTool.execute({ command: "ls" }, agent);
         expect(res).toEqual({ exitCode: 0, stdout: "output", stderr: "" });
         expect(mockHeadlessComputer.execute).toHaveBeenCalledWith({
             command: "ls",
@@ -53,16 +62,9 @@ describe("computer tool builder", () => {
         expect(tools).toHaveLength(13);
 
         const clickTool = tools.find((t) => t.name === "click")!;
-        const clickRes = await clickTool.execute({ x: 10, y: 20 });
+        const clickRes = await clickTool.execute({ x: 10, y: 20 }, agent);
         expect(clickRes).toEqual({ success: true });
         expect(mockGraphicalComputer.click).toHaveBeenCalledWith({ x: 10, y: 20, button: undefined });
     });
 
-    it("buildComputerTools combines headless and graphical tools when isGraphical is true", () => {
-        const headlessTools = buildComputerTools(mockHeadlessComputer, false);
-        expect(headlessTools).toHaveLength(6);
-
-        const graphicalTools = buildComputerTools(mockGraphicalComputer, true);
-        expect(graphicalTools).toHaveLength(19);
-    });
 });

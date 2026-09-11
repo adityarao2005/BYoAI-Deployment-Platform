@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { parse } from 'yaml'
-import { AgentConfigSchema, type AgentConfig } from '@byo-ai-agent-platform/core/config'
+import { AgentConfigSchema, type AgentConfig, type ComputerUseToolProviderConfig, type ToolProviderConfig } from '@byo-ai-agent-platform/core/config'
 import { Agent } from '@byo-ai-agent-platform/core/agents'
 import { OpenAIModel, GeminiModel, AnthropicModel, SelfHostedModel, modelRegistry } from '@byo-ai-agent-platform/core/models'
 import { ZipSkillRepository, GitSkillRepository, skillRepositoryRegistry } from '@byo-ai-agent-platform/core/skills'
@@ -123,6 +123,23 @@ export function registerSkillRepositories(config: AgentConfig): void {
 
 // ─── Tool Provider Registration ─────────────────────────────────────
 
+function registerComputerToolProvider(toolProviders: ToolProviderConfig[]): void {
+    const computerConfigs = toolProviders.filter(
+        (p): p is ComputerUseToolProviderConfig => p.type === "computer"
+    );
+
+    if (computerConfigs.length > 1) {
+        throw new Error(
+            `There should only be 1 computer use tool provider declared, currently these are the declared computer tool providers: ${computerConfigs}`
+        );
+    }
+
+    if (computerConfigs.length === 1 && computerConfigs[0]) {
+        const computerToolProvider = createComputerUseToolProvider(computerConfigs[0]);
+        toolProviderRegistry.registerToolProvider(computerToolProvider);
+    }
+}
+
 export function registerToolProviders(config: AgentConfig): void {
     for (const providerConfig of config.toolProviders) {
         if (providerConfig.type === "openapi") {
@@ -132,10 +149,7 @@ export function registerToolProviders(config: AgentConfig): void {
     }
 
     // Computer use tool provider (at most one allowed)
-    const computerProvider = createComputerUseToolProvider(config.toolProviders);
-    if (computerProvider) {
-        toolProviderRegistry.registerToolProvider(computerProvider);
-    }
+    registerComputerToolProvider(config.toolProviders);
 }
 
 // ─── Bootstrap ──────────────────────────────────────────────────────

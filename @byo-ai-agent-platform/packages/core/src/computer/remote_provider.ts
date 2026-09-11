@@ -1,20 +1,20 @@
 import type { RemoteComputerUseToolProviderConfig } from "@/config/tool_config";
-import type { Tool } from "@/tools";
 import { type ConnectTransportOptions, createConnectTransport } from "@connectrpc/connect-node";
 import { type Client, createClient, type Interceptor, type Transport } from "@connectrpc/connect";
 import { BasicComputerService, ComputerProviderService, ComputerType, GraphicalComputerService } from "@/gen/computer_api/v1/computer_pb";
-import { ComputerUseToolProvider } from "./base_provider";
-import { buildComputerTools } from "./builder";
 import dotenv from "dotenv";
 import fs from "node:fs";
 import type {
     CaptureScreenshotArgs,
     CaptureScreenshotResult,
     ClickArgs,
+    ComputerPayload,
+    ComputerProvider,
     DragArgs,
     ExecuteArgs,
     ExecutionResult,
     GraphicalComputer,
+    HeadlessComputer,
     KeyArgs,
     ListDirectoryArgs,
     ListDirectoryResult,
@@ -29,11 +29,11 @@ import type {
 } from "./computer";
 import type { SecureClientSessionOptions } from "node:http2";
 
-export class ConnectRemoteComputer implements GraphicalComputer {
+// headless computer over connectrpc
+export class ConnectHeadlessRemoteComputer implements HeadlessComputer {
     constructor(
-        private computerId: string,
-        private basicService: Client<typeof BasicComputerService>,
-        private graphicalService?: Client<typeof GraphicalComputerService>
+        protected computerId: string,
+        private basicService: Client<typeof BasicComputerService>
     ) { }
 
     async execute(args: ExecuteArgs): Promise<ExecutionResult> {
@@ -133,6 +133,18 @@ export class ConnectRemoteComputer implements GraphicalComputer {
             default:
                 throw new Error("Unexpected get_group_id response");
         }
+    }
+}
+
+
+// graphical computer over connectrpc
+export class ConnectGraphicalRemoteComputer extends ConnectHeadlessRemoteComputer implements GraphicalComputer {
+    constructor(
+        computerId: string,
+        basicService: Client<typeof BasicComputerService>,
+        private graphicalService: Client<typeof GraphicalComputerService>
+    ) {
+        super(computerId, basicService);
     }
 
     async captureScreenshot(args: CaptureScreenshotArgs = {}): Promise<CaptureScreenshotResult> {
@@ -470,71 +482,105 @@ export function buildNetworkRulesConfig(
     };
 }
 
-export class RemoteComputerUseToolProvider extends ComputerUseToolProvider {
+export class RemoteComputerProvider implements ComputerProvider {
+    // configuration for the transport
     transport: Transport | null = null;
-    config: RemoteComputerUseToolProviderConfig;
     computerProviderService: Client<typeof ComputerProviderService> | null = null;
     basicComputerService: Client<typeof BasicComputerService> | null = null;
     graphicalComputerService: Client<typeof GraphicalComputerService> | null = null;
-    computerId: string = "";
 
-    constructor(config: RemoteComputerUseToolProviderConfig) {
-        super();
-        this.config = config;
+    // configuration for the computer provider
+    config: RemoteComputerUseToolProviderConfig;
+    environment?: Record<string, string>
+    resources?: {
+        cpu?: string,
+        memory?: string
+    }
+    networkRules?: {
+        allowedHosts: string[];
+        deniedHosts: string[];
     }
 
-    async createTools(): Promise<Tool[]> {
+
+    constructor(config: RemoteComputerUseToolProviderConfig) {
+        this.config = config;
+
+    }
+
+    // initialize the tool provider
+    async init() {
         const transportOptions = await buildTransportOptions(this.config);
         this.transport = createConnectTransport(transportOptions);
 
         this.computerProviderService = createClient(ComputerProviderService, this.transport);
         this.basicComputerService = createClient(BasicComputerService, this.transport);
+        this.graphicalComputerService = createClient(GraphicalComputerService, this.transport);
 
-        const environment = await resolveEnvironmentConfig(this.config);
-        const resources = buildResourceConfig(this.config);
-        const networkRules = buildNetworkRulesConfig(this.config);
+        this.environment = await resolveEnvironmentConfig(this.config);
+        this.resources = buildResourceConfig(this.config);
+        this.networkRules = buildNetworkRulesConfig(this.config);
+    }
 
-        // create the computer
-        const createResponse = await this.computerProviderService.createComputer({
+    // create the computers
+    async createComputer(): Promise<string> {
+
+        const createResponse = await this.computerProviderService?.createComputer({
             image: this.config.image,
-            resources,
-            environment,
-            networkRules,
+            resources: this.resources,
+            environment: this.environment,
+            networkRules: this.networkRules,
         });
 
-        switch (createResponse.result.case) {
+        switch (createResponse?.result.case) {
+            case "sessionId":
+                return createResponse.result.value;
+
             case "errorMessage":
                 throw new Error(createResponse.result.value);
-            case "sessionId":
-                this.computerId = createResponse.result.value;
-                break;
+            default:
+                throw new Error("Computer Provider was not initialized");
         }
+    }
 
-        // get information about the computer
-        const infoResponse = await this.computerProviderService.getComputerInfo({
-            sessionId: this.computerId,
-        });
+    // delete the computer
+    async deleteComputer(computerId: string): Promise<void> {
+        await this.computerProviderService?.deleteComputer({
+            sessionId: computerId
+        })
+    }
 
-        let isGraphical = false;
-        switch (infoResponse.type) {
-            case ComputerType.UNSPECIFIED:
-                throw new Error("Computer does not exist.. this was not supposed to happen");
+    // get the computer info
+    async getComputer(computerId: string): Promise<ComputerPayload> {
+
+        if (!this.basicComputerService || !this.graphicalComputerService || !this.computerProviderService)
+            return {
+                error: "Computer Provider not initialized",
+                type: ComputerType.UNSPECIFIED
+            }
+
+        const payload = await this.computerProviderService?.getComputerInfo({
+            sessionId: computerId
+        })
+
+
+        switch (payload?.type) {
             case ComputerType.GRAPHICAL:
-                isGraphical = true;
-                this.graphicalComputerService = createClient(GraphicalComputerService, this.transport);
-                break;
+                return {
+                    type: ComputerType.GRAPHICAL,
+                    computer: new ConnectGraphicalRemoteComputer(computerId, this.basicComputerService, this.graphicalComputerService)
+                }
             case ComputerType.HEADLESS:
-                isGraphical = false;
-                break;
+                return {
+                    type: ComputerType.HEADLESS,
+                    computer: new ConnectHeadlessRemoteComputer(computerId, this.basicComputerService)
+                }
+            case ComputerType.UNSPECIFIED:
+                return {
+                    error: "Something went wrong on the remote computer provider's side when attempting to get the computer",
+                    type: ComputerType.UNSPECIFIED
+                }
         }
-
-        const remoteComputer = new ConnectRemoteComputer(
-            this.computerId,
-            this.basicComputerService,
-            this.graphicalComputerService || undefined
-        );
-
-        return buildComputerTools(remoteComputer, isGraphical);
     }
 }
+
 
