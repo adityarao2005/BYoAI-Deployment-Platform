@@ -1,50 +1,45 @@
 import { bootstrap } from "./bootstrap";
 import { createInterface } from "node:readline/promises";
-import type { AgentConversation } from "@byo-ai-agent-platform/core/agents";
 
-const agent = await bootstrap();
+const { agent, communicator } = await bootstrap();
 
-let conversation: AgentConversation = {
-    history: [],
-}
+// Subscribe to communicator events to stream agent lifecycle to stdout
+communicator.on("agent:message", ({ content }) => {
+    console.log(`assistant: ${content}`);
+});
+
+communicator.on("tool:call", ({ tool, args }) => {
+    console.log(`Tool call: ${tool} with arguments: ${JSON.stringify(args)}`);
+});
+
+communicator.on("tool:complete", ({ tool, result }) => {
+    console.log(`Tool response: ${tool} with result: ${JSON.stringify(result)}`);
+});
 
 const rl = createInterface({
     input: process.stdin,
-    output: process.stdout
-})
+    output: process.stdout,
+});
 
 while (true) {
+    const input = await rl.question("\nEnter a message for the agent (or 'exit' to quit): ");
 
-    const input = await rl.question("Enter a message for the agent (or 'exit' to quit): ")
-
-    if (input.toLowerCase() === "exit") {
-        console.log("Exiting...")
-        process.exit(0)
+    if (input.trim().toLowerCase() === "exit") {
+        console.log("Exiting...");
+        process.exit(0);
     }
 
-    console.log("<<Processing>>...")
+    console.log("<<Processing>>...");
 
-    conversation.history.push({
-        role: "user",
-        type: "message",
-        content: input
-    })
-
-    const lengthBefore = conversation.history.length
-
-    const result = await agent.performTask(conversation)
-
-    const diff = result.history.slice(lengthBefore)
-
-    for (const msg of diff) {
-        if (msg.type === "message") {
-            console.log(`${msg.role}: ${msg.content}`)
-        } else if (msg.type === "tool_call") {
-            console.log(`Tool call: ${msg.tool.name} with arguments: ${JSON.stringify(msg.arguments)}`)
-        } else if (msg.type === "tool_response") {
-            console.log(`Tool response: ${msg.tool.name} with result: ${JSON.stringify(msg.result)}`)
-        }
-    }
-
-    conversation = result
+    // Wait until the agent finishes processing this turn
+    await new Promise<void>((resolve) => {
+        const unsubscribe = communicator.on("agent:complete", () => {
+            unsubscribe();
+            resolve();
+        });
+        communicator.emit("user:message", {
+            agent,
+            content: input,
+        });
+    });
 }

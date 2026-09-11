@@ -1,72 +1,18 @@
 import { describe, expect, it } from "bun:test";
+import fs from "node:fs/promises";
+import path from "node:path";
+import os from "node:os";
 import type { Model } from "@/models/models";
 import {
     AgentMemory,
     AgentManager,
     type Agent,
-    type AgentCommunicator,
-    type AgentEventMap,
-    type AgentEventHandler,
-    type AgentMemoryManager,
     type AgentConfiguration,
 } from "./agents";
+import { InMemoryAgentCommunicator } from "./communication";
+import { InMemoryAgentMemoryManager, JsonFileAgentMemoryManager } from "./memory";
 import type { ModelInteraction, ModelMessageOutput } from "@/models/conversation";
 import type { Tool, ToolProvider } from "@/tools/tools";
-
-class InMemoryCommunicator implements AgentCommunicator {
-    public listeners: Map<keyof AgentEventMap, Set<AgentEventHandler<any>>> = new Map();
-    public emitted: Array<{ event: keyof AgentEventMap; payload: any }> = [];
-
-    async emit<K extends keyof AgentEventMap>(event: K, payload: AgentEventMap[K]): Promise<void> {
-        this.emitted.push({ event, payload });
-        const handlers = this.listeners.get(event);
-        if (handlers) {
-            for (const handler of handlers) {
-                await handler(payload);
-            }
-        }
-    }
-
-    on<K extends keyof AgentEventMap>(event: K, handler: AgentEventHandler<AgentEventMap[K]>): () => void {
-        if (!this.listeners.has(event)) {
-            this.listeners.set(event, new Set());
-        }
-        this.listeners.get(event)!.add(handler);
-        return () => {
-            this.listeners.get(event)?.delete(handler);
-        };
-    }
-}
-
-class InMemoryMemoryManager implements AgentMemoryManager {
-    private memories: Map<string, AgentMemory> = new Map();
-    private counter = 0;
-
-    async createAgentMemoryEntry(): Promise<string> {
-        const id = `agent-${++this.counter}`;
-        this.memories.set(id, new AgentMemory());
-        return id;
-    }
-
-    async getAgentMemory(agent: Agent): Promise<AgentMemory> {
-        let mem = this.memories.get(agent.id);
-        if (!mem) {
-            mem = new AgentMemory();
-            this.memories.set(agent.id, mem);
-        }
-        return mem;
-    }
-
-    async addTranscriptEntries(agent: Agent, conversationEntries: ModelInteraction[]): Promise<void> {
-        const mem = await this.getAgentMemory(agent);
-        mem.transcript.push(...conversationEntries);
-    }
-
-    async setComputerId(agent: Agent, computerId: string): Promise<void> {
-        const mem = await this.getAgentMemory(agent);
-        mem.computerId = computerId;
-    }
-}
 
 describe("AgentMemory", () => {
     it("correctly computes pending tool calls and handles resolution", () => {
@@ -123,8 +69,8 @@ describe("AgentMemory", () => {
 
 describe("AgentManager Integration", () => {
     it("creates an agent and handles basic message turn via communicator events", async () => {
-        const communicator = new InMemoryCommunicator();
-        const memoryManager = new InMemoryMemoryManager();
+        const communicator = new InMemoryAgentCommunicator();
+        const memoryManager = new InMemoryAgentMemoryManager();
 
         const model: Model = {
             async execute(_input) {
@@ -176,8 +122,8 @@ describe("AgentManager Integration", () => {
     });
 
     it("handles tool calling loop and completes when all tool calls resolve", async () => {
-        const communicator = new InMemoryCommunicator();
-        const memoryManager = new InMemoryMemoryManager();
+        const communicator = new InMemoryAgentCommunicator();
+        const memoryManager = new InMemoryAgentMemoryManager();
 
         let toolExecuted = false;
 
@@ -272,8 +218,8 @@ describe("AgentManager Integration", () => {
     });
 
     it("safely handles tool execution errors without crashing the manager", async () => {
-        const communicator = new InMemoryCommunicator();
-        const memoryManager = new InMemoryMemoryManager();
+        const communicator = new InMemoryAgentCommunicator();
+        const memoryManager = new InMemoryAgentMemoryManager();
 
         const failingTool: Tool = {
             name: "fail_tool",
@@ -347,5 +293,39 @@ describe("AgentManager Integration", () => {
         expect(agentCompleteEvent).toBeDefined();
 
         manager.destroy();
+    });
+});
+
+describe("JsonFileAgentMemoryManager", () => {
+    it("persists memory records to JSON files and retrieves them across instances", async () => {
+        const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "agent-memory-test-"));
+
+        try {
+            const memoryManager1 = new JsonFileAgentMemoryManager(tempDir);
+            const agentId = await memoryManager1.createAgentMemoryEntry();
+            const agent = { id: agentId };
+
+            await memoryManager1.setComputerId(agent, "comp-999");
+            await memoryManager1.addTranscriptEntries(agent, [
+                {
+                    role: "user",
+                    type: "message",
+                    content: "Hello persistent memory!",
+                },
+            ]);
+
+            // Create a new memory manager instance pointing to the same directory
+            const memoryManager2 = new JsonFileAgentMemoryManager(tempDir);
+            const retrievedMemory = await memoryManager2.getAgentMemory(agent);
+
+            expect(retrievedMemory.computerId).toBe("comp-999");
+            expect(retrievedMemory.transcript).toHaveLength(1);
+            expect(retrievedMemory.transcript[0]).toMatchObject({
+                role: "user",
+                content: "Hello persistent memory!",
+            });
+        } finally {
+            await fs.rm(tempDir, { recursive: true, force: true });
+        }
     });
 });

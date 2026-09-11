@@ -2,7 +2,12 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { parse } from 'yaml'
 import { AgentConfigSchema, type AgentConfig, type ComputerUseToolProviderConfig, type ToolProviderConfig } from '@byo-ai-agent-platform/core/config'
-import { Agent } from '@byo-ai-agent-platform/core/agents'
+import {
+    AgentManager,
+    InMemoryAgentCommunicator,
+    InMemoryAgentMemoryManager,
+    type Agent,
+} from '@byo-ai-agent-platform/core/agents'
 import { OpenAIModel, GeminiModel, AnthropicModel, SelfHostedModel, modelRegistry } from '@byo-ai-agent-platform/core/models'
 import { ZipSkillRepository, GitSkillRepository, skillRepositoryRegistry } from '@byo-ai-agent-platform/core/skills'
 import { ComputerUseToolProvider, OpenAPIToolProvider, toolProviderRegistry } from '@byo-ai-agent-platform/core/tools'
@@ -156,7 +161,13 @@ export function registerToolProviders(config: AgentConfig): void {
 
 // ─── Bootstrap ──────────────────────────────────────────────────────
 
-export async function bootstrap(): Promise<Agent> {
+export interface BootstrappedAgent {
+    manager: AgentManager;
+    agent: Agent;
+    communicator: InMemoryAgentCommunicator;
+}
+
+export async function bootstrap(): Promise<BootstrappedAgent> {
     const config = await loadConfigIfAvailable();
 
     if (config) {
@@ -170,10 +181,26 @@ export async function bootstrap(): Promise<Agent> {
         throw new Error("No model registered in the model registry. Cannot create agent.");
     }
 
-    return new Agent(
-        "agent",
-        defaultModel,
-        skillRepositoryRegistry.getAllSkillRepositories(),
-        toolProviderRegistry.getAllToolProviders()
-    );
+    const communicator = new InMemoryAgentCommunicator();
+    const memoryManager = new InMemoryAgentMemoryManager();
+
+    const manager = new AgentManager({
+        name: "agent",
+        description: "You are a helpful assistant.",
+        model: defaultModel,
+        skillRepository: skillRepositoryRegistry.getAllSkillRepositories(),
+        toolProviders: toolProviderRegistry.getAllToolProviders(),
+        memoryManager,
+        communicator,
+        computerProvider: computerProvider ?? undefined,
+    });
+
+    await manager.init();
+    const agent = await manager.createAgent();
+
+    return {
+        manager,
+        agent,
+        communicator,
+    };
 }

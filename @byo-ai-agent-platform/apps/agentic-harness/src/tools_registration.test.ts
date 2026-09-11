@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { toolProviderRegistry } from "@byo-ai-agent-platform/core/tools";
 import type { AgentConfig } from "@byo-ai-agent-platform/core/config";
-import { Agent } from "@byo-ai-agent-platform/core/agents";
+import type { Agent } from "@byo-ai-agent-platform/core/agents";
 import { registerToolProviders } from "./bootstrap";
 
 describe("Tool Provider Registration", () => {
@@ -120,7 +120,7 @@ describe("Tool Provider Registration", () => {
         expect(providers).toHaveLength(1);
 
         const computerProvider = providers[0];
-        const agent = new Agent("test-agent", { execute: async () => [] }, [], []);
+        const agent: Agent = { id: "test-agent", name: "test-agent" };
 
         await expect(computerProvider?.getAllTools(agent)).rejects.toThrow(
             "The Agent is not registered with this tool provider and thus the agent does not have a computer id"
@@ -151,7 +151,7 @@ describe("Tool Provider Registration", () => {
         expect(providers).toHaveLength(1);
 
         const computerProvider = providers[0];
-        const agent = new Agent("test-agent", { execute: async () => [] }, [], []);
+        const agent: Agent = { id: "test-agent", name: "test-agent" };
 
         await expect(computerProvider?.getAllTools(agent)).rejects.toThrow(
             "The Agent is not registered with this tool provider and thus the agent does not have a computer id"
