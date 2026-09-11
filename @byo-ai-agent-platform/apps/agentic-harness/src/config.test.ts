@@ -1,8 +1,9 @@
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
-import { loadConfig } from "./config";
+import { afterEach, describe, expect, it } from "bun:test";
+import { stringify } from "yaml";
+import { loadConfig } from "./bootstrap";
 
 describe("loadConfig", () => {
     let tempConfigDir: string | undefined;
@@ -46,5 +47,33 @@ describe("loadConfig", () => {
         });
         expect(config.skillRepositories).toEqual([]);
         expect(config.toolProviders).toEqual([]);
+    });
+
+    it("parses YAML content from an agent.yaml file", async () => {
+        tempConfigDir = await mkdtemp(join(tmpdir(), "agent-config-yaml-"));
+        const configPath = join(tempConfigDir, "agent.yaml");
+
+        await writeFile(
+            configPath,
+            stringify({
+                models: [
+                    {
+                        name: "claude",
+                        brand: "anthropic",
+                        properties: {
+                            apiKey: "sk-ant-123",
+                            maxTokens: 4096,
+                        },
+                    },
+                ],
+            }),
+            "utf8"
+        );
+
+        const config = await loadConfig(configPath);
+
+        expect(config.models).toHaveLength(1);
+        expect(config.models[0]?.name).toBe("claude");
+        expect(config.models[0]?.brand).toBe("anthropic");
     });
 });

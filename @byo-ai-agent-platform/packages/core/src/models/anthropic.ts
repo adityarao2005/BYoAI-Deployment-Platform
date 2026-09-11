@@ -1,7 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk";
-import { Model, modelRegistry } from "./models";
-import { logger } from "@/logger";
-import { ModelInput, ModelInteraction, ModelMessageOutput } from "./conversation";
+import type { Model } from "./models";
+import { logger } from "../logger";
+import type { ModelInput, ModelInteraction, ModelMessageOutput } from "./conversation";
 
 function toAnthropicInteraction(message: ModelInteraction[]): Anthropic.Messages.MessageParam[] {
     return message.map((msg) => {

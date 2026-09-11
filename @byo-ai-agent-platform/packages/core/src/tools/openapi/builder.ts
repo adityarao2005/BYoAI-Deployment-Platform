@@ -1,6 +1,6 @@
-import { OpenAPIToolProviderConfig } from "@/config/tool_config";
-import { ToolObjectArgument, toolObject } from "../tool_argument";
-import { Tool } from "../tools";
+import type { OpenAPIToolProviderConfig } from "@/config/tool_config";
+import { type ToolObjectArgument, toolObject } from "@/tools/tool_argument";
+import type { Tool } from "@/tools";
 import { convertOpenAPISchemaToToolArgument } from "./schema";
 import { executeOpenAPIOperation } from "./executor";
 

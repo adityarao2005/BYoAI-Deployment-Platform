@@ -1,4 +1,4 @@
-import { ToolArgument, toolArray, toolBoolean, toolInteger, toolNumber, toolObject, toolString } from "../tool_argument";
+import { type ToolArgument, toolArray, toolBoolean, toolInteger, toolNumber, toolObject, toolString } from "@/tools/tool_argument";
 
 export function convertOpenAPISchemaToToolArgument(schema: any, fallbackDescription: string = ""): ToolArgument {
     if (!schema || typeof schema !== "object") {

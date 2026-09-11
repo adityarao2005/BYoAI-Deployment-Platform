@@ -1,4 +1,4 @@
-import { Tool, ToolProvider } from "../tools";
+import type { Tool, ToolProvider } from "@/tools";
 
 // abstract computer use tool provider
 export abstract class ComputerUseToolProvider implements ToolProvider {

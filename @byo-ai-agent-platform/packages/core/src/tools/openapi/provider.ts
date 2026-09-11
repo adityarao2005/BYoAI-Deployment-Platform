@@ -1,5 +1,5 @@
-import { OpenAPIToolProviderConfig, ToolProviderConfig } from "@/config/tool_config";
-import { Tool, ToolProvider, toolProviderRegistry } from "../tools";
+import type { OpenAPIToolProviderConfig } from "@/config/tool_config";
+import type { Tool, ToolProvider } from "@/tools";
 import { parseSpecURL } from "./parser";
 import { buildToolsFromSpec } from "./builder";
 

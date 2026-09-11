@@ -1,4 +1,4 @@
-import { OpenAPIToolProviderConfig } from "@/config/tool_config";
+import type { OpenAPIToolProviderConfig } from "@/config/tool_config";
 
 export interface ExecuteOperationOptions {
     method: string;
@@ -90,7 +90,7 @@ export async function executeOpenAPIOperation({
             }
             if (sec.queryParams) {
                 for (const [qKey, qVal] of Object.entries(sec.queryParams)) {
-                    fullUrl.searchParams.append(qKey, qVal);
+                    fullUrl.searchParams.append(qKey, String(qVal));
                 }
             }
             if (sec.urlAuthority) {
@@ -101,7 +101,7 @@ export async function executeOpenAPIOperation({
     }
 
     // 6. Request body determination
-    let bodyPayload: any = undefined;
+    let bodyPayload: any ;
     if (args.requestBody !== undefined) {
         bodyPayload = args.requestBody;
     } else if (args.body !== undefined) {

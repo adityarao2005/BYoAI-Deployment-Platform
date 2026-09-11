@@ -1,12 +1,10 @@
 
 import AdmZip from "adm-zip";
-import { Skill, SkillRepository, skillRepositoryRegistry } from "./skills";
-import { SkillRepositoryConfig } from "@/config/skill_config";
-import fs from "fs/promises"
-import { Readable } from "stream";
-import { pipeline } from "stream/promises";
+import type { Skill, SkillRepository } from "./skills";
+import fs from "node:fs/promises"
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { parse } from "yaml";
-import z from "zod";
 
 export class ZipSkillRepository implements SkillRepository {
     location: string;
@@ -98,7 +96,7 @@ export class ZipSkillRepository implements SkillRepository {
         }
 
         // Create a temporary file to store the downloaded zip
-        const filepath = "temp" + crypto.randomUUID() + ".zip";
+        const filepath = `temp${crypto.randomUUID()}.zip`;
 
         await using file = await fs.open(filepath, "w");
 

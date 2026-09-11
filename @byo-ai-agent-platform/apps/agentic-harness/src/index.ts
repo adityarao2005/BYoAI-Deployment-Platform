@@ -1,6 +1,6 @@
 import { bootstrap } from "./bootstrap";
 import { createInterface } from "node:readline/promises";
-import type { AgentConversation } from "@byo-ai-agent-platform/core/agents/agents";
+import type { AgentConversation } from "@byo-ai-agent-platform/core/agents";
 
 const agent = await bootstrap();
 

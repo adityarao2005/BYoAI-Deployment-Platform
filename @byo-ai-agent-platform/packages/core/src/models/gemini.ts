@@ -1,8 +1,8 @@
-import { ContentListUnion, GoogleGenAI } from "@google/genai";
-import { Model, modelRegistry } from "./models";
-import { logger } from "@/logger";
-import { ToolArgument } from "@/tools/tool_argument";
-import { ModelInput, ModelInteraction, ModelMessageOutput } from "./conversation";
+import { type ContentListUnion, GoogleGenAI } from "@google/genai";
+import type { Model } from "./models";
+import { logger } from "../logger";
+import type { ToolArgument } from "@/tools/tool_argument";
+import type { ModelInput, ModelInteraction, ModelMessageOutput } from "./conversation";
 
 export function formatSchemaForGemini(arg: ToolArgument): any {
     // Deep clone to prevent mutating your core registry state

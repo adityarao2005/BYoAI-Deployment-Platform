@@ -1,7 +1,7 @@
 import express from "express";
-import { AddressInfo } from "node:net";
-import { Server } from "node:http";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { AddressInfo } from "node:net";
+import type { Server } from "node:http";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { OpenAPIToolProvider } from "./openapi";
 
 describe("OpenAPIToolProvider Integration Suite", () => {

@@ -1,6 +1,8 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, mock } from "bun:test";
 import { buildComputerTools, createGraphicalTools, createHeadlessTools } from "./builder";
-import { GraphicalComputer, HeadlessComputer } from "./computer";
+import type { GraphicalComputer, HeadlessComputer } from "./computer";
+
+const vi = { fn: mock };
 
 describe("computer tool builder", () => {
     const mockHeadlessComputer: HeadlessComputer = {

@@ -1,4 +1,4 @@
-import { ToolObjectArgument } from "./tool_argument";
+import type { ToolObjectArgument } from "./tool_argument";
 
 
 /*

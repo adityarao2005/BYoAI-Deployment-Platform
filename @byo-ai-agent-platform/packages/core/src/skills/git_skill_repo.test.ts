@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 import { buildGitCloneSource, normalizeSkillsSubdirectory } from "./git_skill_repo";
 
 describe("git skill repository helpers", () => {

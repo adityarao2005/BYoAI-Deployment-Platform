@@ -1,12 +1,16 @@
-import { describe, expect, it } from "vitest";
-import { registerComputerUseToolProvider } from "./registry";
-import { toolProviderRegistry } from "../tools";
+import { describe, expect, it } from "bun:test";
+import { createComputerUseToolProvider } from "./registry";
+import { LocalComputerUseToolProvider } from "./local_provider";
+import { RemoteComputerUseToolProvider } from "./remote_provider";
 
-describe("registerComputerUseToolProvider", () => {
-    it("registers remote computer tool provider into registry", () => {
-        const initialCount = toolProviderRegistry.getAllToolProviders().length;
+describe("createComputerUseToolProvider", () => {
+    it("returns null if no computer tool provider is configured", () => {
+        const provider = createComputerUseToolProvider([]);
+        expect(provider).toBeNull();
+    });
 
-        registerComputerUseToolProvider([
+    it("creates remote computer tool provider", () => {
+        const provider = createComputerUseToolProvider([
             {
                 type: "computer",
                 provider: {
@@ -19,14 +23,11 @@ describe("registerComputerUseToolProvider", () => {
             },
         ]);
 
-        const providers = toolProviderRegistry.getAllToolProviders();
-        expect(providers.length).toBe(initialCount + 1);
+        expect(provider).toBeInstanceOf(RemoteComputerUseToolProvider);
     });
 
-    it("registers local computer tool provider into registry", () => {
-        const initialCount = toolProviderRegistry.getAllToolProviders().length;
-
-        registerComputerUseToolProvider([
+    it("creates local computer tool provider", () => {
+        const provider = createComputerUseToolProvider([
             {
                 type: "computer",
                 provider: {
@@ -36,13 +37,12 @@ describe("registerComputerUseToolProvider", () => {
             },
         ]);
 
-        const providers = toolProviderRegistry.getAllToolProviders();
-        expect(providers.length).toBe(initialCount + 1);
+        expect(provider).toBeInstanceOf(LocalComputerUseToolProvider);
     });
 
     it("throws if more than 1 computer tool provider is provided", () => {
         expect(() =>
-            registerComputerUseToolProvider([
+            createComputerUseToolProvider([
                 {
                     type: "computer",
                     provider: { type: "local", enableGUIToolsIfAvailable: false },

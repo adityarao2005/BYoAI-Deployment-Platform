@@ -1,6 +1,6 @@
-import { Tool } from "../tools";
-import { toolArray, toolBoolean, toolInteger, toolObject, toolString } from "../tool_argument";
-import { GraphicalComputer, HeadlessComputer } from "./computer";
+import type { Tool } from "@/tools";
+import { toolArray, toolBoolean, toolInteger, toolObject, toolString } from "@/tools/tool_argument";
+import type { GraphicalComputer, HeadlessComputer } from "./computer";
 
 /**
  * Creates Tool objects for headless computer operations.

@@ -1,60 +1,66 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { RemoteComputerUseToolProvider } from "./remote_provider";
-import { ComputerType } from "@/gen/computer_api/v1/computer_pb";
-import { RemoteComputerUseToolProviderConfig } from "@/config/tool_config";
+import { ComputerType } from "../../gen/computer_api/v1/computer_pb";
+import type { RemoteComputerUseToolProviderConfig } from "@/config/tool_config";
 
-vi.mock("@connectrpc/connect-node", () => ({
-    createConnectTransport: vi.fn().mockReturnValue({}),
+const mockTransport = {};
+mock.module("@connectrpc/connect-node", () => ({
+    createConnectTransport: mock(() => mockTransport),
 }));
 
 const mockComputerProviderClient = {
-    createComputer: vi.fn(),
-    getComputerInfo: vi.fn(),
+    createComputer: mock(),
+    getComputerInfo: mock(),
 };
 
 const mockBasicComputerClient = {
-    execute: vi.fn(),
-    readFile: vi.fn(),
-    writeFile: vi.fn(),
-    listDirectory: vi.fn(),
-    getUserId: vi.fn(),
-    getGroupId: vi.fn(),
+    execute: mock(),
+    readFile: mock(),
+    writeFile: mock(),
+    listDirectory: mock(),
+    getUserId: mock(),
+    getGroupId: mock(),
 };
 
 const mockGraphicalComputerClient = {
-    captureScreenshot: vi.fn(),
-    click: vi.fn(),
-    type: vi.fn(),
-    pressKey: vi.fn(),
-    releaseKey: vi.fn(),
-    pressAndHoldKey: vi.fn(),
-    releaseAllKeys: vi.fn(),
-    drag: vi.fn(),
-    moveMouseTo: vi.fn(),
-    scroll: vi.fn(),
-    getClipboard: vi.fn(),
-    setClipboard: vi.fn(),
-    getScreenSize: vi.fn(),
+    captureScreenshot: mock(),
+    click: mock(),
+    type: mock(),
+    pressKey: mock(),
+    releaseKey: mock(),
+    pressAndHoldKey: mock(),
+    releaseAllKeys: mock(),
+    drag: mock(),
+    moveMouseTo: mock(),
+    scroll: mock(),
+    getClipboard: mock(),
+    setClipboard: mock(),
+    getScreenSize: mock(),
 };
 
-vi.mock("@connectrpc/connect", async (importOriginal) => {
-    const actual = await importOriginal<typeof import("@connectrpc/connect")>();
-    return {
-        ...actual,
-        createClient: vi.fn((service: any) => {
-            if (service?.typeName === "computer_api.v1.ComputerProviderService") {
-                return mockComputerProviderClient;
-            }
-            if (service?.typeName === "computer_api.v1.BasicComputerService") {
-                return mockBasicComputerClient;
-            }
-            if (service?.typeName === "computer_api.v1.GraphicalComputerService") {
-                return mockGraphicalComputerClient;
-            }
-            return {};
-        }),
-    };
-});
+mock.module("@connectrpc/connect", () => ({
+    createClient: mock((service: any) => {
+        if (service?.typeName === "computer_api.v1.ComputerProviderService") {
+            return mockComputerProviderClient;
+        }
+        if (service?.typeName === "computer_api.v1.BasicComputerService") {
+            return mockBasicComputerClient;
+        }
+        if (service?.typeName === "computer_api.v1.GraphicalComputerService") {
+            return mockGraphicalComputerClient;
+        }
+        return {};
+    }),
+}));
+
+const vi = {
+    fn: mock,
+    clearAllMocks: () => {
+        for (const m of Object.values(mockComputerProviderClient)) (m as any).mockClear?.();
+        for (const m of Object.values(mockBasicComputerClient)) (m as any).mockClear?.();
+        for (const m of Object.values(mockGraphicalComputerClient)) (m as any).mockClear?.();
+    },
+};
 
 describe("RemoteComputerUseToolProvider", () => {
     const remoteConfig: RemoteComputerUseToolProviderConfig = {

@@ -1,4 +1,4 @@
-import { ModelInput, ModelMessageOutput } from "./conversation";
+import type { ModelInput, ModelMessageOutput } from "./conversation";
 
 
 export interface Model {

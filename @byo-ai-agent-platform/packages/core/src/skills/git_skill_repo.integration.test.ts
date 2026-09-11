@@ -3,16 +3,12 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "bun:test";
 
 const execFileAsync = promisify(execFile);
 
 describe("GitSkillRepository", () => {
     let tempDir: string | undefined;
-
-    beforeEach(() => {
-        vi.resetModules();
-    });
 
     afterEach(async () => {
         if (tempDir) {

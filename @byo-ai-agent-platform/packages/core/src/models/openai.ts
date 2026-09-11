@@ -1,7 +1,7 @@
 import OpenAI from "openai";
-import { Model, modelRegistry } from "./models";
-import { logger } from "@/logger";
-import { AssistantMessage, ModelInput, ModelInteraction, ModelMessageOutput, ToolCallRequest } from "./conversation";
+import type { Model } from "./models";
+import { logger } from "../logger";
+import type { ModelInput, ModelInteraction, ModelMessageOutput } from "./conversation";
 
 function toOpenAIInteraction(message: ModelInteraction[]): OpenAI.Responses.ResponseInput {
     return message.map((msg) => {

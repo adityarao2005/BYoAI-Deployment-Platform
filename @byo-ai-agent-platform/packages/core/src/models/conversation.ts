@@ -1,4 +1,4 @@
-import { Tool } from "@/tools/tools";
+import type { Tool } from "@/tools/tools";
 
 // user and assistant message types
 export type Role = 'user' | 'assistant';

@@ -1,10 +1,10 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "bun:test";
 import { SelfHostedModel } from "./self_hosted";
 
 // only describe the tests if the environment variable is set, otherwise skip them
 const SELF_HOSTED_MODEL_BASE_URL = process.env.SELF_HOSTED_MODEL_BASE_URL;
 
-describe.runIf(SELF_HOSTED_MODEL_BASE_URL)("SelfHostedModel integration test", () => {
+describe.skipIf(!SELF_HOSTED_MODEL_BASE_URL)("SelfHostedModel integration test", () => {
 
     // test whether it completes a chat completion request successfully, and logs the choices and selected response
     test("should execute a chat completion request", async () => {

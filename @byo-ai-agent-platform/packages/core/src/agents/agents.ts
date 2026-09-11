@@ -1,10 +1,10 @@
-import { logger } from "@/logger";
+import { logger } from "../logger";
 import type { Model } from "@/models/models";
 import { isToolCallRequest, type ModelInteraction, type ToolCallRequest, type ToolCallResponse } from "@/models/conversation";
 import type { SkillRepository } from "@/skills";
 import { loadSkillToolProvider } from "@/tools/load_skill";
 import { validateToolArgument } from "@/tools/tool_argument";
-import type { Tool, ToolProvider } from "@/tools/tools";
+import type { ToolProvider } from "@/tools/tools";
 
 async function executeTool(request: ToolCallRequest): Promise<ToolCallResponse> {
     if (!validateToolArgument(request.tool.inputSchema, request.arguments)) {
@@ -61,7 +61,7 @@ export class Agent {
             this.toolProviders.map((provider) =>
                 provider.getAllTools())))
             // flatten the array of arrays into a single array of tools
-            .flatMap(e => e);
+            .flat();
 
         // create the model
         const messages: ModelInteraction[] = input.history ? [...input.history] : [];
@@ -110,7 +110,7 @@ export class Agent {
     private async constructSystemPrompt(): Promise<string> {
 
         const skills = (await Promise.all(this.skillRepository.map(repo => repo.getAllSkills())))
-            .flatMap(e => e);
+            .flat();
 
         return `
 ## Who you are:

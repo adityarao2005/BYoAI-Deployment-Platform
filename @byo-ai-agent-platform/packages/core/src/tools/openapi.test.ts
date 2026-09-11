@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 import { normalizeOpenAPIDocument } from "./openapi";
 
 const petSchema = {
@@ -95,7 +95,7 @@ describe.each([
     ["OpenAPI 3.0", openApi30Document],
     ["OpenAPI 3.1", openApi31Document],
     ["Swagger 2.0", swaggerDocument],
-])("normalizeOpenAPIDocument with %s input", (_, document) => {
+])("normalizeOpenAPIDocument with %s input", (_: string, document: any) => {
     it("upgrades and dereferences the document in memory", async () => {
         const schema = await normalizeOpenAPIDocument(document);
         const typedSchema = schema as Record<string, any>;
@@ -110,9 +110,8 @@ describe.each([
     });
 });
 
-import { OpenAPIToolProviderConfig } from "@/config/tool_config";
-import { buildToolsFromSpec, convertOpenAPISchemaToToolArgument, OpenAPIToolProvider, registerOpenAPIToolProviders } from "./openapi";
-import { toolProviderRegistry } from "./tools";
+import type { OpenAPIToolProviderConfig } from "../config/tool_config";
+import { buildToolsFromSpec, convertOpenAPISchemaToToolArgument } from "./openapi";
 
 describe("convertOpenAPISchemaToToolArgument", () => {
     it("converts primitive schema types correctly", () => {
@@ -249,26 +248,5 @@ describe("buildToolsFromSpec", () => {
         const getPetTool = tools.find(t => t.name === "test-provider_get_pets_petId")!;
         expect(getPetTool.inputSchema.properties).toHaveProperty("petId");
         expect(getPetTool.inputSchema.required).toEqual(["petId"]);
-    });
-});
-
-describe("registerOpenAPIToolProviders", () => {
-    it("registers OpenAPI providers in toolProviderRegistry", () => {
-        const initialCount = toolProviderRegistry.getAllToolProviders().length;
-
-        registerOpenAPIToolProviders([
-            {
-                name: "my-openapi-service",
-                type: "openapi",
-                specUrl: "http://example.com/spec.json",
-                securityVariables: { type: "bearerToken", token: "abc" },
-            },
-        ]);
-
-        const providers = toolProviderRegistry.getAllToolProviders();
-        expect(providers.length).toBe(initialCount + 1);
-
-        const registered = providers[providers.length - 1] as OpenAPIToolProvider;
-        expect(registered.config.name).toBe("my-openapi-service");
     });
 });

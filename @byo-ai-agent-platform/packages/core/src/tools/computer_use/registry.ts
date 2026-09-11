@@ -1,5 +1,5 @@
 import type { ToolProviderConfig } from "@/config/tool_config";
-import { ToolProvider, toolProviderRegistry } from "../tools";
+import type { ToolProvider } from "@/tools";
 import { LocalComputerUseToolProvider } from "./local_provider";
 import { RemoteComputerUseToolProvider } from "./remote_provider";
 

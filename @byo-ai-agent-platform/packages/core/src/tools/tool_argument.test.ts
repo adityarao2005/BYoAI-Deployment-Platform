@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { validateToolArgument, ToolArgument } from "./tool_argument"; // Adjust path to your file
+import { describe, it, expect } from "bun:test";
+import { validateToolArgument, type ToolArgument } from "./tool_argument"; // Adjust path to your file
 
 describe("validateToolArgument", () => {
   // --- PRIMITIVES ---

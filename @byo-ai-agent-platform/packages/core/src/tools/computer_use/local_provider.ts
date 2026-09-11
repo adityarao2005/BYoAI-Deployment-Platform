@@ -1,8 +1,8 @@
-import { LocalComputerUseToolProviderConfig } from "@/config/tool_config";
-import { Tool } from "../tools";
+import type { LocalComputerUseToolProviderConfig } from "@/config/tool_config";
+import type { Tool } from "@/tools";
 import { ComputerUseToolProvider } from "./base_provider";
 import { buildComputerTools } from "./builder";
-import {
+import type {
     CaptureScreenshotArgs,
     CaptureScreenshotResult,
     ClickArgs,

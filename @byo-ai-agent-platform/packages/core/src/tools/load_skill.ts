@@ -1,7 +1,7 @@
 import type { Agent } from "@/agents/agents";
-import { logger } from "@/logger";
+import { logger } from "../logger";
 import { getSkillMDFile } from "@/skills";
-import { Tool, ToolProvider } from "./tools";
+import type { Tool, ToolProvider } from "./tools";
 
 function createLoadSkillTool(agent: Agent): Tool {
     return {

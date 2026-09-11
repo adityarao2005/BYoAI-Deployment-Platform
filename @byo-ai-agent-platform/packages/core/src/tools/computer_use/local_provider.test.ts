@@ -1,6 +1,8 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { describe, expect, it, beforeEach, afterEach, spyOn } from "bun:test";
 import { ERR_GRAPHICS_UNSUPPORTED, LocalComputer, LocalComputerUseToolProvider, LocalGraphicalComputer } from "./local_provider";
-import { LocalComputerUseToolProviderConfig } from "@/config/tool_config";
+import type { LocalComputerUseToolProviderConfig } from "@/config/tool_config";
+
+const vi = { spyOn, restoreAllMocks: () => { } };
 import * as os from "node:os";
 import * as path from "node:path";
 import * as fs from "node:fs/promises";

@@ -4,9 +4,8 @@ import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { parse } from "yaml";
-import { AgentConfig } from "@/config/config";
-import { Skill, SkillRepository, skillRepositoryRegistry } from "./skills";
-import { SkillRepositoryConfig } from "@/config/skill_config";
+import type { Skill, SkillRepository } from "./skills";
+import type { SkillRepositoryConfig } from "../config/skill_config";
 
 const execFileAsync = promisify(execFile);
 

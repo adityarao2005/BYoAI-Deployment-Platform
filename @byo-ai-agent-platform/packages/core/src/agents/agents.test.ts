@@ -1,9 +1,9 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "bun:test";
 import type { Model } from "@/models/models";
 import { Agent } from "./agents";
 import type { ModelInteraction, ModelMessageInput, ModelMessageOutput } from "@/models/conversation";
 import type { Tool, ToolProvider } from "@/tools/tools";
-import { logger } from "@/logger";
+import { logger } from "../logger";
 
 const DUMMY_MESSAGE = "Hello, I am a dummy model!"
 
@@ -27,7 +27,7 @@ describe("Agents Unit Test", () => {
 
         // model which returns expected message
         const model = {
-            async execute(input) {
+            async execute(_) {
                 return expectedMessage
             }
         } satisfies Model;
@@ -76,7 +76,7 @@ describe("Agents Unit Test", () => {
 
         // model which returns expected message
         const model = {
-            async execute(input) {
+            async execute(_) {
                 return expectedMessage
             }
         } satisfies Model;
@@ -166,7 +166,7 @@ describe("Agents Unit Test", () => {
 
         // model which returns expected message
         const model = {
-            async execute(input) {
+            async execute(_input) {
                 // if not called, return tool call message, else return expected message
                 if (!weatherToolCalled) {
                     return expectedToolMessage

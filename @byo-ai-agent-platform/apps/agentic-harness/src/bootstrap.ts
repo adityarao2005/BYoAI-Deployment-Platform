@@ -1,20 +1,11 @@
-import { z } from 'zod'
-import fs from 'fs/promises'
-import path from 'path'
+import fs from 'node:fs/promises'
+import path from 'node:path'
 import { parse } from 'yaml'
 import { AgentConfigSchema, type AgentConfig } from '@byo-ai-agent-platform/core/config'
-import { Agent } from '@byo-ai-agent-platform/core/agents/agents'
-import { OpenAIModel } from '@byo-ai-agent-platform/core/models/openai'
-import { GeminiModel } from '@byo-ai-agent-platform/core/models/gemini'
-import { AnthropicModel } from '@byo-ai-agent-platform/core/models/anthropic'
-import { SelfHostedModel } from '@byo-ai-agent-platform/core/models/self_hosted'
-import { modelRegistry } from '@byo-ai-agent-platform/core/models/models'
-import { ZipSkillRepository } from '@byo-ai-agent-platform/core/skills/zip_skill_repo'
-import { GitSkillRepository } from '@byo-ai-agent-platform/core/skills/git_skill_repo'
-import { skillRepositoryRegistry } from '@byo-ai-agent-platform/core/skills/skills'
-import { OpenAPIToolProvider } from '@byo-ai-agent-platform/core/tools/openapi/provider'
-import { createComputerUseToolProvider } from '@byo-ai-agent-platform/core/tools/computer_use/registry'
-import { toolProviderRegistry } from '@byo-ai-agent-platform/core/tools/tools'
+import { Agent } from '@byo-ai-agent-platform/core/agents'
+import { OpenAIModel, GeminiModel, AnthropicModel, SelfHostedModel, modelRegistry } from '@byo-ai-agent-platform/core/models'
+import { ZipSkillRepository, GitSkillRepository, skillRepositoryRegistry } from '@byo-ai-agent-platform/core/skills'
+import { OpenAPIToolProvider, createComputerUseToolProvider, toolProviderRegistry } from '@byo-ai-agent-platform/core/tools'
 import { logger } from '@byo-ai-agent-platform/core/logger'
 
 // ─── Config Loading ──────────────────────────────────────────────────
@@ -70,41 +61,41 @@ export async function loadConfigIfAvailable(): Promise<AgentConfig | null> {
 
 // ─── Model Registration ──────────────────────────────────────────────
 
-function registerModels(config: AgentConfig): void {
+export function registerModels(config: AgentConfig): void {
     for (const modelConfig of config.models) {
-        const { name, properties } = modelConfig;
+        const { name } = modelConfig;
 
         switch (modelConfig.brand) {
             case "openai": {
-                if (!properties.apiKey) {
+                if (!modelConfig.properties.apiKey) {
                     logger.warn(`Missing API key for OpenAI model: ${name}. Skipping registration.`);
                     continue;
                 }
                 logger.info(`Registering OpenAI model: ${name}`);
-                modelRegistry.registerModel(name, new OpenAIModel(name, properties.apiKey));
+                modelRegistry.registerModel(name, new OpenAIModel(name, modelConfig.properties.apiKey));
                 break;
             }
             case "gemini": {
-                if (!properties.apiKey) {
+                if (!modelConfig.properties.apiKey) {
                     logger.warn(`Missing API key for Gemini model: ${name}. Skipping registration.`);
                     continue;
                 }
                 logger.info(`Registering Gemini model: ${name}`);
-                modelRegistry.registerModel(name, new GeminiModel(name, properties.apiKey));
+                modelRegistry.registerModel(name, new GeminiModel(name, modelConfig.properties.apiKey));
                 break;
             }
             case "anthropic": {
-                if (!properties.apiKey) {
+                if (!modelConfig.properties.apiKey) {
                     logger.warn(`Missing API key for Anthropic model: ${name}. Skipping registration.`);
                     continue;
                 }
                 logger.info(`Registering Anthropic model: ${name}`);
-                modelRegistry.registerModel(name, new AnthropicModel(name, properties.apiKey, properties.maxTokens));
+                modelRegistry.registerModel(name, new AnthropicModel(name, modelConfig.properties.apiKey, modelConfig.properties.maxTokens));
                 break;
             }
             case "self_hosted": {
-                logger.info(`Registering self-hosted model: ${name} with base URL: ${properties.baseUrl}`);
-                modelRegistry.registerModel(name, new SelfHostedModel(properties.baseUrl, name, properties.apiKey));
+                logger.info(`Registering self-hosted model: ${name} with base URL: ${modelConfig.properties.baseUrl}`);
+                modelRegistry.registerModel(name, new SelfHostedModel(modelConfig.properties.baseUrl, name, modelConfig.properties.apiKey));
                 break;
             }
         }
@@ -113,7 +104,7 @@ function registerModels(config: AgentConfig): void {
 
 // ─── Skill Repository Registration ──────────────────────────────────
 
-function registerSkillRepositories(config: AgentConfig): void {
+export function registerSkillRepositories(config: AgentConfig): void {
     for (const repoConfig of config.skillRepositories) {
         switch (repoConfig.type) {
             case "zip": {
@@ -132,7 +123,7 @@ function registerSkillRepositories(config: AgentConfig): void {
 
 // ─── Tool Provider Registration ─────────────────────────────────────
 
-function registerToolProviders(config: AgentConfig): void {
+export function registerToolProviders(config: AgentConfig): void {
     for (const providerConfig of config.toolProviders) {
         if (providerConfig.type === "openapi") {
             const openApiProvider = new OpenAPIToolProvider(providerConfig);

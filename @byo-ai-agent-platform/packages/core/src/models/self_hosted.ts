@@ -1,8 +1,8 @@
 import OpenAI from "openai";
-import { Model, modelRegistry } from "./models";
-import { logger } from "@/logger";
-import { ModelInput, ModelInteraction, ModelMessageOutput } from "./conversation";
-import { ChatCompletionAssistantMessageParam } from "openai/resources";
+import type { Model } from "./models";
+import { logger } from "../logger";
+import type { ModelInput, ModelInteraction, ModelMessageOutput } from "./conversation";
+import type { ChatCompletionAssistantMessageParam } from "openai/resources";
 
 function toChatCompletionInteraction(message: ModelInteraction[]): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
     return message.map((msg) => {

@@ -126,13 +126,13 @@ export function validateToolArgument(arg: ToolArgument, value: any): boolean {
             // Check required fields safely
             if (arg.required) {
                 for (const req of arg.required) {
-                    if (!Object.prototype.hasOwnProperty.call(value, req)) return false;
+                    if (!Object.hasOwn(value, req)) return false;
                 }
             }
 
             // Validate properties that exist in the layout definition
             for (const key of Object.keys(arg.properties)) {
-                if (Object.prototype.hasOwnProperty.call(value, key)) {
+                if (Object.hasOwn(value, key)) {
                     if (!validateToolArgument(arg.properties[key]!, value[key])) {
                         return false;
                     }
