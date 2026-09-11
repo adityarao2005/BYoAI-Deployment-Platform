@@ -1,18 +1,19 @@
 import { describe, expect, it, mock } from "bun:test";
 import { createGraphicalTools, createHeadlessTools } from "./builder";
 import type { GraphicalComputer, HeadlessComputer } from "../../computer/computer";
-import { Agent } from "@/agents";
+import { type Agent, type AgentSession, AgentMemory } from "@/agents";
 
 const vi = { fn: mock };
 
 describe("computer tool builder", () => {
 
-    const agent = new Agent("test-agent", {
-        execute: async (_) => {
-            // dummy model.. doesn't matter to us
-            return []
-        }
-    }, [], [])
+    const agent: Agent = { id: "test-agent", name: "test-agent" };
+    const session: AgentSession = {
+        agent,
+        name: "test-agent",
+        description: "test",
+        memory: new AgentMemory(),
+    };
 
     const mockHeadlessComputer: HeadlessComputer = {
         execute: vi.fn().mockResolvedValue({ exitCode: 0, stdout: "output", stderr: "" }),
@@ -45,7 +46,7 @@ describe("computer tool builder", () => {
         expect(tools).toHaveLength(6);
 
         const execTool = tools.find((t) => t.name === "execute")!;
-        const res = await execTool.execute({ command: "ls" }, agent);
+        const res = await execTool.execute({ command: "ls" }, session);
         expect(res).toEqual({ exitCode: 0, stdout: "output", stderr: "" });
         expect(mockHeadlessComputer.execute).toHaveBeenCalledWith({
             command: "ls",
@@ -62,7 +63,7 @@ describe("computer tool builder", () => {
         expect(tools).toHaveLength(13);
 
         const clickTool = tools.find((t) => t.name === "click")!;
-        const clickRes = await clickTool.execute({ x: 10, y: 20 }, agent);
+        const clickRes = await clickTool.execute({ x: 10, y: 20 }, session);
         expect(clickRes).toEqual({ success: true });
         expect(mockGraphicalComputer.click).toHaveBeenCalledWith({ x: 10, y: 20, button: undefined });
     });

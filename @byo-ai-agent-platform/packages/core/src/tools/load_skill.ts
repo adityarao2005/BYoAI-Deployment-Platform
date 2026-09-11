@@ -1,9 +1,9 @@
-import type { Agent } from "@/agents/agents";
+import type { Agent, AgentSession } from "@/agents/agents";
 import { logger } from "../logger";
-import { getSkillMDFile } from "@/skills";
+import { getSkillMDFile, type SkillRepository } from "@/skills";
 import type { Tool, ToolProvider } from "./tools";
 
-function createLoadSkillTool(agent: Agent): Tool {
+function createLoadSkillTool(repositories?: SkillRepository[]): Tool {
     return {
         name: "load_skill",
         description: "Load a skill into the agent's memory.",
@@ -18,10 +18,11 @@ function createLoadSkillTool(agent: Agent): Tool {
             },
             required: ["skillName"]
         },
-        async execute(args: Record<string, any>) {
+        async execute(args: Record<string, any>, session?: AgentSession) {
             const skillName = args.skillName;
+            const repos = session?.skillRepositories ?? repositories ?? [];
 
-            for (const repo of agent.skillRepository) {
+            for (const repo of repos) {
                 const skill = await repo.getSkillByName(skillName);
                 if (skill) {
                     logger.info(`Skill ${skillName} loaded into agent's memory.`);
@@ -42,8 +43,12 @@ function createLoadSkillTool(agent: Agent): Tool {
     };
 }
 
-export function loadSkillToolProvider(agent: Agent): ToolProvider {
-    const loadSkillTool = createLoadSkillTool(agent);
+export function loadSkillToolProvider(agentOrRepos?: Agent | SkillRepository[]): ToolProvider {
+    let repos: SkillRepository[] | undefined;
+    if (Array.isArray(agentOrRepos)) {
+        repos = agentOrRepos;
+    }
+    const loadSkillTool = createLoadSkillTool(repos);
 
     return {
         async getAllTools() {

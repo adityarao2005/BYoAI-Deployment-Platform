@@ -3,19 +3,20 @@ import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { OpenAPIToolProvider } from "./openapi";
-import { Agent } from "@/agents";
+import { type Agent, type AgentSession, AgentMemory } from "@/agents";
 
 describe("OpenAPIToolProvider Integration Suite", () => {
     let server: Server;
     let specUrl: string;
     let lastReceivedPetQuery: string | undefined;
 
-    const agent = new Agent("test-agent", {
-        execute: async (_) => {
-            // dummy model.. doesn't matter to us
-            return []
-        }
-    }, [], [])
+    const agent: Agent = { id: "test-agent", name: "test-agent" };
+    const session: AgentSession = {
+        agent,
+        name: "test-agent",
+        description: "test",
+        memory: new AgentMemory(),
+    };
 
     beforeAll(async () => {
         const app = express();
@@ -250,7 +251,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
         const listTool = await provider.getToolByName("query-provider_listPets");
         expect(listTool).not.toBeNull();
 
-        const result = await listTool!.execute({ limit: 25 }, agent);
+        const result = await listTool!.execute({ limit: 25 }, session);
         expect(result).toEqual([
             { id: "1", name: "Fluffy", kind: "cat" },
             { id: "2", name: "Spot", kind: "dog" },
@@ -269,7 +270,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
         const getPetTool = await provider.getToolByName("path-provider_getPetById");
         expect(getPetTool).not.toBeNull();
 
-        const result = await getPetTool!.execute({ id: "pet-42" }, agent);
+        const result = await getPetTool!.execute({ id: "pet-42" }, session);
         expect(result).toEqual({ id: "pet-42", name: "Mittens", kind: "cat" });
     });
 
@@ -284,7 +285,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
         const createTool = await provider.getToolByName("post-provider_createPet");
         expect(createTool).not.toBeNull();
 
-        const result = await createTool!.execute({ name: "Rex", kind: "dog" }, agent);
+        const result = await createTool!.execute({ name: "Rex", kind: "dog" }, session);
         expect(result).toEqual({ id: "pet-99", name: "Rex", kind: "dog" });
     });
 
@@ -299,7 +300,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
         const errorTool = await provider.getToolByName("error-provider_getError");
         expect(errorTool).not.toBeNull();
 
-        await expect(errorTool!.execute({}, agent)).rejects.toThrow("HTTP 400 Bad Request");
+        await expect(errorTool!.execute({}, session)).rejects.toThrow("HTTP 400 Bad Request");
     });
 
     it("supports apiKey authentication in headers", async () => {
@@ -318,7 +319,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
         const tool = await provider.getToolByName("apikey-header-provider_checkApiKeyHeader");
         expect(tool).not.toBeNull();
 
-        const result = await tool!.execute({}, agent);
+        const result = await tool!.execute({}, session);
         expect(result).toEqual({ authenticated: true, method: "apiKey-header" });
     });
 
@@ -338,7 +339,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
         const tool = await provider.getToolByName("apikey-query-provider_checkApiKeyQuery");
         expect(tool).not.toBeNull();
 
-        const result = await tool!.execute({}, agent);
+        const result = await tool!.execute({}, session);
         expect(result).toEqual({ authenticated: true, method: "apiKey-query" });
     });
 
@@ -358,7 +359,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
         const tool = await provider.getToolByName("apikey-cookie-provider_checkApiKeyCookie");
         expect(tool).not.toBeNull();
 
-        const result = await tool!.execute({}, agent);
+        const result = await tool!.execute({}, session);
         expect(result).toEqual({ authenticated: true, method: "apiKey-cookie" });
     });
 
@@ -376,7 +377,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
         const tool = await provider.getToolByName("bearer-provider_checkBearerAuth");
         expect(tool).not.toBeNull();
 
-        const result = await tool!.execute({}, agent);
+        const result = await tool!.execute({}, session);
         expect(result).toEqual({ authenticated: true, method: "bearerToken" });
     });
 
@@ -396,7 +397,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
         const tool = await provider.getToolByName("basic-provider_checkBasicAuth");
         expect(tool).not.toBeNull();
 
-        const result = await tool!.execute({}, agent);
+        const result = await tool!.execute({}, session);
         expect(result).toEqual({ authenticated: true, method: "basicAuth" });
     });
 
@@ -416,7 +417,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
         const tool = await provider.getToolByName("custom-auth-provider_checkCustomAuth");
         expect(tool).not.toBeNull();
 
-        const result = await tool!.execute({}, agent);
+        const result = await tool!.execute({}, session);
         expect(result).toEqual({ authenticated: true, method: "custom" });
     });
 });

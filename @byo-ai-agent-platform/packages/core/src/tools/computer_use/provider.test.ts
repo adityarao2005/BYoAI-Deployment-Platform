@@ -2,21 +2,16 @@ import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { ComputerUseToolProvider } from "./provider";
 import { ComputerType } from "@/gen/computer_api/v1/computer_pb";
 import type { ComputerProvider, GraphicalComputer, HeadlessComputer } from "@/computer/computer";
-import { Agent } from "@/agents";
+import type { Agent } from "@/agents";
 
 const vi = { fn: mock };
 
 function createAgent(computerId?: string): Agent {
-    return new Agent(
-        "test-agent",
-        {
-            execute: async () => [],
-        },
-        [],
-        [],
-        "A test agent",
-        computerId
-    );
+    return {
+        id: "test-agent",
+        name: "test-agent",
+        computerId,
+    };
 }
 
 describe("ComputerUseToolProvider", () => {

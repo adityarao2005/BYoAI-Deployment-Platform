@@ -18,42 +18,43 @@ export class ComputerUseToolProvider implements ToolProvider {
     }
 
     async getAllTools(agent: Agent): Promise<Tool[]> {
+        const cacheKey = agent.name ?? agent.id;
         // prefetch cached tools
-        const retrievedTools = this.cachedTools.get(agent.name)
+        const retrievedTools = this.cachedTools.get(cacheKey);
         if (retrievedTools !== undefined) {
-            return retrievedTools
+            return retrievedTools;
         }
 
         // refetch them from the provider
         if (!agent.computerId)
             // TODO: once we build an AgentExecutor, we change this to create a new computer for the agent
-            throw new Error(`The Agent is not registered with this tool provider and thus the agent does not have a computer id`)
+            throw new Error(`The Agent is not registered with this tool provider and thus the agent does not have a computer id`);
 
-        const payload = await this.provider.getComputer(agent.computerId)
+        const payload = await this.provider.getComputer(agent.computerId);
 
-        let tools: Tool[] = []
+        let tools: Tool[] = [];
 
         switch (payload.type) {
             case ComputerType.UNSPECIFIED:
-            throw new Error("Something went wrong when trying to retrieve the computer, please check the computer provider logs")
-            
+                throw new Error("Something went wrong when trying to retrieve the computer, please check the computer provider logs");
+
             // headless tools
-        case ComputerType.HEADLESS:
-            tools = createHeadlessTools(payload.computer)
-            break
+            case ComputerType.HEADLESS:
+                tools = createHeadlessTools(payload.computer);
+                break;
 
             // graphical toools
-        case ComputerType.GRAPHICAL:
-            tools = [
-                ...createHeadlessTools(payload.computer),
-                ...createGraphicalTools(payload.computer),
-            ];
-            break;
+            case ComputerType.GRAPHICAL:
+                tools = [
+                    ...createHeadlessTools(payload.computer),
+                    ...createGraphicalTools(payload.computer),
+                ];
+                break;
         }
 
         // cache the values
-        this.cachedTools.set(agent.name, tools)
+        this.cachedTools.set(cacheKey, tools);
 
-        return tools
+        return tools;
     }
 }

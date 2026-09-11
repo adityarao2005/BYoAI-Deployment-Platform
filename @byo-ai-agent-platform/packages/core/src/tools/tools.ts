@@ -1,4 +1,4 @@
-import type { Agent } from "@/agents";
+import type { Agent, AgentSession } from "@/agents";
 import type { ToolObjectArgument } from "./tool_argument";
 
 
@@ -16,8 +16,9 @@ export interface Tool {
     /**
      * executes the tool call given the arguments
      * @param args the tool arguments
+     * @param session the agent session
      */
-    execute(args: Record<string, any>, agent: Agent): Promise<any>;
+    execute(args: Record<string, any>, session: AgentSession): Promise<any>;
 }
 
 /*
@@ -26,15 +27,14 @@ Provides access to a collection of available tools.
 export interface ToolProvider {
     /**
      * Get the tool by name. Returns null if the tool is not found.
-     * @param name name of thet tool
+     * @param name name of the tool
      */
-    // TODO: change this to agent session
-    getToolByName(name: string, agent: Agent): Promise<Tool | null>;
+    getToolByName(name: string, agent?: Agent): Promise<Tool | null>;
 
     /**
      * Get all the tools available in the provider.
      */
-    getAllTools(agent: Agent): Promise<Tool[]>;
+    getAllTools(agent?: Agent): Promise<Tool[]>;
 }
 
 
