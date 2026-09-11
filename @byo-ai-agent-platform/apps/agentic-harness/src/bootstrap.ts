@@ -42,6 +42,20 @@ async function findConfigPath(): Promise<string | null> {
     return null;
 }
 
+export function interpolateEnvVars(content: string): string {
+    return content.replace(/\$\{([^}]+)\}/g, (_, expression: string) => {
+        const colonDashIndex = expression.indexOf(":-");
+        if (colonDashIndex !== -1) {
+            const varName = expression.slice(0, colonDashIndex);
+            const defaultValue = expression.slice(colonDashIndex + 2);
+            return process.env[varName] !== undefined && process.env[varName] !== ""
+                ? process.env[varName]!
+                : defaultValue;
+        }
+        return process.env[expression] ?? "";
+    });
+}
+
 export async function loadConfig(configPath?: string): Promise<AgentConfig> {
     const resolvedConfigPath = configPath ?? await findConfigPath();
 
@@ -50,7 +64,8 @@ export async function loadConfig(configPath?: string): Promise<AgentConfig> {
     }
 
     const configData = await fs.readFile(resolvedConfigPath, 'utf8');
-    const parsedConfig = parse(configData);
+    const interpolatedConfig = interpolateEnvVars(configData);
+    const parsedConfig = parse(interpolatedConfig);
 
     return AgentConfigSchema.parse(parsedConfig);
 }
