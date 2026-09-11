@@ -21,10 +21,32 @@ namespace temp {
     }
 
     // memory of agent (computer, transcript of convo and pending tool calls)
-    export type AgentMemory = {
+    export class AgentMemory {
         transcript: ModelInteraction[]
-        pendingToolCalls: string[]
         computerId?: string
+
+        constructor(transcript: ModelInteraction[], computerId?: string) {
+            this.transcript = transcript
+            this.computerId = computerId
+        }
+
+        getPendingToolCalls(): string[] {
+            const toolCalls: string[] = []
+
+            // check through the transcript list for tool calls and tool responses
+            for (const interaction of this.transcript) {
+                if (interaction.type === "tool_call") {
+                    // push tool calls onto array
+                    toolCalls.push(interaction.id)
+                } else if (interaction.type === "tool_response") {
+                    // remove those tool calls who have responses
+                    const index = toolCalls.findIndex(value => value === interaction.id)
+                    toolCalls.splice(index, 1)
+                }
+            }
+
+            return toolCalls
+        }
     }
 
     // memory manager of agent
@@ -41,14 +63,20 @@ namespace temp {
 
     // acts as communication agent between executor, tool call, and agent making this truely event driven and asynchronous
     export interface AgentCommunicator {
-        // listener listening onto events for when tools results have arrived
-        readonly toolCallEventListener: (toolId: string, result: any) => Promise<void>
-
         // emit tool call event to "handler" (meant to be handled asynchrously, may resume the agent in the same routine too by calling)
-        emitToolCallEvent(agent: Agent, toolId: string, tool: string, args: Record<string, any>): Promise<void>
+        emitToolCallEvent(agent: Agent, toolCallId: string, tool: string, args: Record<string, any>): Promise<void>
+
+        // emit tool call complete
+        emitToolCallComplete(agent: Agent, toolCallId: string, tool: string, result: any): Promise<void>
 
         // emit response to user
         emitUserMessage(agent: Agent, message: string): Promise<void>
+
+        // emit event to run the agent on the existing history
+        emitRunAgent(agent: Agent): Promise<void>
+
+        // emit event for agent to be complete
+        emitAgentComplete(agent: Agent): Promise<void>
     }
 
     // configuration of the agent
@@ -93,8 +121,6 @@ ${description}
         readonly name: string
         readonly description: string
         readonly memory: AgentMemory
-        readonly skills: Skill[]
-        readonly tools: Tool[]
         readonly computerProvider?: ComputerProvider
     }
 
@@ -135,7 +161,10 @@ ${description}
         }
 
         // creates an agent session which will be used by the tool providers
-        private async createAgentSession(agent: Agent): Promise<AgentSession> {
+        private async createAgentSession(agent: Agent): Promise<{
+            session: AgentSession,
+            tools: Tool[]
+        }> {
             // grab the memory of the agent
             const memory = await this.configuration.memoryManager.getAgentMemory(agent)
 
@@ -149,26 +178,107 @@ ${description}
             }
 
             return {
-                agent,
-                name: this.configuration.name,
-                description: this.configuration.description,
-                memory,
-                skills: this.skills,
-                tools: this.tools,
-                computerProvider: this.configuration.computerProvider
+                session: {
+                    agent,
+                    name: this.configuration.name,
+                    description: this.configuration.description,
+                    memory,
+                    computerProvider: this.configuration.computerProvider
+                },
+                tools: this.tools
             }
         }
 
         // send message to agent
-        async sendMessageToAgent(agent: Agent, message: string): Promise<void> {
-            const agentSession = this.createAgentSession(agent)
+        async sendMessageToAgent(agent: Agent, message: string) {
+            // add a new record into the DB for the transcript entry
+            await this.configuration.memoryManager.addTranscriptEntries(agent, [
+                {
+                    role: "user",
+                    type: "message",
+                    content: message
+                }
+            ])
 
+            // emit the run agent signal to run the agent on the new entry
+            await this.configuration.communicator.emitRunAgent(agent)
+        }
+
+        // send message to agent
+        async runAgent(agent: Agent): Promise<void> {
+            const { session, tools } = await this.createAgentSession(agent)
+
+            // get agent transcript
+            let memory = await this.configuration.memoryManager.getAgentMemory(agent)
+
+            // gather model output message
+            const output = await this.configuration.model.execute({
+                history: memory.transcript,
+                systemPrompt: constructSystemPrompt(session.name, session.description, this.skills),
+                tools
+            })
+
+            // set it to memory and retrieve memory
+            await this.configuration.memoryManager.addTranscriptEntries(agent, output)
+
+            let toolCallsPending = false
+
+            // for each message, emit it via communicator
+            for (const message of output) {
+                if (message.type === "message") {
+                    await this.configuration.communicator.emitUserMessage(agent, message.content)
+                } else if (message.type === "tool_call") {
+                    // set to true and emit tool call event
+                    toolCallsPending = true
+                    await this.configuration.communicator.emitToolCallEvent(agent, message.id, message.tool.name, message.arguments)
+                }
+            }
+
+            // if no pending tool calls emitted then emit all events then complete, otherwise do nothing
+            if (!toolCallsPending) {
+                await this.configuration.communicator.emitAgentComplete(agent)
+            }
 
         }
 
+        // handle tool complete
+        async handleToolResponse(agent: Agent, tool: string, toolCallId: string, result: any): Promise<void> {
+            const { tools } = await this.createAgentSession(agent)
 
+            // add a new record into the DB for the transcript entry
+            await this.configuration.memoryManager.addTranscriptEntries(agent, [
+                {
+                    type: 'tool_response',
+                    result,
+                    tool: tools.filter(toolO => toolO.name === tool)[0]!,
+                    id: toolCallId
+                }
+            ])
+
+            // gather memory
+            const memory = await this.configuration.memoryManager.getAgentMemory(agent)
+
+            // if no tool calls left, then run the agent again
+            if (memory.getPendingToolCalls().length === 0) {
+                await this.configuration.communicator.emitRunAgent(agent)
+            }
+        }
+
+        // handle tool call
+        async handleToolCall(agent: Agent, toolCallId: string, toolName: string, args: Record<string, any>): Promise<void> {
+            const { session, tools } = await this.createAgentSession(agent);
+
+            const tool = tools.find(tool => tool.name === toolName)!
+
+            if (!validateToolArgument(tool.inputSchema, args)) {
+                throw new Error(`Invalid arguments for tool ${tool.name}`);
+            }
+
+            const output = await tool.execute(args, session);
+
+            await this.configuration.communicator.emitToolCallComplete(agent, tool.name, toolCallId, output);
+        }
     }
-
 }
 
 export class Agent {
