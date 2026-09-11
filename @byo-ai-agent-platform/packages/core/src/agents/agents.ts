@@ -6,22 +6,7 @@ import { loadSkillToolProvider } from "@/tools/load_skill";
 import { validateToolArgument } from "@/tools/tool_argument";
 import type { ToolProvider } from "@/tools/tools";
 
-async function executeTool(request: ToolCallRequest): Promise<ToolCallResponse> {
-    if (!validateToolArgument(request.tool.inputSchema, request.arguments)) {
-        throw new Error(`Invalid arguments for tool ${request.tool.name}`);
-    }
 
-    const output = await request.tool.execute(request.arguments);
-
-    logger.info(`Tool ${request.tool.name} executed with arguments ${JSON.stringify(request.arguments)}. Output: ${JSON.stringify(output)}`);
-
-    return {
-        type: 'tool_response',
-        result: output,
-        tool: request.tool,
-        id: request.id
-    };
-}
 
 export type AgentConversation = {
     history: ModelInteraction[];
@@ -92,7 +77,7 @@ export class Agent {
 
             // execute the tool call requests
             const toolResponses = await Promise.all(
-                toolCallRequest.map(executeTool))
+                toolCallRequest.map(this.executeTool))
 
             // push all the tool call responses
             messages.push(...toolResponses)
@@ -104,6 +89,23 @@ export class Agent {
         // set the output to the input, set the history and return
         return {
             history: messages,
+        };
+    }
+
+    private async executeTool(request: ToolCallRequest): Promise<ToolCallResponse> {
+        if (!validateToolArgument(request.tool.inputSchema, request.arguments)) {
+            throw new Error(`Invalid arguments for tool ${request.tool.name}`);
+        }
+
+        const output = await request.tool.execute(request.arguments, this);
+
+        logger.info(`Tool ${request.tool.name} executed with arguments ${JSON.stringify(request.arguments)}. Output: ${JSON.stringify(output)}`);
+
+        return {
+            type: 'tool_response',
+            result: output,
+            tool: request.tool,
+            id: request.id
         };
     }
 

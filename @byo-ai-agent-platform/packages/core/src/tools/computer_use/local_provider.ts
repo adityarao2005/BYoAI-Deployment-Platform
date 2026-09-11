@@ -25,7 +25,6 @@ import type {
 } from "./computer";
 import { spawn } from "node:child_process";
 import * as fs from "node:fs/promises";
-import * as path from "node:path";
 import * as process from "node:process";
 
 export const ERR_GRAPHICS_UNSUPPORTED = "graphical interface is not supported: DISPLAY environment variable is not set";

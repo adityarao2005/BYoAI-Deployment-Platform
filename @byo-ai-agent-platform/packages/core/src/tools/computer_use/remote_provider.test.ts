@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { RemoteComputerUseToolProvider } from "./remote_provider";
-import { ComputerType } from "../../gen/computer_api/v1/computer_pb";
+import { ComputerType } from "@/gen/computer_api/v1/computer_pb";
 import type { RemoteComputerUseToolProviderConfig } from "@/config/tool_config";
+import { Agent } from "@/agents";
 
 const mockTransport = {};
 mock.module("@connectrpc/connect-node", () => ({
@@ -70,6 +71,14 @@ describe("RemoteComputerUseToolProvider", () => {
         enableGUIToolsIfAvailable: true,
         envFile: "",
     };
+
+
+    const agent = new Agent("test-agent", {
+        execute: async (_) => {
+            // dummy model.. doesn't matter to us
+            return []
+        }
+    }, [], [])
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -169,7 +178,7 @@ describe("RemoteComputerUseToolProvider", () => {
 
         const execTool = await provider.getToolByName("execute");
         expect(execTool).toBeDefined();
-        const execRes = await execTool!.execute({ command: "echo hello" });
+        const execRes = await execTool!.execute({ command: "echo hello" }, agent);
         expect(execRes).toEqual({ exitCode: 0, stdout: "hello", stderr: "" });
         expect(mockBasicComputerClient.execute).toHaveBeenCalledWith({
             sessionId: "session-123",
@@ -182,23 +191,23 @@ describe("RemoteComputerUseToolProvider", () => {
         });
 
         const readFileTool = await provider.getToolByName("read_file");
-        const readRes = await readFileTool!.execute({ path: "/tmp/foo.txt" });
+        const readRes = await readFileTool!.execute({ path: "/tmp/foo.txt" }, agent);
         expect(readRes).toEqual({ content: new Uint8Array([1, 2, 3]) });
 
         const writeFileTool = await provider.getToolByName("write_file");
-        const writeRes = await writeFileTool!.execute({ path: "/tmp/foo.txt", content: "bar" });
+        const writeRes = await writeFileTool!.execute({ path: "/tmp/foo.txt", content: "bar" }, agent);
         expect(writeRes).toEqual({ success: true });
 
         const listDirTool = await provider.getToolByName("list_directory");
-        const listRes = await listDirTool!.execute({ path: "/tmp" });
+        const listRes = await listDirTool!.execute({ path: "/tmp" }, agent);
         expect(listRes).toEqual({ files: ["file1.txt", "file2.txt"] });
 
         const userIdTool = await provider.getToolByName("get_user_id");
-        const userRes = await userIdTool!.execute({});
+        const userRes = await userIdTool!.execute({}, agent);
         expect(userRes).toEqual({ userId: "1000" });
 
         const groupIdTool = await provider.getToolByName("get_group_id");
-        const groupRes = await groupIdTool!.execute({});
+        const groupRes = await groupIdTool!.execute({}, agent);
         expect(groupRes).toEqual({ groupId: "1000" });
     });
 
@@ -223,7 +232,7 @@ describe("RemoteComputerUseToolProvider", () => {
         const provider = new RemoteComputerUseToolProvider(remoteConfig);
 
         const clickTool = await provider.getToolByName("click");
-        const clickRes = await clickTool!.execute({ x: 100, y: 200, button: "left" });
+        const clickRes = await clickTool!.execute({ x: 100, y: 200, button: "left" }, agent);
         expect(clickRes).toEqual({ success: true });
         expect(mockGraphicalComputerClient.click).toHaveBeenCalledWith({
             sessionId: "session-456",
@@ -233,11 +242,11 @@ describe("RemoteComputerUseToolProvider", () => {
         });
 
         const screenshotTool = await provider.getToolByName("capture_screenshot");
-        const screenshotRes = await screenshotTool!.execute({});
+        const screenshotRes = await screenshotTool!.execute({}, agent);
         expect(screenshotRes).toEqual({ imageData: new Uint8Array([255, 0, 0]) });
 
         const screenSizeTool = await provider.getToolByName("get_screen_size");
-        const screenSizeRes = await screenSizeTool!.execute({});
+        const screenSizeRes = await screenSizeTool!.execute({}, agent);
         expect(screenSizeRes).toEqual({ width: 1920, height: 1080 });
     });
 

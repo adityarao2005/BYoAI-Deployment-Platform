@@ -2,7 +2,7 @@ import type { RemoteComputerUseToolProviderConfig } from "@/config/tool_config";
 import type { Tool } from "@/tools";
 import { type ConnectTransportOptions, createConnectTransport } from "@connectrpc/connect-node";
 import { type Client, createClient, type Interceptor, type Transport } from "@connectrpc/connect";
-import { BasicComputerService, ComputerProviderService, ComputerType, GraphicalComputerService } from "../../gen/computer_api/v1/computer_pb";
+import { BasicComputerService, ComputerProviderService, ComputerType, GraphicalComputerService } from "@/gen/computer_api/v1/computer_pb";
 import { ComputerUseToolProvider } from "./base_provider";
 import { buildComputerTools } from "./builder";
 import dotenv from "dotenv";
@@ -27,7 +27,7 @@ import type {
     TypeArgs,
     WriteFileArgs,
 } from "./computer";
-import type { ClientSessionOptions, SecureClientSessionOptions } from "node:http2";
+import type { SecureClientSessionOptions } from "node:http2";
 
 export class ConnectRemoteComputer implements GraphicalComputer {
     constructor(

@@ -1,3 +1,4 @@
+import type { Agent } from "@/agents";
 import type { ToolObjectArgument } from "./tool_argument";
 
 
@@ -16,7 +17,7 @@ export interface Tool {
      * executes the tool call given the arguments
      * @param args the tool arguments
      */
-    execute(args: Record<string, any>): Promise<any>;
+    execute(args: Record<string, any>, agent: Agent): Promise<any>;
 }
 
 /*
