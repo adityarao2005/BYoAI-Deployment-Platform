@@ -5,8 +5,9 @@ import { AgentConfigSchema, type AgentConfig, type ComputerUseToolProviderConfig
 import { Agent } from '@byo-ai-agent-platform/core/agents'
 import { OpenAIModel, GeminiModel, AnthropicModel, SelfHostedModel, modelRegistry } from '@byo-ai-agent-platform/core/models'
 import { ZipSkillRepository, GitSkillRepository, skillRepositoryRegistry } from '@byo-ai-agent-platform/core/skills'
-import { OpenAPIToolProvider, createComputerUseToolProvider, toolProviderRegistry } from '@byo-ai-agent-platform/core/tools'
+import { ComputerUseToolProvider, OpenAPIToolProvider, toolProviderRegistry } from '@byo-ai-agent-platform/core/tools'
 import { logger } from '@byo-ai-agent-platform/core/logger'
+import { createComputerProvider, type ComputerProvider } from "@byo-ai-agent-platform/core/computer"
 
 // ─── Config Loading ──────────────────────────────────────────────────
 // Moved from core/config/config.ts — config loading is an app concern,
@@ -122,6 +123,7 @@ export function registerSkillRepositories(config: AgentConfig): void {
 }
 
 // ─── Tool Provider Registration ─────────────────────────────────────
+let computerProvider: ComputerProvider | null = null;
 
 function registerComputerToolProvider(toolProviders: ToolProviderConfig[]): void {
     const computerConfigs = toolProviders.filter(
@@ -135,8 +137,8 @@ function registerComputerToolProvider(toolProviders: ToolProviderConfig[]): void
     }
 
     if (computerConfigs.length === 1 && computerConfigs[0]) {
-        const computerToolProvider = createComputerUseToolProvider(computerConfigs[0]);
-        toolProviderRegistry.registerToolProvider(computerToolProvider);
+        computerProvider = createComputerProvider(computerConfigs[0]);
+        toolProviderRegistry.registerToolProvider(new ComputerUseToolProvider(computerProvider));
     }
 }
 

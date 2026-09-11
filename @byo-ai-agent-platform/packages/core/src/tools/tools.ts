@@ -28,6 +28,7 @@ export interface ToolProvider {
      * Get the tool by name. Returns null if the tool is not found.
      * @param name name of thet tool
      */
+    // TODO: change this to agent session
     getToolByName(name: string, agent: Agent): Promise<Tool | null>;
 
     /**

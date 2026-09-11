@@ -122,7 +122,7 @@ describe("Tool Provider Registration", () => {
         const computerProvider = providers[0];
         const agent = new Agent("test-agent", { execute: async () => [] }, [], []);
 
-        await expect(computerProvider.getAllTools(agent)).rejects.toThrow(
+        await expect(computerProvider?.getAllTools(agent)).rejects.toThrow(
             "The Agent is not registered with this tool provider and thus the agent does not have a computer id"
         );
     });
@@ -153,7 +153,7 @@ describe("Tool Provider Registration", () => {
         const computerProvider = providers[0];
         const agent = new Agent("test-agent", { execute: async () => [] }, [], []);
 
-        await expect(computerProvider.getAllTools(agent)).rejects.toThrow(
+        await expect(computerProvider?.getAllTools(agent)).rejects.toThrow(
             "The Agent is not registered with this tool provider and thus the agent does not have a computer id"
         );
     });
