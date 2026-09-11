@@ -6,7 +6,8 @@
     "outDir": "./dist",
     "paths": {
       "@/*": [
-        "./src/*"
+        "./src/*",
+        "../../packages/core/src/*"
       ]
     },
     // Environment setup & latest features
