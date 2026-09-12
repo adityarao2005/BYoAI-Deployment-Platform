@@ -1,50 +1,48 @@
 {
-  "name": "@byo-ai-agent-platform/core",
-  "module": "src/index.ts",
-  "type": "module",
-  "scripts": {
-    "typecheck": "tsc --noEmit",
-    "build": "bun build ./src/index.ts --outdir ./dist --target=bun"
-  },
-  "devDependencies": {
-    "@types/adm-zip": "^0.5.8",
-    "@types/bun": "latest",
-    "@types/express": "^5.0.6",
-    "express": "^5.0.1"
-  },
-  "peerDependencies": {
-    "typescript": "^7"
-  },
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.124.0",
-    "@apidevtools/json-schema-ref-parser": "^16.0.2",
-    "@bufbuild/buf": "^1.72.0",
-    "@bufbuild/protobuf": "^2.14.1",
-    "@bufbuild/protoc-gen-es": "^2.14.1",
-    "@connectrpc/connect": "^2.2.0",
-    "@connectrpc/connect-node": "^2.2.0",
-    "@connectrpc/validate": "^0.2.0",
-    "@google/genai": "^2.21.0",
-    "@scalar/openapi-upgrader": "^0.2.15",
-    "adm-zip": "^0.6.0",
-    "dotenv": "^17.4.2",
-    "openai": "^7.13.0",
-    "winston": "^3.19.0"
-  },
-  "exports": {
-    "./models": "./src/models/index.ts",
-    "./models/*": "./src/models/*",
-    "./agents": "./src/agents/index.ts",
-    "./agents/*": "./src/agents/*",
-    "./skills": "./src/skills/index.ts",
-    "./skills/*": "./src/skills/*",
-    "./tools": "./src/tools/index.ts",
-    "./tools/*": "./src/tools/*",
-    "./config": "./src/config/index.ts",
-    "./config/*": "./src/config/*",
-    "./computer": "./src/computer/index.ts",
-    "./computer/*": "./src/computer/*",
-    "./logger": "./src/logger.ts",
-    "./*": "./src/*"
-  }
+    "name": "@byo-ai-agent-platform/core",
+    "module": "src/index.ts",
+    "type": "module",
+    "scripts": {
+        "typecheck": "tsc --noEmit",
+        "build": "bun build ./src/index.ts --outdir ./dist --target=bun"
+    },
+    "devDependencies": {
+        "@types/adm-zip": "^0.5.8",
+        "@types/bun": "latest",
+        "@types/express": "^5.0.6",
+        "express": "^5.0.1"
+    },
+    "peerDependencies": {
+        "typescript": "^7"
+    },
+    "dependencies": {
+        "@anthropic-ai/sdk": "^0.124.0",
+        "@apidevtools/json-schema-ref-parser": "^16.0.2",
+        "@bufbuild/buf": "^1.72.0",
+        "@bufbuild/protobuf": "^2.14.1",
+        "@bufbuild/protoc-gen-es": "^2.14.1",
+        "@connectrpc/connect": "^2.2.0",
+        "@connectrpc/connect-node": "^2.2.0",
+        "@connectrpc/validate": "^0.2.0",
+        "@google/genai": "^2.21.0",
+        "@scalar/openapi-upgrader": "^0.2.15",
+        "adm-zip": "^0.6.0",
+        "dotenv": "^17.4.2",
+        "openai": "^7.13.0"
+    },
+    "exports": {
+        "./models": "./src/models/index.ts",
+        "./models/*": "./src/models/*",
+        "./agents": "./src/agents/index.ts",
+        "./agents/*": "./src/agents/*",
+        "./skills": "./src/skills/index.ts",
+        "./skills/*": "./src/skills/*",
+        "./tools": "./src/tools/index.ts",
+        "./tools/*": "./src/tools/*",
+        "./config": "./src/config/index.ts",
+        "./config/*": "./src/config/*",
+        "./computer": "./src/computer/index.ts",
+        "./computer/*": "./src/computer/*",
+        "./*": "./src/*"
+    }
 }

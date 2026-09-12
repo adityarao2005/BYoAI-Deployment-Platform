@@ -1,8 +1,11 @@
 import { type ContentListUnion, GoogleGenAI } from "@google/genai";
-import type { Model } from "./models";
-import { logger } from "../logger";
 import type { ToolArgument } from "@/tools/tool_argument";
-import type { ModelInput, ModelInteraction, ModelMessageOutput } from "./conversation";
+import type {
+    ModelInput,
+    ModelInteraction,
+    ModelMessageOutput,
+} from "./conversation";
+import type { Model } from "./models";
 
 export function formatSchemaForGemini(arg: ToolArgument): any {
     // Deep clone to prevent mutating your core registry state
@@ -41,56 +44,70 @@ function toGeminiInteraction(message: ModelInteraction[]): ContentListUnion {
         if (msg.type === "message") {
             return {
                 role: msg.role === "user" ? "user" : "model",
-                parts: [{ text: msg.content }]
-            }
+                parts: [{ text: msg.content }],
+            };
         } else if (msg.type === "tool_call") {
             return {
                 role: "model",
-                parts: [{
-                    ...(msg.thoughtSignature ? { thoughtSignature: msg.thoughtSignature } : {}),
-                    functionCall: {
-                        name: msg.tool.name,
-                        args: msg.arguments,
-                        id: msg.id
-                    }
-                }]
-            }
+                parts: [
+                    {
+                        ...(msg.thoughtSignature
+                            ? { thoughtSignature: msg.thoughtSignature }
+                            : {}),
+                        functionCall: {
+                            name: msg.tool.name,
+                            args: msg.arguments,
+                            id: msg.id,
+                        },
+                    },
+                ],
+            };
         } else if (msg.type === "tool_response") {
             return {
                 role: "model",
-                parts: [{
-                    functionResponse: {
-                        id: msg.id,
-                        name: msg.tool.name,
-                        response: normalizeGeminiFunctionResponse(msg.result)
-                    }
-                }]
-            }
+                parts: [
+                    {
+                        functionResponse: {
+                            id: msg.id,
+                            name: msg.tool.name,
+                            response: normalizeGeminiFunctionResponse(
+                                msg.result,
+                            ),
+                        },
+                    },
+                ],
+            };
         } else {
             throw new Error(`Unknown message type: ${JSON.stringify(msg)}`);
         }
-    })
+    });
 }
 
-export function normalizeGeminiFunctionResponse(result: unknown): Record<string, unknown> {
+export function normalizeGeminiFunctionResponse(
+    result: unknown,
+): Record<string, unknown> {
     if (result === undefined) {
         return {
-            result: null
+            result: null,
         };
     }
 
-    if (result !== null && typeof result === "object" && !Array.isArray(result)) {
+    if (
+        result !== null &&
+        typeof result === "object" &&
+        !Array.isArray(result)
+    ) {
         return JSON.parse(JSON.stringify(result));
     }
 
     return {
-        result: JSON.parse(JSON.stringify(result))
+        result: JSON.parse(JSON.stringify(result)),
     };
 }
 
 export class GeminiModel implements Model {
-    private client: GoogleGenAI
-    private modelName: string
+    private client: GoogleGenAI;
+    private modelName: string;
 
     constructor(modelName: string, apiKey: string) {
         this.modelName = modelName;
@@ -102,15 +119,18 @@ export class GeminiModel implements Model {
             model: this.modelName,
             contents: toGeminiInteraction(input.history),
             config: {
-                systemInstruction: input.systemPrompt ?? "You are a helpful assistant.",
+                systemInstruction:
+                    input.systemPrompt ?? "You are a helpful assistant.",
                 tools: input.tools.map((tool) => ({
-                    functionDeclarations: [{
-                        name: tool.name,
-                        description: tool.description,
-                        parameters: formatSchemaForGemini(tool.inputSchema),
-                    }]
-                }))
-            }
+                    functionDeclarations: [
+                        {
+                            name: tool.name,
+                            description: tool.description,
+                            parameters: formatSchemaForGemini(tool.inputSchema),
+                        },
+                    ],
+                })),
+            },
         });
 
         if (!response.candidates || response.candidates.length === 0) {
@@ -118,15 +138,14 @@ export class GeminiModel implements Model {
         }
 
         const result = response.candidates[0]!;
-        logger.info(`Response status: ${result.finishReason ?? "unknown"}`);
 
-        const parts = result.content?.parts
+        const parts = result.content?.parts;
 
         if (!parts || parts.length === 0) {
-            throw new Error("No content parts received from Gemini model response.");
+            throw new Error(
+                "No content parts received from Gemini model response.",
+            );
         }
-
-        logger.info(`Token tokens: ${result.tokenCount}`);
 
         const output = [] as ModelMessageOutput[];
 
@@ -135,25 +154,31 @@ export class GeminiModel implements Model {
                 output.push({
                     role: "assistant",
                     type: "message",
-                    content: part.text
-                })
+                    content: part.text,
+                });
             } else if (part.functionCall) {
-                const tool = input.tools.find((t) => t.name === part.functionCall!.name);
+                const tool = input.tools.find(
+                    (t) => t.name === part.functionCall!.name,
+                );
 
                 if (!tool) {
-                    throw new Error(`Tool not found for function call: ${part.functionCall!.name}`);
+                    throw new Error(
+                        `Tool not found for function call: ${part.functionCall!.name}`,
+                    );
                 }
 
                 output.push({
                     type: "tool_call",
                     arguments: part.functionCall.args!,
                     id: part.functionCall.id!,
-                    ...(part.thoughtSignature ? { thoughtSignature: part.thoughtSignature } : {}),
-                    tool: tool
-                })
+                    ...(part.thoughtSignature
+                        ? { thoughtSignature: part.thoughtSignature }
+                        : {}),
+                    tool: tool,
+                });
             }
         }
 
-        return output
+        return output;
     }
 }

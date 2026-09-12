@@ -1,42 +1,46 @@
 import { Anthropic } from "@anthropic-ai/sdk";
+import type {
+    ModelInput,
+    ModelInteraction,
+    ModelMessageOutput,
+} from "./conversation";
 import type { Model } from "./models";
-import { logger } from "../logger";
-import type { ModelInput, ModelInteraction, ModelMessageOutput } from "./conversation";
 
-function toAnthropicInteraction(message: ModelInteraction[]): Anthropic.Messages.MessageParam[] {
+function toAnthropicInteraction(
+    message: ModelInteraction[],
+): Anthropic.Messages.MessageParam[] {
     return message.map((msg) => {
         if (msg.type === "message") {
             return {
                 role: msg.role === "user" ? "user" : "assistant",
                 content: msg.content,
-            }
+            };
         } else if (msg.type === "tool_call") {
             return {
                 role: "assistant",
                 content: msg.tool.name,
                 type: "tool_use",
                 input: msg.arguments,
-                id: msg.id
-            }
+                id: msg.id,
+            };
         } else if (msg.type === "tool_response") {
             return {
                 role: "assistant",
                 content: msg.tool.name,
                 type: "tool_response",
                 result: msg.result,
-                id: msg.id
-            }
+                id: msg.id,
+            };
         } else {
             throw new Error(`Unknown message type: ${JSON.stringify(msg)}`);
         }
-    })
+    });
 }
 
-
 export class AnthropicModel implements Model {
-    private client: Anthropic
-    private modelName: string
-    private max_tokens: number
+    private client: Anthropic;
+    private modelName: string;
+    private max_tokens: number;
 
     constructor(modelName: string, apiKey: string, max_tokens: number = 1024) {
         this.modelName = modelName;
@@ -54,16 +58,15 @@ export class AnthropicModel implements Model {
                 input_schema: tool.inputSchema,
                 name: tool.name,
                 description: tool.description,
-                strict: true
-            }))
+                strict: true,
+            })),
         });
 
-
         if (response.content.length <= 0) {
-            throw new Error("No text output received from Anthropic model response.");
+            throw new Error(
+                "No text output received from Anthropic model response.",
+            );
         }
-
-        logger.info(`Token tokens: ${response.usage.output_tokens + response.usage.input_tokens}`);
 
         const output = [] as ModelMessageOutput[];
 
@@ -72,20 +75,24 @@ export class AnthropicModel implements Model {
                 output.push({
                     role: "assistant",
                     type: "message",
-                    content: message.text
+                    content: message.text,
                 });
             } else if (message.type === "tool_use") {
-                const toolToUse = input.tools.find((tool) => tool.name === message.name)
+                const toolToUse = input.tools.find(
+                    (tool) => tool.name === message.name,
+                );
 
                 if (!toolToUse) {
-                    throw new Error(`Tool ${message.name} not found in the provided tools.`);
+                    throw new Error(
+                        `Tool ${message.name} not found in the provided tools.`,
+                    );
                 }
 
                 output.push({
                     type: "tool_call",
                     arguments: message.input as Record<string, unknown>,
                     tool: toolToUse,
-                    id: message.id
+                    id: message.id,
                 });
             }
         }

@@ -1,12 +1,9 @@
-import { logger } from "../logger";
+import type { ModelInteraction } from "@/models/conversation";
 import type { Model } from "@/models/models";
-import type {
-    ModelInteraction,
-} from "@/models/conversation";
 import type { Skill, SkillRepository } from "@/skills";
+import type { ComputerProvider } from "@/tools";
 import { validateToolArgument } from "@/tools/tool_argument";
 import type { Tool, ToolProvider } from "@/tools/tools";
-import type { ComputerProvider } from "@/tools";
 
 // Plain agent identifier
 export type Agent = {
@@ -47,7 +44,10 @@ export interface AgentMemoryManager {
     // grab agent memory
     getAgentMemory(agent: Agent): Promise<AgentMemory>;
     // add conversation item
-    addTranscriptEntries(agent: Agent, conversationEntries: ModelInteraction[]): Promise<void>;
+    addTranscriptEntries(
+        agent: Agent,
+        conversationEntries: ModelInteraction[],
+    ): Promise<void>;
     // sets the computer id for the agent
     setComputerId(agent: Agent, computerId: string): Promise<void>;
 }
@@ -58,16 +58,32 @@ export type AgentEventMap = {
     "agent:message": { agent: Agent; content: string };
     "agent:run": { agent: Agent };
     "agent:complete": { agent: Agent };
-    "tool:call": { agent: Agent; toolCallId: string; tool: string; args: Record<string, any> };
-    "tool:complete": { agent: Agent; toolCallId: string; tool: string; result: any };
+    "tool:call": {
+        agent: Agent;
+        toolCallId: string;
+        tool: string;
+        args: Record<string, any>;
+    };
+    "tool:complete": {
+        agent: Agent;
+        toolCallId: string;
+        tool: string;
+        result: any;
+    };
 };
 
 export type AgentEventHandler<T> = (payload: T) => Promise<void> | void;
 
 // Communicator interface: event-driven asynchronous pub/sub
 export interface AgentCommunicator {
-    emit<K extends keyof AgentEventMap>(event: K, payload: AgentEventMap[K]): Promise<void>;
-    on<K extends keyof AgentEventMap>(event: K, handler: AgentEventHandler<AgentEventMap[K]>): () => void;
+    emit<K extends keyof AgentEventMap>(
+        event: K,
+        payload: AgentEventMap[K],
+    ): Promise<void>;
+    on<K extends keyof AgentEventMap>(
+        event: K,
+        handler: AgentEventHandler<AgentEventMap[K]>,
+    ): () => void;
 }
 
 // Configuration of the agent
@@ -83,7 +99,11 @@ export type AgentConfiguration = {
 };
 
 // Construct system prompt from agent definition and loaded skills
-export function constructSystemPrompt(name: string, description: string, skills: Skill[]): string {
+export function constructSystemPrompt(
+    name: string,
+    description: string,
+    skills: Skill[],
+): string {
     return `
 ## Who you are:
 
@@ -97,14 +117,14 @@ ${description}
 
 <available_skills>
     ${skills
-            .map(
-                (skill) => `
+        .map((skill) =>
+            `
         <skill>
             <name>${skill.frontMatter.name}</name>
             <description><![CDATA[${skill.frontMatter.description}]]></description>
-        </skill>`.trim()
-            )
-            .join("\n")}
+        </skill>`.trim(),
+        )
+        .join("\n")}
 </available_skills>
     `.trim();
 }
@@ -133,7 +153,11 @@ export class AgentManager {
     async init(): Promise<void> {
         // Gather all skills
         this.skills = (
-            await Promise.all(this.configuration.skillRepository.map((repo) => repo.getAllSkills()))
+            await Promise.all(
+                this.configuration.skillRepository.map((repo) =>
+                    repo.getAllSkills(),
+                ),
+            )
         ).flat();
 
         // Subscribe to communicator events to drive agent execution
@@ -143,40 +167,40 @@ export class AgentManager {
             comm.on("agent:run", async ({ agent }) => {
                 try {
                     await this.runAgent(agent);
-                } catch (error) {
-                    logger.error(`Error in agent:run for agent ${agent.id}: ${error}`);
-                }
-            })
+                } catch {}
+            }),
         );
 
         this.unsubscribers.push(
             comm.on("user:message", async ({ agent, content }) => {
                 try {
                     await this.sendMessageToAgent(agent, content);
-                } catch (error) {
-                    logger.error(`Error in agent:run for agent ${agent.id}: ${error}`);
-                }
-            })
+                } catch {}
+            }),
         );
 
         this.unsubscribers.push(
             comm.on("tool:call", async ({ agent, toolCallId, tool, args }) => {
                 try {
                     await this.handleToolCall(agent, toolCallId, tool, args);
-                } catch (error) {
-                    logger.error(`Error handling tool call ${tool} (${toolCallId}): ${error}`);
-                }
-            })
+                } catch {}
+            }),
         );
 
         this.unsubscribers.push(
-            comm.on("tool:complete", async ({ agent, toolCallId, tool, result }) => {
-                try {
-                    await this.handleToolResponse(agent, tool, toolCallId, result);
-                } catch (error) {
-                    logger.error(`Error handling tool response for ${tool} (${toolCallId}): ${error}`);
-                }
-            })
+            comm.on(
+                "tool:complete",
+                async ({ agent, toolCallId, tool, result }) => {
+                    try {
+                        await this.handleToolResponse(
+                            agent,
+                            tool,
+                            toolCallId,
+                            result,
+                        );
+                    } catch {}
+                },
+            ),
         );
     }
 
@@ -189,14 +213,19 @@ export class AgentManager {
 
     // Creates the agent
     async createAgent(): Promise<Agent> {
-        const id = await this.configuration.memoryManager.createAgentMemoryEntry();
+        const id =
+            await this.configuration.memoryManager.createAgentMemoryEntry();
         let computerId: string | undefined;
 
         if (this.configuration.computerProvider) {
             // TODO: handle lifecycle differences
-            computerId = await this.configuration.computerProvider.createComputer();
+            computerId =
+                await this.configuration.computerProvider.createComputer();
             if (computerId) {
-                await this.configuration.memoryManager.setComputerId({ id }, computerId);
+                await this.configuration.memoryManager.setComputerId(
+                    { id },
+                    computerId,
+                );
             }
         }
 
@@ -214,12 +243,15 @@ export class AgentManager {
         session: AgentSession;
         tools: Tool[];
     }> {
-        const memory = await this.configuration.memoryManager.getAgentMemory(agent);
+        const memory =
+            await this.configuration.memoryManager.getAgentMemory(agent);
 
         if (this.tools === undefined) {
             this.tools = (
                 await Promise.all(
-                    this.configuration.toolProviders.map((provider) => provider.getAllTools(agent))
+                    this.configuration.toolProviders.map((provider) =>
+                        provider.getAllTools(agent),
+                    ),
                 )
             ).flat();
         }
@@ -255,15 +287,23 @@ export class AgentManager {
     // Run agent execution cycle
     async runAgent(agent: Agent): Promise<void> {
         const { session, tools } = await this.createAgentSession(agent);
-        const memory = await this.configuration.memoryManager.getAgentMemory(agent);
+        const memory =
+            await this.configuration.memoryManager.getAgentMemory(agent);
 
         const output = await this.configuration.model.execute({
             history: memory.transcript,
-            systemPrompt: constructSystemPrompt(session.name, session.description, this.skills),
+            systemPrompt: constructSystemPrompt(
+                session.name,
+                session.description,
+                this.skills,
+            ),
             tools,
         });
 
-        await this.configuration.memoryManager.addTranscriptEntries(agent, output);
+        await this.configuration.memoryManager.addTranscriptEntries(
+            agent,
+            output,
+        );
 
         let toolCallsPending = false;
 
@@ -296,13 +336,12 @@ export class AgentManager {
         agent: Agent,
         toolCallId: string,
         toolName: string,
-        args: Record<string, any>
+        args: Record<string, any>,
     ): Promise<void> {
         const { session, tools } = await this.createAgentSession(agent);
         const tool = tools.find((t) => t.name === toolName);
 
         if (!tool) {
-            logger.warn(`Tool ${toolName} not found in available tools.`);
             await this.configuration.communicator.emit("tool:complete", {
                 agent,
                 toolCallId,
@@ -313,7 +352,6 @@ export class AgentManager {
         }
 
         if (!validateToolArgument(tool.inputSchema, args)) {
-            logger.warn(`Invalid arguments for tool ${tool.name}: ${JSON.stringify(args)}`);
             await this.configuration.communicator.emit("tool:complete", {
                 agent,
                 toolCallId,
@@ -332,7 +370,6 @@ export class AgentManager {
                 result: output,
             });
         } catch (err: any) {
-            logger.error(`Error executing tool ${tool.name}: ${err?.message ?? err}`);
             await this.configuration.communicator.emit("tool:complete", {
                 agent,
                 toolCallId,
@@ -347,7 +384,7 @@ export class AgentManager {
         agent: Agent,
         toolName: string,
         toolCallId: string,
-        result: any
+        result: any,
     ): Promise<void> {
         const { tools } = await this.createAgentSession(agent);
         const matchingTool = tools.find((t) => t.name === toolName);
@@ -356,7 +393,7 @@ export class AgentManager {
             name: toolName,
             description: "",
             inputSchema: { type: "object", description: "", properties: {} },
-            execute: async () => { },
+            execute: async () => {},
         };
 
         await this.configuration.memoryManager.addTranscriptEntries(agent, [
@@ -368,7 +405,8 @@ export class AgentManager {
             },
         ]);
 
-        const memory = await this.configuration.memoryManager.getAgentMemory(agent);
+        const memory =
+            await this.configuration.memoryManager.getAgentMemory(agent);
 
         if (memory.getPendingToolCalls().length === 0) {
             await this.configuration.communicator.emit("agent:run", {

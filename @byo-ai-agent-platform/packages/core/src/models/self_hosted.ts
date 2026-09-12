@@ -1,10 +1,15 @@
 import OpenAI from "openai";
-import type { Model } from "./models";
-import { logger } from "../logger";
-import type { ModelInput, ModelInteraction, ModelMessageOutput } from "./conversation";
 import type { ChatCompletionAssistantMessageParam } from "openai/resources";
+import type {
+    ModelInput,
+    ModelInteraction,
+    ModelMessageOutput,
+} from "./conversation";
+import type { Model } from "./models";
 
-function toChatCompletionInteraction(message: ModelInteraction[]): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
+function toChatCompletionInteraction(
+    message: ModelInteraction[],
+): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
     return message.map((msg) => {
         if (msg.type === "message") {
             return {
@@ -14,14 +19,16 @@ function toChatCompletionInteraction(message: ModelInteraction[]): OpenAI.Chat.C
         } else if (msg.type === "tool_call") {
             return {
                 role: "assistant",
-                tool_calls: [{
-                    id: msg.id,
-                    type: "function",
-                    function: {
-                        arguments: JSON.stringify(msg.arguments),
-                        name: msg.tool.name
+                tool_calls: [
+                    {
+                        id: msg.id,
+                        type: "function",
+                        function: {
+                            arguments: JSON.stringify(msg.arguments),
+                            name: msg.tool.name,
+                        },
                     },
-                }],
+                ],
             } as ChatCompletionAssistantMessageParam;
         } else if (msg.type === "tool_response") {
             return {
@@ -33,13 +40,12 @@ function toChatCompletionInteraction(message: ModelInteraction[]): OpenAI.Chat.C
         } else {
             throw new Error(`Unknown message type: ${msg}`);
         }
-    })
+    });
 }
 
 export class SelfHostedModel implements Model {
-
-    private client: OpenAI
-    private modelName: string
+    private client: OpenAI;
+    private modelName: string;
 
     constructor(baseURL: string, modelName: string, apiKey?: string) {
         this.modelName = modelName;
@@ -50,35 +56,30 @@ export class SelfHostedModel implements Model {
     }
 
     async execute(input: ModelInput): Promise<ModelMessageOutput[]> {
-
         const response = await this.client.chat.completions.create({
             model: this.modelName,
             messages: [
                 {
                     role: "system",
-                    content: input.systemPrompt ?? "You are a helpful assistant."
+                    content:
+                        input.systemPrompt ?? "You are a helpful assistant.",
                 },
-                ...toChatCompletionInteraction(input.history)
+                ...toChatCompletionInteraction(input.history),
             ],
             tools: input.tools.map((tool) => ({
                 type: "function",
                 function: {
                     name: tool.name,
                     description: tool.description,
-                    parameters: tool.inputSchema
-                }
+                    parameters: tool.inputSchema,
+                },
             })),
-
-        })
-
-        logger.info(`Total tokens: ${response.usage?.total_tokens}`);
-
-        response.choices.forEach((choice, index) => {
-            logger.info(`Choice ${index + 1}: ${choice.message?.content}. Finish reason: ${choice.finish_reason}`);
         });
 
         if (response.choices.length === 0) {
-            throw new Error("No response choices received from self-hosted model.");
+            throw new Error(
+                "No response choices received from self-hosted model.",
+            );
         }
 
         const message = response.choices[0]!.message;
@@ -89,26 +90,29 @@ export class SelfHostedModel implements Model {
             outputs.push({
                 role: "assistant",
                 type: "message",
-                content: message.content
+                content: message.content,
             });
         }
 
         if (message.tool_calls && message.tool_calls.length > 0) {
             for (const tool of message.tool_calls) {
-                if (tool.type !== "function")
-                    continue;
+                if (tool.type !== "function") continue;
 
-                const toolToUse = input.tools.find(t => t.name === tool.function.name);
+                const toolToUse = input.tools.find(
+                    (t) => t.name === tool.function.name,
+                );
 
                 if (!toolToUse) {
-                    throw new Error(`Tool not found for function call: ${tool.function.name}`);
+                    throw new Error(
+                        `Tool not found for function call: ${tool.function.name}`,
+                    );
                 }
 
                 outputs.push({
                     type: "tool_call",
                     arguments: JSON.parse(tool.function.arguments),
                     id: tool.id,
-                    tool: toolToUse
+                    tool: toolToUse,
                 });
             }
         }

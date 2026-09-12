@@ -1,18 +1,40 @@
-import fs from 'node:fs/promises'
-import path from 'node:path'
-import { parse } from 'yaml'
-import { AgentConfigSchema, type AgentConfig, type ComputerUseToolProviderConfig, type ToolProviderConfig } from '@byo-ai-agent-platform/core/config'
+import fs from "node:fs/promises";
+import path from "node:path";
 import {
+    type Agent,
     AgentManager,
     InMemoryAgentCommunicator,
     InMemoryAgentMemoryManager,
-    type Agent,
-} from '@byo-ai-agent-platform/core/agents'
-import { OpenAIModel, GeminiModel, AnthropicModel, SelfHostedModel, modelRegistry } from '@byo-ai-agent-platform/core/models'
-import { ZipSkillRepository, GitSkillRepository, skillRepositoryRegistry } from '@byo-ai-agent-platform/core/skills'
-import { ComputerUseToolProvider, OpenAPIToolProvider, toolProviderRegistry } from '@byo-ai-agent-platform/core/tools'
-import { logger } from '@byo-ai-agent-platform/core/logger'
-import { createComputerProvider, type ComputerProvider } from "@byo-ai-agent-platform/core/computer"
+} from "@byo-ai-agent-platform/core/agents";
+import {
+    type ComputerProvider,
+    createComputerProvider,
+} from "@byo-ai-agent-platform/core/computer";
+import {
+    type AgentConfig,
+    AgentConfigSchema,
+    type ComputerUseToolProviderConfig,
+    type ToolProviderConfig,
+} from "@byo-ai-agent-platform/core/config";
+import {
+    AnthropicModel,
+    GeminiModel,
+    modelRegistry,
+    OpenAIModel,
+    SelfHostedModel,
+} from "@byo-ai-agent-platform/core/models";
+import {
+    GitSkillRepository,
+    skillRepositoryRegistry,
+    ZipSkillRepository,
+} from "@byo-ai-agent-platform/core/skills";
+import {
+    ComputerUseToolProvider,
+    loadSkillToolProvider,
+    OpenAPIToolProvider,
+    toolProviderRegistry,
+} from "@byo-ai-agent-platform/core/tools";
+import { parse } from "yaml";
 
 // ─── Config Loading ──────────────────────────────────────────────────
 // Moved from core/config/config.ts — config loading is an app concern,
@@ -21,20 +43,35 @@ import { createComputerProvider, type ComputerProvider } from "@byo-ai-agent-pla
 async function findConfigPath(): Promise<string | null> {
     // 1. Highest Priority: Explicit override via environment variable
     if (process.env.AGENT_CONFIG_PATH) {
-        if (await fs.access(process.env.AGENT_CONFIG_PATH).then(() => true, () => false)) {
+        if (
+            await fs.access(process.env.AGENT_CONFIG_PATH).then(
+                () => true,
+                () => false,
+            )
+        ) {
             return process.env.AGENT_CONFIG_PATH;
         }
     }
 
     // 2. Second Priority: Local development file in current directory
     const localPath = path.resolve(process.cwd(), "agent.yaml");
-    if (await fs.access(localPath).then(() => true, () => false)) {
+    if (
+        await fs.access(localPath).then(
+            () => true,
+            () => false,
+        )
+    ) {
         return localPath;
     }
 
     // 3. Lowest Priority: Linux/Container standard system configuration path
     const systemPath = "/etc/agent/agent.yaml";
-    if (await fs.access(systemPath).then(() => true, () => false)) {
+    if (
+        await fs.access(systemPath).then(
+            () => true,
+            () => false,
+        )
+    ) {
         return systemPath;
     }
 
@@ -48,7 +85,8 @@ export function interpolateEnvVars(content: string): string {
         if (colonDashIndex !== -1) {
             const varName = expression.slice(0, colonDashIndex);
             const defaultValue = expression.slice(colonDashIndex + 2);
-            return process.env[varName] !== undefined && process.env[varName] !== ""
+            return process.env[varName] !== undefined &&
+                process.env[varName] !== ""
                 ? process.env[varName]!
                 : defaultValue;
         }
@@ -57,13 +95,13 @@ export function interpolateEnvVars(content: string): string {
 }
 
 export async function loadConfig(configPath?: string): Promise<AgentConfig> {
-    const resolvedConfigPath = configPath ?? await findConfigPath();
+    const resolvedConfigPath = configPath ?? (await findConfigPath());
 
     if (!resolvedConfigPath) {
         throw new Error("No valid config file found.");
     }
 
-    const configData = await fs.readFile(resolvedConfigPath, 'utf8');
+    const configData = await fs.readFile(resolvedConfigPath, "utf8");
     const interpolatedConfig = interpolateEnvVars(configData);
     const parsedConfig = parse(interpolatedConfig);
 
@@ -89,34 +127,47 @@ export function registerModels(config: AgentConfig): void {
         switch (modelConfig.brand) {
             case "openai": {
                 if (!modelConfig.properties.apiKey) {
-                    logger.warn(`Missing API key for OpenAI model: ${name}. Skipping registration.`);
                     continue;
                 }
-                logger.info(`Registering OpenAI model: ${name}`);
-                modelRegistry.registerModel(name, new OpenAIModel(name, modelConfig.properties.apiKey));
+                modelRegistry.registerModel(
+                    name,
+                    new OpenAIModel(name, modelConfig.properties.apiKey),
+                );
                 break;
             }
             case "gemini": {
                 if (!modelConfig.properties.apiKey) {
-                    logger.warn(`Missing API key for Gemini model: ${name}. Skipping registration.`);
                     continue;
                 }
-                logger.info(`Registering Gemini model: ${name}`);
-                modelRegistry.registerModel(name, new GeminiModel(name, modelConfig.properties.apiKey));
+                modelRegistry.registerModel(
+                    name,
+                    new GeminiModel(name, modelConfig.properties.apiKey),
+                );
                 break;
             }
             case "anthropic": {
                 if (!modelConfig.properties.apiKey) {
-                    logger.warn(`Missing API key for Anthropic model: ${name}. Skipping registration.`);
                     continue;
                 }
-                logger.info(`Registering Anthropic model: ${name}`);
-                modelRegistry.registerModel(name, new AnthropicModel(name, modelConfig.properties.apiKey, modelConfig.properties.maxTokens));
+                modelRegistry.registerModel(
+                    name,
+                    new AnthropicModel(
+                        name,
+                        modelConfig.properties.apiKey,
+                        modelConfig.properties.maxTokens,
+                    ),
+                );
                 break;
             }
             case "self_hosted": {
-                logger.info(`Registering self-hosted model: ${name} with base URL: ${modelConfig.properties.baseUrl}`);
-                modelRegistry.registerModel(name, new SelfHostedModel(modelConfig.properties.baseUrl, name, modelConfig.properties.apiKey));
+                modelRegistry.registerModel(
+                    name,
+                    new SelfHostedModel(
+                        modelConfig.properties.baseUrl,
+                        name,
+                        modelConfig.properties.apiKey,
+                    ),
+                );
                 break;
             }
         }
@@ -129,12 +180,21 @@ export function registerSkillRepositories(config: AgentConfig): void {
     for (const repoConfig of config.skillRepositories) {
         switch (repoConfig.type) {
             case "zip": {
-                const zipRepo = new ZipSkillRepository(repoConfig.location, repoConfig.skillsSubdirectory, repoConfig.headers);
+                const zipRepo = new ZipSkillRepository(
+                    repoConfig.location,
+                    repoConfig.skillsSubdirectory,
+                    repoConfig.headers,
+                );
                 skillRepositoryRegistry.registerSkillRepository(zipRepo);
                 break;
             }
             case "git": {
-                const gitRepo = new GitSkillRepository(repoConfig.url, repoConfig.branch, repoConfig.skillsSubdirectory, repoConfig.auth);
+                const gitRepo = new GitSkillRepository(
+                    repoConfig.url,
+                    repoConfig.branch,
+                    repoConfig.skillsSubdirectory,
+                    repoConfig.auth,
+                );
                 skillRepositoryRegistry.registerSkillRepository(gitRepo);
                 break;
             }
@@ -145,20 +205,24 @@ export function registerSkillRepositories(config: AgentConfig): void {
 // ─── Tool Provider Registration ─────────────────────────────────────
 let computerProvider: ComputerProvider | null = null;
 
-function registerComputerToolProvider(toolProviders: ToolProviderConfig[]): void {
+function registerComputerToolProvider(
+    toolProviders: ToolProviderConfig[],
+): void {
     const computerConfigs = toolProviders.filter(
-        (p): p is ComputerUseToolProviderConfig => p.type === "computer"
+        (p): p is ComputerUseToolProviderConfig => p.type === "computer",
     );
 
     if (computerConfigs.length > 1) {
         throw new Error(
-            `There should only be 1 computer use tool provider declared, currently these are the declared computer tool providers: ${computerConfigs}`
+            `There should only be 1 computer use tool provider declared, currently these are the declared computer tool providers: ${computerConfigs}`,
         );
     }
 
     if (computerConfigs.length === 1 && computerConfigs[0]) {
         computerProvider = createComputerProvider(computerConfigs[0]);
-        toolProviderRegistry.registerToolProvider(new ComputerUseToolProvider(computerProvider));
+        toolProviderRegistry.registerToolProvider(
+            new ComputerUseToolProvider(computerProvider),
+        );
     }
 }
 
@@ -193,18 +257,26 @@ export async function bootstrap(): Promise<BootstrappedAgent> {
 
     const defaultModel = modelRegistry.getDefaultModel();
     if (!defaultModel) {
-        throw new Error("No model registered in the model registry. Cannot create agent.");
+        throw new Error(
+            "No model registered in the model registry. Cannot create agent.",
+        );
     }
 
     const communicator = new InMemoryAgentCommunicator();
     const memoryManager = new InMemoryAgentMemoryManager();
 
+    const skillRepos = skillRepositoryRegistry.getAllSkillRepositories();
+    const toolProviders = [
+        ...toolProviderRegistry.getAllToolProviders(),
+        ...(skillRepos.length > 0 ? [loadSkillToolProvider(skillRepos)] : []),
+    ];
+
     const manager = new AgentManager({
         name: "agent",
         description: "You are a helpful assistant.",
         model: defaultModel,
-        skillRepository: skillRepositoryRegistry.getAllSkillRepositories(),
-        toolProviders: toolProviderRegistry.getAllToolProviders(),
+        skillRepository: skillRepos,
+        toolProviders,
         memoryManager,
         communicator,
         computerProvider: computerProvider ?? undefined,

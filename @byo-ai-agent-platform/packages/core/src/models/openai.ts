@@ -1,9 +1,14 @@
 import OpenAI from "openai";
+import type {
+    ModelInput,
+    ModelInteraction,
+    ModelMessageOutput,
+} from "./conversation";
 import type { Model } from "./models";
-import { logger } from "../logger";
-import type { ModelInput, ModelInteraction, ModelMessageOutput } from "./conversation";
 
-function toOpenAIInteraction(message: ModelInteraction[]): OpenAI.Responses.ResponseInput {
+function toOpenAIInteraction(
+    message: ModelInteraction[],
+): OpenAI.Responses.ResponseInput {
     return message.map((msg) => {
         if (msg.type === "message") {
             return {
@@ -15,23 +20,23 @@ function toOpenAIInteraction(message: ModelInteraction[]): OpenAI.Responses.Resp
                 type: "function_call",
                 name: msg.tool.name,
                 arguments: JSON.stringify(msg.arguments),
-                call_id: msg.id
+                call_id: msg.id,
             };
         } else if (msg.type === "tool_response") {
             return {
                 type: "function_call_output",
                 output: JSON.stringify(msg.result),
-                call_id: msg.id
+                call_id: msg.id,
             };
         } else {
             throw new Error(`Unknown message type: ${msg}`);
         }
-    })
+    });
 }
 
 export class OpenAIModel implements Model {
-    private client: OpenAI
-    private modelName: string
+    private client: OpenAI;
+    private modelName: string;
 
     constructor(modelName: string, apiKey: string) {
         this.modelName = modelName;
@@ -41,7 +46,6 @@ export class OpenAIModel implements Model {
     }
 
     async execute(input: ModelInput): Promise<ModelMessageOutput[]> {
-
         const response = await this.client.responses.create({
             model: this.modelName,
             instructions: input.systemPrompt ?? "You are a helpful assistant.",
@@ -51,15 +55,13 @@ export class OpenAIModel implements Model {
                 name: tool.name,
                 description: tool.description,
                 parameters: tool.inputSchema,
-                strict: true
-            }))
+                strict: true,
+            })),
         });
 
         if (response.output.length <= 0) {
             throw new Error("No output received from OpenAI model response.");
         }
-
-        logger.info(`Token tokens: ${response.usage!.output_tokens + response.usage!.input_tokens}`);
 
         const output = [] as ModelMessageOutput[];
 
@@ -73,11 +75,10 @@ export class OpenAIModel implements Model {
                 // any refusal messages should come first
                 const refusal = msg.content.find((c) => c.type === "refusal");
                 if (refusal) {
-                    logger.warn(`OpenAI model refused to answer: ${refusal.refusal}`);
                     output.push({
                         role: "assistant",
                         type: "message",
-                        content: refusal.refusal
+                        content: refusal.refusal,
                     });
                 }
 
@@ -85,21 +86,26 @@ export class OpenAIModel implements Model {
                 output.push({
                     role: "assistant",
                     type: "message",
-                    content: msg.content.filter(c => c.type === "output_text").flatMap((c) => c.text).join("\n")
+                    content: msg.content
+                        .filter((c) => c.type === "output_text")
+                        .flatMap((c) => c.text)
+                        .join("\n"),
                 });
             } else if (msg.type === "function_call") {
                 const tool = input.tools.find((t) => t.name === msg.name);
 
                 if (!tool) {
-                    throw new Error(`OpenAI model requested unknown tool: ${msg.name}`);
+                    throw new Error(
+                        `OpenAI model requested unknown tool: ${msg.name}`,
+                    );
                 }
 
                 output.push({
                     type: "tool_call",
                     arguments: JSON.parse(msg.arguments),
                     id: msg.call_id,
-                    tool: tool
-                })
+                    tool: tool,
+                });
             }
         }
         return output;
