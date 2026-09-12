@@ -3,6 +3,8 @@ import path from "node:path";
 import {
     type Agent,
     AgentManager,
+    type AgentObserver,
+    ConsoleAgentObserver,
     InMemoryAgentCommunicator,
     InMemoryAgentMemoryManager,
 } from "@byo-ai-agent-platform/core/agents";
@@ -246,7 +248,13 @@ export interface BootstrappedAgent {
     communicator: InMemoryAgentCommunicator;
 }
 
-export async function bootstrap(): Promise<BootstrappedAgent> {
+export interface BootstrapOptions {
+    observers?: AgentObserver[];
+}
+
+export async function bootstrap(
+    options?: BootstrapOptions,
+): Promise<BootstrappedAgent> {
     const config = await loadConfigIfAvailable();
 
     if (config) {
@@ -271,6 +279,8 @@ export async function bootstrap(): Promise<BootstrappedAgent> {
         ...(skillRepos.length > 0 ? [loadSkillToolProvider(skillRepos)] : []),
     ];
 
+    const observers = options?.observers ?? [new ConsoleAgentObserver()];
+
     const manager = new AgentManager({
         name: "agent",
         description: "You are a helpful assistant.",
@@ -280,6 +290,7 @@ export async function bootstrap(): Promise<BootstrappedAgent> {
         memoryManager,
         communicator,
         computerProvider: computerProvider ?? undefined,
+        observers,
     });
 
     await manager.init();

@@ -1,4 +1,7 @@
-import type { ModelInteraction } from "@/models/conversation";
+import type {
+    ModelInteraction,
+    ModelMessageOutput,
+} from "@/models/conversation";
 import type { Model } from "@/models/models";
 import type { Skill, SkillRepository } from "@/skills";
 import type { ComputerProvider } from "@/tools";
@@ -86,6 +89,31 @@ export interface AgentCommunicator {
     ): () => void;
 }
 
+// Observer interface for monitoring agent execution lifecycle
+export interface AgentObserver {
+    onTurnStart?(agent: Agent, userMessage: string): Promise<void> | void;
+    onTurnEnd?(agent: Agent, error?: unknown): Promise<void> | void;
+    onModelStart?(agent: Agent, prompt: string): Promise<void> | void;
+    onModelEnd?(
+        agent: Agent,
+        output: ModelMessageOutput[],
+    ): Promise<void> | void;
+    onAgentMessage?(agent: Agent, content: string): Promise<void> | void;
+    onToolCallStart?(
+        agent: Agent,
+        toolCallId: string,
+        tool: string,
+        args: Record<string, any>,
+    ): Promise<void> | void;
+    onToolCallEnd?(
+        agent: Agent,
+        toolCallId: string,
+        tool: string,
+        result: any,
+        error?: unknown,
+    ): Promise<void> | void;
+}
+
 // Configuration of the agent
 export type AgentConfiguration = {
     readonly name: string;
@@ -96,6 +124,7 @@ export type AgentConfiguration = {
     readonly memoryManager: AgentMemoryManager;
     readonly communicator: AgentCommunicator;
     readonly computerProvider?: ComputerProvider;
+    readonly observers?: AgentObserver[];
 };
 
 // Construct system prompt from agent definition and loaded skills
@@ -148,6 +177,23 @@ export class AgentManager {
 
     constructor(configuration: AgentConfiguration) {
         this.configuration = configuration;
+    }
+
+    private async notifyObservers<K extends keyof AgentObserver>(
+        method: K,
+        ...args: Parameters<NonNullable<AgentObserver[K]>>
+    ): Promise<void> {
+        if (!this.configuration.observers) return;
+        for (const observer of this.configuration.observers) {
+            try {
+                const fn = observer[method] as any;
+                if (typeof fn === "function") {
+                    await fn.apply(observer, args);
+                }
+            } catch {
+                // Observers must not disrupt agent execution
+            }
+        }
     }
 
     async init(): Promise<void> {
@@ -271,6 +317,7 @@ export class AgentManager {
 
     // Send message to agent
     async sendMessageToAgent(agent: Agent, message: string): Promise<void> {
+        await this.notifyObservers("onTurnStart", agent, message);
         await this.configuration.memoryManager.addTranscriptEntries(agent, [
             {
                 role: "user",
@@ -290,15 +337,27 @@ export class AgentManager {
         const memory =
             await this.configuration.memoryManager.getAgentMemory(agent);
 
-        const output = await this.configuration.model.execute({
-            history: memory.transcript,
-            systemPrompt: constructSystemPrompt(
-                session.name,
-                session.description,
-                this.skills,
-            ),
-            tools,
-        });
+        const prompt = constructSystemPrompt(
+            session.name,
+            session.description,
+            this.skills,
+        );
+
+        await this.notifyObservers("onModelStart", agent, prompt);
+
+        let output: ModelMessageOutput[];
+        try {
+            output = await this.configuration.model.execute({
+                history: memory.transcript,
+                systemPrompt: prompt,
+                tools,
+            });
+        } catch (error) {
+            await this.notifyObservers("onTurnEnd", agent, error);
+            throw error;
+        }
+
+        await this.notifyObservers("onModelEnd", agent, output);
 
         await this.configuration.memoryManager.addTranscriptEntries(
             agent,
@@ -309,12 +368,24 @@ export class AgentManager {
 
         for (const message of output) {
             if (message.type === "message") {
+                await this.notifyObservers(
+                    "onAgentMessage",
+                    agent,
+                    message.content,
+                );
                 await this.configuration.communicator.emit("agent:message", {
                     agent,
                     content: message.content,
                 });
             } else if (message.type === "tool_call") {
                 toolCallsPending = true;
+                await this.notifyObservers(
+                    "onToolCallStart",
+                    agent,
+                    message.id,
+                    message.tool.name,
+                    message.arguments,
+                );
                 await this.configuration.communicator.emit("tool:call", {
                     agent,
                     toolCallId: message.id,
@@ -325,6 +396,7 @@ export class AgentManager {
         }
 
         if (!toolCallsPending) {
+            await this.notifyObservers("onTurnEnd", agent);
             await this.configuration.communicator.emit("agent:complete", {
                 agent,
             });
@@ -342,27 +414,52 @@ export class AgentManager {
         const tool = tools.find((t) => t.name === toolName);
 
         if (!tool) {
+            const errorResult = { error: `Tool ${toolName} not found.` };
+            await this.notifyObservers(
+                "onToolCallEnd",
+                agent,
+                toolCallId,
+                toolName,
+                errorResult,
+            );
             await this.configuration.communicator.emit("tool:complete", {
                 agent,
                 toolCallId,
                 tool: toolName,
-                result: { error: `Tool ${toolName} not found.` },
+                result: errorResult,
             });
             return;
         }
 
         if (!validateToolArgument(tool.inputSchema, args)) {
+            const errorResult = {
+                error: `Invalid arguments for tool ${tool.name}`,
+            };
+            await this.notifyObservers(
+                "onToolCallEnd",
+                agent,
+                toolCallId,
+                tool.name,
+                errorResult,
+            );
             await this.configuration.communicator.emit("tool:complete", {
                 agent,
                 toolCallId,
                 tool: tool.name,
-                result: { error: `Invalid arguments for tool ${tool.name}` },
+                result: errorResult,
             });
             return;
         }
 
         try {
             const output = await tool.execute(args, session);
+            await this.notifyObservers(
+                "onToolCallEnd",
+                agent,
+                toolCallId,
+                tool.name,
+                output,
+            );
             await this.configuration.communicator.emit("tool:complete", {
                 agent,
                 toolCallId,
@@ -370,11 +467,20 @@ export class AgentManager {
                 result: output,
             });
         } catch (err: any) {
+            const errorResult = { error: err?.message ?? String(err) };
+            await this.notifyObservers(
+                "onToolCallEnd",
+                agent,
+                toolCallId,
+                tool.name,
+                errorResult,
+                err,
+            );
             await this.configuration.communicator.emit("tool:complete", {
                 agent,
                 toolCallId,
                 tool: tool.name,
-                result: { error: err?.message ?? String(err) },
+                result: errorResult,
             });
         }
     }
