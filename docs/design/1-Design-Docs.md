@@ -121,3 +121,28 @@ toolProviders:
 | **Computer Use** | Local Provider (`local`) | **Implemented** | `LocalComputerUseToolProvider` uses Node child_process/fs and Linux utilities (`xdotool`, `xclip`, `maim`/`scrot`/`import`) |
 | **Computer Use** | Session RBAC & Lifetime | **Unimplemented** | `computerLifetime` (server, user, session) deferred to event-driven refactor |
 | **Computer Use** | Windows / macOS Local GUI | **Unimplemented** | `LocalGraphicalComputer` currently relies on Linux/X11 tools (`xdotool`, `xclip`, `maim`) |
+
+## Agent Harness & Event-Driven Architecture (`packages/core/src/agents/`)
+
+The agent harness operates as an asynchronous, event-driven orchestration layer separating state persistence, event transport, and tool execution:
+
+- **Agent Orchestrator (`AgentManager`)**:
+  - Manages agent lifecycle (`createAgent`, `createAgentSession`, `sendMessageToAgent`, `runAgent`).
+  - Registers listeners on `AgentCommunicator` during `init()` to automatically react to incoming `user:message` events, `tool:call` execution, and `tool:complete` resolution.
+  - Passes session context (`AgentSession`) containing agent identity, runtime memory, computer provider, and skill repositories to tools.
+  - Contains built-in error handling wrapping tool validation and execution to emit safe error results back into the model transcript.
+
+- **Communication Layer (`AgentCommunicator` / `packages/core/src/agents/communication/`)**:
+  - Typed pub/sub bus with events:
+    - `user:message`: Inbound message from client / queue.
+    - `agent:run`: Trigger execution turn on current history.
+    - `agent:message`: Assistant output message.
+    - `agent:complete`: Turn completion.
+    - `tool:call`: Tool request from model.
+    - `tool:complete`: Tool result resolution.
+  - **`InMemoryAgentCommunicator`**: In-process event bus for local runtime and test execution.
+
+- **Memory Management Layer (`AgentMemoryManager` / `packages/core/src/agents/memory/`)**:
+  - Manages transcript persistence and pending tool call resolution (`getPendingToolCalls()` using `Set<string>`).
+  - **`InMemoryAgentMemoryManager`**: Transient memory store.
+  - **`JsonFileAgentMemoryManager`**: File-backed memory store persisting each agent's conversation history and computer binding to `<storageDir>/<agentId>.json` with atomic writes.

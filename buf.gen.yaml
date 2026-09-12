@@ -7,12 +7,12 @@ plugins:
     out: computer_controller/gen
     opt:
       - paths=source_relative
-  - local: ./agentic_harness/node_modules/.bin/protoc-gen-es
-    out: agentic_harness/src/gen
+  - remote: buf.build/bufbuild/es
+    out: '@byo-ai-agent-platform/packages/core/src/gen'
     opt: target=ts
     include_imports: true
-  - local: ./agentic_harness/node_modules/.bin/protoc-gen-connect-es
-    out: agentic_harness/src/gen
+  - remote: buf.build/connectrpc/es
+    out: '@byo-ai-agent-platform/packages/core/src/gen'
     opt: target=ts
     include_imports: true
 managed:

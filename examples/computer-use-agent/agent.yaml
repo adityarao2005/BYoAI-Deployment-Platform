@@ -1,0 +1,11 @@
+models:
+  - name: gemini-3.7-flash
+    brand: gemini
+    properties:
+      apiKey: "${GEMINI_API_KEY}"
+
+toolProviders:
+  - type: computer
+    provider:
+      type: local
+      enableGUIToolsIfAvailable: false

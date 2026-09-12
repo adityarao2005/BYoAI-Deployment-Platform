@@ -2,7 +2,7 @@ version: v2
 modules:
   - path: .
     excludes:
-      - agentic_harness
+      - '@byo-ai-agent-platform'
       - computer_controller
       - local_models
 

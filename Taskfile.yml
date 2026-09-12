@@ -4,8 +4,8 @@ version: '3'
 
 includes:
   agentic_harness:
-    taskfile: agentic_harness/Taskfile.yml
-    dir: agentic_harness
+    taskfile: '@byo-ai-agent-platform/Taskfile.yml'
+    dir: '@byo-ai-agent-platform'
   local_models:
     taskfile: local_models/Taskfile.yml
     dir: local_models
@@ -47,7 +47,7 @@ tasks:
       - buf.lock
     generates:
       - 'computer_controller/gen/**/*'
-      - 'agentic_harness/src/gen/**/*'
+      - '@byo-ai-agent-platform/packages/core/src/gen/**/*'
     cmds:
       - buf dep update
       - buf lint

@@ -1,0 +1,130 @@
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, describe, expect, it } from "bun:test";
+import { stringify } from "yaml";
+import { loadConfig } from "./bootstrap";
+
+describe("loadConfig", () => {
+    let tempConfigDir: string | undefined;
+
+    afterEach(async () => {
+        if (tempConfigDir) {
+            await rm(tempConfigDir, { recursive: true, force: true });
+            tempConfigDir = undefined;
+        }
+    });
+
+    it("parses JSON content from an agent.yaml file", async () => {
+        tempConfigDir = await mkdtemp(join(tmpdir(), "agent-config-json-"));
+        const configPath = join(tempConfigDir, "agent.yaml");
+
+        await writeFile(
+            configPath,
+            JSON.stringify({
+                models: [
+                    {
+                        name: "gpt4",
+                        brand: "openai",
+                        properties: {
+                            apiKey: "sk-test-key-123",
+                        },
+                    },
+                ],
+            }),
+            "utf8"
+        );
+
+        const config = await loadConfig(configPath);
+
+        expect(config.models).toHaveLength(1);
+        expect(config.models[0]).toMatchObject({
+            name: "gpt4",
+            brand: "openai",
+            properties: {
+                apiKey: "sk-test-key-123",
+            },
+        });
+        expect(config.skillRepositories).toEqual([]);
+        expect(config.toolProviders).toEqual([]);
+    });
+
+    it("parses YAML content from an agent.yaml file", async () => {
+        tempConfigDir = await mkdtemp(join(tmpdir(), "agent-config-yaml-"));
+        const configPath = join(tempConfigDir, "agent.yaml");
+
+        await writeFile(
+            configPath,
+            stringify({
+                models: [
+                    {
+                        name: "claude",
+                        brand: "anthropic",
+                        properties: {
+                            apiKey: "sk-ant-123",
+                            maxTokens: 4096,
+                        },
+                    },
+                ],
+            }),
+            "utf8"
+        );
+
+        const config = await loadConfig(configPath);
+
+        expect(config.models).toHaveLength(1);
+        expect(config.models[0]?.name).toBe("claude");
+        expect(config.models[0]?.brand).toBe("anthropic");
+    });
+
+    it("interpolates environment variables into YAML content", async () => {
+        process.env.TEST_GEMINI_KEY = "substituted-gemini-key";
+        tempConfigDir = await mkdtemp(join(tmpdir(), "agent-config-env-"));
+        const configPath = join(tempConfigDir, "agent.yaml");
+
+        await writeFile(
+            configPath,
+            `
+models:
+  - name: gemini-flash-latest
+    brand: gemini
+    properties:
+      apiKey: "\${TEST_GEMINI_KEY}"
+skillRepositories: []
+toolProviders: []
+`,
+            "utf8"
+        );
+
+        try {
+            const config = await loadConfig(configPath);
+            expect(config.models).toHaveLength(1);
+            expect(config.models[0]?.properties.apiKey).toBe("substituted-gemini-key");
+        } finally {
+            delete process.env.TEST_GEMINI_KEY;
+        }
+    });
+
+    it("supports default values in environment variable syntax", async () => {
+        tempConfigDir = await mkdtemp(join(tmpdir(), "agent-config-default-"));
+        const configPath = join(tempConfigDir, "agent.yaml");
+
+        await writeFile(
+            configPath,
+            `
+models:
+  - name: gemini-flash-latest
+    brand: gemini
+    properties:
+      apiKey: "\${UNSET_VAR:-fallback-key}"
+skillRepositories: []
+toolProviders: []
+`,
+            "utf8"
+        );
+
+        const config = await loadConfig(configPath);
+        expect(config.models[0]?.properties.apiKey).toBe("fallback-key");
+    });
+});
+

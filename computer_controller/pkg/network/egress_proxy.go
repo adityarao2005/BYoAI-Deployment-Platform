@@ -410,4 +410,3 @@ func (p *EgressProxy) handleHTTP(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(resp.StatusCode)
 	_, _ = io.Copy(rw, resp.Body)
 }
-

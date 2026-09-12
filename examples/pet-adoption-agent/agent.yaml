@@ -1,0 +1,20 @@
+models:
+  - name: gemini-3.7-flash
+    brand: gemini
+    properties:
+      apiKey: "${GEMINI_API_KEY}"
+
+skillRepositories:
+  - type: zip
+    location: "${AGENT_SKILLS_PATH:-skills.zip}"
+    skillsSubdirectory: "/skills/"
+
+toolProviders:
+  - name: petstore
+    type: openapi
+    specUrl: "https://petstore.swagger.io/v2/swagger.json"
+    securityVariables:
+      type: apiKey
+      name: api_key
+      key: "special-key"
+      location: header
