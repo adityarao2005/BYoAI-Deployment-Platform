@@ -33,4 +33,21 @@ export class ConsoleAgentObserver implements AgentObserver {
             );
         }
     }
+
+    onTurnEnd(_agent: Agent, error?: unknown): void {
+        if (error) {
+            const message =
+                error instanceof Error ? error.message : String(error);
+            console.error(`[Turn error]: ${message}`);
+        }
+    }
+
+    onError(_agent: Agent, error: unknown, context?: string): void {
+        const prefix = context ? `[Agent error (${context})]` : "[Agent error]";
+        const message =
+            error instanceof Error
+                ? (error.stack ?? error.message)
+                : String(error);
+        console.error(`${prefix}: ${message}`);
+    }
 }

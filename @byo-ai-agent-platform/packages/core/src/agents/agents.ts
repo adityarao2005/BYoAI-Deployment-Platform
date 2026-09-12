@@ -112,6 +112,11 @@ export interface AgentObserver {
         result: any,
         error?: unknown,
     ): Promise<void> | void;
+    onError?(
+        agent: Agent,
+        error: unknown,
+        context?: string,
+    ): Promise<void> | void;
 }
 
 // Configuration of the agent
@@ -213,7 +218,20 @@ export class AgentManager {
             comm.on("agent:run", async ({ agent }) => {
                 try {
                     await this.runAgent(agent);
-                } catch {}
+                } catch (error) {
+                    await this.notifyObservers(
+                        "onError",
+                        agent,
+                        error,
+                        "agent:run",
+                    );
+                    await this.configuration.communicator.emit(
+                        "agent:complete",
+                        {
+                            agent,
+                        },
+                    );
+                }
             }),
         );
 
@@ -221,7 +239,20 @@ export class AgentManager {
             comm.on("user:message", async ({ agent, content }) => {
                 try {
                     await this.sendMessageToAgent(agent, content);
-                } catch {}
+                } catch (error) {
+                    await this.notifyObservers(
+                        "onError",
+                        agent,
+                        error,
+                        "user:message",
+                    );
+                    await this.configuration.communicator.emit(
+                        "agent:complete",
+                        {
+                            agent,
+                        },
+                    );
+                }
             }),
         );
 
@@ -229,7 +260,14 @@ export class AgentManager {
             comm.on("tool:call", async ({ agent, toolCallId, tool, args }) => {
                 try {
                     await this.handleToolCall(agent, toolCallId, tool, args);
-                } catch {}
+                } catch (error) {
+                    await this.notifyObservers(
+                        "onError",
+                        agent,
+                        error,
+                        "tool:call",
+                    );
+                }
             }),
         );
 
@@ -244,7 +282,14 @@ export class AgentManager {
                             toolCallId,
                             result,
                         );
-                    } catch {}
+                    } catch (error) {
+                        await this.notifyObservers(
+                            "onError",
+                            agent,
+                            error,
+                            "tool:complete",
+                        );
+                    }
                 },
             ),
         );
@@ -354,6 +399,7 @@ export class AgentManager {
             });
         } catch (error) {
             await this.notifyObservers("onTurnEnd", agent, error);
+            await this.notifyObservers("onError", agent, error, "model:execute");
             throw error;
         }
 

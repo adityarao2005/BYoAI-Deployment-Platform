@@ -147,4 +147,61 @@ describe("AgentObserver", () => {
 
         manager.destroy();
     });
+
+    it("AgentManager notifies onError and onTurnEnd when model execution fails", async () => {
+        const errorEvents: string[] = [];
+
+        const testObserver: AgentObserver = {
+            onError(_agent, error, context) {
+                errorEvents.push(`error:${context}:${(error as Error).message}`);
+            },
+            onTurnEnd(_agent, error) {
+                errorEvents.push(`turn_end:${(error as Error).message}`);
+            },
+        };
+
+        const failingModel: Model = {
+            async execute() {
+                throw new Error("Model API failure");
+            },
+        };
+
+        const communicator = new InMemoryAgentCommunicator();
+        const memoryManager = new InMemoryAgentMemoryManager();
+
+        const config: AgentConfiguration = {
+            name: "TestAgent",
+            description: "Test description",
+            model: failingModel,
+            skillRepository: [],
+            toolProviders: [],
+            memoryManager,
+            communicator,
+            observers: [testObserver],
+        };
+
+        const manager = new AgentManager(config);
+        await manager.init();
+        const agent = await manager.createAgent();
+
+        let completed = false;
+        communicator.on("agent:complete", () => {
+            completed = true;
+        });
+
+        await communicator.emit("user:message", {
+            agent,
+            content: "Trigger error",
+        });
+
+        expect(errorEvents).toEqual([
+            "turn_end:Model API failure",
+            "error:model:execute:Model API failure",
+            "error:agent:run:Model API failure",
+        ]);
+        expect(completed).toBe(true);
+
+        manager.destroy();
+    });
 });
+
