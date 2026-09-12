@@ -204,13 +204,12 @@ export function registerSkillRepositories(config: AgentConfig): void {
     }
 }
 
-// ─── Tool Provider Registration ─────────────────────────────────────
-let computerProvider: ComputerProvider | null = null;
+// ─── Computer Registration ──────────────────────────────────────────
 
-function registerComputerToolProvider(
-    toolProviders: ToolProviderConfig[],
-): void {
-    const computerConfigs = toolProviders.filter(
+export function registerComputer(
+    config: AgentConfig,
+): ComputerProvider | undefined {
+    const computerConfigs = config.toolProviders.filter(
         (p): p is ComputerUseToolProviderConfig => p.type === "computer",
     );
 
@@ -221,14 +220,18 @@ function registerComputerToolProvider(
     }
 
     if (computerConfigs.length === 1 && computerConfigs[0]) {
-        computerProvider = createComputerProvider(computerConfigs[0]);
-        toolProviderRegistry.registerToolProvider(
-            new ComputerUseToolProvider(computerProvider),
-        );
+        return createComputerProvider(computerConfigs[0]);
     }
+
+    return undefined;
 }
 
-export function registerToolProviders(config: AgentConfig): void {
+// ─── Tool Provider Registration ─────────────────────────────────────
+
+export function registerToolProviders(
+    config: AgentConfig,
+    computer?: ComputerProvider,
+): void {
     for (const providerConfig of config.toolProviders) {
         if (providerConfig.type === "openapi") {
             const openApiProvider = new OpenAPIToolProvider(providerConfig);
@@ -236,8 +239,15 @@ export function registerToolProviders(config: AgentConfig): void {
         }
     }
 
-    // Computer use tool provider (at most one allowed)
-    registerComputerToolProvider(config.toolProviders);
+    // Check if a computer is registered, and if so register the ComputerUseToolProvider
+    const activeComputer =
+        computer !== undefined ? computer : registerComputer(config);
+
+    if (activeComputer) {
+        toolProviderRegistry.registerToolProvider(
+            new ComputerUseToolProvider(activeComputer),
+        );
+    }
 }
 
 // ─── Bootstrap ──────────────────────────────────────────────────────
@@ -257,10 +267,13 @@ export async function bootstrap(
 ): Promise<BootstrappedAgent> {
     const config = await loadConfigIfAvailable();
 
+    let computer: ComputerProvider | undefined = undefined;
+
     if (config) {
         registerModels(config);
         registerSkillRepositories(config);
-        registerToolProviders(config);
+        computer = registerComputer(config);
+        registerToolProviders(config, computer);
     }
 
     const defaultModel = modelRegistry.getDefaultModel();
@@ -289,7 +302,7 @@ export async function bootstrap(
         toolProviders,
         memoryManager,
         communicator,
-        computerProvider: computerProvider ?? undefined,
+        computerProvider: computer,
         observers,
     });
 

@@ -21,6 +21,15 @@ Golang-based daemon service providing remote execution primitives for AI Agents:
 
 For detailed configuration schema, build, run, and test guides, see [computer_controller/README.md](computer_controller/README.md).
 
+## Examples
+
+Explore runnable agent configurations in [`examples/`](examples/):
+
+- **[Pet Adoption & Store Agent](examples/pet-adoption-agent/README.md)** (`examples/pet-adoption-agent/`):
+  Demonstrates dynamic OpenAPI tool execution against Swagger Petstore, progressive skill loading from a packaged zip archive, and interactive console observability.
+- **[Computer Use Agent](examples/computer-use-agent/README.md)** (`examples/computer-use-agent/`):
+  Demonstrates an agent equipped with direct computer execution primitives (bash command execution, filesystem manipulation, and environment sandboxing).
+
 ## Getting Started
 
 ### Task Commands

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "bun:test";
 import { toolProviderRegistry } from "@byo-ai-agent-platform/core/tools";
 import type { AgentConfig } from "@byo-ai-agent-platform/core/config";
 import type { Agent } from "@byo-ai-agent-platform/core/agents";
-import { registerToolProviders } from "./bootstrap";
+import { registerComputer, registerToolProviders } from "./bootstrap";
 
 describe("Tool Provider Registration", () => {
     beforeEach(() => {
@@ -156,5 +156,43 @@ describe("Tool Provider Registration", () => {
         await expect(computerProvider?.getAllTools(agent)).rejects.toThrow(
             "The Agent is not registered with this tool provider and thus the agent does not have a computer id"
         );
+    });
+
+    it("registerComputer returns ComputerProvider and registerToolProviders attaches it when passed", () => {
+        const config: AgentConfig = {
+            models: [],
+            skillRepositories: [],
+            toolProviders: [
+                {
+                    type: "computer",
+                    provider: {
+                        type: "local",
+                        enableGUIToolsIfAvailable: false,
+                    },
+                },
+            ],
+        };
+
+        const computer = registerComputer(config);
+        expect(computer).toBeDefined();
+
+        registerToolProviders(config, computer);
+        const providers = toolProviderRegistry.getAllToolProviders();
+        expect(providers).toHaveLength(1);
+    });
+
+    it("registerComputer returns undefined when no computer provider is configured", () => {
+        const config: AgentConfig = {
+            models: [],
+            skillRepositories: [],
+            toolProviders: [],
+        };
+
+        const computer = registerComputer(config);
+        expect(computer).toBeUndefined();
+
+        registerToolProviders(config, computer);
+        const providers = toolProviderRegistry.getAllToolProviders();
+        expect(providers).toHaveLength(0);
     });
 });
