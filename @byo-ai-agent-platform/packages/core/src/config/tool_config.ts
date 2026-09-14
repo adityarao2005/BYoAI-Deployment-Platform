@@ -4,6 +4,7 @@ export const BaseToolProviderConfigSchema = z.object({
     name: z.string()
 })
 
+// OpenAPI tool provider
 export const OpenAPIToolProviderConfigSchema = BaseToolProviderConfigSchema.extend({
     type: z.literal("openapi"),
     specUrl: z.string(),
@@ -44,12 +45,17 @@ export const OpenAPIToolProviderConfigSchema = BaseToolProviderConfigSchema.exte
 
 export type OpenAPIToolProviderConfig = z.infer<typeof OpenAPIToolProviderConfigSchema>;
 
+// Computer Use Tool Providers
+
+// local tool provider
 export const LocalComputerUseToolProviderConfigSchema = z.object({
     type: z.literal("local"),
     enableGUIToolsIfAvailable: z.boolean()
 });
 
 export type LocalComputerUseToolProviderConfig = z.infer<typeof LocalComputerUseToolProviderConfigSchema>
+
+// remote tool provider
 
 export const RemoteComputerUseToolProviderConfigSchema = z.object({
     type: z.literal("remote"),
@@ -129,9 +135,49 @@ export const ComputerUseToolProviderConfigSchema = z.object({
 
 export type ComputerUseToolProviderConfig = z.infer<typeof ComputerUseToolProviderConfigSchema>;
 
+// mcp server
+// security configuration, either headers, or mtls
+export const McpRemoteSecuritySchema = z.object({
+    mtls: z.object({
+        clientCert: z.string(),
+        clientKey: z.string(),
+        caCert: z.string().optional()
+    }).optional(),
+    headers: z.record(z.string(), z.string()).optional()
+}).optional()
+
+const McpStdioConfigSchema = BaseToolProviderConfigSchema.extend({
+    type: z.literal("mcp"),
+    transport: z.literal("stdio"),
+    command: z.string(),
+    // command line args passed to executable
+    args: z.array(z.string()).optional(),
+    // environment
+    env: z.union([
+        z.record(z.string(), z.string())
+    ]).optional(),
+})
+
+const McpRemoteConfigSchema = BaseToolProviderConfigSchema.extend({
+    type: z.literal("mcp"),
+    transport: z.enum(["http"]),
+    url: z.string(),
+    security: McpRemoteSecuritySchema,
+})
+
+export const McpToolProviderConfigSchema = z.discriminatedUnion("transport", [
+    McpStdioConfigSchema,
+    McpRemoteConfigSchema
+])
+
+export type McpToolProviderConfig = z.infer<typeof McpToolProviderConfigSchema>
+
+// tool providers
+
 export const ToolProviderConfigSchema = z.discriminatedUnion("type", [
     OpenAPIToolProviderConfigSchema,
     ComputerUseToolProviderConfigSchema,
+    McpToolProviderConfigSchema
 ])
 
 export type ToolProviderConfig = z.infer<typeof ToolProviderConfigSchema>;
