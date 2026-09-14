@@ -8,15 +8,19 @@ import {
     InMemoryAgentCommunicator,
     InMemoryAgentMemoryManager,
 } from "@byo-ai-agent-platform/core/agents";
+
 import {
     type ComputerProvider,
     createComputerProvider,
 } from "@byo-ai-agent-platform/core/computer";
+
 import {
     type AgentConfig,
-    AgentConfigSchema,
-    type ComputerUseToolProviderConfig,
-    type ToolProviderConfig,
+    AgentConfigSchema
+} from "./agent.config"
+
+import {
+    type ComputerUseToolProviderConfig
 } from "@byo-ai-agent-platform/core/config";
 import {
     AnthropicModel,

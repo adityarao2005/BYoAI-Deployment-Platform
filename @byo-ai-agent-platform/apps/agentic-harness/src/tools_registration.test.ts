@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { toolProviderRegistry } from "@byo-ai-agent-platform/core/tools";
-import type { AgentConfig } from "@byo-ai-agent-platform/core/config";
+import type { AgentConfig } from "./agent.config";
 import type { Agent } from "@byo-ai-agent-platform/core/agents";
 import { registerComputer, registerToolProviders } from "./bootstrap";
 

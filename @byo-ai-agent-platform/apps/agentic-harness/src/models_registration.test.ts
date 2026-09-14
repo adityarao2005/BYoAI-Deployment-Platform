@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { modelRegistry } from "@byo-ai-agent-platform/core/models";
-import type { AgentConfig } from "@byo-ai-agent-platform/core/config";
+import type { AgentConfig } from "./agent.config";
 import { registerModels } from "./bootstrap";
 
 describe("Model Config Registration", () => {
@@ -152,7 +152,7 @@ describe("Model Config Registration", () => {
                     properties: {
                         apiKey: "",
                         maxTokens: 1024,
-                        
+
                     },
                 },
             ],
