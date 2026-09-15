@@ -146,7 +146,7 @@ export const McpRemoteSecuritySchema = z.object({
     headers: z.record(z.string(), z.string()).optional()
 }).optional()
 
-const McpStdioConfigSchema = BaseToolProviderConfigSchema.extend({
+export const McpStdioConfigSchema = BaseToolProviderConfigSchema.extend({
     type: z.literal("mcp"),
     transport: z.literal("stdio"),
     command: z.string(),
@@ -158,12 +158,16 @@ const McpStdioConfigSchema = BaseToolProviderConfigSchema.extend({
     ]).optional(),
 })
 
-const McpRemoteConfigSchema = BaseToolProviderConfigSchema.extend({
+export type McpStdioConfig = z.infer<typeof McpRemoteConfigSchema>
+
+export const McpRemoteConfigSchema = BaseToolProviderConfigSchema.extend({
     type: z.literal("mcp"),
-    transport: z.enum(["http"]),
+    transport: z.literal("http"),
     url: z.string(),
     security: McpRemoteSecuritySchema,
 })
+
+export type McpRemoteConfig = z.infer<typeof McpRemoteConfigSchema>
 
 export const McpToolProviderConfigSchema = z.discriminatedUnion("transport", [
     McpStdioConfigSchema,

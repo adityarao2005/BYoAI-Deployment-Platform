@@ -3,6 +3,8 @@ import { toolObject, toolString, type Tool, type ToolProvider } from "@/tools";
 import { Client } from "@modelcontextprotocol/client"
 
 export interface McpClientFactory {
+    readonly name: string
+
     createClient(agent: Agent): Promise<Client>
 }
 
@@ -12,7 +14,6 @@ export class McpServerToolProvider implements ToolProvider {
     private cachedTools: Map<string, Tool[]> = new Map();
 
     constructor(
-        private name: string,
         private clientFactory: McpClientFactory,
     ) {}
 
@@ -80,7 +81,7 @@ export class McpServerToolProvider implements ToolProvider {
 
             agentTools.push({
                 description: tool.description,
-                name: `${this.name}_tools_${tool.name}`,
+                name: `${this.clientFactory.name}_tools_${tool.name}`,
                 inputSchema: {
                     properties,
                     type: "object",
@@ -95,8 +96,8 @@ export class McpServerToolProvider implements ToolProvider {
 
         // add tool for reading resource
         agentTools.push({
-            description: `Retrieves an MCP resource associated with the mcp server ${this.name} and the provided URI`,
-            name: `${this.name}_read_resource`,
+            description: `Retrieves an MCP resource associated with the mcp server ${this.clientFactory.name} and the provided URI`,
+            name: `${this.clientFactory.name}_read_resource`,
             inputSchema: toolObject("Schema Object for tool call input", {
                 uri: toolString("URI of the resource"),
             }),
@@ -107,8 +108,8 @@ export class McpServerToolProvider implements ToolProvider {
 
         // add tool for listing resources
         agentTools.push({
-            description: `Lists the MCP resources associated with the mcp server ${this.name}`,
-            name: `${this.name}_list_resources`,
+            description: `Lists the MCP resources associated with the mcp server ${this.clientFactory.name}`,
+            name: `${this.clientFactory.name}_list_resources`,
             inputSchema: toolObject("Schema Object for tool call input", {}),
             execute: async () => {
                 return resources;
