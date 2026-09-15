@@ -383,8 +383,8 @@ export async function buildTransportOptions(
 ): Promise<ConnectTransportOptions> {
     const interceptors: Interceptor[] = [];
 
-    if (config.security?.apiKey) {
-        const apiKey = config.security.apiKey;
+    if (config.security?.bearerToken) {
+        const apiKey = config.security.bearerToken;
         interceptors.push((next) => async (req) => {
             req.header.set("Authorization", `Bearer ${apiKey}`);
             return await next(req);

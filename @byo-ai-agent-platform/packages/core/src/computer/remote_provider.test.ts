@@ -238,7 +238,7 @@ describe("RemoteComputerProvider", () => {
         const configWithSecurity: RemoteComputerUseToolProviderConfig = {
             ...remoteConfig,
             security: {
-                apiKey: "secret-key-xyz",
+                bearerToken: "secret-key-xyz",
                 mtls: {
                     clientCert: "sample-cert-content",
                     clientKey: "sample-key-content",

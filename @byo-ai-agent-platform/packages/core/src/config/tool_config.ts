@@ -66,9 +66,9 @@ export const RemoteComputerUseToolProviderConfigSchema = z.object({
 
     // TODO: when we work on the on getting user based & session based rbac stuff when we rework the agent harness to be event driven, we need to add a new computerLifetime argument with options for "server", "user", "session"
 
-    // security configuration, either apikey auth or mtls
+    // security configuration, either bearer token auth or mtls
     security: z.object({
-        apiKey: z.string().optional(),
+        bearerToken: z.string().optional(),
         mtls: z.object({
             clientCert: z.string(),
             clientKey: z.string(),
@@ -136,15 +136,29 @@ export const ComputerUseToolProviderConfigSchema = z.object({
 export type ComputerUseToolProviderConfig = z.infer<typeof ComputerUseToolProviderConfigSchema>;
 
 // mcp server
-// security configuration, either headers, or mtls
+export const McpAuthSchema = z.discriminatedUnion("type", [
+    z.object({
+        type: z.literal("bearer"),
+        token: z.string(),
+    }),
+    z.object({
+        type: z.literal("basic"),
+        username: z.string(),
+        password: z.string(),
+    }),
+]);
+
+export type McpAuth = z.infer<typeof McpAuthSchema>;
+
 export const McpRemoteSecuritySchema = z.object({
     mtls: z.object({
         clientCert: z.string(),
         clientKey: z.string(),
-        caCert: z.string().optional()
+        caCert: z.string().optional(),
     }).optional(),
-    headers: z.record(z.string(), z.string()).optional()
-}).optional()
+    auth: McpAuthSchema.optional(),
+    headers: z.record(z.string(), z.string()).optional(),
+}).optional();
 
 export const McpStdioConfigSchema = BaseToolProviderConfigSchema.extend({
     type: z.literal("mcp"),
@@ -158,7 +172,7 @@ export const McpStdioConfigSchema = BaseToolProviderConfigSchema.extend({
     ]).optional(),
 })
 
-export type McpStdioConfig = z.infer<typeof McpRemoteConfigSchema>
+export type McpStdioConfig = z.infer<typeof McpStdioConfigSchema>
 
 export const McpRemoteConfigSchema = BaseToolProviderConfigSchema.extend({
     type: z.literal("mcp"),

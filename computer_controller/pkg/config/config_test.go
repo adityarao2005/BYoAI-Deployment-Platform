@@ -178,8 +178,8 @@ server:
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
-		if cfg.Server.Security.HasAPIKey() {
-			t.Error("expected HasAPIKey() to be false")
+		if cfg.Server.Security.HasBearerToken() {
+			t.Error("expected HasBearerToken() to be false")
 		}
 		if cfg.Server.Security.HasTLS() {
 			t.Error("expected HasTLS() to be false")
@@ -196,17 +196,17 @@ server:
 type: local
 server:
   security:
-    apiKey: "${TEST_CC_API_KEY}"
+    bearerToken: "${TEST_CC_API_KEY}"
 `)
 		cfg, err := LoadConfig(yamlData)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
-		if !cfg.Server.Security.HasAPIKey() {
-			t.Error("expected HasAPIKey() to be true")
+		if !cfg.Server.Security.HasBearerToken() {
+			t.Error("expected HasBearerToken() to be true")
 		}
-		if cfg.Server.Security.ApiKey != "super-secret-token" {
-			t.Errorf("expected ApiKey %q, got %q", "super-secret-token", cfg.Server.Security.ApiKey)
+		if cfg.Server.Security.BearerToken != "super-secret-token" {
+			t.Errorf("expected bearerToken %q, got %q", "super-secret-token", cfg.Server.Security.BearerToken)
 		}
 		if cfg.Server.Security.HasTLS() {
 			t.Error("expected HasTLS() to be false")
@@ -218,7 +218,7 @@ server:
 type: local
 server:
   security:
-    apiKey: "my-key"
+    bearerToken: "my-key"
     tls:
       tlsCertificate: "/path/to/cert.pem"
       tlsCertificateKey: "/path/to/key.pem"
@@ -228,8 +228,8 @@ server:
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
-		if !cfg.Server.Security.HasAPIKey() {
-			t.Error("expected HasAPIKey() to be true")
+		if !cfg.Server.Security.HasBearerToken() {
+			t.Error("expected HasBearerToken() to be true")
 		}
 		if !cfg.Server.Security.HasTLS() {
 			t.Error("expected HasTLS() to be true")

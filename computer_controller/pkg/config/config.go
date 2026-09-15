@@ -52,12 +52,12 @@ func (t TlsConfig) IsMTLSEnabled() bool {
 }
 
 type ServerSecurityConfig struct {
-	ApiKey string    `yaml:"apiKey,omitempty"`
-	Tls    TlsConfig `yaml:"tls,omitempty"`
+	BearerToken string    `yaml:"bearerToken,omitempty"`
+	Tls         TlsConfig `yaml:"tls,omitempty"`
 }
 
-func (s ServerSecurityConfig) HasAPIKey() bool {
-	return s.ApiKey != ""
+func (s ServerSecurityConfig) HasBearerToken() bool {
+	return s.BearerToken != ""
 }
 
 func (s ServerSecurityConfig) HasTLS() bool {
@@ -106,7 +106,7 @@ func (c *ServerConfig) UnmarshalYAML(value *yaml.Node) error {
 	}
 
 	sec := raw.Server.Security
-	sec.ApiKey = os.ExpandEnv(sec.ApiKey)
+	sec.BearerToken = os.ExpandEnv(sec.BearerToken)
 	sec.Tls.TlsCertificate = os.ExpandEnv(sec.Tls.TlsCertificate)
 	sec.Tls.TlsCertificateKey = os.ExpandEnv(sec.Tls.TlsCertificateKey)
 	sec.Tls.TlsTrustedCertificates = os.ExpandEnv(sec.Tls.TlsTrustedCertificates)

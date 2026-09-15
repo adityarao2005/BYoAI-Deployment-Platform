@@ -78,6 +78,7 @@ describe("McpServerToolProvider", () => {
         };
 
         mockFactory = {
+            name: "test_server",
             createClient: vi.fn().mockImplementation(async (agent: Agent) => {
                 if (agent.id === "agent-b") return mockClientB as unknown as Client;
                 return mockClientA as unknown as Client;
@@ -86,7 +87,7 @@ describe("McpServerToolProvider", () => {
     });
 
     it("discovers tools and creates resource tools with safe names", async () => {
-        const provider = new McpServerToolProvider("test_server", mockFactory);
+        const provider = new McpServerToolProvider(mockFactory);
         const agent = createAgent("agent-a", "agent-a");
 
         const tools = await provider.getAllTools(agent);
@@ -104,7 +105,7 @@ describe("McpServerToolProvider", () => {
     });
 
     it("retrieves a tool by name using getToolByName", async () => {
-        const provider = new McpServerToolProvider("test_server", mockFactory);
+        const provider = new McpServerToolProvider(mockFactory);
         const agent = createAgent("agent-a", "agent-a");
 
         const tool = await provider.getToolByName("test_server_tools_echo", agent);
@@ -116,7 +117,7 @@ describe("McpServerToolProvider", () => {
     });
 
     it("executes an MCP tool and delegates to client.callTool", async () => {
-        const provider = new McpServerToolProvider("test_server", mockFactory);
+        const provider = new McpServerToolProvider(mockFactory);
         const agent = createAgent("agent-a", "agent-a");
 
         const tool = await provider.getToolByName("test_server_tools_echo", agent);
@@ -138,7 +139,7 @@ describe("McpServerToolProvider", () => {
             content: [{ type: "text", text: "Something went wrong" }],
         });
 
-        const provider = new McpServerToolProvider("test_server", mockFactory);
+        const provider = new McpServerToolProvider(mockFactory);
         const agent = createAgent("agent-a", "agent-a");
         const tool = await provider.getToolByName("test_server_tools_echo", agent);
         const fakeSession = { agent } as unknown as AgentSession;
@@ -148,7 +149,7 @@ describe("McpServerToolProvider", () => {
     });
 
     it("executes read_resource and calls client.readResource", async () => {
-        const provider = new McpServerToolProvider("test_server", mockFactory);
+        const provider = new McpServerToolProvider(mockFactory);
         const agent = createAgent("agent-a", "agent-a");
 
         const readResourceTool = await provider.getToolByName("test_server_read_resource", agent);
@@ -162,7 +163,7 @@ describe("McpServerToolProvider", () => {
     });
 
     it("executes list_resources and returns listed resources", async () => {
-        const provider = new McpServerToolProvider("test_server", mockFactory);
+        const provider = new McpServerToolProvider(mockFactory);
         const agent = createAgent("agent-a", "agent-a");
 
         const listResourceTool = await provider.getToolByName("test_server_list_resources", agent);
@@ -179,7 +180,7 @@ describe("McpServerToolProvider", () => {
     });
 
     it("isolates tools per agent and does not leak execution closures across agents", async () => {
-        const provider = new McpServerToolProvider("test_server", mockFactory);
+        const provider = new McpServerToolProvider(mockFactory);
         const agentA = createAgent("agent-a", "agent-a");
         const agentB = createAgent("agent-b", "agent-b");
 

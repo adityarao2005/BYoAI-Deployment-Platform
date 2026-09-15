@@ -548,7 +548,7 @@ func TestServerAPIKeyAuth(t *testing.T) {
 		Type: config.TypeLocal,
 		Server: config.ServerNetworkConfig{
 			Security: config.ServerSecurityConfig{
-				ApiKey: apiKey,
+				BearerToken: apiKey,
 			},
 		},
 	}
