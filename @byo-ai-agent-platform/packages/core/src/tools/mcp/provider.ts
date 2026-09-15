@@ -1,0 +1,121 @@
+import type { Agent } from "@/agents";
+import { toolObject, toolString, type Tool, type ToolProvider } from "@/tools";
+import { Client } from "@modelcontextprotocol/client"
+
+export interface McpClientFactory {
+    createClient(agent: Agent): Promise<Client>
+}
+
+
+// mcp server tool provider, supports only tools and resources for now
+export class McpServerToolProvider implements ToolProvider {
+    private cachedTools: Map<string, Tool[]> = new Map();
+
+    constructor(
+        private name: string,
+        private clientFactory: McpClientFactory,
+    ) {}
+
+    async getToolByName(name: string, agent: Agent): Promise<Tool | null> {
+        const tools = await this.getAllTools(agent);
+        return tools.find((tool) => tool.name === name) || null;
+    }
+
+    private async getToolsAndResources(agent: Agent) {
+        const client = await this.clientFactory.createClient(agent);
+        try {
+            const { tools } = await client.listTools();
+            const { resources } = await client.listResources();
+
+            return {
+                tools,
+                resources,
+            };
+        } finally {
+            await client.close();
+        }
+    }
+
+    private async executeMcpTool(agent: Agent, toolName: string, args: Record<string, any>) {
+        const client = await this.clientFactory.createClient(agent);
+        try {
+            const result = await client.callTool({
+                name: toolName,
+                arguments: args,
+            });
+
+            if (result.isError) {
+                throw new Error(`MCP tool error: ${JSON.stringify(result.content)}`);
+            }
+
+            return result.content;
+        } finally {
+            await client.close();
+        }
+    }
+
+    private async readMcpResource(agent: Agent, uri: string) {
+        const client = await this.clientFactory.createClient(agent);
+        try {
+            const result = await client.readResource({ uri });
+            return result.contents;
+        } finally {
+            await client.close();
+        }
+    }
+
+    async getAllTools(agent: Agent): Promise<Tool[]> {
+        const cacheKey = agent.name ?? agent.id;
+        const cached = this.cachedTools.get(cacheKey);
+        if (cached !== undefined) {
+            return cached;
+        }
+
+        const { tools, resources } = await this.getToolsAndResources(agent);
+        const agentTools: Tool[] = [];
+
+        for (const tool of tools) {
+            const properties = (tool.inputSchema?.properties as Record<string, any>) ?? {};
+            const required = Array.isArray(tool.inputSchema?.required) ? tool.inputSchema.required : null;
+
+            agentTools.push({
+                description: tool.description,
+                name: `${this.name}_tools_${tool.name}`,
+                inputSchema: {
+                    properties,
+                    type: "object",
+                    description: tool.description || "Input schema",
+                    required,
+                },
+                execute: async (args: Record<string, any>) => {
+                    return await this.executeMcpTool(agent, tool.name, args);
+                },
+            });
+        }
+
+        // add tool for reading resource
+        agentTools.push({
+            description: `Retrieves an MCP resource associated with the mcp server ${this.name} and the provided URI`,
+            name: `${this.name}_read_resource`,
+            inputSchema: toolObject("Schema Object for tool call input", {
+                uri: toolString("URI of the resource"),
+            }),
+            execute: async ({ uri }: { uri: string }) => {
+                return await this.readMcpResource(agent, uri);
+            },
+        });
+
+        // add tool for listing resources
+        agentTools.push({
+            description: `Lists the MCP resources associated with the mcp server ${this.name}`,
+            name: `${this.name}_list_resources`,
+            inputSchema: toolObject("Schema Object for tool call input", {}),
+            execute: async () => {
+                return resources;
+            },
+        });
+
+        this.cachedTools.set(cacheKey, agentTools);
+        return agentTools;
+    }
+}

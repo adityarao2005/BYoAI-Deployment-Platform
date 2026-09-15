@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { normalizeOpenAPIDocument } from "./openapi";
+import { normalizeOpenAPIDocument } from ".";
 
 const petSchema = {
     type: "object",
@@ -110,8 +110,8 @@ describe.each([
     });
 });
 
-import type { OpenAPIToolProviderConfig } from "../config/tool_config";
-import { buildToolsFromSpec, convertOpenAPISchemaToToolArgument } from "./openapi";
+import type { OpenAPIToolProviderConfig } from "../../config/tool_config";
+import { buildToolsFromSpec, convertOpenAPISchemaToToolArgument } from ".";
 
 describe("convertOpenAPISchemaToToolArgument", () => {
     it("converts primitive schema types correctly", () => {

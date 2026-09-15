@@ -2,7 +2,7 @@ import express from "express";
 import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
-import { OpenAPIToolProvider } from "./openapi";
+import { OpenAPIToolProvider } from ".";
 import { type Agent, type AgentSession, AgentMemory } from "@/agents";
 
 describe("OpenAPIToolProvider Integration Suite", () => {
