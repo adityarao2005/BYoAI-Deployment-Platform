@@ -10,7 +10,7 @@ Object as output. If the execution fails, it throws a ToolCallException.
 */
 export interface Tool {
     name: string;
-    description: string;
+    description?: string;
     inputSchema: ToolObjectArgument; // JSON Schema for input validation
 
     /**

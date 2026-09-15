@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { toolProviderRegistry } from "@byo-ai-agent-platform/core/tools";
-import type { AgentConfig } from "@byo-ai-agent-platform/core/config";
+import {
+    McpServerToolProvider,
+    OpenAPIToolProvider,
+    toolProviderRegistry,
+} from "@byo-ai-agent-platform/core/tools";
+import type { AgentConfig } from "./agent.config";
 import type { Agent } from "@byo-ai-agent-platform/core/agents";
 import { registerComputer, registerToolProviders } from "./bootstrap";
 
@@ -27,6 +31,100 @@ describe("Tool Provider Registration", () => {
 
         const providers = toolProviderRegistry.getAllToolProviders();
         expect(providers).toHaveLength(1);
+        expect(providers[0]).toBeInstanceOf(OpenAPIToolProvider);
+    });
+
+    it("registers mcp stdio tool provider from config", () => {
+        const config: AgentConfig = {
+            models: [],
+            skillRepositories: [],
+            toolProviders: [
+                {
+                    name: "my-mcp-stdio-service",
+                    type: "mcp",
+                    transport: "stdio",
+                    command: "node",
+                    args: ["server.js"],
+                },
+            ],
+        };
+
+        registerToolProviders(config);
+
+        const providers = toolProviderRegistry.getAllToolProviders();
+        expect(providers).toHaveLength(1);
+        expect(providers[0]).toBeInstanceOf(McpServerToolProvider);
+    });
+
+    it("registers mcp http tool provider from config", () => {
+        const config: AgentConfig = {
+            models: [],
+            skillRepositories: [],
+            toolProviders: [
+                {
+                    name: "my-mcp-http-service",
+                    type: "mcp",
+                    transport: "http",
+                    url: "http://localhost:3000/mcp",
+                },
+            ],
+        };
+
+        registerToolProviders(config);
+
+        const providers = toolProviderRegistry.getAllToolProviders();
+        expect(providers).toHaveLength(1);
+        expect(providers[0]).toBeInstanceOf(McpServerToolProvider);
+    });
+
+    it("registers mcp computer tool provider from config when computer provider is configured", () => {
+        const config: AgentConfig = {
+            models: [],
+            skillRepositories: [],
+            toolProviders: [
+                {
+                    type: "computer",
+                    provider: {
+                        type: "local",
+                        enableGUIToolsIfAvailable: false,
+                    },
+                },
+                {
+                    name: "my-mcp-computer-service",
+                    type: "mcp",
+                    transport: "computer",
+                    command: "python",
+                    args: ["mcp_server.py"],
+                },
+            ],
+        };
+
+        const computer = registerComputer(config);
+        registerToolProviders(config, computer);
+
+        const providers = toolProviderRegistry.getAllToolProviders();
+        expect(providers).toHaveLength(2);
+        expect(providers[1]).toBeInstanceOf(McpServerToolProvider);
+    });
+
+    it("throws when registering mcp computer tool provider without computer provider", () => {
+        const config: AgentConfig = {
+            models: [],
+            skillRepositories: [],
+            toolProviders: [
+                {
+                    name: "my-mcp-computer-service",
+                    type: "mcp",
+                    transport: "computer",
+                    command: "python",
+                    args: ["mcp_server.py"],
+                },
+            ],
+        };
+
+        expect(() => registerToolProviders(config)).toThrow(
+            "Cannot create the mcp tool provider my-mcp-computer-service. There is no computer provider added.",
+        );
     });
 
     it("registers local computer use tool provider from config", () => {

@@ -7,6 +7,7 @@
         "build": "bun build ./src/index.ts --outdir ./dist --target=bun"
     },
     "devDependencies": {
+        "@modelcontextprotocol/server": "^2.0.0",
         "@types/adm-zip": "^0.5.8",
         "@types/bun": "latest",
         "@types/express": "^5.0.6",
@@ -25,6 +26,7 @@
         "@connectrpc/connect-node": "^2.2.0",
         "@connectrpc/validate": "^0.2.0",
         "@google/genai": "^2.21.0",
+        "@modelcontextprotocol/client": "^2.0.0",
         "@scalar/openapi-upgrader": "^0.2.15",
         "adm-zip": "^0.6.0",
         "dotenv": "^17.4.2",

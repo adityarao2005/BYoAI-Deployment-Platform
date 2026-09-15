@@ -1,9 +1,23 @@
-import type { RemoteComputerUseToolProviderConfig } from "@/config/tool_config";
-import { type ConnectTransportOptions, createConnectTransport } from "@connectrpc/connect-node";
-import { type Client, createClient, type Interceptor, type Transport } from "@connectrpc/connect";
-import { BasicComputerService, ComputerProviderService, ComputerType, GraphicalComputerService } from "@/gen/computer_api/v1/computer_pb";
-import dotenv from "dotenv";
 import fs from "node:fs";
+import type { SecureClientSessionOptions } from "node:http2";
+import {
+    type Client,
+    createClient,
+    type Interceptor,
+    type Transport,
+} from "@connectrpc/connect";
+import {
+    type ConnectTransportOptions,
+    createConnectTransport,
+} from "@connectrpc/connect-node";
+import dotenv from "dotenv";
+import type { RemoteComputerUseToolProviderConfig } from "@/config/tool_config";
+import {
+    BasicComputerService,
+    ComputerProviderService,
+    ComputerType,
+    GraphicalComputerService,
+} from "@/gen/computer_api/v1/computer_pb";
 import type {
     CaptureScreenshotArgs,
     CaptureScreenshotResult,
@@ -12,6 +26,7 @@ import type {
     ComputerProvider,
     DragArgs,
     ExecuteArgs,
+    ExecuteStreamArgs,
     ExecutionResult,
     GraphicalComputer,
     HeadlessComputer,
@@ -24,17 +39,17 @@ import type {
     ScreenSizeResult,
     ScrollArgs,
     SetClipboardArgs,
+    StreamSession,
     TypeArgs,
     WriteFileArgs,
 } from "./computer";
-import type { SecureClientSessionOptions } from "node:http2";
 
 // headless computer over connectrpc
 export class ConnectHeadlessRemoteComputer implements HeadlessComputer {
     constructor(
         protected computerId: string,
-        private basicService: Client<typeof BasicComputerService>
-    ) { }
+        private basicService: Client<typeof BasicComputerService>,
+    ) {}
 
     async execute(args: ExecuteArgs): Promise<ExecutionResult> {
         const response = await this.basicService.execute({
@@ -56,6 +71,157 @@ export class ConnectHeadlessRemoteComputer implements HeadlessComputer {
         }
     }
 
+    async executeStream(args: ExecuteStreamArgs): Promise<StreamSession> {
+        const stdoutListeners: ((chunk: Uint8Array) => void)[] = [];
+        const stderrListeners: ((chunk: Uint8Array) => void)[] = [];
+        const exitListeners: ((code: number) => void)[] = [];
+        const errorListeners: ((error: Error) => void)[] = [];
+
+        let exitCodeResolved = false;
+        let finalExitCode: number | null = null;
+        let streamError: Error | null = null;
+
+        const outboundQueue: (any | null)[] = [];
+        let resolveQueueSignal: (() => void) | null = null;
+
+        const pushOutbound = (req: any) => {
+            outboundQueue.push(req);
+            if (resolveQueueSignal) {
+                resolveQueueSignal();
+                resolveQueueSignal = null;
+            }
+        };
+
+        pushOutbound({
+            input: {
+                case: "config",
+                value: {
+                    sessionId: this.computerId,
+                    command: args.command,
+                    cwd: args.cwd,
+                    envVars: args.envVars || {},
+                    shell: args.shell,
+                    shellArgs: args.shellArgs || [],
+                },
+            },
+        });
+
+        async function* requestGenerator(): AsyncIterable<any> {
+            while (true) {
+                if (outboundQueue.length === 0) {
+                    await new Promise<void>((resolve) => {
+                        resolveQueueSignal = resolve;
+                    });
+                }
+                while (outboundQueue.length > 0) {
+                    const req = outboundQueue.shift();
+                    if (req === null) {
+                        return;
+                    }
+                    yield req;
+                }
+            }
+        }
+
+        const waitPromise = new Promise<number>(async (resolve, reject) => {
+            try {
+                const responseStream = await this.basicService.executeStream(
+                    requestGenerator(),
+                );
+                for await (const msg of responseStream) {
+                    switch (msg.output.case) {
+                        case "stdout":
+                            for (const listener of stdoutListeners) {
+                                listener(msg.output.value);
+                            }
+                            break;
+                        case "stderr":
+                            for (const listener of stderrListeners) {
+                                listener(msg.output.value);
+                            }
+                            break;
+                        case "exitCode":
+                            exitCodeResolved = true;
+                            finalExitCode = msg.output.value;
+                            for (const listener of exitListeners) {
+                                listener(finalExitCode);
+                            }
+                            resolve(finalExitCode);
+                            break;
+                        case "errorMessage": {
+                            const err = new Error(msg.output.value);
+                            streamError = err;
+                            for (const listener of errorListeners) {
+                                listener(err);
+                            }
+                            reject(err);
+                            break;
+                        }
+                    }
+                }
+                if (!exitCodeResolved) {
+                    const defaultCode = finalExitCode ?? 0;
+                    resolve(defaultCode);
+                }
+            } catch (err: any) {
+                streamError = err;
+                for (const listener of errorListeners) {
+                    listener(err);
+                }
+                reject(err);
+            }
+        });
+
+        return {
+            async writeStdin(data: Uint8Array | string): Promise<void> {
+                const stdinBytes =
+                    typeof data === "string"
+                        ? new TextEncoder().encode(data)
+                        : data;
+                pushOutbound({
+                    input: {
+                        case: "stdin",
+                        value: stdinBytes,
+                    },
+                });
+            },
+            async closeStdin(): Promise<void> {
+                pushOutbound({
+                    input: {
+                        case: "closeStdin",
+                        value: true,
+                    },
+                });
+            },
+            onStdout(listener: (chunk: Uint8Array) => void): void {
+                stdoutListeners.push(listener);
+            },
+            onStderr(listener: (chunk: Uint8Array) => void): void {
+                stderrListeners.push(listener);
+            },
+            onExit(listener: (code: number) => void): void {
+                if (exitCodeResolved && finalExitCode !== null) {
+                    listener(finalExitCode);
+                } else {
+                    exitListeners.push(listener);
+                }
+            },
+            onError(listener: (error: Error) => void): void {
+                if (streamError) {
+                    listener(streamError);
+                } else {
+                    errorListeners.push(listener);
+                }
+            },
+            async wait(): Promise<number> {
+                return waitPromise;
+            },
+            async kill(): Promise<void> {
+                pushOutbound(null);
+            },
+        };
+    }
+
     async readFile(args: ReadFileArgs): Promise<ReadFileResult> {
         const response = await this.basicService.readFile({
             sessionId: this.computerId,
@@ -75,7 +241,10 @@ export class ConnectHeadlessRemoteComputer implements HeadlessComputer {
 
     async writeFile(args: WriteFileArgs): Promise<{ success: boolean }> {
         const rawContent = args.content;
-        const content = typeof rawContent === "string" ? new TextEncoder().encode(rawContent) : rawContent;
+        const content =
+            typeof rawContent === "string"
+                ? new TextEncoder().encode(rawContent)
+                : rawContent;
         const response = await this.basicService.writeFile({
             sessionId: this.computerId,
             path: args.path,
@@ -136,19 +305,24 @@ export class ConnectHeadlessRemoteComputer implements HeadlessComputer {
     }
 }
 
-
 // graphical computer over connectrpc
-export class ConnectGraphicalRemoteComputer extends ConnectHeadlessRemoteComputer implements GraphicalComputer {
+export class ConnectGraphicalRemoteComputer
+    extends ConnectHeadlessRemoteComputer
+    implements GraphicalComputer
+{
     constructor(
         computerId: string,
         basicService: Client<typeof BasicComputerService>,
-        private graphicalService: Client<typeof GraphicalComputerService>
+        private graphicalService: Client<typeof GraphicalComputerService>,
     ) {
         super(computerId, basicService);
     }
 
-    async captureScreenshot(args: CaptureScreenshotArgs = {}): Promise<CaptureScreenshotResult> {
-        if (!this.graphicalService) throw new Error("GraphicalComputerService is not initialized");
+    async captureScreenshot(
+        args: CaptureScreenshotArgs = {},
+    ): Promise<CaptureScreenshotResult> {
+        if (!this.graphicalService)
+            throw new Error("GraphicalComputerService is not initialized");
         const response = await this.graphicalService.captureScreenshot({
             sessionId: this.computerId,
             x: args.x,
@@ -167,7 +341,8 @@ export class ConnectGraphicalRemoteComputer extends ConnectHeadlessRemoteCompute
     }
 
     async click(args: ClickArgs): Promise<{ success: boolean }> {
-        if (!this.graphicalService) throw new Error("GraphicalComputerService is not initialized");
+        if (!this.graphicalService)
+            throw new Error("GraphicalComputerService is not initialized");
         const response = await this.graphicalService.click({
             sessionId: this.computerId,
             x: args.x,
@@ -185,7 +360,8 @@ export class ConnectGraphicalRemoteComputer extends ConnectHeadlessRemoteCompute
     }
 
     async type(args: TypeArgs): Promise<{ success: boolean }> {
-        if (!this.graphicalService) throw new Error("GraphicalComputerService is not initialized");
+        if (!this.graphicalService)
+            throw new Error("GraphicalComputerService is not initialized");
         const response = await this.graphicalService.type({
             sessionId: this.computerId,
             text: args.text,
@@ -201,7 +377,8 @@ export class ConnectGraphicalRemoteComputer extends ConnectHeadlessRemoteCompute
     }
 
     async pressKey(args: KeyArgs): Promise<{ success: boolean }> {
-        if (!this.graphicalService) throw new Error("GraphicalComputerService is not initialized");
+        if (!this.graphicalService)
+            throw new Error("GraphicalComputerService is not initialized");
         const response = await this.graphicalService.pressKey({
             sessionId: this.computerId,
             key: args.key,
@@ -217,7 +394,8 @@ export class ConnectGraphicalRemoteComputer extends ConnectHeadlessRemoteCompute
     }
 
     async releaseKey(args: KeyArgs): Promise<{ success: boolean }> {
-        if (!this.graphicalService) throw new Error("GraphicalComputerService is not initialized");
+        if (!this.graphicalService)
+            throw new Error("GraphicalComputerService is not initialized");
         const response = await this.graphicalService.releaseKey({
             sessionId: this.computerId,
             key: args.key,
@@ -233,7 +411,8 @@ export class ConnectGraphicalRemoteComputer extends ConnectHeadlessRemoteCompute
     }
 
     async pressAndHoldKey(args: KeyArgs): Promise<{ success: boolean }> {
-        if (!this.graphicalService) throw new Error("GraphicalComputerService is not initialized");
+        if (!this.graphicalService)
+            throw new Error("GraphicalComputerService is not initialized");
         const response = await this.graphicalService.pressAndHoldKey({
             sessionId: this.computerId,
             key: args.key,
@@ -249,7 +428,8 @@ export class ConnectGraphicalRemoteComputer extends ConnectHeadlessRemoteCompute
     }
 
     async releaseAllKeys(): Promise<{ success: boolean }> {
-        if (!this.graphicalService) throw new Error("GraphicalComputerService is not initialized");
+        if (!this.graphicalService)
+            throw new Error("GraphicalComputerService is not initialized");
         const response = await this.graphicalService.releaseAllKeys({
             sessionId: this.computerId,
         });
@@ -264,7 +444,8 @@ export class ConnectGraphicalRemoteComputer extends ConnectHeadlessRemoteCompute
     }
 
     async drag(args: DragArgs): Promise<{ success: boolean }> {
-        if (!this.graphicalService) throw new Error("GraphicalComputerService is not initialized");
+        if (!this.graphicalService)
+            throw new Error("GraphicalComputerService is not initialized");
         const response = await this.graphicalService.drag({
             sessionId: this.computerId,
             x1: args.x1,
@@ -283,7 +464,8 @@ export class ConnectGraphicalRemoteComputer extends ConnectHeadlessRemoteCompute
     }
 
     async moveMouseTo(args: MoveMouseToArgs): Promise<{ success: boolean }> {
-        if (!this.graphicalService) throw new Error("GraphicalComputerService is not initialized");
+        if (!this.graphicalService)
+            throw new Error("GraphicalComputerService is not initialized");
         const response = await this.graphicalService.moveMouseTo({
             sessionId: this.computerId,
             x: args.x,
@@ -300,7 +482,8 @@ export class ConnectGraphicalRemoteComputer extends ConnectHeadlessRemoteCompute
     }
 
     async scroll(args: ScrollArgs): Promise<{ success: boolean }> {
-        if (!this.graphicalService) throw new Error("GraphicalComputerService is not initialized");
+        if (!this.graphicalService)
+            throw new Error("GraphicalComputerService is not initialized");
         const response = await this.graphicalService.scroll({
             sessionId: this.computerId,
             dx: args.dx,
@@ -317,7 +500,8 @@ export class ConnectGraphicalRemoteComputer extends ConnectHeadlessRemoteCompute
     }
 
     async getClipboard(): Promise<{ text: string }> {
-        if (!this.graphicalService) throw new Error("GraphicalComputerService is not initialized");
+        if (!this.graphicalService)
+            throw new Error("GraphicalComputerService is not initialized");
         const response = await this.graphicalService.getClipboard({
             sessionId: this.computerId,
         });
@@ -332,7 +516,8 @@ export class ConnectGraphicalRemoteComputer extends ConnectHeadlessRemoteCompute
     }
 
     async setClipboard(args: SetClipboardArgs): Promise<{ success: boolean }> {
-        if (!this.graphicalService) throw new Error("GraphicalComputerService is not initialized");
+        if (!this.graphicalService)
+            throw new Error("GraphicalComputerService is not initialized");
         const response = await this.graphicalService.setClipboard({
             sessionId: this.computerId,
             text: args.text,
@@ -348,7 +533,8 @@ export class ConnectGraphicalRemoteComputer extends ConnectHeadlessRemoteCompute
     }
 
     async getScreenSize(): Promise<ScreenSizeResult> {
-        if (!this.graphicalService) throw new Error("GraphicalComputerService is not initialized");
+        if (!this.graphicalService)
+            throw new Error("GraphicalComputerService is not initialized");
         const response = await this.graphicalService.getScreenSize({
             sessionId: this.computerId,
         });
@@ -379,12 +565,12 @@ async function loadCertOrFile(pathOrContent: string): Promise<string | Buffer> {
  * Helper to build ConnectRPC Transport options (interceptors for auth, nodeOptions for mTLS/certs).
  */
 export async function buildTransportOptions(
-    config: RemoteComputerUseToolProviderConfig
+    config: RemoteComputerUseToolProviderConfig,
 ): Promise<ConnectTransportOptions> {
     const interceptors: Interceptor[] = [];
 
-    if (config.security?.apiKey) {
-        const apiKey = config.security.apiKey;
+    if (config.security?.bearerToken) {
+        const apiKey = config.security.bearerToken;
         interceptors.push((next) => async (req) => {
             req.header.set("Authorization", `Bearer ${apiKey}`);
             return await next(req);
@@ -404,7 +590,9 @@ export async function buildTransportOptions(
         };
 
         if (config.security.mtls.clientKey) {
-            nodeOptions.key = await loadCertOrFile(config.security.mtls.clientKey);
+            nodeOptions.key = await loadCertOrFile(
+                config.security.mtls.clientKey,
+            );
         }
 
         if (config.security.mtls.caCert) {
@@ -424,15 +612,20 @@ export async function buildTransportOptions(
  * Asynchronously loads .env file if specified and merges with environment config (config.environment takes priority).
  */
 export async function resolveEnvironmentConfig(
-    config: RemoteComputerUseToolProviderConfig
+    config: RemoteComputerUseToolProviderConfig,
 ): Promise<Record<string, string>> {
     let envFromFile: Record<string, string> = {};
     if (config.envFile) {
         try {
-            const fileContent = await fs.promises.readFile(config.envFile, "utf-8");
+            const fileContent = await fs.promises.readFile(
+                config.envFile,
+                "utf-8",
+            );
             envFromFile = dotenv.parse(fileContent);
         } catch (err: any) {
-            throw new Error(`Failed to read env file ${config.envFile}: ${err.message}`);
+            throw new Error(
+                `Failed to read env file ${config.envFile}: ${err.message}`,
+            );
         }
     }
 
@@ -446,7 +639,7 @@ export async function resolveEnvironmentConfig(
  * Maps resource config into protobuf ComputerResourceConfig format.
  */
 export function buildResourceConfig(
-    config: RemoteComputerUseToolProviderConfig
+    config: RemoteComputerUseToolProviderConfig,
 ): { cpu?: string; memory?: string } | undefined {
     if (!config.resources) {
         return undefined;
@@ -465,7 +658,7 @@ export function buildResourceConfig(
  * Maps network rules config into protobuf NetworkRules format.
  */
 export function buildNetworkRulesConfig(
-    config: RemoteComputerUseToolProviderConfig
+    config: RemoteComputerUseToolProviderConfig,
 ): { allowedHosts: string[]; deniedHosts: string[] } | undefined {
     if (!config.networkRules) {
         return undefined;
@@ -485,26 +678,26 @@ export function buildNetworkRulesConfig(
 export class RemoteComputerProvider implements ComputerProvider {
     // configuration for the transport
     transport: Transport | null = null;
-    computerProviderService: Client<typeof ComputerProviderService> | null = null;
+    computerProviderService: Client<typeof ComputerProviderService> | null =
+        null;
     basicComputerService: Client<typeof BasicComputerService> | null = null;
-    graphicalComputerService: Client<typeof GraphicalComputerService> | null = null;
+    graphicalComputerService: Client<typeof GraphicalComputerService> | null =
+        null;
 
     // configuration for the computer provider
     config: RemoteComputerUseToolProviderConfig;
-    environment?: Record<string, string>
+    environment?: Record<string, string>;
     resources?: {
-        cpu?: string,
-        memory?: string
-    }
+        cpu?: string;
+        memory?: string;
+    };
     networkRules?: {
         allowedHosts: string[];
         deniedHosts: string[];
-    }
-
+    };
 
     constructor(config: RemoteComputerUseToolProviderConfig) {
         this.config = config;
-
     }
 
     // initialize the tool provider
@@ -512,9 +705,18 @@ export class RemoteComputerProvider implements ComputerProvider {
         const transportOptions = await buildTransportOptions(this.config);
         this.transport = createConnectTransport(transportOptions);
 
-        this.computerProviderService = createClient(ComputerProviderService, this.transport);
-        this.basicComputerService = createClient(BasicComputerService, this.transport);
-        this.graphicalComputerService = createClient(GraphicalComputerService, this.transport);
+        this.computerProviderService = createClient(
+            ComputerProviderService,
+            this.transport,
+        );
+        this.basicComputerService = createClient(
+            BasicComputerService,
+            this.transport,
+        );
+        this.graphicalComputerService = createClient(
+            GraphicalComputerService,
+            this.transport,
+        );
 
         this.environment = await resolveEnvironmentConfig(this.config);
         this.resources = buildResourceConfig(this.config);
@@ -523,13 +725,13 @@ export class RemoteComputerProvider implements ComputerProvider {
 
     // create the computers
     async createComputer(): Promise<string> {
-
-        const createResponse = await this.computerProviderService?.createComputer({
-            image: this.config.image,
-            resources: this.resources,
-            environment: this.environment,
-            networkRules: this.networkRules,
-        });
+        const createResponse =
+            await this.computerProviderService?.createComputer({
+                image: this.config.image,
+                resources: this.resources,
+                environment: this.environment,
+                networkRules: this.networkRules,
+            });
 
         switch (createResponse?.result.case) {
             case "sessionId":
@@ -545,42 +747,49 @@ export class RemoteComputerProvider implements ComputerProvider {
     // delete the computer
     async deleteComputer(computerId: string): Promise<void> {
         await this.computerProviderService?.deleteComputer({
-            sessionId: computerId
-        })
+            sessionId: computerId,
+        });
     }
 
     // get the computer info
     async getComputer(computerId: string): Promise<ComputerPayload> {
-
-        if (!this.basicComputerService || !this.graphicalComputerService || !this.computerProviderService)
+        if (
+            !this.basicComputerService ||
+            !this.graphicalComputerService ||
+            !this.computerProviderService
+        )
             return {
                 error: "Computer Provider not initialized",
-                type: ComputerType.UNSPECIFIED
-            }
+                type: ComputerType.UNSPECIFIED,
+            };
 
         const payload = await this.computerProviderService?.getComputerInfo({
-            sessionId: computerId
-        })
-
+            sessionId: computerId,
+        });
 
         switch (payload?.type) {
             case ComputerType.GRAPHICAL:
                 return {
                     type: ComputerType.GRAPHICAL,
-                    computer: new ConnectGraphicalRemoteComputer(computerId, this.basicComputerService, this.graphicalComputerService)
-                }
+                    computer: new ConnectGraphicalRemoteComputer(
+                        computerId,
+                        this.basicComputerService,
+                        this.graphicalComputerService,
+                    ),
+                };
             case ComputerType.HEADLESS:
                 return {
                     type: ComputerType.HEADLESS,
-                    computer: new ConnectHeadlessRemoteComputer(computerId, this.basicComputerService)
-                }
+                    computer: new ConnectHeadlessRemoteComputer(
+                        computerId,
+                        this.basicComputerService,
+                    ),
+                };
             case ComputerType.UNSPECIFIED:
                 return {
                     error: "Something went wrong on the remote computer provider's side when attempting to get the computer",
-                    type: ComputerType.UNSPECIFIED
-                }
+                    type: ComputerType.UNSPECIFIED,
+                };
         }
     }
 }
-
-

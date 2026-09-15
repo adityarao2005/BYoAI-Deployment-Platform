@@ -171,6 +171,37 @@ message GetGroupIdResponse {
     }
 }
 
+// execute stream - bidirectional streaming for interactive process I/O
+
+// Configuration sent as the first message to start a streaming execution session.
+message ExecuteStreamConfig {
+    string session_id = 1;
+    string command = 2;
+    optional string cwd = 3;
+    map<string, string> env_vars = 4;
+    optional string shell = 5;
+    repeated string shell_args = 6;
+}
+
+// Client-to-server streaming message: first message must be config, then stdin data or close.
+message ExecuteStreamRequest {
+    oneof input {
+        ExecuteStreamConfig config = 1;
+        bytes stdin = 2;
+        bool close_stdin = 3;
+    }
+}
+
+// Server-to-client streaming message: stdout/stderr chunks, then a final exit code or error.
+message ExecuteStreamResponse {
+    oneof output {
+        bytes stdout = 1;
+        bytes stderr = 2;
+        int32 exit_code = 3;
+        string error_message = 4;
+    }
+}
+
 service BasicComputerService {
     rpc Execute(ExecuteRequest) returns (ExecuteResponse);
     rpc ReadFile(ReadFileRequest) returns (ReadFileResponse);
@@ -178,6 +209,7 @@ service BasicComputerService {
     rpc ListDirectory(ListDirectoryRequest) returns (ListDirectoryResponse);
     rpc GetUserId(GetUserIdRequest) returns (GetUserIdResponse);
     rpc GetGroupId(GetGroupIdRequest) returns (GetGroupIdResponse);
+    rpc ExecuteStream(stream ExecuteStreamRequest) returns (stream ExecuteStreamResponse);
 }
 
 

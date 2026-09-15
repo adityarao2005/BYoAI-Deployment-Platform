@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
-import { RemoteComputerProvider } from "./remote_provider";
-import { ComputerType } from "@/gen/computer_api/v1/computer_pb";
 import type { RemoteComputerUseToolProviderConfig } from "@/config/tool_config";
+import { ComputerType } from "@/gen/computer_api/v1/computer_pb";
+import { RemoteComputerProvider } from "./remote_provider";
 
 const mockTransport = {};
 mock.module("@connectrpc/connect-node", () => ({
@@ -57,9 +57,12 @@ mock.module("@connectrpc/connect", () => ({
 const vi = {
     fn: mock,
     clearAllMocks: () => {
-        for (const m of Object.values(mockComputerProviderClient)) (m as any).mockClear?.();
-        for (const m of Object.values(mockBasicComputerClient)) (m as any).mockClear?.();
-        for (const m of Object.values(mockGraphicalComputerClient)) (m as any).mockClear?.();
+        for (const m of Object.values(mockComputerProviderClient))
+            (m as any).mockClear?.();
+        for (const m of Object.values(mockBasicComputerClient))
+            (m as any).mockClear?.();
+        for (const m of Object.values(mockGraphicalComputerClient))
+            (m as any).mockClear?.();
     },
 };
 
@@ -90,12 +93,17 @@ describe("RemoteComputerProvider", () => {
 
     it("throws an error when createComputer returns errorMessage", async () => {
         mockComputerProviderClient.createComputer.mockResolvedValueOnce({
-            result: { case: "errorMessage", value: "Failed to allocate container" },
+            result: {
+                case: "errorMessage",
+                value: "Failed to allocate container",
+            },
         });
 
         const provider = new RemoteComputerProvider(remoteConfig);
         await provider.init();
-        await expect(provider.createComputer()).rejects.toThrow("Failed to allocate container");
+        await expect(provider.createComputer()).rejects.toThrow(
+            "Failed to allocate container",
+        );
     });
 
     it("deletes computer by sessionId", async () => {
@@ -115,7 +123,10 @@ describe("RemoteComputerProvider", () => {
             type: ComputerType.HEADLESS,
         });
         mockBasicComputerClient.execute.mockResolvedValueOnce({
-            result: { case: "execResult", value: { exitCode: 0, stdout: "hello", stderr: "" } },
+            result: {
+                case: "execResult",
+                value: { exitCode: 0, stdout: "hello", stderr: "" },
+            },
         });
         mockBasicComputerClient.readFile.mockResolvedValueOnce({
             result: { case: "content", value: new Uint8Array([1, 2, 3]) },
@@ -140,16 +151,29 @@ describe("RemoteComputerProvider", () => {
         expect(payload.type).toBe(ComputerType.HEADLESS);
 
         if (payload.type === ComputerType.HEADLESS) {
-            const execRes = await payload.computer.execute({ command: "echo hello" });
-            expect(execRes).toEqual({ exitCode: 0, stdout: "hello", stderr: "" });
+            const execRes = await payload.computer.execute({
+                command: "echo hello",
+            });
+            expect(execRes).toEqual({
+                exitCode: 0,
+                stdout: "hello",
+                stderr: "",
+            });
 
-            const readRes = await payload.computer.readFile({ path: "/tmp/foo.txt" });
+            const readRes = await payload.computer.readFile({
+                path: "/tmp/foo.txt",
+            });
             expect(readRes).toEqual({ content: new Uint8Array([1, 2, 3]) });
 
-            const writeRes = await payload.computer.writeFile({ path: "/tmp/foo.txt", content: new Uint8Array([97]) });
+            const writeRes = await payload.computer.writeFile({
+                path: "/tmp/foo.txt",
+                content: new Uint8Array([97]),
+            });
             expect(writeRes).toEqual({ success: true });
 
-            const listRes = await payload.computer.listDirectory({ path: "/tmp" });
+            const listRes = await payload.computer.listDirectory({
+                path: "/tmp",
+            });
             expect(listRes).toEqual({ files: ["file1.txt"] });
 
             const userRes = await payload.computer.getUserId();
@@ -168,7 +192,10 @@ describe("RemoteComputerProvider", () => {
             result: { case: "response", value: {} },
         });
         mockGraphicalComputerClient.captureScreenshot.mockResolvedValueOnce({
-            result: { case: "response", value: { imageData: new Uint8Array([255, 0, 0]) } },
+            result: {
+                case: "response",
+                value: { imageData: new Uint8Array([255, 0, 0]) },
+            },
         });
         mockGraphicalComputerClient.getScreenSize.mockResolvedValueOnce({
             result: { case: "response", value: { width: 1920, height: 1080 } },
@@ -181,7 +208,11 @@ describe("RemoteComputerProvider", () => {
         expect(payload.type).toBe(ComputerType.GRAPHICAL);
 
         if (payload.type === ComputerType.GRAPHICAL) {
-            const clickRes = await payload.computer.click({ x: 100, y: 200, button: "left" });
+            const clickRes = await payload.computer.click({
+                x: 100,
+                y: 200,
+                button: "left",
+            });
             expect(clickRes).toEqual({ success: true });
 
             const shotRes = await payload.computer.captureScreenshot();
@@ -233,12 +264,14 @@ describe("RemoteComputerProvider", () => {
     });
 
     it("configures apiKey interceptor and mTLS nodeOptions on transport with full chain fallback", async () => {
-        const { createConnectTransport } = await import("@connectrpc/connect-node");
+        const { createConnectTransport } = await import(
+            "@connectrpc/connect-node"
+        );
 
         const configWithSecurity: RemoteComputerUseToolProviderConfig = {
             ...remoteConfig,
             security: {
-                apiKey: "secret-key-xyz",
+                bearerToken: "secret-key-xyz",
                 mtls: {
                     clientCert: "sample-cert-content",
                     clientKey: "sample-key-content",
@@ -259,12 +292,14 @@ describe("RemoteComputerProvider", () => {
                     key: "sample-key-content",
                     ca: "sample-cert-content",
                 },
-            })
+            }),
         );
     });
 
     it("configures mTLS nodeOptions with distinct clientKey and caCert", async () => {
-        const { createConnectTransport } = await import("@connectrpc/connect-node");
+        const { createConnectTransport } = await import(
+            "@connectrpc/connect-node"
+        );
 
         const configWithFullMtls: RemoteComputerUseToolProviderConfig = {
             ...remoteConfig,
@@ -289,7 +324,7 @@ describe("RemoteComputerProvider", () => {
                     key: "sample-key-content",
                     ca: "sample-ca-content",
                 },
-            })
+            }),
         );
     });
 });

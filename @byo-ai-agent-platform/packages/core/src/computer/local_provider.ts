@@ -1,5 +1,7 @@
-import type { LocalComputerUseToolProviderConfig } from "@/config/tool_config";
-import type { Tool } from "@/tools";
+import { spawn } from "node:child_process";
+import { randomUUID } from "node:crypto";
+import * as fs from "node:fs/promises";
+import * as process from "node:process";
 import type {
     CaptureScreenshotArgs,
     CaptureScreenshotResult,
@@ -8,6 +10,7 @@ import type {
     ComputerProvider,
     DragArgs,
     ExecuteArgs,
+    ExecuteStreamArgs,
     ExecutionResult,
     GraphicalComputer,
     HeadlessComputer,
@@ -20,16 +23,16 @@ import type {
     ScreenSizeResult,
     ScrollArgs,
     SetClipboardArgs,
+    StreamSession,
     TypeArgs,
     WriteFileArgs,
 } from "@/computer/computer";
-import { spawn } from "node:child_process";
-import * as fs from "node:fs/promises";
-import * as process from "node:process";
-import { randomUUID } from "node:crypto";
+import type { LocalComputerUseToolProviderConfig } from "@/config/tool_config";
 import { ComputerType } from "@/gen/computer_api/v1/computer_pb";
+import type { Tool } from "@/tools";
 
-export const ERR_GRAPHICS_UNSUPPORTED = "graphical interface is not supported: DISPLAY environment variable is not set";
+export const ERR_GRAPHICS_UNSUPPORTED =
+    "graphical interface is not supported: DISPLAY environment variable is not set";
 
 /**
  * LocalComputer implements HeadlessComputer using native Node.js process and filesystem APIs.
@@ -61,15 +64,25 @@ export class LocalComputer implements HeadlessComputer {
 
                 let stdoutDirect = "";
                 let stderrDirect = "";
-                childDirect.stdout.on("data", (chunk) => (stdoutDirect += chunk.toString()));
-                childDirect.stderr.on("data", (chunk) => (stderrDirect += chunk.toString()));
+                childDirect.stdout.on(
+                    "data",
+                    (chunk) => (stdoutDirect += chunk.toString()),
+                );
+                childDirect.stderr.on(
+                    "data",
+                    (chunk) => (stderrDirect += chunk.toString()),
+                );
                 if (args.stdin) {
                     childDirect.stdin.write(args.stdin);
                     childDirect.stdin.end();
                 }
                 childDirect.on("error", reject);
                 childDirect.on("close", (code) => {
-                    resolve({ exitCode: code ?? 0, stdout: stdoutDirect, stderr: stderrDirect });
+                    resolve({
+                        exitCode: code ?? 0,
+                        stdout: stdoutDirect,
+                        stderr: stderrDirect,
+                    });
                 });
                 return;
             }
@@ -110,6 +123,124 @@ export class LocalComputer implements HeadlessComputer {
     }
 
     /**
+     * Starts a real-time streaming execution session for interactive commands.
+     */
+    async executeStream(args: ExecuteStreamArgs): Promise<StreamSession> {
+        let child: ReturnType<typeof spawn>;
+        const shellExecutable = args.shell ?? "sh";
+
+        if (args.shellArgs && args.shellArgs.length > 0) {
+            child = spawn(shellExecutable, [...args.shellArgs, args.command], {
+                cwd: args.cwd,
+                env: { ...process.env, ...(args.envVars || {}) },
+            });
+        } else if (args.shell !== "") {
+            child = spawn(shellExecutable, ["-c", args.command], {
+                cwd: args.cwd,
+                env: { ...process.env, ...(args.envVars || {}) },
+            });
+        } else {
+            const parts = args.command.split(" ");
+            const cmd = parts[0] || "";
+            const spawnArgs = parts.slice(1);
+            child = spawn(cmd, spawnArgs, {
+                cwd: args.cwd,
+                env: { ...process.env, ...(args.envVars || {}) },
+            });
+        }
+
+        const stdoutListeners: ((chunk: Uint8Array) => void)[] = [];
+        const stderrListeners: ((chunk: Uint8Array) => void)[] = [];
+        const exitListeners: ((code: number) => void)[] = [];
+        const errorListeners: ((error: Error) => void)[] = [];
+
+        let exitCodeResolved = false;
+        let finalExitCode: number | null = null;
+        let spawnError: Error | null = null;
+
+        const waitPromise = new Promise<number>((resolve, reject) => {
+            child.on("error", (err) => {
+                spawnError = err;
+                for (const listener of errorListeners) {
+                    listener(err);
+                }
+                reject(err);
+            });
+
+            child.on("close", (code) => {
+                exitCodeResolved = true;
+                finalExitCode = code ?? 0;
+                for (const listener of exitListeners) {
+                    listener(finalExitCode);
+                }
+                resolve(finalExitCode);
+            });
+        });
+
+        child.stdout!.on("data", (chunk: Buffer) => {
+            const uint8 = new Uint8Array(
+                chunk.buffer,
+                chunk.byteOffset,
+                chunk.byteLength,
+            );
+            for (const listener of stdoutListeners) {
+                listener(uint8);
+            }
+        });
+
+        child.stderr!.on("data", (chunk: Buffer) => {
+            const uint8 = new Uint8Array(
+                chunk.buffer,
+                chunk.byteOffset,
+                chunk.byteLength,
+            );
+            for (const listener of stderrListeners) {
+                listener(uint8);
+            }
+        });
+
+        return {
+            async writeStdin(data: Uint8Array | string): Promise<void> {
+                return new Promise((resolve, reject) => {
+                    child.stdin!.write(data, (err) => {
+                        if (err) reject(err);
+                        else resolve();
+                    });
+                });
+            },
+            async closeStdin(): Promise<void> {
+                child.stdin!.end();
+            },
+            onStdout(listener: (chunk: Uint8Array) => void): void {
+                stdoutListeners.push(listener);
+            },
+            onStderr(listener: (chunk: Uint8Array) => void): void {
+                stderrListeners.push(listener);
+            },
+            onExit(listener: (code: number) => void): void {
+                if (exitCodeResolved && finalExitCode !== null) {
+                    listener(finalExitCode);
+                } else {
+                    exitListeners.push(listener);
+                }
+            },
+            onError(listener: (error: Error) => void): void {
+                if (spawnError) {
+                    listener(spawnError);
+                } else {
+                    errorListeners.push(listener);
+                }
+            },
+            async wait(): Promise<number> {
+                return waitPromise;
+            },
+            async kill(): Promise<void> {
+                child.kill();
+            },
+        };
+    }
+
+    /**
      * Reads file content from local filesystem.
      * Supports optional byte offset and limit range reading.
      */
@@ -119,10 +250,20 @@ export class LocalComputer implements HeadlessComputer {
             try {
                 const stat = await handle.stat();
                 const startOffset = Number(args.offset ?? 0);
-                const maxBytes = args.limit !== undefined ? Number(args.limit) : stat.size - startOffset;
+                const maxBytes =
+                    args.limit !== undefined
+                        ? Number(args.limit)
+                        : stat.size - startOffset;
                 const buffer = Buffer.alloc(Math.max(0, maxBytes));
-                const { bytesRead } = await handle.read(buffer, 0, buffer.length, startOffset);
-                return { content: new Uint8Array(buffer.subarray(0, bytesRead)) };
+                const { bytesRead } = await handle.read(
+                    buffer,
+                    0,
+                    buffer.length,
+                    startOffset,
+                );
+                return {
+                    content: new Uint8Array(buffer.subarray(0, bytesRead)),
+                };
             } finally {
                 await handle.close();
             }
@@ -137,7 +278,10 @@ export class LocalComputer implements HeadlessComputer {
      */
     async writeFile(args: WriteFileArgs): Promise<{ success: boolean }> {
         const flag = args.append ? "a" : "w";
-        const content = typeof args.content === "string" ? Buffer.from(args.content) : args.content;
+        const content =
+            typeof args.content === "string"
+                ? Buffer.from(args.content)
+                : args.content;
         await fs.writeFile(args.path, content, { flag });
         return { success: true };
     }
@@ -171,7 +315,10 @@ export class LocalComputer implements HeadlessComputer {
  * LocalGraphicalComputer extends LocalComputer with local desktop GUI automation.
  * Uses Linux utilities (xdotool, xclip, maim, scrot, import) to interact with X11 / desktop server.
  */
-export class LocalGraphicalComputer extends LocalComputer implements GraphicalComputer {
+export class LocalGraphicalComputer
+    extends LocalComputer
+    implements GraphicalComputer
+{
     /**
      * Checks if local desktop graphics are supported (DISPLAY environment variable set).
      */
@@ -182,7 +329,11 @@ export class LocalGraphicalComputer extends LocalComputer implements GraphicalCo
     /**
      * Helper to run a local CLI tool command and return stdout buffer.
      */
-    private runCommand(cmd: string, args: string[], stdin?: string): Promise<Buffer> {
+    private runCommand(
+        cmd: string,
+        args: string[],
+        stdin?: string,
+    ): Promise<Buffer> {
         return new Promise<Buffer>((resolve, reject) => {
             if (!this.supportsGraphics()) {
                 return reject(new Error(ERR_GRAPHICS_UNSUPPORTED));
@@ -192,8 +343,12 @@ export class LocalGraphicalComputer extends LocalComputer implements GraphicalCo
             const stdoutChunks: Buffer[] = [];
             const stderrChunks: Buffer[] = [];
 
-            child.stdout.on("data", (chunk: Buffer) => stdoutChunks.push(chunk));
-            child.stderr.on("data", (chunk: Buffer) => stderrChunks.push(chunk));
+            child.stdout.on("data", (chunk: Buffer) =>
+                stdoutChunks.push(chunk),
+            );
+            child.stderr.on("data", (chunk: Buffer) =>
+                stderrChunks.push(chunk),
+            );
 
             if (stdin !== undefined) {
                 child.stdin.write(stdin);
@@ -206,7 +361,11 @@ export class LocalGraphicalComputer extends LocalComputer implements GraphicalCo
                     resolve(Buffer.concat(stdoutChunks));
                 } else {
                     const stderrMsg = Buffer.concat(stderrChunks).toString();
-                    reject(new Error(`Command '${cmd} ${args.join(" ")}' failed with code ${code}: ${stderrMsg}`));
+                    reject(
+                        new Error(
+                            `Command '${cmd} ${args.join(" ")}' failed with code ${code}: ${stderrMsg}`,
+                        ),
+                    );
                 }
             });
         });
@@ -216,7 +375,9 @@ export class LocalGraphicalComputer extends LocalComputer implements GraphicalCo
      * Captures local screen screenshot as PNG image bytes.
      * Tries maim, scrot, or import in order.
      */
-    async captureScreenshot(args: CaptureScreenshotArgs = {}): Promise<CaptureScreenshotResult> {
+    async captureScreenshot(
+        args: CaptureScreenshotArgs = {},
+    ): Promise<CaptureScreenshotResult> {
         if (!this.supportsGraphics()) {
             throw new Error(ERR_GRAPHICS_UNSUPPORTED);
         }
@@ -238,7 +399,9 @@ export class LocalGraphicalComputer extends LocalComputer implements GraphicalCo
             }
         }
 
-        throw new Error("failed to capture screenshot: no working screenshot tool found (maim, scrot, import)");
+        throw new Error(
+            "failed to capture screenshot: no working screenshot tool found (maim, scrot, import)",
+        );
     }
 
     /**
@@ -253,7 +416,14 @@ export class LocalGraphicalComputer extends LocalComputer implements GraphicalCo
             btnNum = "2";
         }
 
-        await this.runCommand("xdotool", ["mousemove", "--sync", args.x.toString(), args.y.toString(), "click", btnNum]);
+        await this.runCommand("xdotool", [
+            "mousemove",
+            "--sync",
+            args.x.toString(),
+            args.y.toString(),
+            "click",
+            btnNum,
+        ]);
         return { success: true };
     }
 
@@ -261,7 +431,12 @@ export class LocalGraphicalComputer extends LocalComputer implements GraphicalCo
      * Types string text into focused active window.
      */
     async type(args: TypeArgs): Promise<{ success: boolean }> {
-        await this.runCommand("xdotool", ["type", "--clearmodifiers", "--", args.text]);
+        await this.runCommand("xdotool", [
+            "type",
+            "--clearmodifiers",
+            "--",
+            args.text,
+        ]);
         return { success: true };
     }
 
@@ -333,7 +508,12 @@ export class LocalGraphicalComputer extends LocalComputer implements GraphicalCo
      * Moves mouse cursor to (x, y).
      */
     async moveMouseTo(args: MoveMouseToArgs): Promise<{ success: boolean }> {
-        await this.runCommand("xdotool", ["mousemove", "--sync", args.x.toString(), args.y.toString()]);
+        await this.runCommand("xdotool", [
+            "mousemove",
+            "--sync",
+            args.x.toString(),
+            args.y.toString(),
+        ]);
         return { success: true };
     }
 
@@ -344,13 +524,23 @@ export class LocalGraphicalComputer extends LocalComputer implements GraphicalCo
         if (args.dy !== 0) {
             const btn = args.dy < 0 ? "4" : "5";
             const repeat = Math.abs(args.dy);
-            await this.runCommand("xdotool", ["click", "--repeat", repeat.toString(), btn]);
+            await this.runCommand("xdotool", [
+                "click",
+                "--repeat",
+                repeat.toString(),
+                btn,
+            ]);
         }
 
         if (args.dx !== 0) {
             const btn = args.dx < 0 ? "6" : "7";
             const repeat = Math.abs(args.dx);
-            await this.runCommand("xdotool", ["click", "--repeat", repeat.toString(), btn]);
+            await this.runCommand("xdotool", [
+                "click",
+                "--repeat",
+                repeat.toString(),
+                btn,
+            ]);
         }
 
         return { success: true };
@@ -360,7 +550,11 @@ export class LocalGraphicalComputer extends LocalComputer implements GraphicalCo
      * Reads text from system clipboard using xclip.
      */
     async getClipboard(): Promise<{ text: string }> {
-        const out = await this.runCommand("xclip", ["-selection", "clipboard", "-o"]);
+        const out = await this.runCommand("xclip", [
+            "-selection",
+            "clipboard",
+            "-o",
+        ]);
         return { text: out.toString() };
     }
 
@@ -379,13 +573,17 @@ export class LocalGraphicalComputer extends LocalComputer implements GraphicalCo
         const out = await this.runCommand("xdotool", ["getdisplaygeometry"]);
         const parts = out.toString().trim().split(/\s+/);
         if (parts.length < 2) {
-            throw new Error(`invalid display geometry output: '${out.toString()}'`);
+            throw new Error(
+                `invalid display geometry output: '${out.toString()}'`,
+            );
         }
 
         const width = parseInt(parts[0]!, 10);
         const height = parseInt(parts[1]!, 10);
         if (Number.isNaN(width) || Number.isNaN(height)) {
-            throw new Error(`failed to parse display geometry output: '${out.toString()}'`);
+            throw new Error(
+                `failed to parse display geometry output: '${out.toString()}'`,
+            );
         }
 
         return { width, height };
@@ -397,38 +595,54 @@ export class LocalGraphicalComputer extends LocalComputer implements GraphicalCo
  */
 export class LocalComputerProvider implements ComputerProvider {
     config: LocalComputerUseToolProviderConfig;
-    computers: Map<string, ComputerPayload>
+    computers: Map<string, ComputerPayload>;
 
     constructor(config: LocalComputerUseToolProviderConfig) {
         this.config = config;
-        this.computers = new Map()
+        this.computers = new Map();
     }
 
-    async init(): Promise<void> { }
+    async init(): Promise<void> {}
 
     // create computer
     async createComputer(): Promise<string> {
         // check if it has display or if its graphical or not
-        const hasDisplay = Boolean(process.env.DISPLAY || process.env.WAYLAND_DISPLAY);
+        const hasDisplay = Boolean(
+            process.env.DISPLAY || process.env.WAYLAND_DISPLAY,
+        );
         const isGraphical = this.config.enableGUIToolsIfAvailable && hasDisplay;
 
         // create random uuid and set into the map
-        const computerId = randomUUID()
-        this.computers.set(computerId, isGraphical ?
-            { computer: new LocalGraphicalComputer(), type: ComputerType.GRAPHICAL } :
-            { computer: new LocalComputer(), type: ComputerType.HEADLESS });
+        const computerId = randomUUID();
+        this.computers.set(
+            computerId,
+            isGraphical
+                ? {
+                      computer: new LocalGraphicalComputer(),
+                      type: ComputerType.GRAPHICAL,
+                  }
+                : {
+                      computer: new LocalComputer(),
+                      type: ComputerType.HEADLESS,
+                  },
+        );
 
         // return
-        return computerId
+        return computerId;
     }
 
     // delete computer
     async deleteComputer(computerId: string): Promise<void> {
-        this.computers.delete(computerId)
+        this.computers.delete(computerId);
     }
 
     // get computer
     async getComputer(computerId: string): Promise<ComputerPayload> {
-        return this.computers.get(computerId) ?? { error: `Computer with id ${computerId} not found`, type: ComputerType.UNSPECIFIED }
+        return (
+            this.computers.get(computerId) ?? {
+                error: `Computer with id ${computerId} not found`,
+                type: ComputerType.UNSPECIFIED,
+            }
+        );
     }
 }

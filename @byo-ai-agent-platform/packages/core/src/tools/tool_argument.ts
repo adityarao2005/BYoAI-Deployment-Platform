@@ -85,8 +85,8 @@ export function isToolBooleanArgument(arg: ToolArgument): arg is ToolBooleanArgu
 
 export type ToolObjectArgument = {
     type: "object",
-    description: string,
     properties: Record<string, ToolArgument>,
+    description: string,
     required?: string[] | null,
     additionalProperties?: boolean | undefined;
 }

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { skillRepositoryRegistry } from "@byo-ai-agent-platform/core/skills";
-import type { AgentConfig } from "@byo-ai-agent-platform/core/config";
+import type { AgentConfig } from "./agent.config";
 import { registerSkillRepositories } from "./bootstrap";
 
 describe("Skill Repository Registration", () => {

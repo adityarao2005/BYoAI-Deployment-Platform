@@ -182,3 +182,149 @@ func TestLocalComputerFileAndUserOperations(t *testing.T) {
 		}
 	})
 }
+
+func TestLocalComputerExecuteStream(t *testing.T) {
+	comp := LocalComputer{sessionId: "test-stream-session"}
+	ctx := context.Background()
+
+	t.Run("Stdout streaming", func(t *testing.T) {
+		input := ExecInput{
+			Command: "echo hello from stream",
+		}
+
+		session, err := comp.ExecuteStream(ctx, input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		defer session.Kill()
+
+		// Close stdin immediately since we don't need it
+		session.Stdin.Close()
+
+		// Read stdout
+		var stdout bytes.Buffer
+		_, err = stdout.ReadFrom(session.Stdout)
+		if err != nil {
+			t.Fatalf("failed to read stdout: %v", err)
+		}
+
+		exitCode, err := session.Wait()
+		if err != nil {
+			t.Fatalf("unexpected error waiting: %v", err)
+		}
+		if exitCode != 0 {
+			t.Errorf("expected exit code 0, got %d", exitCode)
+		}
+		if stdout.String() != "hello from stream\n" {
+			t.Errorf("expected stdout %q, got %q", "hello from stream\n", stdout.String())
+		}
+	})
+
+	t.Run("Stdin and Stdout bidirectional", func(t *testing.T) {
+		input := ExecInput{
+			Command: "cat",
+		}
+
+		session, err := comp.ExecuteStream(ctx, input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		defer session.Kill()
+
+		// Write to stdin
+		testData := "stream stdin test\n"
+		_, err = session.Stdin.Write([]byte(testData))
+		if err != nil {
+			t.Fatalf("failed to write to stdin: %v", err)
+		}
+		session.Stdin.Close()
+
+		// Read stdout
+		var stdout bytes.Buffer
+		_, err = stdout.ReadFrom(session.Stdout)
+		if err != nil {
+			t.Fatalf("failed to read stdout: %v", err)
+		}
+
+		exitCode, err := session.Wait()
+		if err != nil {
+			t.Fatalf("unexpected error waiting: %v", err)
+		}
+		if exitCode != 0 {
+			t.Errorf("expected exit code 0, got %d", exitCode)
+		}
+		if stdout.String() != testData {
+			t.Errorf("expected stdout %q, got %q", testData, stdout.String())
+		}
+	})
+
+	t.Run("Non-zero exit code", func(t *testing.T) {
+		input := ExecInput{
+			Command: "exit 42",
+		}
+
+		session, err := comp.ExecuteStream(ctx, input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		defer session.Kill()
+
+		session.Stdin.Close()
+
+		// Drain stdout and stderr
+		go func() {
+			var buf bytes.Buffer
+			buf.ReadFrom(session.Stdout)
+		}()
+		go func() {
+			var buf bytes.Buffer
+			buf.ReadFrom(session.Stderr)
+		}()
+
+		exitCode, err := session.Wait()
+		if err != nil {
+			t.Fatalf("unexpected error waiting: %v", err)
+		}
+		if exitCode != 42 {
+			t.Errorf("expected exit code 42, got %d", exitCode)
+		}
+	})
+
+	t.Run("Environment Variables and CWD", func(t *testing.T) {
+		cwd := "/"
+		env := []EnvVar{
+			{Name: "STREAM_TEST_VAR", Value: "stream_val"},
+		}
+		input := ExecInput{
+			Command: "echo $STREAM_TEST_VAR && pwd",
+			Cwd:     &cwd,
+			Env:     env,
+		}
+
+		session, err := comp.ExecuteStream(ctx, input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		defer session.Kill()
+
+		session.Stdin.Close()
+
+		var stdout bytes.Buffer
+		_, err = stdout.ReadFrom(session.Stdout)
+		if err != nil {
+			t.Fatalf("failed to read stdout: %v", err)
+		}
+
+		exitCode, err := session.Wait()
+		if err != nil {
+			t.Fatalf("unexpected error waiting: %v", err)
+		}
+		if exitCode != 0 {
+			t.Errorf("expected exit code 0, got %d", exitCode)
+		}
+		expectedOutput := "stream_val\n/\n"
+		if stdout.String() != expectedOutput {
+			t.Errorf("expected stdout %q, got %q", expectedOutput, stdout.String())
+		}
+	})
+}

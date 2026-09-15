@@ -37,8 +37,8 @@ func NewServerHandlerAndProvider(server_config *config.ServerConfig) (http.Handl
 
 	var handler http.Handler = mux
 
-	if server_config.Server.Security.HasAPIKey() {
-		handler = apiKeyAuthMiddleware(server_config.Server.Security.ApiKey, handler)
+	if server_config.Server.Security.HasBearerToken() {
+		handler = apiKeyAuthMiddleware(server_config.Server.Security.BearerToken, handler)
 	}
 
 	return handler, computer_provider, nil

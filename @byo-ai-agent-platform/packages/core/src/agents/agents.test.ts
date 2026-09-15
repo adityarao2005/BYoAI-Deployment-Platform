@@ -6,7 +6,6 @@ import type { Model } from "@/models/models";
 import {
     AgentMemory,
     AgentManager,
-    type Agent,
     type AgentConfiguration,
 } from "./agents";
 import { InMemoryAgentCommunicator } from "./communication";

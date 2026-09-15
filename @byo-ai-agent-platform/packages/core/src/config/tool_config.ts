@@ -4,6 +4,7 @@ export const BaseToolProviderConfigSchema = z.object({
     name: z.string()
 })
 
+// OpenAPI tool provider
 export const OpenAPIToolProviderConfigSchema = BaseToolProviderConfigSchema.extend({
     type: z.literal("openapi"),
     specUrl: z.string(),
@@ -44,12 +45,17 @@ export const OpenAPIToolProviderConfigSchema = BaseToolProviderConfigSchema.exte
 
 export type OpenAPIToolProviderConfig = z.infer<typeof OpenAPIToolProviderConfigSchema>;
 
+// Computer Use Tool Providers
+
+// local tool provider
 export const LocalComputerUseToolProviderConfigSchema = z.object({
     type: z.literal("local"),
     enableGUIToolsIfAvailable: z.boolean()
 });
 
 export type LocalComputerUseToolProviderConfig = z.infer<typeof LocalComputerUseToolProviderConfigSchema>
+
+// remote tool provider
 
 export const RemoteComputerUseToolProviderConfigSchema = z.object({
     type: z.literal("remote"),
@@ -60,9 +66,9 @@ export const RemoteComputerUseToolProviderConfigSchema = z.object({
 
     // TODO: when we work on the on getting user based & session based rbac stuff when we rework the agent harness to be event driven, we need to add a new computerLifetime argument with options for "server", "user", "session"
 
-    // security configuration, either apikey auth or mtls
+    // security configuration, either bearer token auth or mtls
     security: z.object({
-        apiKey: z.string().optional(),
+        bearerToken: z.string().optional(),
         mtls: z.object({
             clientCert: z.string(),
             clientKey: z.string(),
@@ -129,9 +135,85 @@ export const ComputerUseToolProviderConfigSchema = z.object({
 
 export type ComputerUseToolProviderConfig = z.infer<typeof ComputerUseToolProviderConfigSchema>;
 
+// mcp server
+export const McpAuthSchema = z.discriminatedUnion("type", [
+    z.object({
+        type: z.literal("bearer"),
+        token: z.string(),
+    }),
+    z.object({
+        type: z.literal("basic"),
+        username: z.string(),
+        password: z.string(),
+    }),
+]);
+
+export type McpAuth = z.infer<typeof McpAuthSchema>;
+
+export const McpRemoteSecuritySchema = z.object({
+    mtls: z.object({
+        clientCert: z.string(),
+        clientKey: z.string(),
+        caCert: z.string().optional(),
+    }).optional(),
+    auth: McpAuthSchema.optional(),
+    headers: z.record(z.string(), z.string()).optional(),
+}).optional();
+
+export const McpStdioConfigSchema = BaseToolProviderConfigSchema.extend({
+    type: z.literal("mcp"),
+    transport: z.literal("stdio"),
+    command: z.string(),
+    // command line args passed to executable
+    args: z.array(z.string()).optional(),
+    // environment
+    cwd: z.string().optional(),
+    env: z.union([
+        z.record(z.string(), z.string())
+    ]).optional(),
+})
+
+export type McpStdioConfig = z.infer<typeof McpStdioConfigSchema>
+
+
+export const McpComputerConfigSchema = BaseToolProviderConfigSchema.extend({
+    type: z.literal("mcp"),
+    transport: z.literal("computer"),
+    command: z.string(),
+    // command line args passed to executable
+    args: z.array(z.string()).optional(),
+    // environment
+    cwd: z.string().optional(),
+    env: z.union([
+        z.record(z.string(), z.string())
+    ]).optional(),
+})
+
+export type McpComputerConfig = z.infer<typeof McpComputerConfigSchema>
+
+export const McpRemoteConfigSchema = BaseToolProviderConfigSchema.extend({
+    type: z.literal("mcp"),
+    transport: z.literal("http"),
+    url: z.string(),
+    security: McpRemoteSecuritySchema,
+})
+
+export type McpRemoteConfig = z.infer<typeof McpRemoteConfigSchema>
+
+export const McpToolProviderConfigSchema = z.discriminatedUnion("transport", [
+    McpStdioConfigSchema,
+    McpRemoteConfigSchema,
+    McpComputerConfigSchema
+])
+
+export type McpToolProviderConfig = z.infer<typeof McpToolProviderConfigSchema>
+
+// tool providers
+
 export const ToolProviderConfigSchema = z.discriminatedUnion("type", [
     OpenAPIToolProviderConfigSchema,
     ComputerUseToolProviderConfigSchema,
+    McpToolProviderConfigSchema
 ])
 
 export type ToolProviderConfig = z.infer<typeof ToolProviderConfigSchema>;

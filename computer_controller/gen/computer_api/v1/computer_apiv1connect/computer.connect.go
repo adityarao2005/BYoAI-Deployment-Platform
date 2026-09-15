@@ -64,6 +64,9 @@ const (
 	// BasicComputerServiceGetGroupIdProcedure is the fully-qualified name of the BasicComputerService's
 	// GetGroupId RPC.
 	BasicComputerServiceGetGroupIdProcedure = "/computer_api.v1.BasicComputerService/GetGroupId"
+	// BasicComputerServiceExecuteStreamProcedure is the fully-qualified name of the
+	// BasicComputerService's ExecuteStream RPC.
+	BasicComputerServiceExecuteStreamProcedure = "/computer_api.v1.BasicComputerService/ExecuteStream"
 	// GraphicalComputerServiceCaptureScreenshotProcedure is the fully-qualified name of the
 	// GraphicalComputerService's CaptureScreenshot RPC.
 	GraphicalComputerServiceCaptureScreenshotProcedure = "/computer_api.v1.GraphicalComputerService/CaptureScreenshot"
@@ -237,6 +240,7 @@ type BasicComputerServiceClient interface {
 	ListDirectory(context.Context, *connect.Request[v1.ListDirectoryRequest]) (*connect.Response[v1.ListDirectoryResponse], error)
 	GetUserId(context.Context, *connect.Request[v1.GetUserIdRequest]) (*connect.Response[v1.GetUserIdResponse], error)
 	GetGroupId(context.Context, *connect.Request[v1.GetGroupIdRequest]) (*connect.Response[v1.GetGroupIdResponse], error)
+	ExecuteStream(context.Context) *connect.BidiStreamForClient[v1.ExecuteStreamRequest, v1.ExecuteStreamResponse]
 }
 
 // NewBasicComputerServiceClient constructs a client for the computer_api.v1.BasicComputerService
@@ -286,6 +290,12 @@ func NewBasicComputerServiceClient(httpClient connect.HTTPClient, baseURL string
 			connect.WithSchema(basicComputerServiceMethods.ByName("GetGroupId")),
 			connect.WithClientOptions(opts...),
 		),
+		executeStream: connect.NewClient[v1.ExecuteStreamRequest, v1.ExecuteStreamResponse](
+			httpClient,
+			baseURL+BasicComputerServiceExecuteStreamProcedure,
+			connect.WithSchema(basicComputerServiceMethods.ByName("ExecuteStream")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -297,6 +307,7 @@ type basicComputerServiceClient struct {
 	listDirectory *connect.Client[v1.ListDirectoryRequest, v1.ListDirectoryResponse]
 	getUserId     *connect.Client[v1.GetUserIdRequest, v1.GetUserIdResponse]
 	getGroupId    *connect.Client[v1.GetGroupIdRequest, v1.GetGroupIdResponse]
+	executeStream *connect.Client[v1.ExecuteStreamRequest, v1.ExecuteStreamResponse]
 }
 
 // Execute calls computer_api.v1.BasicComputerService.Execute.
@@ -329,6 +340,11 @@ func (c *basicComputerServiceClient) GetGroupId(ctx context.Context, req *connec
 	return c.getGroupId.CallUnary(ctx, req)
 }
 
+// ExecuteStream calls computer_api.v1.BasicComputerService.ExecuteStream.
+func (c *basicComputerServiceClient) ExecuteStream(ctx context.Context) *connect.BidiStreamForClient[v1.ExecuteStreamRequest, v1.ExecuteStreamResponse] {
+	return c.executeStream.CallBidiStream(ctx)
+}
+
 // BasicComputerServiceHandler is an implementation of the computer_api.v1.BasicComputerService
 // service.
 type BasicComputerServiceHandler interface {
@@ -338,6 +354,7 @@ type BasicComputerServiceHandler interface {
 	ListDirectory(context.Context, *connect.Request[v1.ListDirectoryRequest]) (*connect.Response[v1.ListDirectoryResponse], error)
 	GetUserId(context.Context, *connect.Request[v1.GetUserIdRequest]) (*connect.Response[v1.GetUserIdResponse], error)
 	GetGroupId(context.Context, *connect.Request[v1.GetGroupIdRequest]) (*connect.Response[v1.GetGroupIdResponse], error)
+	ExecuteStream(context.Context, *connect.BidiStream[v1.ExecuteStreamRequest, v1.ExecuteStreamResponse]) error
 }
 
 // NewBasicComputerServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -383,6 +400,12 @@ func NewBasicComputerServiceHandler(svc BasicComputerServiceHandler, opts ...con
 		connect.WithSchema(basicComputerServiceMethods.ByName("GetGroupId")),
 		connect.WithHandlerOptions(opts...),
 	)
+	basicComputerServiceExecuteStreamHandler := connect.NewBidiStreamHandler(
+		BasicComputerServiceExecuteStreamProcedure,
+		svc.ExecuteStream,
+		connect.WithSchema(basicComputerServiceMethods.ByName("ExecuteStream")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/computer_api.v1.BasicComputerService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case BasicComputerServiceExecuteProcedure:
@@ -397,6 +420,8 @@ func NewBasicComputerServiceHandler(svc BasicComputerServiceHandler, opts ...con
 			basicComputerServiceGetUserIdHandler.ServeHTTP(w, r)
 		case BasicComputerServiceGetGroupIdProcedure:
 			basicComputerServiceGetGroupIdHandler.ServeHTTP(w, r)
+		case BasicComputerServiceExecuteStreamProcedure:
+			basicComputerServiceExecuteStreamHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -428,6 +453,10 @@ func (UnimplementedBasicComputerServiceHandler) GetUserId(context.Context, *conn
 
 func (UnimplementedBasicComputerServiceHandler) GetGroupId(context.Context, *connect.Request[v1.GetGroupIdRequest]) (*connect.Response[v1.GetGroupIdResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.BasicComputerService.GetGroupId is not implemented"))
+}
+
+func (UnimplementedBasicComputerServiceHandler) ExecuteStream(context.Context, *connect.BidiStream[v1.ExecuteStreamRequest, v1.ExecuteStreamResponse]) error {
+	return connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.BasicComputerService.ExecuteStream is not implemented"))
 }
 
 // GraphicalComputerServiceClient is a client for the computer_api.v1.GraphicalComputerService

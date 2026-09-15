@@ -1,9 +1,5 @@
 import { z } from 'zod'
-import { ModelConfigSchema } from './model_config';
-import { SkillRepositoryConfigSchema } from './skill_config';
-import { ToolProviderConfigSchema } from './tool_config';
-
-
+import { ModelConfigSchema, SkillRepositoryConfigSchema, ToolProviderConfigSchema } from '@byo-ai-agent-platform/core/config';
 
 // agent schema
 export const AgentConfigSchema = z.object({

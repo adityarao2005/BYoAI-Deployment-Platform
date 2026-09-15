@@ -8,15 +8,19 @@ import {
     InMemoryAgentCommunicator,
     InMemoryAgentMemoryManager,
 } from "@byo-ai-agent-platform/core/agents";
+
 import {
     type ComputerProvider,
     createComputerProvider,
 } from "@byo-ai-agent-platform/core/computer";
+
 import {
     type AgentConfig,
-    AgentConfigSchema,
-    type ComputerUseToolProviderConfig,
-    type ToolProviderConfig,
+    AgentConfigSchema
+} from "./agent.config"
+
+import {
+    type ComputerUseToolProviderConfig
 } from "@byo-ai-agent-platform/core/config";
 import {
     AnthropicModel,
@@ -34,7 +38,12 @@ import {
     ComputerUseToolProvider,
     loadSkillToolProvider,
     OpenAPIToolProvider,
+    StreamableHTTPMcpClientFactory,
+    StdioMcpClientFactory,
     toolProviderRegistry,
+    type McpClientFactory,
+    McpServerToolProvider,
+    ComputerUseStdioMcpClientFactory,
 } from "@byo-ai-agent-platform/core/tools";
 import { parse } from "yaml";
 
@@ -232,12 +241,6 @@ export function registerToolProviders(
     config: AgentConfig,
     computer?: ComputerProvider,
 ): void {
-    for (const providerConfig of config.toolProviders) {
-        if (providerConfig.type === "openapi") {
-            const openApiProvider = new OpenAPIToolProvider(providerConfig);
-            toolProviderRegistry.registerToolProvider(openApiProvider);
-        }
-    }
 
     // Check if a computer is registered, and if so register the ComputerUseToolProvider
     const activeComputer =
@@ -247,6 +250,33 @@ export function registerToolProviders(
         toolProviderRegistry.registerToolProvider(
             new ComputerUseToolProvider(activeComputer),
         );
+    }
+
+    for (const providerConfig of config.toolProviders) {
+        if (providerConfig.type === "openapi") {
+            const openApiProvider = new OpenAPIToolProvider(providerConfig);
+            toolProviderRegistry.registerToolProvider(openApiProvider);
+        } else if (providerConfig.type === "mcp") {
+            let clientFactory: McpClientFactory
+
+            switch (providerConfig.transport) {
+                case "stdio":
+                    clientFactory = new StdioMcpClientFactory(providerConfig)
+                    break;
+                case "computer":
+                    if (activeComputer)
+                        clientFactory = new ComputerUseStdioMcpClientFactory(providerConfig, activeComputer)
+                    else {
+                        throw new Error(`Cannot create the mcp tool provider ${providerConfig.name}. There is no computer provider added.`)
+                    }
+                    break;
+                case "http":
+                    clientFactory = new StreamableHTTPMcpClientFactory(providerConfig)
+                    break;
+            }
+
+            toolProviderRegistry.registerToolProvider(new McpServerToolProvider(clientFactory))
+        }
     }
 }
 

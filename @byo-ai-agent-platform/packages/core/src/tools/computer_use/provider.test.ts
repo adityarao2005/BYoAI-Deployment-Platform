@@ -22,6 +22,7 @@ describe("ComputerUseToolProvider", () => {
     beforeEach(() => {
         mockHeadlessComputer = {
             execute: vi.fn().mockResolvedValue({ exitCode: 0, stdout: "", stderr: "" }),
+            executeStream: vi.fn().mockResolvedValue({} as any),
             readFile: vi.fn().mockResolvedValue({ content: new Uint8Array() }),
             writeFile: vi.fn().mockResolvedValue({ success: true }),
             listDirectory: vi.fn().mockResolvedValue({ files: [] }),

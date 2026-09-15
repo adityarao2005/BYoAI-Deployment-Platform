@@ -79,11 +79,51 @@ export interface ListDirectoryResult {
 }
 
 /**
+ * Interactive stream session for executing commands with real-time stdin/stdout/stderr streaming.
+ */
+export interface StreamSession {
+    /** Write binary or UTF-8 string data to process stdin. */
+    writeStdin(data: Uint8Array | string): Promise<void>;
+    /** Close standard input of the process. */
+    closeStdin(): Promise<void>;
+    /** Register listener for stdout byte chunks. */
+    onStdout(listener: (chunk: Uint8Array) => void): void;
+    /** Register listener for stderr byte chunks. */
+    onStderr(listener: (chunk: Uint8Array) => void): void;
+    /** Register listener for process exit code. */
+    onExit(listener: (code: number) => void): void;
+    /** Register listener for execution errors. */
+    onError(listener: (error: Error) => void): void;
+    /** Promise that resolves to the exit code when process terminates. */
+    wait(): Promise<number>;
+    /** Forcefully kill the running process. */
+    kill(): Promise<void>;
+}
+
+/**
+ * Arguments for starting a streaming execution session.
+ */
+export interface ExecuteStreamArgs {
+    /** Command string or binary path to execute. */
+    command: string;
+    /** Optional working directory. */
+    cwd?: string;
+    /** Optional environment variables key-value map. */
+    envVars?: Record<string, string>;
+    /** Optional shell executable. Set to "" for direct execution without shell. */
+    shell?: string;
+    /** Optional shell arguments. */
+    shellArgs?: string[];
+}
+
+/**
  * Abstraction for headless computer operations (shell execution, filesystem, process identity).
  */
 export interface HeadlessComputer {
     /** Executes a command on the computer shell. */
     execute(args: ExecuteArgs): Promise<ExecutionResult>;
+    /** Starts a real-time streaming execution session for interactive commands. */
+    executeStream(args: ExecuteStreamArgs): Promise<StreamSession>;
     /** Reads content from a file path. */
     readFile(args: ReadFileArgs): Promise<ReadFileResult>;
     /** Writes content to a file path. */
@@ -204,7 +244,9 @@ export interface ScreenSizeResult {
  */
 export interface GraphicalComputer extends HeadlessComputer {
     /** Captures screenshot of display as PNG image bytes. */
-    captureScreenshot(args?: CaptureScreenshotArgs): Promise<CaptureScreenshotResult>;
+    captureScreenshot(
+        args?: CaptureScreenshotArgs,
+    ): Promise<CaptureScreenshotResult>;
     /** Clicks mouse button at (x, y) coordinates. */
     click(args: ClickArgs): Promise<{ success: boolean }>;
     /** Types text into currently focused active window. */
@@ -231,22 +273,24 @@ export interface GraphicalComputer extends HeadlessComputer {
     getScreenSize(): Promise<ScreenSizeResult>;
 }
 
-export type ComputerPayload = {
-    type: ComputerType.GRAPHICAL,
-    computer: GraphicalComputer
-} | {
-    type: ComputerType.HEADLESS,
-    computer: HeadlessComputer
-} | {
-    type: ComputerType.UNSPECIFIED,
-    error: string
-}
+export type ComputerPayload =
+    | {
+          type: ComputerType.GRAPHICAL;
+          computer: GraphicalComputer;
+      }
+    | {
+          type: ComputerType.HEADLESS;
+          computer: HeadlessComputer;
+      }
+    | {
+          type: ComputerType.UNSPECIFIED;
+          error: string;
+      };
 
 /**
  * Provides the computer for you
  */
 export interface ComputerProvider {
-
     /**
      * Initializes provider
      */
@@ -267,5 +311,5 @@ export interface ComputerProvider {
      * Deletes a computer for you
      * @param computerId computer id
      */
-    deleteComputer(computerId: string): Promise<void>
+    deleteComputer(computerId: string): Promise<void>;
 }

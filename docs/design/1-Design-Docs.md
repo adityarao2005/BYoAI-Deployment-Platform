@@ -50,7 +50,7 @@ The **Computer Controller** is a Golang-based service running inside target sand
 - **Session & Capability Detection**: 
   - Dynamic capability detection (`has_display`, display size, supported features).
   - Explicit session lifecycle management with `CreateComputer`, `GetComputer`, and `DeleteComputer` RPC endpoints.
-- **Execution Primitives**: Synchronous and streaming shell command execution, file read/write/list, and GUI interaction hooks.
+- **Execution Primitives**: Synchronous (`Execute`) and real-time bidirectional streaming (`ExecuteStream`) shell command execution, file read/write/list, and GUI interaction hooks. `ExecuteStream` uses ConnectRPC bidirectional streaming (`ExecuteStreamRequest`/`ExecuteStreamResponse`) to relay stdin, stdout, stderr, and process exit status in real time.
 
 The admins working on building their AI Agents can either manage it via Kubernetes or through the admin console.
 
@@ -58,13 +58,15 @@ The admins working on building their AI Agents can either manage it via Kubernet
 
 The TypeScript Agent Harness integrates computer use capabilities via a decoupled provider architecture:
 - **Interfaces (`computer.ts`)**:
-  - `HeadlessComputer`: Contract for basic execution (shell execution, file read/write/list, user/group IDs).
+  - `HeadlessComputer`: Contract for basic execution (shell execution, real-time command streaming `executeStream`, file read/write/list, user/group IDs).
   - `GraphicalComputer`: Contract for desktop GUI automation (screenshot capture, mouse click/move/drag/scroll, keyboard input, clipboard management, screen geometry).
 - **Tool Transformer (`builder.ts`)**:
   - `buildComputerTools(computer, isGraphical)`: Transforms any implementation of `HeadlessComputer` or `GraphicalComputer` into executable agent `Tool[]` objects with JSON Schema parameter validation.
 - **Providers**:
-  - `RemoteComputerUseToolProvider` (`remote_provider.ts`): Connects to remote Computer Controller instances via ConnectRPC (`BasicComputerService`, `GraphicalComputerService`, `ComputerProviderService`).
-  - `LocalComputerUseToolProvider` (`local_provider.ts`): Executes operations directly on the local host OS using Node process/filesystem APIs and Linux utilities (`xdotool`, `xclip`, `maim`, `scrot`, `import`).
+  - `RemoteComputerUseToolProvider` (`remote_provider.ts`): Connects to remote Computer Controller instances via ConnectRPC (`BasicComputerService`, `GraphicalComputerService`, `ComputerProviderService`). Implements `executeStream` over ConnectRPC bidi streaming.
+  - `LocalComputerUseToolProvider` (`local_provider.ts`): Executes operations directly on the local host OS using Node process/filesystem APIs (`child_process.spawn` streaming for `executeStream`) and Linux utilities (`xdotool`, `xclip`, `maim`, `scrot`, `import`).
+- **Computer-Use MCP Stdio Transport (`computer_transport.ts`)**:
+  - `ComputerStdioClientTransport`: Custom MCP `Transport` implementation that spawns and executes MCP stdio server binaries **inside the agent's computer sandbox** (local or remote Docker container) via `computer.executeStream()`, bridging JSON-RPC lines between MCP `Client` and process stdin/stdout in real time.
 - **Registry (`registry.ts`)**:
   - `registerComputerUseToolProvider(config)`: Reads `agent.yaml` tool provider configuration and registers the designated local or remote computer provider into `toolProviderRegistry`.
 
@@ -117,8 +119,9 @@ toolProviders:
 | **OpenAPI** | Authentication | **Implemented** | `apiKey` (header, query, cookie), `bearerToken`, `basicAuth`, `custom` headers/queryParams/pathParams |
 | **OpenAPI** | OAuth2 Flow | **Unimplemented** | Schema defined; interactive token retrieval flow deferred for server component |
 | **Computer Use** | Abstraction & Tool Builder | **Implemented** | `HeadlessComputer` & `GraphicalComputer` interfaces; `buildComputerTools` generates 6 basic & 13 GUI tools |
-| **Computer Use** | Remote Provider (`remote`) | **Implemented** | `RemoteComputerUseToolProvider` communicates with Computer Controller via ConnectRPC |
+| **Computer Use** | Remote Provider (`remote`) | **Implemented** | `RemoteComputerUseToolProvider` communicates with Computer Controller via ConnectRPC (unary & bidi streaming) |
 | **Computer Use** | Local Provider (`local`) | **Implemented** | `LocalComputerUseToolProvider` uses Node child_process/fs and Linux utilities (`xdotool`, `xclip`, `maim`/`scrot`/`import`) |
+| **Computer Use** | MCP Stdio Transport (`computer_transport`) | **Implemented** | `ComputerStdioClientTransport` executes stdio MCP servers in local or remote computer sandboxes via `executeStream` |
 | **Computer Use** | Session RBAC & Lifetime | **Unimplemented** | `computerLifetime` (server, user, session) deferred to event-driven refactor |
 | **Computer Use** | Windows / macOS Local GUI | **Unimplemented** | `LocalGraphicalComputer` currently relies on Linux/X11 tools (`xdotool`, `xclip`, `maim`) |
 
