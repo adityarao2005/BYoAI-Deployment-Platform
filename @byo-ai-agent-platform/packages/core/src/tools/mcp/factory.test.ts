@@ -1,35 +1,8 @@
-import { describe, expect, it, mock, beforeEach } from "bun:test";
+import { describe, expect, it, beforeEach, afterAll, spyOn } from "bun:test";
 import { RemoteMcpClientFactory, loadCertOrContent } from "./factory";
 import type { McpRemoteConfig } from "@/config";
 import type { Agent } from "@/agents";
-
-const mockConnect = mock((_transport: any) => Promise.resolve());
-
-mock.module("@modelcontextprotocol/client", () => {
-    class MockClient {
-        options: any;
-        constructor(options: any) {
-            this.options = options;
-        }
-        async connect(transport: any) {
-            return await mockConnect(transport);
-        }
-    }
-
-    class MockStreamableHTTPClientTransport {
-        url: URL;
-        opts: any;
-        constructor(url: URL, opts: any) {
-            this.url = url;
-            this.opts = opts;
-        }
-    }
-
-    return {
-        Client: MockClient,
-        StreamableHTTPClientTransport: MockStreamableHTTPClientTransport,
-    };
-});
+import { Client } from "@modelcontextprotocol/client";
 
 describe("RemoteMcpClientFactory", () => {
     const dummyAgent: Agent = {
@@ -37,8 +10,21 @@ describe("RemoteMcpClientFactory", () => {
         name: "test-agent",
     };
 
+    let connectSpy: any;
+    let lastTransport: any = null;
+
     beforeEach(() => {
-        mockConnect.mockClear();
+        lastTransport = null;
+        if (connectSpy) connectSpy.mockRestore();
+        connectSpy = spyOn(Client.prototype, "connect").mockImplementation(async function (
+            transport: any
+        ) {
+            lastTransport = transport;
+        });
+    });
+
+    afterAll(() => {
+        if (connectSpy) connectSpy.mockRestore();
     });
 
     it("creates client with bearer token configured as authProvider", async () => {
@@ -59,15 +45,14 @@ describe("RemoteMcpClientFactory", () => {
         const client = await factory.createClient(dummyAgent);
 
         expect(client).toBeDefined();
-        expect(mockConnect).toHaveBeenCalledTimes(1);
+        expect(connectSpy).toHaveBeenCalledTimes(1);
 
-        const transport = mockConnect.mock.calls[0]![0] as any;
-        expect(transport.url.toString()).toBe("http://localhost:8000/");
-        expect(transport.opts.authProvider).toBeDefined();
+        expect(lastTransport._url.toString()).toBe("http://localhost:8000/");
+        expect(lastTransport._authProvider).toBeDefined();
 
-        const token = await transport.opts.authProvider.token();
+        const token = await lastTransport._authProvider.token();
         expect(token).toBe("secret-bearer-token");
-        expect(transport.opts.requestInit.headers["Authorization"]).toBeUndefined();
+        expect(lastTransport._requestInit.headers["Authorization"]).toBeUndefined();
     });
 
     it("creates client with basic auth formatted and encoded in Authorization header", async () => {
@@ -88,10 +73,9 @@ describe("RemoteMcpClientFactory", () => {
         const factory = new RemoteMcpClientFactory(config);
         await factory.createClient(dummyAgent);
 
-        const transport = mockConnect.mock.calls[0]![0] as any;
         const expectedBase64 = Buffer.from("admin:secret123").toString("base64");
-        expect(transport.opts.requestInit.headers["Authorization"]).toBe(`Basic ${expectedBase64}`);
-        expect(transport.opts.authProvider).toBeUndefined();
+        expect(lastTransport._requestInit.headers["Authorization"]).toBe(`Basic ${expectedBase64}`);
+        expect(lastTransport._authProvider).toBeUndefined();
     });
 
     it("preserves custom headers alongside basic auth", async () => {
@@ -115,9 +99,8 @@ describe("RemoteMcpClientFactory", () => {
         const factory = new RemoteMcpClientFactory(config);
         await factory.createClient(dummyAgent);
 
-        const transport = mockConnect.mock.calls[0]![0] as any;
-        expect(transport.opts.requestInit.headers["X-Custom-Header"]).toBe("custom-value");
-        expect(transport.opts.requestInit.headers["Authorization"]).toBe(
+        expect(lastTransport._requestInit.headers["X-Custom-Header"]).toBe("custom-value");
+        expect(lastTransport._requestInit.headers["Authorization"]).toBe(
             `Basic ${Buffer.from("user:pass").toString("base64")}`
         );
     });
@@ -140,11 +123,10 @@ describe("RemoteMcpClientFactory", () => {
         const factory = new RemoteMcpClientFactory(config);
         await factory.createClient(dummyAgent);
 
-        const transport = mockConnect.mock.calls[0]![0] as any;
-        expect(transport.opts.requestInit.tls).toBeDefined();
-        expect(transport.opts.requestInit.tls.cert).toContain("-----BEGIN CERTIFICATE-----");
-        expect(transport.opts.requestInit.tls.key).toContain("-----BEGIN RSA PRIVATE KEY-----");
-        expect(transport.opts.requestInit.tls.ca).toContain("CA...");
+        expect(lastTransport._requestInit.tls).toBeDefined();
+        expect(lastTransport._requestInit.tls.cert).toContain("-----BEGIN CERTIFICATE-----");
+        expect(lastTransport._requestInit.tls.key).toContain("-----BEGIN RSA PRIVATE KEY-----");
+        expect(lastTransport._requestInit.tls.ca).toContain("CA...");
     });
 
     it("loadCertOrContent returns content directly if not a valid file path", async () => {

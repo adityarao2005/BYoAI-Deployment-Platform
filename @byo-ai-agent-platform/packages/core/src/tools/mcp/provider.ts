@@ -33,7 +33,9 @@ export class McpServerToolProvider implements ToolProvider {
                 resources,
             };
         } finally {
-            await client.close();
+            if (typeof client?.close === "function") {
+                await client.close();
+            }
         }
     }
 
@@ -51,7 +53,9 @@ export class McpServerToolProvider implements ToolProvider {
 
             return result.content;
         } finally {
-            await client.close();
+            if (typeof client?.close === "function") {
+                await client.close();
+            }
         }
     }
 
@@ -61,7 +65,9 @@ export class McpServerToolProvider implements ToolProvider {
             const result = await client.readResource({ uri });
             return result.contents;
         } finally {
-            await client.close();
+            if (typeof client?.close === "function") {
+                await client.close();
+            }
         }
     }
 
