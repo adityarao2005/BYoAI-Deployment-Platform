@@ -1,12 +1,14 @@
 import fs from "node:fs/promises";
 import type { Agent } from "@/agents";
-import type { McpRemoteConfig } from "@/config";
+import type { McpRemoteConfig, McpStdioConfig } from "@/config";
 import {
     Client,
     StreamableHTTPClientTransport,
     type StreamableHTTPClientTransportOptions,
 } from "@modelcontextprotocol/client";
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio"
 import type { McpClientFactory } from "./provider";
+import type { ComputerProvider } from "@/computer";
 
 export async function loadCertOrContent(pathOrContent: string): Promise<string> {
     try {
@@ -70,6 +72,71 @@ export class RemoteMcpClientFactory implements McpClientFactory {
 
         const transportOptions = await this.buildTransportOptions();
         const transport = new StreamableHTTPClientTransport(new URL(this.config.url), transportOptions);
+
+        await client.connect(transport);
+
+        return client;
+    }
+}
+
+// stdio mcp client factory (basic stdio)
+export class StdioMcpClientFactory implements McpClientFactory {
+    readonly name: string;
+
+    constructor(
+        private config: McpStdioConfig,
+        private version?: string,
+        private description?: string,
+    ) {
+        this.name = config.name;
+    }
+
+    async createClient(_agent: Agent): Promise<Client> {
+        const client = new Client({
+            name: this.name,
+            version: this.version ?? "1.0.0",
+            description: this.description,
+        });
+
+        const transport = new StdioClientTransport({
+            command: this.config.command,
+            args: this.config.args,
+            cwd: this.config.cwd,
+            env: this.config.env
+        });
+
+        await client.connect(transport);
+
+        return client;
+    }
+}
+
+// computer use stdio mcp client factory
+export class ComputerUseStdioMcpClientFactory implements McpClientFactory {
+    readonly name: string;
+
+    constructor(
+        private config: McpStdioConfig,
+        private computerProvider: ComputerProvider,
+        private version?: string,
+        private description?: string,
+    ) {
+        this.name = config.name;
+    }
+
+    async createClient(_agent: Agent): Promise<Client> {
+        const client = new Client({
+            name: this.name,
+            version: this.version ?? "1.0.0",
+            description: this.description,
+        });
+
+        const transport = new StdioClientTransport({
+            command: this.config.command,
+            args: this.config.args,
+            cwd: this.config.cwd,
+            env: this.config.env
+        });
 
         await client.connect(transport);
 

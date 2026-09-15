@@ -167,6 +167,7 @@ export const McpStdioConfigSchema = BaseToolProviderConfigSchema.extend({
     // command line args passed to executable
     args: z.array(z.string()).optional(),
     // environment
+    cwd: z.string().optional(),
     env: z.union([
         z.record(z.string(), z.string())
     ]).optional(),
