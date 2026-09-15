@@ -7,7 +7,7 @@ import {
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import type { Agent } from "@/agents";
 import type { ComputerProvider } from "@/computer";
-import type { McpRemoteConfig, McpStdioConfig } from "@/config";
+import type { McpComputerConfig, McpRemoteConfig, McpStdioConfig } from "@/config";
 import type { McpClientFactory } from "./provider";
 
 export async function loadCertOrContent(
@@ -21,7 +21,7 @@ export async function loadCertOrContent(
 }
 
 // remote mcp client factory
-export class RemoteMcpClientFactory implements McpClientFactory {
+export class StreamableHTTPMcpClientFactory implements McpClientFactory {
     readonly name: string;
 
     constructor(
@@ -130,7 +130,7 @@ export class ComputerUseStdioMcpClientFactory implements McpClientFactory {
     readonly name: string;
 
     constructor(
-        private config: McpStdioConfig,
+        private config: McpComputerConfig,
         private computerProvider: ComputerProvider,
         private version?: string,
         private description?: string,

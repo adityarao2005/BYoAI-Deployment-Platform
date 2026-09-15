@@ -10,7 +10,7 @@ import {
 import { z } from "zod";
 import type { Agent, AgentSession } from "@/agents";
 import type { McpRemoteConfig } from "@/config";
-import { RemoteMcpClientFactory } from "./factory";
+import { StreamableHTTPMcpClientFactory } from "./factory";
 import { McpServerToolProvider } from "./provider";
 
 describe("MCP Integration Test Suite", () => {
@@ -156,7 +156,7 @@ describe("MCP Integration Test Suite", () => {
                 },
             };
 
-            const factory = new RemoteMcpClientFactory(config);
+            const factory = new StreamableHTTPMcpClientFactory(config);
             const provider = new McpServerToolProvider(factory);
 
             const tools = await provider.getAllTools(dummyAgent);
@@ -234,7 +234,7 @@ describe("MCP Integration Test Suite", () => {
                 },
             };
 
-            const factory = new RemoteMcpClientFactory(config);
+            const factory = new StreamableHTTPMcpClientFactory(config);
             const provider = new McpServerToolProvider(factory);
 
             expect(provider.getAllTools(dummyAgent)).rejects.toThrow();
@@ -280,7 +280,7 @@ describe("MCP Integration Test Suite", () => {
                 },
             };
 
-            const factory = new RemoteMcpClientFactory(config);
+            const factory = new StreamableHTTPMcpClientFactory(config);
             const provider = new McpServerToolProvider(factory);
 
             const tools = await provider.getAllTools(dummyAgent);
@@ -337,7 +337,7 @@ describe("MCP Integration Test Suite", () => {
                 },
             };
 
-            const factory = new RemoteMcpClientFactory(config);
+            const factory = new StreamableHTTPMcpClientFactory(config);
             const provider = new McpServerToolProvider(factory);
 
             const tools = await provider.getAllTools(dummyAgent);
@@ -384,7 +384,7 @@ describe("MCP Integration Test Suite", () => {
                 },
             };
 
-            const factory = new RemoteMcpClientFactory(config);
+            const factory = new StreamableHTTPMcpClientFactory(config);
             const provider = new McpServerToolProvider(factory);
 
             const tools = await provider.getAllTools(dummyAgent);

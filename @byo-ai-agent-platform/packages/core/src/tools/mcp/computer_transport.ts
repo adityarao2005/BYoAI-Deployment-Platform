@@ -1,6 +1,6 @@
 import type { JSONRPCMessage, Transport } from "@modelcontextprotocol/client";
 import type { HeadlessComputer, StreamSession } from "@/computer/computer";
-import type { McpStdioConfig } from "@/config/tool_config";
+import type { McpComputerConfig, McpStdioConfig } from "@/config/tool_config";
 
 /**
  * Custom MCP Transport that executes MCP servers inside the agent's computer
@@ -14,7 +14,7 @@ export class ComputerStdioClientTransport implements Transport {
 
     constructor(
         private computer: HeadlessComputer,
-        private config: McpStdioConfig,
+        private config: McpComputerConfig,
     ) {}
 
     /**

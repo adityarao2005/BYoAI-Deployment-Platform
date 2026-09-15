@@ -2,7 +2,7 @@ import { afterAll, beforeEach, describe, expect, it, spyOn } from "bun:test";
 import { Client } from "@modelcontextprotocol/client";
 import type { Agent } from "@/agents";
 import type { McpRemoteConfig } from "@/config";
-import { loadCertOrContent, RemoteMcpClientFactory } from "./factory";
+import { loadCertOrContent, StreamableHTTPMcpClientFactory } from "./factory";
 
 describe("RemoteMcpClientFactory", () => {
     const dummyAgent: Agent = {
@@ -41,7 +41,7 @@ describe("RemoteMcpClientFactory", () => {
             },
         };
 
-        const factory = new RemoteMcpClientFactory(config);
+        const factory = new StreamableHTTPMcpClientFactory(config);
         const client = await factory.createClient(dummyAgent);
 
         expect(client).toBeDefined();
@@ -72,7 +72,7 @@ describe("RemoteMcpClientFactory", () => {
             },
         };
 
-        const factory = new RemoteMcpClientFactory(config);
+        const factory = new StreamableHTTPMcpClientFactory(config);
         await factory.createClient(dummyAgent);
 
         const expectedBase64 =
@@ -101,7 +101,7 @@ describe("RemoteMcpClientFactory", () => {
             },
         };
 
-        const factory = new RemoteMcpClientFactory(config);
+        const factory = new StreamableHTTPMcpClientFactory(config);
         await factory.createClient(dummyAgent);
 
         expect(lastTransport._requestInit.headers["X-Custom-Header"]).toBe(
@@ -129,7 +129,7 @@ describe("RemoteMcpClientFactory", () => {
             },
         };
 
-        const factory = new RemoteMcpClientFactory(config);
+        const factory = new StreamableHTTPMcpClientFactory(config);
         await factory.createClient(dummyAgent);
 
         expect(lastTransport._requestInit.tls).toBeDefined();

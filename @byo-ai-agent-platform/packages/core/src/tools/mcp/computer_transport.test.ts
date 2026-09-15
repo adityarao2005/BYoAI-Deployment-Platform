@@ -7,7 +7,7 @@ import type {
     HeadlessComputer,
     StreamSession,
 } from "@/computer/computer";
-import type { McpStdioConfig } from "@/config";
+import type { McpComputerConfig, McpStdioConfig } from "@/config";
 import { ComputerType } from "@/gen/computer_api/v1/computer_pb";
 import { ComputerStdioClientTransport } from "./computer_transport";
 import { ComputerUseStdioMcpClientFactory } from "./factory";
@@ -73,10 +73,10 @@ describe("ComputerStdioClientTransport", () => {
         };
     });
 
-    const mcpConfig: McpStdioConfig = {
+    const mcpConfig: McpComputerConfig = {
         name: "test-computer-mcp",
         type: "mcp",
-        transport: "stdio",
+        transport: "computer",
         command: "npx",
         args: ["@modelcontextprotocol/server-filesystem", "/tmp"],
         env: { FOO: "BAR" },
@@ -217,10 +217,10 @@ describe("ComputerUseStdioMcpClientFactory", () => {
             ),
         };
 
-        const mcpConfig: McpStdioConfig = {
+        const mcpConfig: McpComputerConfig = {
             name: "fs-mcp",
             type: "mcp",
-            transport: "stdio",
+            transport: "computer",
             command: "npx",
             args: ["@modelcontextprotocol/server-filesystem", "/tmp"],
         };

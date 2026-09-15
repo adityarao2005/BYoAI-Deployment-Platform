@@ -175,6 +175,22 @@ export const McpStdioConfigSchema = BaseToolProviderConfigSchema.extend({
 
 export type McpStdioConfig = z.infer<typeof McpStdioConfigSchema>
 
+
+export const McpComputerConfigSchema = BaseToolProviderConfigSchema.extend({
+    type: z.literal("mcp"),
+    transport: z.literal("computer"),
+    command: z.string(),
+    // command line args passed to executable
+    args: z.array(z.string()).optional(),
+    // environment
+    cwd: z.string().optional(),
+    env: z.union([
+        z.record(z.string(), z.string())
+    ]).optional(),
+})
+
+export type McpComputerConfig = z.infer<typeof McpComputerConfigSchema>
+
 export const McpRemoteConfigSchema = BaseToolProviderConfigSchema.extend({
     type: z.literal("mcp"),
     transport: z.literal("http"),
@@ -186,7 +202,8 @@ export type McpRemoteConfig = z.infer<typeof McpRemoteConfigSchema>
 
 export const McpToolProviderConfigSchema = z.discriminatedUnion("transport", [
     McpStdioConfigSchema,
-    McpRemoteConfigSchema
+    McpRemoteConfigSchema,
+    McpComputerConfigSchema
 ])
 
 export type McpToolProviderConfig = z.infer<typeof McpToolProviderConfigSchema>
