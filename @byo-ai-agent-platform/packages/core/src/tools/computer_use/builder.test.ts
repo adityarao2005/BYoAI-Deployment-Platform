@@ -17,6 +17,7 @@ describe("computer tool builder", () => {
 
     const mockHeadlessComputer: HeadlessComputer = {
         execute: vi.fn().mockResolvedValue({ exitCode: 0, stdout: "output", stderr: "" }),
+        executeStream: vi.fn().mockResolvedValue({} as any),
         readFile: vi.fn().mockResolvedValue({ content: new Uint8Array([65, 66]) }),
         writeFile: vi.fn().mockResolvedValue({ success: true }),
         listDirectory: vi.fn().mockResolvedValue({ files: ["a.txt"] }),

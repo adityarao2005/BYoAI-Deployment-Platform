@@ -111,6 +111,8 @@ export class StdioMcpClientFactory implements McpClientFactory {
     }
 }
 
+import { ComputerStdioClientTransport } from "./computer_transport";
+
 // computer use stdio mcp client factory
 export class ComputerUseStdioMcpClientFactory implements McpClientFactory {
     readonly name: string;
@@ -124,19 +126,23 @@ export class ComputerUseStdioMcpClientFactory implements McpClientFactory {
         this.name = config.name;
     }
 
-    async createClient(_agent: Agent): Promise<Client> {
+    async createClient(agent: Agent): Promise<Client> {
+        if (!agent.computerId) {
+            throw new Error(`Agent ${agent.name} needs to have a computer to use this MCP server`)
+        }
+
         const client = new Client({
             name: this.name,
             version: this.version ?? "1.0.0",
             description: this.description,
         });
 
-        const transport = new StdioClientTransport({
-            command: this.config.command,
-            args: this.config.args,
-            cwd: this.config.cwd,
-            env: this.config.env
-        });
+        const payload = await this.computerProvider.getComputer(agent.computerId);
+        if ("error" in payload || !payload.computer) {
+            throw new Error(`Failed to get computer for agent '${agent.id}' (computerId '${agent.computerId}'): ${"error" in payload ? payload.error : "computer not found"}`);
+        }
+
+        const transport = new ComputerStdioClientTransport(payload.computer, this.config);
 
         await client.connect(transport);
 

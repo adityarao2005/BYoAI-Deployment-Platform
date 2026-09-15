@@ -8,6 +8,7 @@ import type {
     ComputerProvider,
     DragArgs,
     ExecuteArgs,
+    ExecuteStreamArgs,
     ExecutionResult,
     GraphicalComputer,
     HeadlessComputer,
@@ -20,6 +21,7 @@ import type {
     ScreenSizeResult,
     ScrollArgs,
     SetClipboardArgs,
+    StreamSession,
     TypeArgs,
     WriteFileArgs,
 } from "@/computer/computer";
@@ -107,6 +109,116 @@ export class LocalComputer implements HeadlessComputer {
                 });
             });
         });
+    }
+
+    /**
+     * Starts a real-time streaming execution session for interactive commands.
+     */
+    async executeStream(args: ExecuteStreamArgs): Promise<StreamSession> {
+        let child: ReturnType<typeof spawn>;
+        const shellExecutable = args.shell ?? "sh";
+
+        if (args.shellArgs && args.shellArgs.length > 0) {
+            child = spawn(shellExecutable, [...args.shellArgs, args.command], {
+                cwd: args.cwd,
+                env: { ...process.env, ...(args.envVars || {}) },
+            });
+        } else if (args.shell !== "") {
+            child = spawn(shellExecutable, ["-c", args.command], {
+                cwd: args.cwd,
+                env: { ...process.env, ...(args.envVars || {}) },
+            });
+        } else {
+            const parts = args.command.split(" ");
+            const cmd = parts[0] || "";
+            const spawnArgs = parts.slice(1);
+            child = spawn(cmd, spawnArgs, {
+                cwd: args.cwd,
+                env: { ...process.env, ...(args.envVars || {}) },
+            });
+        }
+
+        const stdoutListeners: ((chunk: Uint8Array) => void)[] = [];
+        const stderrListeners: ((chunk: Uint8Array) => void)[] = [];
+        const exitListeners: ((code: number) => void)[] = [];
+        const errorListeners: ((error: Error) => void)[] = [];
+
+        let exitCodeResolved = false;
+        let finalExitCode: number | null = null;
+        let spawnError: Error | null = null;
+
+        const waitPromise = new Promise<number>((resolve, reject) => {
+            child.on("error", (err) => {
+                spawnError = err;
+                for (const listener of errorListeners) {
+                    listener(err);
+                }
+                reject(err);
+            });
+
+            child.on("close", (code) => {
+                exitCodeResolved = true;
+                finalExitCode = code ?? 0;
+                for (const listener of exitListeners) {
+                    listener(finalExitCode);
+                }
+                resolve(finalExitCode);
+            });
+        });
+
+        child.stdout!.on("data", (chunk: Buffer) => {
+            const uint8 = new Uint8Array(chunk.buffer, chunk.byteOffset, chunk.byteLength);
+            for (const listener of stdoutListeners) {
+                listener(uint8);
+            }
+        });
+
+        child.stderr!.on("data", (chunk: Buffer) => {
+            const uint8 = new Uint8Array(chunk.buffer, chunk.byteOffset, chunk.byteLength);
+            for (const listener of stderrListeners) {
+                listener(uint8);
+            }
+        });
+
+        return {
+            async writeStdin(data: Uint8Array | string): Promise<void> {
+                return new Promise((resolve, reject) => {
+                    child.stdin!.write(data, (err) => {
+                        if (err) reject(err);
+                        else resolve();
+                    });
+                });
+            },
+            async closeStdin(): Promise<void> {
+                child.stdin!.end();
+            },
+            onStdout(listener: (chunk: Uint8Array) => void): void {
+                stdoutListeners.push(listener);
+            },
+            onStderr(listener: (chunk: Uint8Array) => void): void {
+                stderrListeners.push(listener);
+            },
+            onExit(listener: (code: number) => void): void {
+                if (exitCodeResolved && finalExitCode !== null) {
+                    listener(finalExitCode);
+                } else {
+                    exitListeners.push(listener);
+                }
+            },
+            onError(listener: (error: Error) => void): void {
+                if (spawnError) {
+                    listener(spawnError);
+                } else {
+                    errorListeners.push(listener);
+                }
+            },
+            async wait(): Promise<number> {
+                return waitPromise;
+            },
+            async kill(): Promise<void> {
+                child.kill();
+            },
+        };
     }
 
     /**

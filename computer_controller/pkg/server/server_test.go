@@ -62,7 +62,9 @@ func TestServerConnectRPCIntegration(t *testing.T) {
 		t.Fatalf("failed to create server handler: %v", err)
 	}
 
-	ts := httptest.NewServer(handler)
+	ts := httptest.NewUnstartedServer(handler)
+	ts.EnableHTTP2 = true
+	ts.StartTLS()
 	defer ts.Close()
 
 	ctx := context.Background()
@@ -289,6 +291,170 @@ func TestServerConnectRPCIntegration(t *testing.T) {
 		if gidResp.Msg.GetGroupId() == "" {
 			t.Fatalf("expected non-empty GroupId, got error: %v", gidResp.Msg.GetErrorMessage())
 		}
+	})
+
+	t.Run("BasicComputerService - ExecuteStream RPCs", func(t *testing.T) {
+		sessionID := "0"
+
+		t.Run("Stdout streaming", func(t *testing.T) {
+			stream := basicClient.ExecuteStream(ctx)
+
+			// Send config
+			if err := stream.Send(&computer_apiv1.ExecuteStreamRequest{
+				Input: &computer_apiv1.ExecuteStreamRequest_Config{
+					Config: &computer_apiv1.ExecuteStreamConfig{
+						SessionId: sessionID,
+						Command:   "echo hello_stream",
+					},
+				},
+			}); err != nil {
+				t.Fatalf("failed to send config: %v", err)
+			}
+
+			// Close send side
+			if err := stream.CloseRequest(); err != nil {
+				t.Fatalf("failed to close request: %v", err)
+			}
+
+			var stdout []byte
+			var exitCode int32
+			gotExit := false
+			for {
+				resp, err := stream.Receive()
+				if err != nil {
+					break
+				}
+				switch output := resp.GetOutput().(type) {
+				case *computer_apiv1.ExecuteStreamResponse_Stdout:
+					stdout = append(stdout, output.Stdout...)
+				case *computer_apiv1.ExecuteStreamResponse_ExitCode:
+					exitCode = output.ExitCode
+					gotExit = true
+				case *computer_apiv1.ExecuteStreamResponse_ErrorMessage:
+					t.Fatalf("unexpected error: %s", output.ErrorMessage)
+				}
+			}
+
+			if !gotExit {
+				t.Fatal("expected exit code message")
+			}
+			if exitCode != 0 {
+				t.Errorf("expected exit code 0, got %d", exitCode)
+			}
+			if string(stdout) != "hello_stream\n" {
+				t.Errorf("expected stdout %q, got %q", "hello_stream\n", string(stdout))
+			}
+		})
+
+		t.Run("Stdin and Stdout bidirectional", func(t *testing.T) {
+			stream := basicClient.ExecuteStream(ctx)
+
+			// Send config
+			if err := stream.Send(&computer_apiv1.ExecuteStreamRequest{
+				Input: &computer_apiv1.ExecuteStreamRequest_Config{
+					Config: &computer_apiv1.ExecuteStreamConfig{
+						SessionId: sessionID,
+						Command:   "cat",
+					},
+				},
+			}); err != nil {
+				t.Fatalf("failed to send config: %v", err)
+			}
+
+			// Send stdin data
+			testData := "stream_stdin_test_data"
+			if err := stream.Send(&computer_apiv1.ExecuteStreamRequest{
+				Input: &computer_apiv1.ExecuteStreamRequest_Stdin{
+					Stdin: []byte(testData),
+				},
+			}); err != nil {
+				t.Fatalf("failed to send stdin: %v", err)
+			}
+
+			// Close stdin
+			if err := stream.Send(&computer_apiv1.ExecuteStreamRequest{
+				Input: &computer_apiv1.ExecuteStreamRequest_CloseStdin{
+					CloseStdin: true,
+				},
+			}); err != nil {
+				t.Fatalf("failed to send close_stdin: %v", err)
+			}
+
+			if err := stream.CloseRequest(); err != nil {
+				t.Fatalf("failed to close request: %v", err)
+			}
+
+			var stdout []byte
+			var exitCode int32
+			gotExit := false
+			for {
+				resp, err := stream.Receive()
+				if err != nil {
+					break
+				}
+				switch output := resp.GetOutput().(type) {
+				case *computer_apiv1.ExecuteStreamResponse_Stdout:
+					stdout = append(stdout, output.Stdout...)
+				case *computer_apiv1.ExecuteStreamResponse_ExitCode:
+					exitCode = output.ExitCode
+					gotExit = true
+				case *computer_apiv1.ExecuteStreamResponse_ErrorMessage:
+					t.Fatalf("unexpected error: %s", output.ErrorMessage)
+				}
+			}
+
+			if !gotExit {
+				t.Fatal("expected exit code message")
+			}
+			if exitCode != 0 {
+				t.Errorf("expected exit code 0, got %d", exitCode)
+			}
+			if string(stdout) != testData {
+				t.Errorf("expected stdout %q, got %q", testData, string(stdout))
+			}
+		})
+
+		t.Run("Non-zero exit code", func(t *testing.T) {
+			stream := basicClient.ExecuteStream(ctx)
+
+			if err := stream.Send(&computer_apiv1.ExecuteStreamRequest{
+				Input: &computer_apiv1.ExecuteStreamRequest_Config{
+					Config: &computer_apiv1.ExecuteStreamConfig{
+						SessionId: sessionID,
+						Command:   "exit 7",
+					},
+				},
+			}); err != nil {
+				t.Fatalf("failed to send config: %v", err)
+			}
+
+			if err := stream.CloseRequest(); err != nil {
+				t.Fatalf("failed to close request: %v", err)
+			}
+
+			var exitCode int32
+			gotExit := false
+			for {
+				resp, err := stream.Receive()
+				if err != nil {
+					break
+				}
+				switch output := resp.GetOutput().(type) {
+				case *computer_apiv1.ExecuteStreamResponse_ExitCode:
+					exitCode = output.ExitCode
+					gotExit = true
+				case *computer_apiv1.ExecuteStreamResponse_ErrorMessage:
+					t.Fatalf("unexpected error: %s", output.ErrorMessage)
+				}
+			}
+
+			if !gotExit {
+				t.Fatal("expected exit code message")
+			}
+			if exitCode != 7 {
+				t.Errorf("expected exit code 7, got %d", exitCode)
+			}
+		})
 	})
 }
 

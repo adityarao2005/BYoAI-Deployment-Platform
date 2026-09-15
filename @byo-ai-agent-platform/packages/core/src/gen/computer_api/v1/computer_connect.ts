@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { CaptureScreenshotRequest, CaptureScreenshotResponse, ClickRequest, ClickResponse, CreateComputerRequest, CreateComputerResponse, DeleteComputerRequest, DeleteComputerResponse, DragRequest, DragResponse, ExecuteRequest, ExecuteResponse, GetClipboardRequest, GetClipboardResponse, GetComputerInfoRequest, GetComputerInfoResponse, GetGroupIdRequest, GetGroupIdResponse, GetScreenSizeRequest, GetScreenSizeResponse, GetUserIdRequest, GetUserIdResponse, ListDirectoryRequest, ListDirectoryResponse, MoveMouseToRequest, MoveMouseToResponse, PressAndHoldKeyRequest, PressAndHoldKeyResponse, PressKeyRequest, PressKeyResponse, ReadFileRequest, ReadFileResponse, ReleaseAllKeysRequest, ReleaseAllKeysResponse, ReleaseKeyRequest, ReleaseKeyResponse, ScrollRequest, ScrollResponse, SetClipboardRequest, SetClipboardResponse, TypeRequest, TypeResponse, WriteFileRequest, WriteFileResponse } from "./computer_pb.js";
+import { CaptureScreenshotRequest, CaptureScreenshotResponse, ClickRequest, ClickResponse, CreateComputerRequest, CreateComputerResponse, DeleteComputerRequest, DeleteComputerResponse, DragRequest, DragResponse, ExecuteRequest, ExecuteResponse, ExecuteStreamRequest, ExecuteStreamResponse, GetClipboardRequest, GetClipboardResponse, GetComputerInfoRequest, GetComputerInfoResponse, GetGroupIdRequest, GetGroupIdResponse, GetScreenSizeRequest, GetScreenSizeResponse, GetUserIdRequest, GetUserIdResponse, ListDirectoryRequest, ListDirectoryResponse, MoveMouseToRequest, MoveMouseToResponse, PressAndHoldKeyRequest, PressAndHoldKeyResponse, PressKeyRequest, PressKeyResponse, ReadFileRequest, ReadFileResponse, ReleaseAllKeysRequest, ReleaseAllKeysResponse, ReleaseKeyRequest, ReleaseKeyResponse, ScrollRequest, ScrollResponse, SetClipboardRequest, SetClipboardResponse, TypeRequest, TypeResponse, WriteFileRequest, WriteFileResponse } from "./computer_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -101,6 +101,15 @@ export const BasicComputerService = {
       I: GetGroupIdRequest,
       O: GetGroupIdResponse,
       kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc computer_api.v1.BasicComputerService.ExecuteStream
+     */
+    executeStream: {
+      name: "ExecuteStream",
+      I: ExecuteStreamRequest,
+      O: ExecuteStreamResponse,
+      kind: MethodKind.BiDiStreaming,
     },
   }
 } as const;

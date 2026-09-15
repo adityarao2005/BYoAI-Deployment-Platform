@@ -12,6 +12,7 @@ import type {
     ComputerProvider,
     DragArgs,
     ExecuteArgs,
+    ExecuteStreamArgs,
     ExecutionResult,
     GraphicalComputer,
     HeadlessComputer,
@@ -24,6 +25,7 @@ import type {
     ScreenSizeResult,
     ScrollArgs,
     SetClipboardArgs,
+    StreamSession,
     TypeArgs,
     WriteFileArgs,
 } from "./computer";
@@ -54,6 +56,151 @@ export class ConnectHeadlessRemoteComputer implements HeadlessComputer {
             default:
                 throw new Error("Unexpected execute response");
         }
+    }
+
+    async executeStream(args: ExecuteStreamArgs): Promise<StreamSession> {
+        const stdoutListeners: ((chunk: Uint8Array) => void)[] = [];
+        const stderrListeners: ((chunk: Uint8Array) => void)[] = [];
+        const exitListeners: ((code: number) => void)[] = [];
+        const errorListeners: ((error: Error) => void)[] = [];
+
+        let exitCodeResolved = false;
+        let finalExitCode: number | null = null;
+        let streamError: Error | null = null;
+
+        const outboundQueue: (any | null)[] = [];
+        let resolveQueueSignal: (() => void) | null = null;
+
+        const pushOutbound = (req: any) => {
+            outboundQueue.push(req);
+            if (resolveQueueSignal) {
+                resolveQueueSignal();
+                resolveQueueSignal = null;
+            }
+        };
+
+        pushOutbound({
+            input: {
+                case: "config",
+                value: {
+                    sessionId: this.computerId,
+                    command: args.command,
+                    cwd: args.cwd,
+                    envVars: args.envVars || {},
+                    shell: args.shell,
+                    shellArgs: args.shellArgs || [],
+                },
+            },
+        });
+
+        async function* requestGenerator(): AsyncIterable<any> {
+            while (true) {
+                if (outboundQueue.length === 0) {
+                    await new Promise<void>((resolve) => {
+                        resolveQueueSignal = resolve;
+                    });
+                }
+                while (outboundQueue.length > 0) {
+                    const req = outboundQueue.shift();
+                    if (req === null) {
+                        return;
+                    }
+                    yield req;
+                }
+            }
+        }
+
+        const waitPromise = new Promise<number>(async (resolve, reject) => {
+            try {
+                const responseStream = await this.basicService.executeStream(requestGenerator());
+                for await (const msg of responseStream) {
+                    switch (msg.output.case) {
+                        case "stdout":
+                            for (const listener of stdoutListeners) {
+                                listener(msg.output.value);
+                            }
+                            break;
+                        case "stderr":
+                            for (const listener of stderrListeners) {
+                                listener(msg.output.value);
+                            }
+                            break;
+                        case "exitCode":
+                            exitCodeResolved = true;
+                            finalExitCode = msg.output.value;
+                            for (const listener of exitListeners) {
+                                listener(finalExitCode);
+                            }
+                            resolve(finalExitCode);
+                            break;
+                        case "errorMessage":
+                            const err = new Error(msg.output.value);
+                            streamError = err;
+                            for (const listener of errorListeners) {
+                                listener(err);
+                            }
+                            reject(err);
+                            break;
+                    }
+                }
+                if (!exitCodeResolved) {
+                    const defaultCode = finalExitCode ?? 0;
+                    resolve(defaultCode);
+                }
+            } catch (err: any) {
+                streamError = err;
+                for (const listener of errorListeners) {
+                    listener(err);
+                }
+                reject(err);
+            }
+        });
+
+        return {
+            async writeStdin(data: Uint8Array | string): Promise<void> {
+                const stdinBytes = typeof data === "string" ? new TextEncoder().encode(data) : data;
+                pushOutbound({
+                    input: {
+                        case: "stdin",
+                        value: stdinBytes,
+                    },
+                });
+            },
+            async closeStdin(): Promise<void> {
+                pushOutbound({
+                    input: {
+                        case: "closeStdin",
+                        value: true,
+                    },
+                });
+            },
+            onStdout(listener: (chunk: Uint8Array) => void): void {
+                stdoutListeners.push(listener);
+            },
+            onStderr(listener: (chunk: Uint8Array) => void): void {
+                stderrListeners.push(listener);
+            },
+            onExit(listener: (code: number) => void): void {
+                if (exitCodeResolved && finalExitCode !== null) {
+                    listener(finalExitCode);
+                } else {
+                    exitListeners.push(listener);
+                }
+            },
+            onError(listener: (error: Error) => void): void {
+                if (streamError) {
+                    listener(streamError);
+                } else {
+                    errorListeners.push(listener);
+                }
+            },
+            async wait(): Promise<number> {
+                return waitPromise;
+            },
+            async kill(): Promise<void> {
+                pushOutbound(null);
+            },
+        };
     }
 
     async readFile(args: ReadFileArgs): Promise<ReadFileResult> {

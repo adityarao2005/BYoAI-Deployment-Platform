@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/config"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/network"
@@ -452,6 +453,105 @@ func (computer *DockerComputer) Execute(ctx context.Context, execInput ExecInput
 		Stdout:   stdoutBuf.String(),
 		Stderr:   stderrBuf.String(),
 		ExitCode: inspectResult.ExitCode,
+	}, nil
+}
+
+func (computer *DockerComputer) ExecuteStream(ctx context.Context, execInput ExecInput) (*ExecStreamSession, error) {
+	// build the command args, mirroring Execute's shell handling
+	var cmd []string
+
+	if execInput.Shell != nil && *execInput.Shell == "" {
+		cmd = []string{execInput.Command}
+	} else {
+		shell := "sh"
+		if execInput.Shell != nil {
+			shell = *execInput.Shell
+		}
+
+		var args []string
+		if execInput.ShellArgs != nil {
+			args = append(args, execInput.ShellArgs...)
+		} else {
+			args = append(args, "-c")
+		}
+		args = append(args, execInput.Command)
+		cmd = append([]string{shell}, args...)
+	}
+
+	// build environment variables in KEY=VALUE format
+	var env []string
+	if execInput.Env != nil {
+		for _, e := range execInput.Env {
+			env = append(env, fmt.Sprintf("%s=%s", e.Name, e.Value))
+		}
+	}
+
+	// set working directory
+	var workingDir string
+	if execInput.Cwd != nil {
+		workingDir = *execInput.Cwd
+	}
+
+	// create the exec configuration with stdin attached
+	execCreateResult, err := computer.apiClient.ExecCreate(ctx, computer.containerId, client.ExecCreateOptions{
+		Cmd:          cmd,
+		Env:          env,
+		WorkingDir:   workingDir,
+		AttachStdout: true,
+		AttachStderr: true,
+		AttachStdin:  true,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create exec: %w", err)
+	}
+
+	// attach to the exec to get the hijacked connection for bidirectional I/O
+	attachResult, err := computer.apiClient.ExecAttach(ctx, execCreateResult.ID, client.ExecAttachOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to attach exec: %w", err)
+	}
+
+	// Docker multiplexes stdout/stderr over the single hijacked connection.
+	// We demux them into separate pipes using stdcopy.StdCopy in a background goroutine.
+	stdoutPipeReader, stdoutPipeWriter := io.Pipe()
+	stderrPipeReader, stderrPipeWriter := io.Pipe()
+
+	// demux goroutine: reads from Docker stream and writes to the stdout/stderr pipes
+	go func() {
+		defer stdoutPipeWriter.Close()
+		defer stderrPipeWriter.Close()
+		// StdCopy reads Docker's multiplexed stream and writes to stdout/stderr writers
+		_, _ = stdcopy.StdCopy(stdoutPipeWriter, stderrPipeWriter, attachResult.Reader)
+	}()
+
+	execID := execCreateResult.ID
+
+	return &ExecStreamSession{
+		Stdin:  attachResult.Conn,
+		Stdout: stdoutPipeReader,
+		Stderr: stderrPipeReader,
+		Wait: func() (int, error) {
+			// poll for exec completion
+			for {
+				inspectResult, err := computer.apiClient.ExecInspect(context.Background(), execID, client.ExecInspectOptions{})
+				if err != nil {
+					return -1, fmt.Errorf("failed to inspect exec: %w", err)
+				}
+				if !inspectResult.Running {
+					return inspectResult.ExitCode, nil
+				}
+				// small sleep to avoid busy-waiting
+				select {
+				case <-ctx.Done():
+					return -1, ctx.Err()
+				case <-time.After(100 * time.Millisecond):
+				}
+			}
+		},
+		Kill: func() error {
+			attachResult.Close()
+			return nil
+		},
 	}, nil
 }
 

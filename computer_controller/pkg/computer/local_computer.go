@@ -97,6 +97,91 @@ func (computer LocalComputer) Execute(ctx context.Context, execInput ExecInput) 
 	}, nil
 }
 
+func (computer LocalComputer) ExecuteStream(ctx context.Context, execInput ExecInput) (*ExecStreamSession, error) {
+	var cmd *exec.Cmd
+
+	if execInput.Shell != nil && *execInput.Shell == "" {
+		cmd = exec.CommandContext(ctx, execInput.Command)
+	} else {
+		shell := "sh"
+		if execInput.Shell != nil {
+			shell = *execInput.Shell
+		}
+
+		var args []string
+		if execInput.ShellArgs != nil {
+			args = append(args, execInput.ShellArgs...)
+		} else {
+			args = append(args, "-c")
+		}
+		args = append(args, execInput.Command)
+		cmd = exec.CommandContext(ctx, shell, args...)
+	}
+
+	// set the current working directory
+	if execInput.Cwd != nil {
+		cmd.Dir = *execInput.Cwd
+	}
+
+	// for each environment variable, append it to the environment of the command
+	var customEnvs []string
+	for k, v := range computer.env {
+		customEnvs = append(customEnvs, fmt.Sprintf("%s=%s", k, v))
+	}
+	if execInput.Env != nil {
+		for _, value := range execInput.Env {
+			customEnvs = append(customEnvs, fmt.Sprintf("%s=%s", value.Name, value.Value))
+		}
+	}
+	if len(customEnvs) > 0 {
+		cmd.Env = append(os.Environ(), customEnvs...)
+	}
+
+	// set configurable wait delay if provided
+	if execInput.WaitDelay != nil {
+		cmd.WaitDelay = *execInput.WaitDelay
+	}
+
+	stdinPipe, err := cmd.StdinPipe()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create stdin pipe: %w", err)
+	}
+
+	stdoutPipe, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create stdout pipe: %w", err)
+	}
+
+	stderrPipe, err := cmd.StderrPipe()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create stderr pipe: %w", err)
+	}
+
+	if err := cmd.Start(); err != nil {
+		return nil, fmt.Errorf("failed to start process: %w", err)
+	}
+
+	return &ExecStreamSession{
+		Stdin:  stdinPipe,
+		Stdout: stdoutPipe,
+		Stderr: stderrPipe,
+		Wait: func() (int, error) {
+			err := cmd.Wait()
+			if err != nil {
+				var exitErr *exec.ExitError
+				if errors.As(err, &exitErr) {
+					return exitErr.ExitCode(), nil
+				}
+				return -1, err
+			}
+			return 0, nil
+		},
+		Kill: func() error {
+			return cmd.Process.Kill()
+		},
+	}, nil
+}
+
 func (computer LocalComputer) ReadFile(ctx context.Context, filePath string) ([]byte, error) {
 	return os.ReadFile(filePath)
 }

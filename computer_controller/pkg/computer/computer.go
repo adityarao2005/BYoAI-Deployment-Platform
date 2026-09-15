@@ -3,8 +3,20 @@ package computer
 import (
 	"context"
 	"errors"
+	"io"
 	"time"
 )
+
+// ExecStreamSession represents a running interactive process with bidirectional I/O.
+type ExecStreamSession struct {
+	Stdin  io.WriteCloser
+	Stdout io.ReadCloser
+	Stderr io.ReadCloser
+	// Wait blocks until the process exits and returns the exit code.
+	Wait func() (int, error)
+	// Kill terminates the process.
+	Kill func() error
+}
 
 // Result of a command execution to give the AI full context
 type ExecResult struct {
@@ -50,6 +62,9 @@ type FileInfo struct {
 type IComputer interface {
 	// Added context for timeouts, and explicit CWD/Env vars, and optional stdin
 	Execute(ctx context.Context, execInput ExecInput) (*ExecResult, error)
+
+	// ExecuteStream starts an interactive process and returns a session with bidirectional I/O pipes.
+	ExecuteStream(ctx context.Context, execInput ExecInput) (*ExecStreamSession, error)
 
 	// Changed to []byte to support binary files safely
 	ReadFile(ctx context.Context, filePath string) ([]byte, error)
