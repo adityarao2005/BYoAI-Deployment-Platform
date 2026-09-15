@@ -456,6 +456,18 @@ func (computer *DockerComputer) Execute(ctx context.Context, execInput ExecInput
 	}, nil
 }
 
+type dockerStdinWriter struct {
+	attachResult *client.ExecAttachResult
+}
+
+func (w *dockerStdinWriter) Write(p []byte) (int, error) {
+	return w.attachResult.Conn.Write(p)
+}
+
+func (w *dockerStdinWriter) Close() error {
+	return w.attachResult.CloseWrite()
+}
+
 func (computer *DockerComputer) ExecuteStream(ctx context.Context, execInput ExecInput) (*ExecStreamSession, error) {
 	// build the command args, mirroring Execute's shell handling
 	var cmd []string
@@ -527,7 +539,7 @@ func (computer *DockerComputer) ExecuteStream(ctx context.Context, execInput Exe
 	execID := execCreateResult.ID
 
 	return &ExecStreamSession{
-		Stdin:  attachResult.Conn,
+		Stdin:  &dockerStdinWriter{attachResult: &attachResult},
 		Stdout: stdoutPipeReader,
 		Stderr: stderrPipeReader,
 		Wait: func() (int, error) {
