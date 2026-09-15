@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
-import { McpServerToolProvider, type McpClientFactory } from "./provider";
-import type { Agent, AgentSession } from "@/agents";
 import type { Client } from "@modelcontextprotocol/client";
+import type { Agent, AgentSession } from "@/agents";
+import { type McpClientFactory, McpServerToolProvider } from "./provider";
 
 const vi = { fn: mock };
 
@@ -27,7 +27,10 @@ describe("McpServerToolProvider", () => {
                         inputSchema: {
                             type: "object",
                             properties: {
-                                message: { type: "string", description: "The message" },
+                                message: {
+                                    type: "string",
+                                    description: "The message",
+                                },
                             },
                             required: ["message"],
                         },
@@ -54,7 +57,9 @@ describe("McpServerToolProvider", () => {
                 content: [{ type: "text", text: "echoed: hello" }],
             }),
             readResource: vi.fn().mockResolvedValue({
-                contents: [{ uri: "file:///config.json", text: "{\"key\": \"value\"}" }],
+                contents: [
+                    { uri: "file:///config.json", text: '{"key": "value"}' },
+                ],
             }),
             close: vi.fn().mockResolvedValue(undefined),
         };
@@ -80,7 +85,8 @@ describe("McpServerToolProvider", () => {
         mockFactory = {
             name: "test_server",
             createClient: vi.fn().mockImplementation(async (agent: Agent) => {
-                if (agent.id === "agent-b") return mockClientB as unknown as Client;
+                if (agent.id === "agent-b")
+                    return mockClientB as unknown as Client;
                 return mockClientA as unknown as Client;
             }),
         };
@@ -99,7 +105,9 @@ describe("McpServerToolProvider", () => {
         expect(toolNames).toContain("test_server_read_resource");
         expect(toolNames).toContain("test_server_list_resources");
 
-        const noArgsTool = tools.find((t) => t.name === "test_server_tools_no_args");
+        const noArgsTool = tools.find(
+            (t) => t.name === "test_server_tools_no_args",
+        );
         expect(noArgsTool?.inputSchema.properties).toEqual({});
         expect(noArgsTool?.inputSchema.required).toBeNull();
     });
@@ -108,7 +116,10 @@ describe("McpServerToolProvider", () => {
         const provider = new McpServerToolProvider(mockFactory);
         const agent = createAgent("agent-a", "agent-a");
 
-        const tool = await provider.getToolByName("test_server_tools_echo", agent);
+        const tool = await provider.getToolByName(
+            "test_server_tools_echo",
+            agent,
+        );
         expect(tool).not.toBeNull();
         expect(tool?.name).toBe("test_server_tools_echo");
 
@@ -120,7 +131,10 @@ describe("McpServerToolProvider", () => {
         const provider = new McpServerToolProvider(mockFactory);
         const agent = createAgent("agent-a", "agent-a");
 
-        const tool = await provider.getToolByName("test_server_tools_echo", agent);
+        const tool = await provider.getToolByName(
+            "test_server_tools_echo",
+            agent,
+        );
         const fakeSession = { agent } as unknown as AgentSession;
 
         const result = await tool!.execute({ message: "hello" }, fakeSession);
@@ -141,10 +155,15 @@ describe("McpServerToolProvider", () => {
 
         const provider = new McpServerToolProvider(mockFactory);
         const agent = createAgent("agent-a", "agent-a");
-        const tool = await provider.getToolByName("test_server_tools_echo", agent);
+        const tool = await provider.getToolByName(
+            "test_server_tools_echo",
+            agent,
+        );
         const fakeSession = { agent } as unknown as AgentSession;
 
-        expect(tool!.execute({ message: "err" }, fakeSession)).rejects.toThrow("MCP tool error");
+        expect(tool!.execute({ message: "err" }, fakeSession)).rejects.toThrow(
+            "MCP tool error",
+        );
         expect(mockClientA.close).toHaveBeenCalled();
     });
 
@@ -152,13 +171,23 @@ describe("McpServerToolProvider", () => {
         const provider = new McpServerToolProvider(mockFactory);
         const agent = createAgent("agent-a", "agent-a");
 
-        const readResourceTool = await provider.getToolByName("test_server_read_resource", agent);
+        const readResourceTool = await provider.getToolByName(
+            "test_server_read_resource",
+            agent,
+        );
         const fakeSession = { agent } as unknown as AgentSession;
 
-        const contents = await readResourceTool!.execute({ uri: "file:///config.json" }, fakeSession);
+        const contents = await readResourceTool!.execute(
+            { uri: "file:///config.json" },
+            fakeSession,
+        );
 
-        expect(contents).toEqual([{ uri: "file:///config.json", text: "{\"key\": \"value\"}" }]);
-        expect(mockClientA.readResource).toHaveBeenCalledWith({ uri: "file:///config.json" });
+        expect(contents).toEqual([
+            { uri: "file:///config.json", text: '{"key": "value"}' },
+        ]);
+        expect(mockClientA.readResource).toHaveBeenCalledWith({
+            uri: "file:///config.json",
+        });
         expect(mockClientA.close).toHaveBeenCalled();
     });
 
@@ -166,7 +195,10 @@ describe("McpServerToolProvider", () => {
         const provider = new McpServerToolProvider(mockFactory);
         const agent = createAgent("agent-a", "agent-a");
 
-        const listResourceTool = await provider.getToolByName("test_server_list_resources", agent);
+        const listResourceTool = await provider.getToolByName(
+            "test_server_list_resources",
+            agent,
+        );
         const fakeSession = { agent } as unknown as AgentSession;
 
         const resources = await listResourceTool!.execute({}, fakeSession);
@@ -188,7 +220,9 @@ describe("McpServerToolProvider", () => {
         const toolsB = await provider.getAllTools(agentB);
 
         const echoA = toolsA.find((t) => t.name === "test_server_tools_echo");
-        const toolB = toolsB.find((t) => t.name === "test_server_tools_agent_b_tool");
+        const toolB = toolsB.find(
+            (t) => t.name === "test_server_tools_agent_b_tool",
+        );
 
         expect(echoA).toBeDefined();
         expect(toolB).toBeDefined();

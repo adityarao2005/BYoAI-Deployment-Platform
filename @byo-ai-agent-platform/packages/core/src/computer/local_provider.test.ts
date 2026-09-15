@@ -1,17 +1,25 @@
-import { describe, expect, it, beforeEach, afterEach, spyOn } from "bun:test";
-import { ERR_GRAPHICS_UNSUPPORTED, LocalComputer, LocalComputerProvider, LocalGraphicalComputer } from "./local_provider";
+import { afterEach, beforeEach, describe, expect, it, spyOn } from "bun:test";
 import { ComputerType } from "@/gen/computer_api/v1/computer_pb";
+import {
+    ERR_GRAPHICS_UNSUPPORTED,
+    LocalComputer,
+    LocalComputerProvider,
+    LocalGraphicalComputer,
+} from "./local_provider";
 
-const vi = { spyOn, restoreAllMocks: () => { } };
+const vi = { spyOn, restoreAllMocks: () => {} };
+
+import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
-import * as fs from "node:fs/promises";
 
 describe("LocalComputer", () => {
     let tmpDir: string;
 
     beforeEach(async () => {
-        tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "local-computer-test-"));
+        tmpDir = await fs.mkdtemp(
+            path.join(os.tmpdir(), "local-computer-test-"),
+        );
     });
 
     afterEach(async () => {
@@ -89,8 +97,12 @@ describe("LocalGraphicalComputer", () => {
         const computer = new LocalGraphicalComputer();
         expect(computer.supportsGraphics()).toBe(false);
 
-        await expect(computer.click({ x: 10, y: 10 })).rejects.toThrow(ERR_GRAPHICS_UNSUPPORTED);
-        await expect(computer.captureScreenshot()).rejects.toThrow(ERR_GRAPHICS_UNSUPPORTED);
+        await expect(computer.click({ x: 10, y: 10 })).rejects.toThrow(
+            ERR_GRAPHICS_UNSUPPORTED,
+        );
+        await expect(computer.captureScreenshot()).rejects.toThrow(
+            ERR_GRAPHICS_UNSUPPORTED,
+        );
     });
 
     it("executes graphical actions when DISPLAY is set and tools exist", async () => {
@@ -98,22 +110,35 @@ describe("LocalGraphicalComputer", () => {
         const computer = new LocalGraphicalComputer();
 
         // Spy on internal runCommand logic or mock spawn for CLI interactions
-        const runCommandSpy = vi.spyOn(computer as any, "runCommand").mockImplementation(async (cmd: any, args: any, stdin?: any) => {
-            if (cmd === "xdotool" && args[0] === "getdisplaygeometry") {
-                return Buffer.from("1920 1080\n");
-            }
-            if (cmd === "xclip" && args.includes("-o")) {
-                return Buffer.from("copied clip text");
-            }
-            if (cmd === "maim") {
-                return Buffer.from([137, 80, 78, 71]); // PNG magic bytes
-            }
-            return Buffer.from("");
-        });
+        const runCommandSpy = vi
+            .spyOn(computer as any, "runCommand")
+            .mockImplementation(async (cmd: any, args: any, stdin?: any) => {
+                if (cmd === "xdotool" && args[0] === "getdisplaygeometry") {
+                    return Buffer.from("1920 1080\n");
+                }
+                if (cmd === "xclip" && args.includes("-o")) {
+                    return Buffer.from("copied clip text");
+                }
+                if (cmd === "maim") {
+                    return Buffer.from([137, 80, 78, 71]); // PNG magic bytes
+                }
+                return Buffer.from("");
+            });
 
-        const clickRes = await computer.click({ x: 100, y: 200, button: "left" });
+        const clickRes = await computer.click({
+            x: 100,
+            y: 200,
+            button: "left",
+        });
         expect(clickRes).toEqual({ success: true });
-        expect(runCommandSpy).toHaveBeenCalledWith("xdotool", ["mousemove", "--sync", "100", "200", "click", "1"]);
+        expect(runCommandSpy).toHaveBeenCalledWith("xdotool", [
+            "mousemove",
+            "--sync",
+            "100",
+            "200",
+            "click",
+            "1",
+        ]);
 
         const typeRes = await computer.type({ text: "hello" });
         expect(typeRes).toEqual({ success: true });

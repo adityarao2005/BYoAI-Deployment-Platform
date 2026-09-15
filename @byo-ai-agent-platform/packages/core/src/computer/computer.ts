@@ -244,7 +244,9 @@ export interface ScreenSizeResult {
  */
 export interface GraphicalComputer extends HeadlessComputer {
     /** Captures screenshot of display as PNG image bytes. */
-    captureScreenshot(args?: CaptureScreenshotArgs): Promise<CaptureScreenshotResult>;
+    captureScreenshot(
+        args?: CaptureScreenshotArgs,
+    ): Promise<CaptureScreenshotResult>;
     /** Clicks mouse button at (x, y) coordinates. */
     click(args: ClickArgs): Promise<{ success: boolean }>;
     /** Types text into currently focused active window. */
@@ -271,22 +273,24 @@ export interface GraphicalComputer extends HeadlessComputer {
     getScreenSize(): Promise<ScreenSizeResult>;
 }
 
-export type ComputerPayload = {
-    type: ComputerType.GRAPHICAL,
-    computer: GraphicalComputer
-} | {
-    type: ComputerType.HEADLESS,
-    computer: HeadlessComputer
-} | {
-    type: ComputerType.UNSPECIFIED,
-    error: string
-}
+export type ComputerPayload =
+    | {
+          type: ComputerType.GRAPHICAL;
+          computer: GraphicalComputer;
+      }
+    | {
+          type: ComputerType.HEADLESS;
+          computer: HeadlessComputer;
+      }
+    | {
+          type: ComputerType.UNSPECIFIED;
+          error: string;
+      };
 
 /**
  * Provides the computer for you
  */
 export interface ComputerProvider {
-
     /**
      * Initializes provider
      */
@@ -307,5 +311,5 @@ export interface ComputerProvider {
      * Deletes a computer for you
      * @param computerId computer id
      */
-    deleteComputer(computerId: string): Promise<void>
+    deleteComputer(computerId: string): Promise<void>;
 }

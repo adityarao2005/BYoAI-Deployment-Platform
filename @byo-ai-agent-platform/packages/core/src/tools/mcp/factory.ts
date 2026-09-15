@@ -1,16 +1,18 @@
 import fs from "node:fs/promises";
-import type { Agent } from "@/agents";
-import type { McpRemoteConfig, McpStdioConfig } from "@/config";
 import {
     Client,
     StreamableHTTPClientTransport,
     type StreamableHTTPClientTransportOptions,
 } from "@modelcontextprotocol/client";
-import { StdioClientTransport } from "@modelcontextprotocol/client/stdio"
-import type { McpClientFactory } from "./provider";
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
+import type { Agent } from "@/agents";
 import type { ComputerProvider } from "@/computer";
+import type { McpRemoteConfig, McpStdioConfig } from "@/config";
+import type { McpClientFactory } from "./provider";
 
-export async function loadCertOrContent(pathOrContent: string): Promise<string> {
+export async function loadCertOrContent(
+    pathOrContent: string,
+): Promise<string> {
     try {
         return await fs.readFile(pathOrContent, "utf-8");
     } catch {
@@ -37,7 +39,9 @@ export class RemoteMcpClientFactory implements McpClientFactory {
 
         const auth = this.config.security?.auth;
         if (auth?.type === "basic") {
-            const credentials = Buffer.from(`${auth.username}:${auth.password}`).toString("base64");
+            const credentials = Buffer.from(
+                `${auth.username}:${auth.password}`,
+            ).toString("base64");
             headers["Authorization"] = `Basic ${credentials}`;
         }
 
@@ -50,14 +54,19 @@ export class RemoteMcpClientFactory implements McpClientFactory {
             const { clientCert, clientKey, caCert } = this.config.security.mtls;
             requestInit.tls = {
                 cert: await loadCertOrContent(clientCert),
-                ...(clientKey ? { key: await loadCertOrContent(clientKey) } : {}),
+                ...(clientKey
+                    ? { key: await loadCertOrContent(clientKey) }
+                    : {}),
                 ...(caCert ? { ca: await loadCertOrContent(caCert) } : {}),
             };
         }
 
         const transportOptions: StreamableHTTPClientTransportOptions = {
             requestInit,
-            authProvider: auth?.type === "bearer" ? { token: async () => auth.token } : undefined,
+            authProvider:
+                auth?.type === "bearer"
+                    ? { token: async () => auth.token }
+                    : undefined,
         };
 
         return transportOptions;
@@ -71,7 +80,10 @@ export class RemoteMcpClientFactory implements McpClientFactory {
         });
 
         const transportOptions = await this.buildTransportOptions();
-        const transport = new StreamableHTTPClientTransport(new URL(this.config.url), transportOptions);
+        const transport = new StreamableHTTPClientTransport(
+            new URL(this.config.url),
+            transportOptions,
+        );
 
         await client.connect(transport);
 
@@ -102,7 +114,7 @@ export class StdioMcpClientFactory implements McpClientFactory {
             command: this.config.command,
             args: this.config.args,
             cwd: this.config.cwd,
-            env: this.config.env
+            env: this.config.env,
         });
 
         await client.connect(transport);
@@ -128,7 +140,9 @@ export class ComputerUseStdioMcpClientFactory implements McpClientFactory {
 
     async createClient(agent: Agent): Promise<Client> {
         if (!agent.computerId) {
-            throw new Error(`Agent ${agent.name} needs to have a computer to use this MCP server`)
+            throw new Error(
+                `Agent ${agent.name} needs to have a computer to use this MCP server`,
+            );
         }
 
         const client = new Client({
@@ -137,12 +151,19 @@ export class ComputerUseStdioMcpClientFactory implements McpClientFactory {
             description: this.description,
         });
 
-        const payload = await this.computerProvider.getComputer(agent.computerId);
+        const payload = await this.computerProvider.getComputer(
+            agent.computerId,
+        );
         if ("error" in payload || !payload.computer) {
-            throw new Error(`Failed to get computer for agent '${agent.id}' (computerId '${agent.computerId}'): ${"error" in payload ? payload.error : "computer not found"}`);
+            throw new Error(
+                `Failed to get computer for agent '${agent.id}' (computerId '${agent.computerId}'): ${"error" in payload ? payload.error : "computer not found"}`,
+            );
         }
 
-        const transport = new ComputerStdioClientTransport(payload.computer, this.config);
+        const transport = new ComputerStdioClientTransport(
+            payload.computer,
+            this.config,
+        );
 
         await client.connect(transport);
 

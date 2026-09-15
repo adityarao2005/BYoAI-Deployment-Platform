@@ -25,7 +25,10 @@ export class ComputerStdioClientTransport implements Transport {
             throw new Error("ComputerStdioClientTransport is already started");
         }
 
-        const fullCommand = [this.config.command, ...(this.config.args || [])].join(" ");
+        const fullCommand = [
+            this.config.command,
+            ...(this.config.args || []),
+        ].join(" ");
         this.session = await this.computer.executeStream({
             command: fullCommand,
             cwd: this.config.cwd,
@@ -46,8 +49,13 @@ export class ComputerStdioClientTransport implements Transport {
                 try {
                     const message = JSON.parse(trimmed) as JSONRPCMessage;
                     this.onmessage?.(message);
-                } catch (err: any) {
-                    this.onerror?.(new Error(`Failed to parse MCP JSON-RPC line: ${err.message}`));
+                } catch (err: unknown) {
+                    const message = err instanceof Error ? err.message : String(err);
+                    this.onerror?.(
+                        new Error(
+                            `Failed to parse MCP JSON-RPC line: ${message}`,
+                        ),
+                    );
                 }
             }
         });
@@ -59,7 +67,11 @@ export class ComputerStdioClientTransport implements Transport {
 
         this.session.onExit((code: number) => {
             if (code !== 0) {
-                this.onerror?.(new Error(`MCP server process exited with non-zero exit code ${code}`));
+                this.onerror?.(
+                    new Error(
+                        `MCP server process exited with non-zero exit code ${code}`,
+                    ),
+                );
             }
             this.onclose?.();
         });

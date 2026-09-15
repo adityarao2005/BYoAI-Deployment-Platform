@@ -1,14 +1,17 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { execSync } from "node:child_process";
 import fs from "node:fs/promises";
-import path from "node:path";
 import os from "node:os";
-import { McpServer, WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/server";
+import path from "node:path";
+import {
+    McpServer,
+    WebStandardStreamableHTTPServerTransport,
+} from "@modelcontextprotocol/server";
 import { z } from "zod";
 import type { Agent, AgentSession } from "@/agents";
-import { McpServerToolProvider } from "./provider";
-import { RemoteMcpClientFactory } from "./factory";
 import type { McpRemoteConfig } from "@/config";
+import { RemoteMcpClientFactory } from "./factory";
+import { McpServerToolProvider } from "./provider";
 
 describe("MCP Integration Test Suite", () => {
     let tempDir: string;
@@ -38,23 +41,23 @@ describe("MCP Integration Test Suite", () => {
 
         execSync(
             `openssl req -x509 -newkey rsa:2048 -nodes -keyout ${caKeyPath} -out ${caCertPath} -days 1 -subj "/CN=TestCA"`,
-            { stdio: "pipe" }
+            { stdio: "pipe" },
         );
         execSync(
             `openssl req -newkey rsa:2048 -nodes -keyout ${serverKeyPath} -out ${serverCsrPath} -subj "/CN=localhost"`,
-            { stdio: "pipe" }
+            { stdio: "pipe" },
         );
         execSync(
             `openssl x509 -req -in ${serverCsrPath} -CA ${caCertPath} -CAkey ${caKeyPath} -CAcreateserial -out ${serverCertPath} -days 1`,
-            { stdio: "pipe" }
+            { stdio: "pipe" },
         );
         execSync(
             `openssl req -newkey rsa:2048 -nodes -keyout ${clientKeyPath} -out ${clientCsrPath} -subj "/CN=TestClient"`,
-            { stdio: "pipe" }
+            { stdio: "pipe" },
         );
         execSync(
             `openssl x509 -req -in ${clientCsrPath} -CA ${caCertPath} -CAkey ${caKeyPath} -CAcreateserial -out ${clientCertPath} -days 1`,
-            { stdio: "pipe" }
+            { stdio: "pipe" },
         );
 
         caCert = await fs.readFile(caCertPath, "utf-8");
@@ -95,7 +98,7 @@ describe("MCP Integration Test Suite", () => {
                         },
                     ],
                 };
-            }
+            },
         );
 
         server.registerResource(
@@ -114,7 +117,7 @@ describe("MCP Integration Test Suite", () => {
                         },
                     ],
                 };
-            }
+            },
         );
 
         return server;
@@ -159,10 +162,16 @@ describe("MCP Integration Test Suite", () => {
             const tools = await provider.getAllTools(dummyAgent);
             expect(tools.length).toBe(3); // calculate_sum, read_resource, list_resources
 
-            const sumTool = await provider.getToolByName("bearer_mcp_tools_calculate_sum", dummyAgent);
+            const sumTool = await provider.getToolByName(
+                "bearer_mcp_tools_calculate_sum",
+                dummyAgent,
+            );
             expect(sumTool).not.toBeNull();
 
-            const sumResult = await sumTool!.execute({ a: 15, b: 35 }, fakeSession);
+            const sumResult = await sumTool!.execute(
+                { a: 15, b: 35 },
+                fakeSession,
+            );
             expect(sumResult).toEqual([
                 {
                     type: "text",
@@ -170,9 +179,15 @@ describe("MCP Integration Test Suite", () => {
                 },
             ]);
 
-            const readTool = await provider.getToolByName("bearer_mcp_read_resource", dummyAgent);
+            const readTool = await provider.getToolByName(
+                "bearer_mcp_read_resource",
+                dummyAgent,
+            );
             expect(readTool).not.toBeNull();
-            const resourceResult = await readTool!.execute({ uri: "memo://notes.txt" }, fakeSession);
+            const resourceResult = await readTool!.execute(
+                { uri: "memo://notes.txt" },
+                fakeSession,
+            );
             expect(resourceResult).toEqual([
                 {
                     uri: "memo://notes.txt",
@@ -195,7 +210,10 @@ describe("MCP Integration Test Suite", () => {
         const server = Bun.serve({
             port: 0,
             async fetch(req) {
-                if (req.headers.get("Authorization") !== `Bearer ${expectedToken}`) {
+                if (
+                    req.headers.get("Authorization") !==
+                    `Bearer ${expectedToken}`
+                ) {
                     return new Response("Unauthorized", { status: 401 });
                 }
                 return await serverTransport.handleRequest(req);
@@ -266,10 +284,15 @@ describe("MCP Integration Test Suite", () => {
             const provider = new McpServerToolProvider(factory);
 
             const tools = await provider.getAllTools(dummyAgent);
-            const sumTool = tools.find((t) => t.name === "basic_mcp_tools_calculate_sum");
+            const sumTool = tools.find(
+                (t) => t.name === "basic_mcp_tools_calculate_sum",
+            );
             expect(sumTool).toBeDefined();
 
-            const sumResult = await sumTool!.execute({ a: 7, b: 8 }, fakeSession);
+            const sumResult = await sumTool!.execute(
+                { a: 7, b: 8 },
+                fakeSession,
+            );
             expect(sumResult).toEqual([
                 {
                     type: "text",
@@ -365,10 +388,15 @@ describe("MCP Integration Test Suite", () => {
             const provider = new McpServerToolProvider(factory);
 
             const tools = await provider.getAllTools(dummyAgent);
-            const sumTool = tools.find((t) => t.name === "mtls_mcp_tools_calculate_sum");
+            const sumTool = tools.find(
+                (t) => t.name === "mtls_mcp_tools_calculate_sum",
+            );
             expect(sumTool).toBeDefined();
 
-            const sumResult = await sumTool!.execute({ a: 100, b: 200 }, fakeSession);
+            const sumResult = await sumTool!.execute(
+                { a: 100, b: 200 },
+                fakeSession,
+            );
             expect(sumResult).toEqual([
                 {
                     type: "text",

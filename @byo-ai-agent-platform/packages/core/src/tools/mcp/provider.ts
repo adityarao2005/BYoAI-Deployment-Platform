@@ -1,21 +1,18 @@
+import type { Client } from "@modelcontextprotocol/client";
 import type { Agent } from "@/agents";
-import { toolObject, toolString, type Tool, type ToolProvider } from "@/tools";
-import { Client } from "@modelcontextprotocol/client"
+import { type Tool, type ToolProvider, toolObject, toolString } from "@/tools";
 
 export interface McpClientFactory {
-    readonly name: string
+    readonly name: string;
 
-    createClient(agent: Agent): Promise<Client>
+    createClient(agent: Agent): Promise<Client>;
 }
-
 
 // mcp server tool provider, supports only tools and resources for now
 export class McpServerToolProvider implements ToolProvider {
     private cachedTools: Map<string, Tool[]> = new Map();
 
-    constructor(
-        private clientFactory: McpClientFactory,
-    ) {}
+    constructor(private clientFactory: McpClientFactory) {}
 
     async getToolByName(name: string, agent: Agent): Promise<Tool | null> {
         const tools = await this.getAllTools(agent);
@@ -39,7 +36,11 @@ export class McpServerToolProvider implements ToolProvider {
         }
     }
 
-    private async executeMcpTool(agent: Agent, toolName: string, args: Record<string, any>) {
+    private async executeMcpTool(
+        agent: Agent,
+        toolName: string,
+        args: Record<string, any>,
+    ) {
         const client = await this.clientFactory.createClient(agent);
         try {
             const result = await client.callTool({
@@ -48,7 +49,9 @@ export class McpServerToolProvider implements ToolProvider {
             });
 
             if (result.isError) {
-                throw new Error(`MCP tool error: ${JSON.stringify(result.content)}`);
+                throw new Error(
+                    `MCP tool error: ${JSON.stringify(result.content)}`,
+                );
             }
 
             return result.content;
@@ -82,8 +85,11 @@ export class McpServerToolProvider implements ToolProvider {
         const agentTools: Tool[] = [];
 
         for (const tool of tools) {
-            const properties = (tool.inputSchema?.properties as Record<string, any>) ?? {};
-            const required = Array.isArray(tool.inputSchema?.required) ? tool.inputSchema.required : null;
+            const properties =
+                (tool.inputSchema?.properties as Record<string, any>) ?? {};
+            const required = Array.isArray(tool.inputSchema?.required)
+                ? tool.inputSchema.required
+                : null;
 
             agentTools.push({
                 description: tool.description,

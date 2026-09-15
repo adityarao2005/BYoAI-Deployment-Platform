@@ -1,8 +1,8 @@
-import { describe, expect, it, beforeEach, afterAll, spyOn } from "bun:test";
-import { RemoteMcpClientFactory, loadCertOrContent } from "./factory";
-import type { McpRemoteConfig } from "@/config";
-import type { Agent } from "@/agents";
+import { afterAll, beforeEach, describe, expect, it, spyOn } from "bun:test";
 import { Client } from "@modelcontextprotocol/client";
+import type { Agent } from "@/agents";
+import type { McpRemoteConfig } from "@/config";
+import { loadCertOrContent, RemoteMcpClientFactory } from "./factory";
 
 describe("RemoteMcpClientFactory", () => {
     const dummyAgent: Agent = {
@@ -16,11 +16,11 @@ describe("RemoteMcpClientFactory", () => {
     beforeEach(() => {
         lastTransport = null;
         if (connectSpy) connectSpy.mockRestore();
-        connectSpy = spyOn(Client.prototype, "connect").mockImplementation(async function (
-            transport: any
-        ) {
-            lastTransport = transport;
-        });
+        connectSpy = spyOn(Client.prototype, "connect").mockImplementation(
+            async (transport: any) => {
+                lastTransport = transport;
+            },
+        );
     });
 
     afterAll(() => {
@@ -52,7 +52,9 @@ describe("RemoteMcpClientFactory", () => {
 
         const token = await lastTransport._authProvider.token();
         expect(token).toBe("secret-bearer-token");
-        expect(lastTransport._requestInit.headers["Authorization"]).toBeUndefined();
+        expect(
+            lastTransport._requestInit.headers["Authorization"],
+        ).toBeUndefined();
     });
 
     it("creates client with basic auth formatted and encoded in Authorization header", async () => {
@@ -73,8 +75,11 @@ describe("RemoteMcpClientFactory", () => {
         const factory = new RemoteMcpClientFactory(config);
         await factory.createClient(dummyAgent);
 
-        const expectedBase64 = Buffer.from("admin:secret123").toString("base64");
-        expect(lastTransport._requestInit.headers["Authorization"]).toBe(`Basic ${expectedBase64}`);
+        const expectedBase64 =
+            Buffer.from("admin:secret123").toString("base64");
+        expect(lastTransport._requestInit.headers["Authorization"]).toBe(
+            `Basic ${expectedBase64}`,
+        );
         expect(lastTransport._authProvider).toBeUndefined();
     });
 
@@ -99,9 +104,11 @@ describe("RemoteMcpClientFactory", () => {
         const factory = new RemoteMcpClientFactory(config);
         await factory.createClient(dummyAgent);
 
-        expect(lastTransport._requestInit.headers["X-Custom-Header"]).toBe("custom-value");
+        expect(lastTransport._requestInit.headers["X-Custom-Header"]).toBe(
+            "custom-value",
+        );
         expect(lastTransport._requestInit.headers["Authorization"]).toBe(
-            `Basic ${Buffer.from("user:pass").toString("base64")}`
+            `Basic ${Buffer.from("user:pass").toString("base64")}`,
         );
     });
 
@@ -113,8 +120,10 @@ describe("RemoteMcpClientFactory", () => {
             url: "https://localhost:8443",
             security: {
                 mtls: {
-                    clientCert: "-----BEGIN CERTIFICATE-----\nMIIB...\n-----END CERTIFICATE-----",
-                    clientKey: "-----BEGIN RSA PRIVATE KEY-----\nMIIE...\n-----END RSA PRIVATE KEY-----",
+                    clientCert:
+                        "-----BEGIN CERTIFICATE-----\nMIIB...\n-----END CERTIFICATE-----",
+                    clientKey:
+                        "-----BEGIN RSA PRIVATE KEY-----\nMIIE...\n-----END RSA PRIVATE KEY-----",
                     caCert: "-----BEGIN CERTIFICATE-----\nCA...\n-----END CERTIFICATE-----",
                 },
             },
@@ -124,8 +133,12 @@ describe("RemoteMcpClientFactory", () => {
         await factory.createClient(dummyAgent);
 
         expect(lastTransport._requestInit.tls).toBeDefined();
-        expect(lastTransport._requestInit.tls.cert).toContain("-----BEGIN CERTIFICATE-----");
-        expect(lastTransport._requestInit.tls.key).toContain("-----BEGIN RSA PRIVATE KEY-----");
+        expect(lastTransport._requestInit.tls.cert).toContain(
+            "-----BEGIN CERTIFICATE-----",
+        );
+        expect(lastTransport._requestInit.tls.key).toContain(
+            "-----BEGIN RSA PRIVATE KEY-----",
+        );
         expect(lastTransport._requestInit.tls.ca).toContain("CA...");
     });
 

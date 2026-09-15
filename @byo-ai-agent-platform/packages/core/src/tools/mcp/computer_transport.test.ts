@@ -1,12 +1,16 @@
-import { describe, expect, it, mock, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
+import { Client } from "@modelcontextprotocol/client";
+import type { Agent } from "@/agents";
+import type {
+    ComputerPayload,
+    ComputerProvider,
+    HeadlessComputer,
+    StreamSession,
+} from "@/computer/computer";
+import type { McpStdioConfig } from "@/config";
+import { ComputerType } from "@/gen/computer_api/v1/computer_pb";
 import { ComputerStdioClientTransport } from "./computer_transport";
 import { ComputerUseStdioMcpClientFactory } from "./factory";
-import type { HeadlessComputer, StreamSession } from "@/computer/computer";
-import type { McpStdioConfig } from "@/config";
-import type { Agent } from "@/agents";
-import type { ComputerProvider, ComputerPayload } from "@/computer/computer";
-import { ComputerType } from "@/gen/computer_api/v1/computer_pb";
-import { Client } from "@modelcontextprotocol/client";
 
 describe("ComputerStdioClientTransport", () => {
     let mockSession: StreamSession;
@@ -55,7 +59,11 @@ describe("ComputerStdioClientTransport", () => {
         };
 
         mockComputer = {
-            execute: mock(async () => ({ exitCode: 0, stdout: "", stderr: "" })),
+            execute: mock(async () => ({
+                exitCode: 0,
+                stdout: "",
+                stderr: "",
+            })),
             executeStream: mock(async () => mockSession),
             readFile: mock(async () => ({ content: new Uint8Array() })),
             writeFile: mock(async () => ({ success: true })),
@@ -75,7 +83,10 @@ describe("ComputerStdioClientTransport", () => {
     };
 
     it("starts execution session on the computer with full command and environment", async () => {
-        const transport = new ComputerStdioClientTransport(mockComputer, mcpConfig);
+        const transport = new ComputerStdioClientTransport(
+            mockComputer,
+            mcpConfig,
+        );
         await transport.start();
 
         expect(mockComputer.executeStream).toHaveBeenCalledWith({
@@ -86,10 +97,18 @@ describe("ComputerStdioClientTransport", () => {
     });
 
     it("serializes and sends JSON-RPC messages to stdin", async () => {
-        const transport = new ComputerStdioClientTransport(mockComputer, mcpConfig);
+        const transport = new ComputerStdioClientTransport(
+            mockComputer,
+            mcpConfig,
+        );
         await transport.start();
 
-        const jsonMsg = { jsonrpc: "2.0" as const, id: 1, method: "tools/list", params: {} };
+        const jsonMsg = {
+            jsonrpc: "2.0" as const,
+            id: 1,
+            method: "tools/list",
+            params: {},
+        };
         await transport.send(jsonMsg);
 
         expect(writtenStdin).toHaveLength(1);
@@ -97,7 +116,10 @@ describe("ComputerStdioClientTransport", () => {
     });
 
     it("buffers stdout chunks and emits parsed JSON-RPC messages via onmessage", async () => {
-        const transport = new ComputerStdioClientTransport(mockComputer, mcpConfig);
+        const transport = new ComputerStdioClientTransport(
+            mockComputer,
+            mcpConfig,
+        );
         const receivedMessages: any[] = [];
         transport.onmessage = (msg) => receivedMessages.push(msg);
 
@@ -122,7 +144,10 @@ describe("ComputerStdioClientTransport", () => {
     });
 
     it("triggers onclose when process exits", async () => {
-        const transport = new ComputerStdioClientTransport(mockComputer, mcpConfig);
+        const transport = new ComputerStdioClientTransport(
+            mockComputer,
+            mcpConfig,
+        );
         let closed = false;
         transport.onclose = () => {
             closed = true;
@@ -135,7 +160,10 @@ describe("ComputerStdioClientTransport", () => {
     });
 
     it("closes stdin and kills session on transport close", async () => {
-        const transport = new ComputerStdioClientTransport(mockComputer, mcpConfig);
+        const transport = new ComputerStdioClientTransport(
+            mockComputer,
+            mcpConfig,
+        );
         await transport.start();
         await transport.close();
 
@@ -164,7 +192,11 @@ describe("ComputerUseStdioMcpClientFactory", () => {
         };
 
         const mockComputer: HeadlessComputer = {
-            execute: mock(async () => ({ exitCode: 0, stdout: "", stderr: "" })),
+            execute: mock(async () => ({
+                exitCode: 0,
+                stdout: "",
+                stderr: "",
+            })),
             executeStream: mock(async () => mockSession),
             readFile: mock(async () => ({ content: new Uint8Array() })),
             writeFile: mock(async () => ({ success: true })),
@@ -177,10 +209,12 @@ describe("ComputerUseStdioMcpClientFactory", () => {
             init: mock(async () => {}),
             createComputer: mock(async () => "comp-999"),
             deleteComputer: mock(async () => {}),
-            getComputer: mock(async (): Promise<ComputerPayload> => ({
-                type: ComputerType.HEADLESS,
-                computer: mockComputer,
-            })),
+            getComputer: mock(
+                async (): Promise<ComputerPayload> => ({
+                    type: ComputerType.HEADLESS,
+                    computer: mockComputer,
+                }),
+            ),
         };
 
         const mcpConfig: McpStdioConfig = {
@@ -191,15 +225,17 @@ describe("ComputerUseStdioMcpClientFactory", () => {
             args: ["@modelcontextprotocol/server-filesystem", "/tmp"],
         };
 
-        const connectSpy = mock(async function (this: Client) {
-            // Mock client.connect
-        });
+        const connectSpy = spyOn(Client.prototype, "connect").mockImplementation(async () => {});
 
-        const factory = new ComputerUseStdioMcpClientFactory(mcpConfig, mockProvider);
-        const client = new Client({ name: "fs-mcp", version: "1.0.0" });
-        
-        const payload = await mockProvider.getComputer("comp-999");
+        const factory = new ComputerUseStdioMcpClientFactory(
+            mcpConfig,
+            mockProvider,
+        );
+
+        const client = await factory.createClient(agent);
+        expect(client).toBeDefined();
         expect(mockProvider.getComputer).toHaveBeenCalledWith("comp-999");
-        expect(payload.type).toBe(ComputerType.HEADLESS);
+        expect(connectSpy).toHaveBeenCalled();
+        connectSpy.mockRestore();
     });
 });
