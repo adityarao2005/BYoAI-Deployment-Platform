@@ -1,6 +1,9 @@
 import { AgentMemory, type Agent, type AgentMemoryManager } from "../agents";
 import type { ModelInteraction } from "@/models/conversation";
 
+/**
+ * In-memory implementation of {@link AgentMemoryManager} for managing non-persistent agent conversation state.
+ */
 export class InMemoryAgentMemoryManager implements AgentMemoryManager {
     private memories: Map<string, AgentMemory> = new Map();
     private counter = 0;

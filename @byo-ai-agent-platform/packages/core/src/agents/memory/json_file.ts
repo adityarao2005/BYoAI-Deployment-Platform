@@ -4,12 +4,18 @@ import crypto from "node:crypto";
 import { AgentMemory, type Agent, type AgentMemoryManager } from "../agents";
 import type { ModelInteraction } from "@/models/conversation";
 
+/**
+ * Serialized JSON record schema for persisting agent memory to disk.
+ */
 export interface JsonAgentMemoryRecord {
     id: string;
     computerId?: string;
     transcript: ModelInteraction[];
 }
 
+/**
+ * File-backed implementation of {@link AgentMemoryManager} persisting agent memories as JSON files on disk.
+ */
 export class JsonFileAgentMemoryManager implements AgentMemoryManager {
     private storageDir: string;
     private initialized = false;

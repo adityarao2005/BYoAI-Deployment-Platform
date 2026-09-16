@@ -8,14 +8,18 @@ import type { ComputerProvider } from "@/tools";
 import { validateToolArgument } from "@/tools/tool_argument";
 import type { Tool, ToolProvider } from "@/tools/tools";
 
-// Plain agent identifier
+/**
+ * Plain agent identifier.
+ */
 export type Agent = {
     id: string;
     name?: string;
     computerId?: string;
 };
 
-// Memory of agent (computer, transcript of conversation, and pending tool calls)
+/**
+ * Encapsulates agent state, including conversation transcript, associated computer provider ID, and pending tool calls.
+ */
 export class AgentMemory {
     transcript: ModelInteraction[];
     computerId?: string;
@@ -25,6 +29,9 @@ export class AgentMemory {
         this.computerId = computerId;
     }
 
+    /**
+     * Computes tool call IDs that have been invoked but not yet answered with a tool response.
+     */
     getPendingToolCalls(): string[] {
         const pending = new Set<string>();
 
@@ -40,22 +47,26 @@ export class AgentMemory {
     }
 }
 
-// Memory manager interface
+/**
+ * Interface for managing agent conversation memory, transcripts, and computer provider session state.
+ */
 export interface AgentMemoryManager {
-    // create memory entry of agent
+    /** Creates a new memory entry for an agent and returns its memory ID */
     createAgentMemoryEntry(): Promise<string>;
-    // grab agent memory
+    /** Retrieves memory for a given agent */
     getAgentMemory(agent: Agent): Promise<AgentMemory>;
-    // add conversation item
+    /** Appends conversation items to the agent transcript */
     addTranscriptEntries(
         agent: Agent,
         conversationEntries: ModelInteraction[],
     ): Promise<void>;
-    // sets the computer id for the agent
+    /** Sets the active computer provider session ID for the agent */
     setComputerId(agent: Agent, computerId: string): Promise<void>;
 }
 
-// Strongly-typed event map for agent communication
+/**
+ * Strongly-typed event map for agent asynchronous communication and pub/sub messaging.
+ */
 export type AgentEventMap = {
     "user:message": { agent: Agent; content: string };
     "agent:message": { agent: Agent; content: string };
@@ -75,21 +86,28 @@ export type AgentEventMap = {
     };
 };
 
+/** Handler callback type for agent events. */
 export type AgentEventHandler<T> = (payload: T) => Promise<void> | void;
 
-// Communicator interface: event-driven asynchronous pub/sub
+/**
+ * Event-driven asynchronous pub/sub communicator interface for agents.
+ */
 export interface AgentCommunicator {
+    /** Emits an event with payload to registered listeners */
     emit<K extends keyof AgentEventMap>(
         event: K,
         payload: AgentEventMap[K],
     ): Promise<void>;
+    /** Registers an event listener function and returns an unsubscribe callback */
     on<K extends keyof AgentEventMap>(
         event: K,
         handler: AgentEventHandler<AgentEventMap[K]>,
     ): () => void;
 }
 
-// Observer interface for monitoring agent execution lifecycle
+/**
+ * Observer interface for monitoring agent execution lifecycle events (model prompts, tool calls, turn start/end).
+ */
 export interface AgentObserver {
     onTurnStart?(agent: Agent, userMessage: string): Promise<void> | void;
     onTurnEnd?(agent: Agent, error?: unknown): Promise<void> | void;
@@ -119,7 +137,9 @@ export interface AgentObserver {
     ): Promise<void> | void;
 }
 
-// Configuration of the agent
+/**
+ * Full configuration object for initializing an {@link AgentManager}.
+ */
 export type AgentConfiguration = {
     readonly name: string;
     readonly description: string;
@@ -132,7 +152,9 @@ export type AgentConfiguration = {
     readonly observers?: AgentObserver[];
 };
 
-// Construct system prompt from agent definition and loaded skills
+/**
+ * Constructs the system prompt string from agent metadata and available skills.
+ */
 export function constructSystemPrompt(
     name: string,
     description: string,
@@ -163,7 +185,9 @@ ${description}
     `.trim();
 }
 
-// Session passed to tools during execution
+/**
+ * Execution session context provided to tools when executed by an agent.
+ */
 export interface AgentSession {
     readonly agent: Agent;
     readonly name: string;
@@ -173,7 +197,9 @@ export interface AgentSession {
     readonly skillRepositories?: SkillRepository[];
 }
 
-// AgentManager orchestrating the agent lifecycle
+/**
+ * Manager class orchestrating agent initialization, event subscription, model tool call loops, and execution lifecycle.
+ */
 export class AgentManager {
     private configuration: AgentConfiguration;
     private skills: Skill[] = [];

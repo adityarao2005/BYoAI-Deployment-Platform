@@ -10,7 +10,10 @@ View design docs in [docs/design/](docs/design/).
 Python-based local LLM server setup utilizing `uv` and Docker Compose.
 
 ### Agent Platform (`@byo-ai-agent-platform/`)
-TypeScript-based monorepo managed with `bun`, containing the `@byo-ai-agent-platform/core` library and `@byo-ai-agent-platform/agentic-harness` application.
+TypeScript-based monorepo managed with `bun`:
+- **[`@byo-ai-agent-platform/agentic-harness`](@byo-ai-agent-platform/apps/agentic-harness/README.md)**: CLI application runtime for loading YAML definitions (`agent.yaml`) and running autonomous agent loops. See [@byo-ai-agent-platform/apps/agentic-harness/README.md](@byo-ai-agent-platform/apps/agentic-harness/README.md) for full configuration reference.
+- **[`@byo-ai-agent-platform/core`](@byo-ai-agent-platform/packages/core/README.md)**: Core TypeScript SDK and library for building agents, LLM integrations, computer sandboxing, and MCP tools programmatically. See [@byo-ai-agent-platform/packages/core/README.md](@byo-ai-agent-platform/packages/core/README.md) for API usage.
+
 
 ### Computer Controller (`computer_controller/`)
 Golang-based daemon service providing remote execution primitives for AI Agents:

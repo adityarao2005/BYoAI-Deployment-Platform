@@ -20,7 +20,9 @@ const SelfHostedPropertiesSchema = z.object({
     apiKey: z.string().optional(),
 });
 
-// model config schema
+/**
+ * Zod discriminated union schema for model provider configuration (`openai`, `gemini`, `anthropic`, `self_hosted`).
+ */
 export const ModelConfigSchema = z.discriminatedUnion("brand", [
     z.object({
         name: z.string(),
@@ -44,4 +46,7 @@ export const ModelConfigSchema = z.discriminatedUnion("brand", [
     }),
 ]);
 
+/**
+ * Configuration type for an LLM model provider.
+ */
 export type ModelConfig = z.infer<typeof ModelConfigSchema>;
