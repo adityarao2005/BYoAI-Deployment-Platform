@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { bootstrap } from "./bootstrap";
-import z from "zod";
+import { HTTPException } from "hono/http-exception";
 
 const { manager } = await bootstrap();
 
@@ -26,5 +26,15 @@ app.get("/interactions", async (c) => {
     }))
 })
 
+// get interaction memory
+app.get("/interactions/:id", async (c) => {
+    const { id } = c.req.param()
+    const interaction = await manager.getAgentInteraction(id)
+
+    if (!interaction) {
+        throw new HTTPException(404, { message: `Agent interaction ${id} does not exist.` })
+    }
+    return c.json(interaction)
+})
 
 export default app

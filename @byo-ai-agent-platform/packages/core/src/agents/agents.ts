@@ -1,4 +1,5 @@
 import type {
+    ModelInteraction,
     ModelMessageOutput,
 } from "@/models/conversation";
 import type { Model } from "@/models/models";
@@ -213,11 +214,6 @@ export class AgentManager {
     async createAgent(): Promise<AgentHandle> {
         const id =
             await this.configuration.memoryManager.createAgentMemoryEntry(this.configuration.name);
-        let agent = await this.getAgent(id);
-
-        if (!agent) {
-            throw new Error("Something went wrong when creating the memory entry");
-        }
 
         if (this.configuration.computerProvider) {
             // TODO: handle lifecycle differences
@@ -228,15 +224,15 @@ export class AgentManager {
                     id,
                     computerId,
                 );
-
-                agent = await this.getAgent(id);
-                if (!agent) {
-                    throw new Error("Something went wrong when creating the memory entry");
-                }
             }
         }
 
-        return agent;
+        const value = await this.configuration.memoryManager.getAgent(id);
+
+        if (!value) {
+            throw new Error(`Something went wrong when attempting to create the agent: ${id}`)
+        }
+        return value
     }
 
     // Creates an agent session which will be used by the tools
@@ -244,9 +240,9 @@ export class AgentManager {
         session: AgentSession;
         tools: Tool[];
     }> {
-        let agent = await this.getAgent(agentId);
+        let agent = await this.configuration.memoryManager.getAgent(agentId);
         if (!agent) {
-            agent = { id: agentId, name: this.configuration.name };
+            throw new Error(`The agent ${agentId} should exist before creating a new session`)
         }
         const memory =
             await this.configuration.memoryManager.getAgentMemory(agentId);
@@ -482,16 +478,27 @@ export class AgentManager {
     }
 
     // Get agent by id
-    async getAgent(id: string): Promise<AgentHandle | undefined> {
-        return await this.configuration.memoryManager.getAgent(id);
-    }
+    async getAgentInteraction(id: string): Promise<AgentInteraction | undefined> {
+        const memory = await this.configuration.memoryManager.getAgentMemory(id);
 
-    async getAgentMemory(agentId: string) {
-        return await this.configuration.memoryManager.getAgentMemory(agentId);
+        if (!memory) {
+            throw new Error(`Agent ${id} should have memory to grab`)
+        }
+
+        return {
+            id,
+            name: memory.name,
+            transcript: memory.transcript
+        }
     }
 
     async getAllAgents(): Promise<string[]> {
         return await this.configuration.memoryManager.getAllAgents();
     }
+}
 
+export type AgentInteraction = {
+    id: string;
+    name: string;
+    transcript: ModelInteraction[]
 }
