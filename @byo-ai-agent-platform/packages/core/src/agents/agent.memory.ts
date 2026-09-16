@@ -1,4 +1,5 @@
 import type { ModelInteraction } from "@/models";
+import type { AgentHandle } from "./agents";
 
 /**
  * Encapsulates agent state, including conversation transcript, associated computer provider ID, and pending tool calls.
@@ -32,6 +33,7 @@ export class AgentMemory {
     }
 }
 
+
 /**
  * Interface for managing agent conversation memory, transcripts, and computer provider session state.
  */
@@ -40,23 +42,23 @@ export interface AgentMemoryManager {
     createAgentMemoryEntry(name: string): Promise<string>;
 
     /** Retrieves memory for a given agent */
-    getAgentMemory(agent: Agent): Promise<AgentMemory>;
+    getAgentMemory(agentId: string): Promise<AgentMemory>;
 
     /** Appends conversation items to the agent transcript */
     addTranscriptEntries(
-        agent: Agent,
+        agentId: string,
         conversationEntries: ModelInteraction[],
     ): Promise<void>;
 
     /** Sets the active computer provider session ID for the agent */
-    setComputerId(agent: Agent, computerId: string): Promise<void>;
+    setComputerId(agentId: string, computerId: string): Promise<void>;
 
     /** Sets the name of the agent */
-    setName(agent: Agent, name: string): Promise<void>
+    setName(agentId: string, name: string): Promise<void>;
 
     // Get agent by id
-    getAgent(id: string): Promise<Agent | undefined>
+    getAgent(id: string): Promise<AgentHandle | undefined>;
 
     // get all agents
-    getAllAgents(): Promise<Agent[]>
+    getAllAgents(): Promise<string[]>;
 }

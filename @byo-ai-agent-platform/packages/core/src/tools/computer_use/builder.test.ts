@@ -1,13 +1,13 @@
 import { describe, expect, it, mock } from "bun:test";
 import { createGraphicalTools, createHeadlessTools } from "./builder";
 import type { GraphicalComputer, HeadlessComputer } from "../../computer/computer";
-import { type Agent, type AgentSession, AgentMemory } from "@/agents";
+import { type AgentHandle, type AgentSession, AgentMemory } from "@/agents";
 
 const vi = { fn: mock };
 
 describe("computer tool builder", () => {
 
-    const agent: Agent = { id: "test-agent", name: "test-agent" };
+    const agent: AgentHandle = { id: "test-agent", name: "test-agent" };
     const session: AgentSession = {
         agent,
         name: "test-agent",

@@ -1,7 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import {
-    type Agent,
     AgentManager,
     type AgentObserver,
     ConsoleAgentObserver,

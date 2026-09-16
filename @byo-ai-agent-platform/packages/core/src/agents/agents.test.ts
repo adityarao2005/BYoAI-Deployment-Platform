@@ -142,7 +142,7 @@ describe("AgentManager Integration", () => {
         const agent = await manager.createAgent();
         expect(agent.id).toBeDefined();
 
-        await communicator.emit("user:message", { agent, content: "Hi there" });
+        await communicator.emit("user:message", { agentId: agent.id, content: "Hi there" });
 
         // Verify events emitted
         const eventNames = communicator.emitted.map((e) => e.event);
@@ -159,7 +159,7 @@ describe("AgentManager Integration", () => {
         );
 
         // Verify transcript
-        const memory = await memoryManager.getAgentMemory(agent);
+        const memory = await memoryManager.getAgentMemory(agent.id);
         expect(memory.transcript).toHaveLength(2);
         expect(memory.transcript[0]).toMatchObject({
             role: "user",
@@ -245,7 +245,7 @@ describe("AgentManager Integration", () => {
 
         const agent = await manager.createAgent();
         await communicator.emit("user:message", {
-            agent,
+            agentId: agent.id,
             content: "What is 5 + 7?",
         });
 
@@ -262,7 +262,7 @@ describe("AgentManager Integration", () => {
             "agent:complete",
         ]);
 
-        const memory = await memoryManager.getAgentMemory(agent);
+        const memory = await memoryManager.getAgentMemory(agent.id);
         expect(memory.transcript).toHaveLength(4);
         expect(memory.transcript[0]?.type).toBe("message");
         expect(memory.transcript[1]?.type).toBe("tool_call");
@@ -341,7 +341,7 @@ describe("AgentManager Integration", () => {
 
         const agent = await manager.createAgent();
         await communicator.emit("user:message", {
-            agent,
+            agentId: agent.id,
             content: "Run the failing tool",
         });
 
@@ -370,10 +370,9 @@ describe("JsonFileAgentMemoryManager", () => {
         try {
             const memoryManager1 = new JsonFileAgentMemoryManager(tempDir);
             const agentId = await memoryManager1.createAgentMemoryEntry("test");
-            const agent = { id: agentId, name: "test" };
 
-            await memoryManager1.setComputerId(agent, "comp-999");
-            await memoryManager1.addTranscriptEntries(agent, [
+            await memoryManager1.setComputerId(agentId, "comp-999");
+            await memoryManager1.addTranscriptEntries(agentId, [
                 {
                     role: "user",
                     type: "message",
@@ -383,7 +382,7 @@ describe("JsonFileAgentMemoryManager", () => {
 
             // Create a new memory manager instance pointing to the same directory
             const memoryManager2 = new JsonFileAgentMemoryManager(tempDir);
-            const retrievedMemory = await memoryManager2.getAgentMemory(agent);
+            const retrievedMemory = await memoryManager2.getAgentMemory(agentId);
 
             expect(retrievedMemory.computerId).toBe("comp-999");
             expect(retrievedMemory.transcript).toHaveLength(1);
@@ -418,16 +417,8 @@ describe("JsonFileAgentMemoryManager", () => {
 
             const allAgents = await memoryManager.getAllAgents();
             expect(allAgents).toHaveLength(2);
-            expect(allAgents).toContainEqual({
-                id: id1,
-                name: "agent1",
-                computerId: undefined,
-            });
-            expect(allAgents).toContainEqual({
-                id: id2,
-                name: "agent2",
-                computerId: undefined,
-            });
+            expect(allAgents).toContain(id1);
+            expect(allAgents).toContain(id2);
         } finally {
             await fs.rm(tempDir, { recursive: true, force: true });
         }

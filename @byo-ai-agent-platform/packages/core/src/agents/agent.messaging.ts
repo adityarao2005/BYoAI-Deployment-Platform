@@ -1,22 +1,21 @@
 import type { ModelMessageOutput } from "@/models";
-import type { Agent } from "./agents";
 
 /**
  * Strongly-typed event map for agent asynchronous communication and pub/sub messaging.
  */
 export type AgentEventMap = {
-    "user:message": { agent: Agent; content: string };
-    "agent:message": { agent: Agent; content: string };
-    "agent:run": { agent: Agent };
-    "agent:complete": { agent: Agent };
+    "user:message": { agentId: string; content: string };
+    "agent:message": { agentId: string; content: string };
+    "agent:run": { agentId: string };
+    "agent:complete": { agentId: string };
     "tool:call": {
-        agent: Agent;
+        agentId: string;
         toolCallId: string;
         tool: string;
         args: Record<string, any>;
     };
     "tool:complete": {
-        agent: Agent;
+        agentId: string;
         toolCallId: string;
         tool: string;
         result: any;
@@ -46,29 +45,29 @@ export interface AgentCommunicator {
  * Observer interface for monitoring agent execution lifecycle events (model prompts, tool calls, turn start/end).
  */
 export interface AgentObserver {
-    onTurnStart?(agent: Agent, userMessage: string): Promise<void> | void;
-    onTurnEnd?(agent: Agent, error?: unknown): Promise<void> | void;
-    onModelStart?(agent: Agent, prompt: string): Promise<void> | void;
+    onTurnStart?(agentId: string, userMessage: string): Promise<void> | void;
+    onTurnEnd?(agentId: string, error?: unknown): Promise<void> | void;
+    onModelStart?(agentId: string, prompt: string): Promise<void> | void;
     onModelEnd?(
-        agent: Agent,
+        agentId: string,
         output: ModelMessageOutput[],
     ): Promise<void> | void;
-    onAgentMessage?(agent: Agent, content: string): Promise<void> | void;
+    onAgentMessage?(agentId: string, content: string): Promise<void> | void;
     onToolCallStart?(
-        agent: Agent,
+        agentId: string,
         toolCallId: string,
         tool: string,
         args: Record<string, any>,
     ): Promise<void> | void;
     onToolCallEnd?(
-        agent: Agent,
+        agentId: string,
         toolCallId: string,
         tool: string,
         result: any,
         error?: unknown,
     ): Promise<void> | void;
     onError?(
-        agent: Agent,
+        agentId: string,
         error: unknown,
         context?: string,
     ): Promise<void> | void;

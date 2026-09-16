@@ -5,7 +5,7 @@ import {
     type StreamableHTTPClientTransportOptions,
 } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
-import type { Agent } from "@/agents";
+import type { AgentHandle } from "@/agents";
 import type { ComputerProvider } from "@/computer";
 import type { McpComputerConfig, McpRemoteConfig, McpStdioConfig } from "@/config";
 import type { McpClientFactory } from "./provider";
@@ -72,7 +72,7 @@ export class StreamableHTTPMcpClientFactory implements McpClientFactory {
         return transportOptions;
     }
 
-    async createClient(_agent: Agent): Promise<Client> {
+    async createClient(_agent: AgentHandle): Promise<Client> {
         const client = new Client({
             name: this.name,
             version: this.version ?? "1.0.0",
@@ -103,7 +103,7 @@ export class StdioMcpClientFactory implements McpClientFactory {
         this.name = config.name;
     }
 
-    async createClient(_agent: Agent): Promise<Client> {
+    async createClient(_agent: AgentHandle): Promise<Client> {
         const client = new Client({
             name: this.name,
             version: this.version ?? "1.0.0",
@@ -138,7 +138,7 @@ export class ComputerUseStdioMcpClientFactory implements McpClientFactory {
         this.name = config.name;
     }
 
-    async createClient(agent: Agent): Promise<Client> {
+    async createClient(agent: AgentHandle): Promise<Client> {
         if (!agent.computerId) {
             throw new Error(
                 `Agent ${agent.name} needs to have a computer to use this MCP server`,

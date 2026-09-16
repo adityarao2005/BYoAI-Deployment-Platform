@@ -1,4 +1,4 @@
-import { AgentMemory, type Agent, type AgentMemoryManager } from "../agents";
+import { AgentMemory, type AgentHandle, type AgentMemoryManager } from "@/agents";
 import type { ModelInteraction } from "@/models/conversation";
 
 /**
@@ -14,33 +14,33 @@ export class InMemoryAgentMemoryManager implements AgentMemoryManager {
         return id;
     }
 
-    async setName(agent: Agent, name: string): Promise<void> {
-        const memory = this.memories.get(agent.id)
+    async setName(agentId: string, name: string): Promise<void> {
+        const memory = this.memories.get(agentId);
 
         if (memory) {
-            memory.name = name
+            memory.name = name;
         }
     }
 
-    async getAgentMemory(agent: Agent): Promise<AgentMemory> {
-        const memory = this.memories.get(agent.id);
+    async getAgentMemory(agentId: string): Promise<AgentMemory> {
+        const memory = this.memories.get(agentId);
         if (!memory) {
-            throw new Error(`Agent ${agent.id} not found`)
+            throw new Error(`Agent ${agentId} not found`);
         }
         return memory;
     }
 
-    async addTranscriptEntries(agent: Agent, conversationEntries: ModelInteraction[]): Promise<void> {
-        const memory = await this.getAgentMemory(agent);
+    async addTranscriptEntries(agentId: string, conversationEntries: ModelInteraction[]): Promise<void> {
+        const memory = await this.getAgentMemory(agentId);
         memory.transcript.push(...conversationEntries);
     }
 
-    async setComputerId(agent: Agent, computerId: string): Promise<void> {
-        const memory = await this.getAgentMemory(agent);
+    async setComputerId(agentId: string, computerId: string): Promise<void> {
+        const memory = await this.getAgentMemory(agentId);
         memory.computerId = computerId;
     }
 
-    async getAgent(id: string): Promise<Agent | undefined> {
+    async getAgent(id: string): Promise<AgentHandle | undefined> {
         const memory = this.memories.get(id)
 
         if (!memory)
@@ -53,13 +53,7 @@ export class InMemoryAgentMemoryManager implements AgentMemoryManager {
         }
     }
 
-    async getAllAgents(): Promise<Agent[]> {
-        return this.memories.entries().map(([id, agent]) => {
-            return {
-                id,
-                name: agent.name,
-                computerId: agent.computerId
-            }
-        }).toArray()
+    async getAllAgents(): Promise<string[]> {
+        return Array.from(this.memories.keys());
     }
 }

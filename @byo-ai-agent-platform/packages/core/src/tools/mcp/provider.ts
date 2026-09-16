@@ -1,25 +1,25 @@
 import type { Client } from "@modelcontextprotocol/client";
-import type { Agent } from "@/agents";
+import type { AgentHandle } from "@/agents";
 import { type Tool, type ToolProvider, toolObject, toolString } from "@/tools";
 
 export interface McpClientFactory {
     readonly name: string;
 
-    createClient(agent: Agent): Promise<Client>;
+    createClient(agent: AgentHandle): Promise<Client>;
 }
 
 // mcp server tool provider, supports only tools and resources for now
 export class McpServerToolProvider implements ToolProvider {
     private cachedTools: Map<string, Tool[]> = new Map();
 
-    constructor(private clientFactory: McpClientFactory) {}
+    constructor(private clientFactory: McpClientFactory) { }
 
-    async getToolByName(name: string, agent: Agent): Promise<Tool | null> {
+    async getToolByName(name: string, agent: AgentHandle): Promise<Tool | null> {
         const tools = await this.getAllTools(agent);
         return tools.find((tool) => tool.name === name) || null;
     }
 
-    private async getToolsAndResources(agent: Agent) {
+    private async getToolsAndResources(agent: AgentHandle) {
         const client = await this.clientFactory.createClient(agent);
         try {
             const { tools } = await client.listTools();
@@ -37,7 +37,7 @@ export class McpServerToolProvider implements ToolProvider {
     }
 
     private async executeMcpTool(
-        agent: Agent,
+        agent: AgentHandle,
         toolName: string,
         args: Record<string, any>,
     ) {
@@ -62,7 +62,7 @@ export class McpServerToolProvider implements ToolProvider {
         }
     }
 
-    private async readMcpResource(agent: Agent, uri: string) {
+    private async readMcpResource(agent: AgentHandle, uri: string) {
         const client = await this.clientFactory.createClient(agent);
         try {
             const result = await client.readResource({ uri });
@@ -74,7 +74,7 @@ export class McpServerToolProvider implements ToolProvider {
         }
     }
 
-    async getAllTools(agent: Agent): Promise<Tool[]> {
+    async getAllTools(agent: AgentHandle): Promise<Tool[]> {
         const cacheKey = agent.name ?? agent.id;
         const cached = this.cachedTools.get(cacheKey);
         if (cached !== undefined) {

@@ -1,4 +1,4 @@
-import type { Agent } from "@/agents";
+import type { AgentHandle } from "@/agents";
 import { ComputerType } from "@/gen/computer_api/v1/computer_pb";
 import { createGraphicalTools, createHeadlessTools, type ComputerProvider, type Tool, type ToolProvider } from "@/tools";
 
@@ -12,12 +12,12 @@ export class ComputerUseToolProvider implements ToolProvider {
         this.provider = provider
     }
 
-    async getToolByName(name: string, agent: Agent): Promise<Tool | null> {
+    async getToolByName(name: string, agent: AgentHandle): Promise<Tool | null> {
         const tools = await this.getAllTools(agent);
         return tools.find(tool => tool.name === name) || null;
     }
 
-    async getAllTools(agent: Agent): Promise<Tool[]> {
+    async getAllTools(agent: AgentHandle): Promise<Tool[]> {
         const cacheKey = agent.name ?? agent.id;
         // prefetch cached tools
         const retrievedTools = this.cachedTools.get(cacheKey);
@@ -27,7 +27,6 @@ export class ComputerUseToolProvider implements ToolProvider {
 
         // refetch them from the provider
         if (!agent.computerId)
-            // TODO: once we build an AgentExecutor, we change this to create a new computer for the agent
             throw new Error(`The Agent is not registered with this tool provider and thus the agent does not have a computer id`);
 
         const payload = await this.provider.getComputer(agent.computerId);

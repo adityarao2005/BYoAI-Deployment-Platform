@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import type { Client } from "@modelcontextprotocol/client";
-import type { Agent, AgentSession } from "@/agents";
+import type { AgentHandle, AgentSession } from "@/agents";
 import { type McpClientFactory, McpServerToolProvider } from "./provider";
 
 const vi = { fn: mock };
 
-function createAgent(id: string, name: string): Agent {
+function createAgent(id: string, name: string): AgentHandle {
     return {
         id,
         name,
@@ -84,7 +84,7 @@ describe("McpServerToolProvider", () => {
 
         mockFactory = {
             name: "test_server",
-            createClient: vi.fn().mockImplementation(async (agent: Agent) => {
+            createClient: vi.fn().mockImplementation(async (agent: AgentHandle) => {
                 if (agent.id === "agent-b")
                     return mockClientB as unknown as Client;
                 return mockClientA as unknown as Client;

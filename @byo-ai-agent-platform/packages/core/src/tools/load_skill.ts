@@ -1,4 +1,4 @@
-import type { Agent, AgentSession } from "@/agents/agents";
+import type { AgentHandle, AgentSession } from "@/agents/agents";
 import { getSkillMDFile, type SkillRepository } from "@/skills";
 import type { Tool, ToolProvider } from "./tools";
 
@@ -41,7 +41,7 @@ function createLoadSkillTool(repositories?: SkillRepository[]): Tool {
 }
 
 export function loadSkillToolProvider(
-    agentOrRepos?: Agent | SkillRepository[],
+    agentOrRepos?: AgentHandle | SkillRepository[],
 ): ToolProvider {
     let repos: SkillRepository[] | undefined;
     if (Array.isArray(agentOrRepos)) {

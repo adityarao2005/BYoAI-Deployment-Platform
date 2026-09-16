@@ -1,11 +1,11 @@
 import { afterAll, beforeEach, describe, expect, it, spyOn } from "bun:test";
 import { Client } from "@modelcontextprotocol/client";
-import type { Agent } from "@/agents";
+import type { AgentHandle } from "@/agents";
 import type { McpRemoteConfig } from "@/config";
 import { loadCertOrContent, StreamableHTTPMcpClientFactory } from "./factory";
 
 describe("RemoteMcpClientFactory", () => {
-    const dummyAgent: Agent = {
+    const dummyAgent: AgentHandle = {
         id: "agent-1",
         name: "test-agent",
     };

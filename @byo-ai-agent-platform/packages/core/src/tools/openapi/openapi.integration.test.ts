@@ -3,14 +3,14 @@ import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { OpenAPIToolProvider } from ".";
-import { type Agent, type AgentSession, AgentMemory } from "@/agents";
+import { type AgentHandle, type AgentSession, AgentMemory } from "@/agents";
 
 describe("OpenAPIToolProvider Integration Suite", () => {
     let server: Server;
     let specUrl: string;
     let lastReceivedPetQuery: string | undefined;
 
-    const agent: Agent = { id: "test-agent", name: "test-agent" };
+    const agent: AgentHandle = { id: "test-agent", name: "test-agent" };
     const session: AgentSession = {
         agent,
         name: "test-agent",

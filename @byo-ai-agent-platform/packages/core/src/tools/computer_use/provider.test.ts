@@ -2,11 +2,11 @@ import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { ComputerUseToolProvider } from "./provider";
 import { ComputerType } from "@/gen/computer_api/v1/computer_pb";
 import type { ComputerProvider, GraphicalComputer, HeadlessComputer } from "@/computer/computer";
-import type { Agent } from "@/agents";
+import type { AgentHandle } from "@/agents";
 
 const vi = { fn: mock };
 
-function createAgent(computerId?: string): Agent {
+function createAgent(computerId?: string): AgentHandle {
     return {
         id: "test-agent",
         name: "test-agent",

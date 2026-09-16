@@ -2,7 +2,7 @@ import type {
     AgentCommunicator,
     AgentEventMap,
     AgentEventHandler,
-} from "../agents";
+} from "@/agents";
 
 /**
  * In-memory implementation of {@link AgentCommunicator} providing synchronous pub/sub event dispatching and listener management.

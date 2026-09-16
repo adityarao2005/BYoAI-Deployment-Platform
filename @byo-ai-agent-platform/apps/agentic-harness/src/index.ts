@@ -19,10 +19,10 @@ app.post("/interactions", async (c) => {
 
 // get all agent interactions 
 app.get("/interactions", async (c) => {
-    const agents = await manager.getAllAgents()
+    const agentIds = await manager.getAllAgents()
 
-    return c.json(agents.map(a => {
-        return { id: a.id }
+    return c.json(agentIds.map(id => {
+        return { id }
     }))
 })
 

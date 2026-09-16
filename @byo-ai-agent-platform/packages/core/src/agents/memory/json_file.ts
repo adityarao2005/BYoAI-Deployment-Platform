@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { ModelInteraction } from "@/models/conversation";
-import { type Agent, AgentMemory, type AgentMemoryManager } from "../agents";
+import { type AgentHandle, AgentMemory, type AgentMemoryManager } from "@/agents";
 
 /**
  * Serialized JSON record schema for persisting agent memory to disk.
@@ -70,8 +70,8 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
         return id;
     }
 
-    async getAgentMemory(agent: Agent): Promise<AgentMemory> {
-        const record = await this.readRecord(agent.id);
+    async getAgentMemory(agentId: string): Promise<AgentMemory> {
+        const record = await this.readRecord(agentId);
         return new AgentMemory(
             record.name,
             record.transcript ?? [],
@@ -79,13 +79,13 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
         );
     }
 
-    async setName(agent: Agent, name: string): Promise<void> {
-        const record = await this.readRecord(agent.id);
+    async setName(agentId: string, name: string): Promise<void> {
+        const record = await this.readRecord(agentId);
         record.name = name;
         await this.writeRecord(record);
     }
 
-    async getAgent(id: string): Promise<Agent | undefined> {
+    async getAgent(id: string): Promise<AgentHandle | undefined> {
         try {
             const record = await this.readRecord(id);
 
@@ -99,48 +99,29 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
         }
     }
 
-    async getAllAgents(): Promise<Agent[]> {
+    async getAllAgents(): Promise<string[]> {
         await this.ensureStorageDir();
         try {
             const files = await fs.readdir(this.storageDir);
-            const jsonFiles = files.filter((file) => file.endsWith(".json"));
-
-            const records = await Promise.all(
-                jsonFiles.map(async (file) => {
-                    try {
-                        const filePath = path.join(this.storageDir, file);
-                        const data = await fs.readFile(filePath, "utf-8");
-                        const record = JSON.parse(
-                            data,
-                        ) as JsonAgentMemoryRecord;
-                        return {
-                            id: record.id,
-                            name: record.name,
-                            computerId: record.computerId,
-                        } as Agent;
-                    } catch {
-                        return null;
-                    }
-                }),
-            );
-
-            return records.filter((agent): agent is Agent => agent !== null);
+            return files
+                .filter((file) => file.endsWith(".json"))
+                .map((file) => file.replace(/\.json$/, ""));
         } catch {
             return [];
         }
     }
 
     async addTranscriptEntries(
-        agent: Agent,
+        agentId: string,
         conversationEntries: ModelInteraction[],
     ): Promise<void> {
-        const record = await this.readRecord(agent.id);
+        const record = await this.readRecord(agentId);
         record.transcript.push(...conversationEntries);
         await this.writeRecord(record);
     }
 
-    async setComputerId(agent: Agent, computerId: string): Promise<void> {
-        const record = await this.readRecord(agent.id);
+    async setComputerId(agentId: string, computerId: string): Promise<void> {
+        const record = await this.readRecord(agentId);
         record.computerId = computerId;
         await this.writeRecord(record);
     }

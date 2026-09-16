@@ -8,7 +8,7 @@ import {
     WebStandardStreamableHTTPServerTransport,
 } from "@modelcontextprotocol/server";
 import { z } from "zod";
-import type { Agent, AgentSession } from "@/agents";
+import type { AgentHandle, AgentSession } from "@/agents";
 import type { McpRemoteConfig } from "@/config";
 import { StreamableHTTPMcpClientFactory } from "./factory";
 import { McpServerToolProvider } from "./provider";
@@ -22,7 +22,7 @@ describe("MCP Integration Test Suite", () => {
     let clientCert: string;
     let clientKey: string;
 
-    const dummyAgent: Agent = {
+    const dummyAgent: AgentHandle = {
         id: "integration-agent-1",
         name: "integration-agent",
     };

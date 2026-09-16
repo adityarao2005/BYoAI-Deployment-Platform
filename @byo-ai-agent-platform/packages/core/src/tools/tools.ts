@@ -1,4 +1,4 @@
-import type { Agent, AgentSession } from "@/agents";
+import type { AgentHandle, AgentSession } from "@/agents";
 import type { ToolObjectArgument } from "./tool_argument";
 
 
@@ -28,13 +28,13 @@ export interface ToolProvider {
      * @param name - Name of the tool.
      * @param agent - Optional target agent context.
      */
-    getToolByName(name: string, agent?: Agent): Promise<Tool | null>;
+    getToolByName(name: string, agent?: AgentHandle): Promise<Tool | null>;
 
     /**
      * Retrieves all tools supplied by this provider.
      * @param agent - Optional target agent context.
      */
-    getAllTools(agent?: Agent): Promise<Tool[]>;
+    getAllTools(agent?: AgentHandle): Promise<Tool[]>;
 }
 
 /**
