@@ -4,6 +4,9 @@ import type {
     AgentEventHandler,
 } from "../agents";
 
+/**
+ * In-memory implementation of {@link AgentCommunicator} providing synchronous pub/sub event dispatching and listener management.
+ */
 export class InMemoryAgentCommunicator implements AgentCommunicator {
     public listeners: Map<keyof AgentEventMap, Set<AgentEventHandler<any>>> = new Map();
     public emitted: Array<{ event: keyof AgentEventMap; payload: any }> = [];

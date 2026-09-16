@@ -2,42 +2,44 @@ import type { Agent, AgentSession } from "@/agents";
 import type { ToolObjectArgument } from "./tool_argument";
 
 
-/*
-Represents a tool that can be executed by an agent. Each tool has a name,
-description, and a schema that defines the expected input and output. The
-execute method takes a list of ToolArgument objects as input and returns an
-Object as output. If the execution fails, it throws a ToolCallException.
-*/
+/**
+ * Represents an executable tool for an agent.
+ * Each tool has a name, description, schema for input arguments, and an `execute` function.
+ */
 export interface Tool {
     name: string;
     description?: string;
     inputSchema: ToolObjectArgument; // JSON Schema for input validation
 
     /**
-     * executes the tool call given the arguments
-     * @param args the tool arguments
-     * @param session the agent session
+     * Executes the tool call given input arguments and session context.
+     * @param args - The tool input arguments.
+     * @param session - The agent execution session.
      */
     execute(args: Record<string, any>, session: AgentSession): Promise<any>;
 }
 
-/*
-Provides access to a collection of available tools.
-*/
+/**
+ * Provider interface managing a collection of tools available to agents.
+ */
 export interface ToolProvider {
     /**
-     * Get the tool by name. Returns null if the tool is not found.
-     * @param name name of the tool
+     * Retrieves a tool by name for a specific agent. Returns null if not found.
+     * @param name - Name of the tool.
+     * @param agent - Optional target agent context.
      */
     getToolByName(name: string, agent?: Agent): Promise<Tool | null>;
 
     /**
-     * Get all the tools available in the provider.
+     * Retrieves all tools supplied by this provider.
+     * @param agent - Optional target agent context.
      */
     getAllTools(agent?: Agent): Promise<Tool[]>;
 }
 
-
+/**
+ * Registry holding all registered tool providers in the platform.
+ */
 export class ToolProviderRegistry {
     private registry: ToolProvider[] = [];
 

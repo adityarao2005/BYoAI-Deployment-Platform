@@ -1,5 +1,8 @@
 import type { Agent, AgentObserver } from "../agents";
 
+/**
+ * Built-in {@link AgentObserver} implementation that logs agent responses, tool calls, tool results, and execution errors to `console`.
+ */
 export class ConsoleAgentObserver implements AgentObserver {
     onAgentMessage(_agent: Agent, content: string): void {
         console.log(`assistant: ${content}`);

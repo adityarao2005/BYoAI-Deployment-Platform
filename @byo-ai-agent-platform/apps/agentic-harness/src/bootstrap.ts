@@ -46,6 +46,7 @@ import {
     ComputerUseStdioMcpClientFactory,
 } from "@byo-ai-agent-platform/core/tools";
 import { parse } from "yaml";
+import { randomUUID } from "node:crypto";
 
 // ─── Config Loading ──────────────────────────────────────────────────
 // Moved from core/config/config.ts — config loading is an app concern,
@@ -90,6 +91,12 @@ async function findConfigPath(): Promise<string | null> {
     return null;
 }
 
+/**
+ * Interpolates environment variables in the format `${VAR}` or `${VAR:-default}` within a raw string.
+ *
+ * @param content - Raw text containing environment variable references.
+ * @returns Interpolated string with environment values expanded.
+ */
 export function interpolateEnvVars(content: string): string {
     return content.replace(/\$\{([^}]+)\}/g, (_, expression: string) => {
         const colonDashIndex = expression.indexOf(":-");
@@ -105,6 +112,13 @@ export function interpolateEnvVars(content: string): string {
     });
 }
 
+/**
+ * Loads and parses an Agent configuration YAML file from the specified path or standard fallback locations.
+ *
+ * @param configPath - Optional explicit path to the configuration YAML file.
+ * @returns Parsed and validated {@link AgentConfig}.
+ * @throws Error if no configuration file is found or if parsing/validation fails.
+ */
 export async function loadConfig(configPath?: string): Promise<AgentConfig> {
     const resolvedConfigPath = configPath ?? (await findConfigPath());
 
@@ -119,6 +133,11 @@ export async function loadConfig(configPath?: string): Promise<AgentConfig> {
     return AgentConfigSchema.parse(parsedConfig);
 }
 
+/**
+ * Attempts to locate and load the agent configuration file if available.
+ *
+ * @returns Parsed {@link AgentConfig}, or `null` if no configuration file was discovered.
+ */
 export async function loadConfigIfAvailable(): Promise<AgentConfig | null> {
     const configPath = await findConfigPath();
 
@@ -280,18 +299,32 @@ export function registerToolProviders(
     }
 }
 
-// ─── Bootstrap ──────────────────────────────────────────────────────
-
+/**
+ * Container holding the fully initialized agent, agent manager, and communicator.
+ */
 export interface BootstrappedAgent {
+    /** Active AgentManager instance governing the agent lifecycle */
     manager: AgentManager;
+    /** The bootstrapped Agent instance ready to handle input */
     agent: Agent;
+    /** In-memory communicator for sending messages and receiving agent responses */
     communicator: InMemoryAgentCommunicator;
 }
 
+/**
+ * Options for configuring the agent bootstrap process.
+ */
 export interface BootstrapOptions {
+    /** Custom observers to monitor agent execution events */
     observers?: AgentObserver[];
 }
 
+/**
+ * Bootstraps the agentic harness by loading configuration, registering models, skills, tools, and computer providers.
+ *
+ * @param options - Optional bootstrap options including observers.
+ * @returns Object containing the bootstrapped agent, manager, and communicator.
+ */
 export async function bootstrap(
     options?: BootstrapOptions,
 ): Promise<BootstrappedAgent> {
@@ -325,8 +358,8 @@ export async function bootstrap(
     const observers = options?.observers ?? [new ConsoleAgentObserver()];
 
     const manager = new AgentManager({
-        name: "agent",
-        description: "You are a helpful assistant.",
+        name: config?.name ?? `agent-${randomUUID()}`,
+        description: config?.description ?? "You are a helpful assistant.",
         model: defaultModel,
         skillRepository: skillRepos,
         toolProviders,

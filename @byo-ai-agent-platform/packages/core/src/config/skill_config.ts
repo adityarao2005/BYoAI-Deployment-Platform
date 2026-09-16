@@ -1,6 +1,8 @@
 import z from "zod";
 
-// skill repository schema
+/**
+ * Zod discriminated union schema for skill repository configuration (`zip` archive or `git` repository).
+ */
 export const SkillRepositoryConfigSchema = z.discriminatedUnion("type", [
     z.object({
         type: z.literal("zip"),
@@ -30,4 +32,7 @@ export const SkillRepositoryConfigSchema = z.discriminatedUnion("type", [
     })
 ]);
 
+/**
+ * Configuration type for a skill repository provider.
+ */
 export type SkillRepositoryConfig = z.infer<typeof SkillRepositoryConfigSchema>;

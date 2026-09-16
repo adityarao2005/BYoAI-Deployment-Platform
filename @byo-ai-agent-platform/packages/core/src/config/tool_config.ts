@@ -176,6 +176,9 @@ export const McpStdioConfigSchema = BaseToolProviderConfigSchema.extend({
 export type McpStdioConfig = z.infer<typeof McpStdioConfigSchema>
 
 
+/**
+ * Configuration schema for MCP server executing over computer provider transport.
+ */
 export const McpComputerConfigSchema = BaseToolProviderConfigSchema.extend({
     type: z.literal("mcp"),
     transport: z.literal("computer"),
@@ -191,6 +194,9 @@ export const McpComputerConfigSchema = BaseToolProviderConfigSchema.extend({
 
 export type McpComputerConfig = z.infer<typeof McpComputerConfigSchema>
 
+/**
+ * Configuration schema for MCP server executing over remote HTTP transport.
+ */
 export const McpRemoteConfigSchema = BaseToolProviderConfigSchema.extend({
     type: z.literal("mcp"),
     transport: z.literal("http"),
@@ -200,6 +206,9 @@ export const McpRemoteConfigSchema = BaseToolProviderConfigSchema.extend({
 
 export type McpRemoteConfig = z.infer<typeof McpRemoteConfigSchema>
 
+/**
+ * Zod discriminated union schema for MCP tool provider configurations (`stdio`, `http`, `computer`).
+ */
 export const McpToolProviderConfigSchema = z.discriminatedUnion("transport", [
     McpStdioConfigSchema,
     McpRemoteConfigSchema,
@@ -208,12 +217,16 @@ export const McpToolProviderConfigSchema = z.discriminatedUnion("transport", [
 
 export type McpToolProviderConfig = z.infer<typeof McpToolProviderConfigSchema>
 
-// tool providers
-
+/**
+ * Universal Zod discriminated union schema for tool provider configuration (`openapi`, `computer`, `mcp`).
+ */
 export const ToolProviderConfigSchema = z.discriminatedUnion("type", [
     OpenAPIToolProviderConfigSchema,
     ComputerUseToolProviderConfigSchema,
     McpToolProviderConfigSchema
 ])
 
+/**
+ * Configuration type for any tool provider.
+ */
 export type ToolProviderConfig = z.infer<typeof ToolProviderConfigSchema>;
