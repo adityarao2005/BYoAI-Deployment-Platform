@@ -1,9 +1,9 @@
-import AdmZip from "adm-zip";
+import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { skillRepositoryRegistry } from "@byo-ai-agent-platform/core/skills";
+import AdmZip from "adm-zip";
 import type { AgentConfig } from "./agent.config";
 import { registerSkillRepositories } from "./bootstrap";
 
@@ -69,9 +69,13 @@ describe("Skill Repository Registration", () => {
         const repos = skillRepositoryRegistry.getAllSkillRepositories();
         expect(repos).toHaveLength(1);
 
-        const skills = await repos[0]!.getAllSkills();
+        const skills = await repos[0]?.getAllSkills();
+        expect(skills).toBeDefined();
         expect(skills).toHaveLength(2);
-        expect(skills.map(s => s.frontMatter.name).sort()).toEqual(["nested-skill", "root-skill"]);
+        expect(skills?.map((s) => s.frontMatter.name).sort()).toEqual([
+            "nested-skill",
+            "root-skill",
+        ]);
     });
 
     it("registers git skill repositories from config", () => {

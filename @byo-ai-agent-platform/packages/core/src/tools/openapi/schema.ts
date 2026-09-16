@@ -1,6 +1,17 @@
-import { type ToolArgument, toolArray, toolBoolean, toolInteger, toolNumber, toolObject, toolString } from "@/tools/tool_argument";
+import {
+    type ToolArgument,
+    toolArray,
+    toolBoolean,
+    toolInteger,
+    toolNumber,
+    toolObject,
+    toolString,
+} from "@/tools/tool_argument";
 
-export function convertOpenAPISchemaToToolArgument(schema: any, fallbackDescription: string = ""): ToolArgument {
+export function convertOpenAPISchemaToToolArgument(
+    schema: any,
+    fallbackDescription: string = "",
+): ToolArgument {
     if (!schema || typeof schema !== "object") {
         return toolString(fallbackDescription);
     }
@@ -17,21 +28,33 @@ export function convertOpenAPISchemaToToolArgument(schema: any, fallbackDescript
             return toolBoolean(description);
         case "array":
             return toolArray(
-                convertOpenAPISchemaToToolArgument(schema.items || {}, "Array item"),
-                description
+                convertOpenAPISchemaToToolArgument(
+                    schema.items || {},
+                    "Array item",
+                ),
+                description,
             );
         case "object": {
             const properties: Record<string, ToolArgument> = {};
             if (schema.properties && typeof schema.properties === "object") {
-                for (const [key, propSchema] of Object.entries(schema.properties)) {
-                    properties[key] = convertOpenAPISchemaToToolArgument(propSchema, key);
+                for (const [key, propSchema] of Object.entries(
+                    schema.properties,
+                )) {
+                    properties[key] = convertOpenAPISchemaToToolArgument(
+                        propSchema,
+                        key,
+                    );
                 }
             }
-            const required = Array.isArray(schema.required) ? schema.required : undefined;
+            const required = Array.isArray(schema.required)
+                ? schema.required
+                : undefined;
             return toolObject(description, properties, required);
         }
-        case "string":
         default:
-            return toolString(description, Array.isArray(schema.enum) ? schema.enum : undefined);
+            return toolString(
+                description,
+                Array.isArray(schema.enum) ? schema.enum : undefined,
+            );
     }
 }

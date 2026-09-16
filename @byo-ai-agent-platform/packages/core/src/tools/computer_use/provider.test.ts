@@ -1,8 +1,12 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
-import { ComputerUseToolProvider } from "./provider";
-import { ComputerType } from "@/gen/computer_api/v1/computer_pb";
-import type { ComputerProvider, GraphicalComputer, HeadlessComputer } from "@/computer/computer";
 import type { AgentHandle } from "@/agents";
+import type {
+    ComputerProvider,
+    GraphicalComputer,
+    HeadlessComputer,
+} from "@/computer/computer";
+import { ComputerType } from "@/gen/computer_api/v1/computer_pb";
+import { ComputerUseToolProvider } from "./provider";
 
 const vi = { fn: mock };
 
@@ -21,7 +25,9 @@ describe("ComputerUseToolProvider", () => {
 
     beforeEach(() => {
         mockHeadlessComputer = {
-            execute: vi.fn().mockResolvedValue({ exitCode: 0, stdout: "", stderr: "" }),
+            execute: vi
+                .fn()
+                .mockResolvedValue({ exitCode: 0, stdout: "", stderr: "" }),
             executeStream: vi.fn().mockResolvedValue({} as any),
             readFile: vi.fn().mockResolvedValue({ content: new Uint8Array() }),
             writeFile: vi.fn().mockResolvedValue({ success: true }),
@@ -32,7 +38,9 @@ describe("ComputerUseToolProvider", () => {
 
         mockGraphicalComputer = {
             ...mockHeadlessComputer,
-            captureScreenshot: vi.fn().mockResolvedValue({ imageData: new Uint8Array() }),
+            captureScreenshot: vi
+                .fn()
+                .mockResolvedValue({ imageData: new Uint8Array() }),
             click: vi.fn().mockResolvedValue({ success: true }),
             type: vi.fn().mockResolvedValue({ success: true }),
             pressKey: vi.fn().mockResolvedValue({ success: true }),
@@ -44,7 +52,9 @@ describe("ComputerUseToolProvider", () => {
             scroll: vi.fn().mockResolvedValue({ success: true }),
             getClipboard: vi.fn().mockResolvedValue({ text: "" }),
             setClipboard: vi.fn().mockResolvedValue({ success: true }),
-            getScreenSize: vi.fn().mockResolvedValue({ width: 1920, height: 1080 }),
+            getScreenSize: vi
+                .fn()
+                .mockResolvedValue({ width: 1920, height: 1080 }),
         };
 
         mockProvider = {
@@ -60,7 +70,7 @@ describe("ComputerUseToolProvider", () => {
         const toolProvider = new ComputerUseToolProvider(mockProvider);
 
         expect(toolProvider.getAllTools(agent)).rejects.toThrow(
-            "The Agent is not registered with this tool provider and thus the agent does not have a computer id"
+            "The Agent is not registered with this tool provider and thus the agent does not have a computer id",
         );
     });
 
@@ -73,7 +83,7 @@ describe("ComputerUseToolProvider", () => {
 
         const toolProvider = new ComputerUseToolProvider(mockProvider);
         expect(toolProvider.getAllTools(agent)).rejects.toThrow(
-            "Something went wrong when trying to retrieve the computer, please check the computer provider logs"
+            "Something went wrong when trying to retrieve the computer, please check the computer provider logs",
         );
     });
 
@@ -142,7 +152,10 @@ describe("ComputerUseToolProvider", () => {
         expect(execTool).toBeDefined();
         expect(execTool?.name).toBe("execute");
 
-        const nonExistent = await toolProvider.getToolByName("non_existent", agent);
+        const nonExistent = await toolProvider.getToolByName(
+            "non_existent",
+            agent,
+        );
         expect(nonExistent).toBeNull();
     });
 });

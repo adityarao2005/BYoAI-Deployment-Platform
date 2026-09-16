@@ -84,11 +84,13 @@ describe("McpServerToolProvider", () => {
 
         mockFactory = {
             name: "test_server",
-            createClient: vi.fn().mockImplementation(async (agent: AgentHandle) => {
-                if (agent.id === "agent-b")
-                    return mockClientB as unknown as Client;
-                return mockClientA as unknown as Client;
-            }),
+            createClient: vi
+                .fn()
+                .mockImplementation(async (agent: AgentHandle) => {
+                    if (agent.id === "agent-b")
+                        return mockClientB as unknown as Client;
+                    return mockClientA as unknown as Client;
+                }),
         };
     });
 

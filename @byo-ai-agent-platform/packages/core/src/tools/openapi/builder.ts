@@ -1,19 +1,38 @@
 import type { OpenAPIToolProviderConfig } from "@/config/tool_config";
-import { type ToolObjectArgument, toolObject } from "@/tools/tool_argument";
 import type { Tool } from "@/tools";
-import { convertOpenAPISchemaToToolArgument } from "./schema";
+import { type ToolObjectArgument, toolObject } from "@/tools/tool_argument";
 import { executeOpenAPIOperation } from "./executor";
+import { convertOpenAPISchemaToToolArgument } from "./schema";
 
-const HTTP_METHODS = ["get", "post", "put", "delete", "patch", "head", "options", "trace"];
+const HTTP_METHODS = [
+    "get",
+    "post",
+    "put",
+    "delete",
+    "patch",
+    "head",
+    "options",
+    "trace",
+];
 
-export function buildToolsFromSpec(doc: Record<string, any>, config: OpenAPIToolProviderConfig): Tool[] {
+export function buildToolsFromSpec(
+    doc: Record<string, any>,
+    config: OpenAPIToolProviderConfig,
+): Tool[] {
     const tools: Tool[] = [];
     const paths = doc.paths || {};
 
     let baseUrl = "";
-    if (Array.isArray(doc.servers) && doc.servers.length > 0 && doc.servers[0]?.url) {
+    if (
+        Array.isArray(doc.servers) &&
+        doc.servers.length > 0 &&
+        doc.servers[0]?.url
+    ) {
         const serverUrl = doc.servers[0].url;
-        if (serverUrl.startsWith("http://") || serverUrl.startsWith("https://")) {
+        if (
+            serverUrl.startsWith("http://") ||
+            serverUrl.startsWith("https://")
+        ) {
             baseUrl = serverUrl;
         } else if (config.specUrl) {
             try {
@@ -32,33 +51,52 @@ export function buildToolsFromSpec(doc: Record<string, any>, config: OpenAPITool
         }
     }
 
-    const providerName = (config.name || "openapi").replace(/[^a-zA-Z0-9_-]/g, "_");
+    const providerName = (config.name || "openapi").replace(
+        /[^a-zA-Z0-9_-]/g,
+        "_",
+    );
 
     for (const [pathKey, pathItemObj] of Object.entries(paths)) {
         if (!pathItemObj || typeof pathItemObj !== "object") continue;
 
         const pathItem = pathItemObj as Record<string, any>;
-        const pathLevelParams: any[] = Array.isArray(pathItem.parameters) ? pathItem.parameters : [];
+        const pathLevelParams: any[] = Array.isArray(pathItem.parameters)
+            ? pathItem.parameters
+            : [];
 
         for (const method of HTTP_METHODS) {
             const operation = pathItem[method];
             if (!operation || typeof operation !== "object") continue;
 
             let opName = "";
-            if (operation.operationId && typeof operation.operationId === "string") {
+            if (
+                operation.operationId &&
+                typeof operation.operationId === "string"
+            ) {
                 opName = operation.operationId.replace(/[^a-zA-Z0-9_-]/g, "_");
             } else {
                 const raw = `${method}_${pathKey}`;
-                opName = raw.replace(/[^a-zA-Z0-9_-]/g, "_").replace(/^_+|_+$/g, "").replace(/__+/g, "_");
+                opName = raw
+                    .replace(/[^a-zA-Z0-9_-]/g, "_")
+                    .replace(/^_+|_+$/g, "")
+                    .replace(/__+/g, "_");
             }
 
             const rawToolName = `${providerName}_${opName}`;
-            const toolName = rawToolName.replace(/[^a-zA-Z0-9_-]/g, "_").replace(/__+/g, "_").slice(0, 64);
+            const toolName = rawToolName
+                .replace(/[^a-zA-Z0-9_-]/g, "_")
+                .replace(/__+/g, "_")
+                .slice(0, 64);
 
-            const description = operation.description || operation.summary || `${method.toUpperCase()} ${pathKey}`;
+            const description =
+                operation.description ||
+                operation.summary ||
+                `${method.toUpperCase()} ${pathKey}`;
 
             // Gather parameters
-            const opLevelParams: any[] = Array.isArray(operation.parameters) ? operation.parameters : [];
+            const opLevelParams: any[] = Array.isArray(operation.parameters)
+                ? operation.parameters
+                : [];
             const paramMap = new Map<string, any>();
 
             for (const p of [...pathLevelParams, ...opLevelParams]) {
@@ -74,7 +112,10 @@ export function buildToolsFromSpec(doc: Record<string, any>, config: OpenAPITool
 
             for (const param of allParams) {
                 const paramSchema = param.schema || { type: "string" };
-                properties[param.name] = convertOpenAPISchemaToToolArgument(paramSchema, param.description || param.name);
+                properties[param.name] = convertOpenAPISchemaToToolArgument(
+                    paramSchema,
+                    param.description || param.name,
+                );
                 if (param.required) {
                     requiredFields.push(param.name);
                 }
@@ -82,13 +123,21 @@ export function buildToolsFromSpec(doc: Record<string, any>, config: OpenAPITool
 
             // Handle request body
             let bodySchemaObj: any = null;
-            if (operation.requestBody && typeof operation.requestBody === "object") {
+            if (
+                operation.requestBody &&
+                typeof operation.requestBody === "object"
+            ) {
                 const content = operation.requestBody.content || {};
                 const firstKey = Object.keys(content)[0];
-                const jsonContent = content["application/json"] || (firstKey ? content[firstKey] : undefined);
+                const jsonContent =
+                    content["application/json"] ||
+                    (firstKey ? content[firstKey] : undefined);
                 if (jsonContent?.schema) {
                     bodySchemaObj = jsonContent.schema;
-                    const bodyArg = convertOpenAPISchemaToToolArgument(bodySchemaObj, operation.requestBody.description || "Request body");
+                    const bodyArg = convertOpenAPISchemaToToolArgument(
+                        bodySchemaObj,
+                        operation.requestBody.description || "Request body",
+                    );
                     if (!properties["requestBody"]) {
                         properties["requestBody"] = bodyArg;
                     }
@@ -97,16 +146,28 @@ export function buildToolsFromSpec(doc: Record<string, any>, config: OpenAPITool
                     }
 
                     // Inline top-level properties if object schema
-                    if (bodySchemaObj.type === "object" && bodySchemaObj.properties) {
-                        for (const [propKey, propSchema] of Object.entries(bodySchemaObj.properties)) {
+                    if (
+                        bodySchemaObj.type === "object" &&
+                        bodySchemaObj.properties
+                    ) {
+                        for (const [propKey, propSchema] of Object.entries(
+                            bodySchemaObj.properties,
+                        )) {
                             if (!properties[propKey]) {
-                                properties[propKey] = convertOpenAPISchemaToToolArgument(propSchema, propKey);
+                                properties[propKey] =
+                                    convertOpenAPISchemaToToolArgument(
+                                        propSchema,
+                                        propKey,
+                                    );
                             }
                         }
                     }
 
                     if (operation.requestBody.required) {
-                        if (!requiredFields.includes("requestBody") && !requiredFields.includes("body")) {
+                        if (
+                            !requiredFields.includes("requestBody") &&
+                            !requiredFields.includes("body")
+                        ) {
                             requiredFields.push("requestBody");
                         }
                     }
@@ -116,7 +177,7 @@ export function buildToolsFromSpec(doc: Record<string, any>, config: OpenAPITool
             const inputSchema: ToolObjectArgument = toolObject(
                 `Input parameters for ${toolName}`,
                 properties,
-                requiredFields.length > 0 ? requiredFields : undefined
+                requiredFields.length > 0 ? requiredFields : undefined,
             );
 
             const tool: Tool = {

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "bun:test";
-import type { Model } from "@/models/models";
-import type { Tool, ToolProvider } from "@/tools/tools";
 import {
     type AgentConfiguration,
     AgentManager,
     type AgentObserver,
 } from "@/agents";
+import type { Model } from "@/models/models";
+import type { Tool, ToolProvider } from "@/tools/tools";
 import { InMemoryAgentCommunicator } from "../communication";
 import { InMemoryAgentMemoryManager } from "../memory";
 import { ConsoleAgentObserver } from "./console";
@@ -153,7 +153,9 @@ describe("AgentObserver", () => {
 
         const testObserver: AgentObserver = {
             onError(_agentId, error, context) {
-                errorEvents.push(`error:${context}:${(error as Error).message}`);
+                errorEvents.push(
+                    `error:${context}:${(error as Error).message}`,
+                );
             },
             onTurnEnd(_agentId, error) {
                 errorEvents.push(`turn_end:${(error as Error).message}`);
@@ -204,4 +206,3 @@ describe("AgentObserver", () => {
         manager.destroy();
     });
 });
-

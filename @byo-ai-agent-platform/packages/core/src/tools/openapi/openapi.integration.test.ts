@@ -1,9 +1,9 @@
-import express from "express";
-import type { AddressInfo } from "node:net";
-import type { Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import type { Server } from "node:http";
+import type { AddressInfo } from "node:net";
+import express from "express";
+import { type AgentHandle, AgentMemory, type AgentSession } from "@/agents";
 import { OpenAPIToolProvider } from ".";
-import { type AgentHandle, type AgentSession, AgentMemory } from "@/agents";
 
 describe("OpenAPIToolProvider Integration Suite", () => {
     let server: Server;
@@ -35,7 +35,11 @@ describe("OpenAPIToolProvider Integration Suite", () => {
                             operationId: "listPets",
                             summary: "List pets",
                             parameters: [
-                                { name: "limit", in: "query", schema: { type: "integer" } },
+                                {
+                                    name: "limit",
+                                    in: "query",
+                                    schema: { type: "integer" },
+                                },
                             ],
                             responses: { "200": { description: "OK" } },
                         },
@@ -65,7 +69,12 @@ describe("OpenAPIToolProvider Integration Suite", () => {
                             operationId: "getPetById",
                             summary: "Get pet by ID",
                             parameters: [
-                                { name: "id", in: "path", required: true, schema: { type: "string" } },
+                                {
+                                    name: "id",
+                                    in: "path",
+                                    required: true,
+                                    schema: { type: "string" },
+                                },
                             ],
                             responses: { "200": { description: "OK" } },
                         },
@@ -74,7 +83,9 @@ describe("OpenAPIToolProvider Integration Suite", () => {
                         get: {
                             operationId: "getError",
                             summary: "Get error",
-                            responses: { "400": { description: "Bad Request" } },
+                            responses: {
+                                "400": { description: "Bad Request" },
+                            },
                         },
                     },
                     "/auth/apikey-header": {
@@ -150,7 +161,10 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             if (key === "secret-header-key") {
                 res.json({ authenticated: true, method: "apiKey-header" });
             } else {
-                res.status(401).json({ authenticated: false, message: "Invalid API key header" });
+                res.status(401).json({
+                    authenticated: false,
+                    message: "Invalid API key header",
+                });
             }
         });
 
@@ -159,7 +173,10 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             if (key === "secret-query-key") {
                 res.json({ authenticated: true, method: "apiKey-query" });
             } else {
-                res.status(401).json({ authenticated: false, message: "Invalid API key query parameter" });
+                res.status(401).json({
+                    authenticated: false,
+                    message: "Invalid API key query parameter",
+                });
             }
         });
 
@@ -168,7 +185,10 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             if (cookie === "session=secret-cookie-key") {
                 res.json({ authenticated: true, method: "apiKey-cookie" });
             } else {
-                res.status(401).json({ authenticated: false, message: "Invalid API key cookie" });
+                res.status(401).json({
+                    authenticated: false,
+                    message: "Invalid API key cookie",
+                });
             }
         });
 
@@ -177,31 +197,44 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             if (authHeader === "Bearer secret-bearer-token-123") {
                 res.json({ authenticated: true, method: "bearerToken" });
             } else {
-                res.status(401).json({ authenticated: false, message: "Invalid Bearer token" });
+                res.status(401).json({
+                    authenticated: false,
+                    message: "Invalid Bearer token",
+                });
             }
         });
 
         app.get("/auth/basic", (req, res) => {
             const authHeader = req.headers["authorization"];
-            const expected = "Basic " + Buffer.from("admin:password123").toString("base64");
+            const expected =
+                "Basic " + Buffer.from("admin:password123").toString("base64");
             if (authHeader === expected) {
                 res.json({ authenticated: true, method: "basicAuth" });
             } else {
-                res.status(401).json({ authenticated: false, message: "Invalid Basic credentials" });
+                res.status(401).json({
+                    authenticated: false,
+                    message: "Invalid Basic credentials",
+                });
             }
         });
 
         app.get("/auth/custom", (req, res) => {
             const headerVal = req.headers["x-custom-auth"];
             const queryVal = req.query["custom_key"];
-            if (headerVal === "custom-header-val" && queryVal === "custom-query-val") {
+            if (
+                headerVal === "custom-header-val" &&
+                queryVal === "custom-query-val"
+            ) {
                 res.json({ authenticated: true, method: "custom" });
             } else {
-                res.status(401).json({ authenticated: false, message: "Invalid custom auth" });
+                res.status(401).json({
+                    authenticated: false,
+                    message: "Invalid custom auth",
+                });
             }
         });
 
-        server = await new Promise(resolve => {
+        server = await new Promise((resolve) => {
             const s = app.listen(0, () => resolve(s));
         });
 
@@ -211,7 +244,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
 
     afterAll(async () => {
         if (server) {
-            await new Promise<void>(resolve => server.close(() => resolve()));
+            await new Promise<void>((resolve) => server.close(() => resolve()));
         }
     });
 
@@ -224,7 +257,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
         });
 
         const tools = await provider.getAllTools();
-        const toolNames = tools.map(t => t.name).sort();
+        const toolNames = tools.map((t) => t.name).sort();
 
         expect(toolNames).toEqual([
             "discovery-provider_checkApiKeyCookie",
@@ -248,7 +281,9 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             securityVariables: { type: "bearerToken", token: "dummy" },
         });
 
-        const listTool = await provider.getToolByName("query-provider_listPets");
+        const listTool = await provider.getToolByName(
+            "query-provider_listPets",
+        );
         expect(listTool).not.toBeNull();
 
         const result = await listTool!.execute({ limit: 25 }, session);
@@ -267,7 +302,9 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             securityVariables: { type: "bearerToken", token: "dummy" },
         });
 
-        const getPetTool = await provider.getToolByName("path-provider_getPetById");
+        const getPetTool = await provider.getToolByName(
+            "path-provider_getPetById",
+        );
         expect(getPetTool).not.toBeNull();
 
         const result = await getPetTool!.execute({ id: "pet-42" }, session);
@@ -282,10 +319,15 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             securityVariables: { type: "bearerToken", token: "dummy" },
         });
 
-        const createTool = await provider.getToolByName("post-provider_createPet");
+        const createTool = await provider.getToolByName(
+            "post-provider_createPet",
+        );
         expect(createTool).not.toBeNull();
 
-        const result = await createTool!.execute({ name: "Rex", kind: "dog" }, session);
+        const result = await createTool!.execute(
+            { name: "Rex", kind: "dog" },
+            session,
+        );
         expect(result).toEqual({ id: "pet-99", name: "Rex", kind: "dog" });
     });
 
@@ -297,10 +339,14 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             securityVariables: { type: "bearerToken", token: "dummy" },
         });
 
-        const errorTool = await provider.getToolByName("error-provider_getError");
+        const errorTool = await provider.getToolByName(
+            "error-provider_getError",
+        );
         expect(errorTool).not.toBeNull();
 
-        await expect(errorTool!.execute({}, session)).rejects.toThrow("HTTP 400 Bad Request");
+        await expect(errorTool!.execute({}, session)).rejects.toThrow(
+            "HTTP 400 Bad Request",
+        );
     });
 
     it("supports apiKey authentication in headers", async () => {
@@ -316,11 +362,16 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             },
         });
 
-        const tool = await provider.getToolByName("apikey-header-provider_checkApiKeyHeader");
+        const tool = await provider.getToolByName(
+            "apikey-header-provider_checkApiKeyHeader",
+        );
         expect(tool).not.toBeNull();
 
         const result = await tool!.execute({}, session);
-        expect(result).toEqual({ authenticated: true, method: "apiKey-header" });
+        expect(result).toEqual({
+            authenticated: true,
+            method: "apiKey-header",
+        });
     });
 
     it("supports apiKey authentication in query parameters", async () => {
@@ -336,7 +387,9 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             },
         });
 
-        const tool = await provider.getToolByName("apikey-query-provider_checkApiKeyQuery");
+        const tool = await provider.getToolByName(
+            "apikey-query-provider_checkApiKeyQuery",
+        );
         expect(tool).not.toBeNull();
 
         const result = await tool!.execute({}, session);
@@ -356,11 +409,16 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             },
         });
 
-        const tool = await provider.getToolByName("apikey-cookie-provider_checkApiKeyCookie");
+        const tool = await provider.getToolByName(
+            "apikey-cookie-provider_checkApiKeyCookie",
+        );
         expect(tool).not.toBeNull();
 
         const result = await tool!.execute({}, session);
-        expect(result).toEqual({ authenticated: true, method: "apiKey-cookie" });
+        expect(result).toEqual({
+            authenticated: true,
+            method: "apiKey-cookie",
+        });
     });
 
     it("supports Bearer token authentication", async () => {
@@ -374,7 +432,9 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             },
         });
 
-        const tool = await provider.getToolByName("bearer-provider_checkBearerAuth");
+        const tool = await provider.getToolByName(
+            "bearer-provider_checkBearerAuth",
+        );
         expect(tool).not.toBeNull();
 
         const result = await tool!.execute({}, session);
@@ -394,7 +454,9 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             },
         });
 
-        const tool = await provider.getToolByName("basic-provider_checkBasicAuth");
+        const tool = await provider.getToolByName(
+            "basic-provider_checkBasicAuth",
+        );
         expect(tool).not.toBeNull();
 
         const result = await tool!.execute({}, session);
@@ -414,7 +476,9 @@ describe("OpenAPIToolProvider Integration Suite", () => {
             },
         });
 
-        const tool = await provider.getToolByName("custom-auth-provider_checkCustomAuth");
+        const tool = await provider.getToolByName(
+            "custom-auth-provider_checkCustomAuth",
+        );
         expect(tool).not.toBeNull();
 
         const result = await tool!.execute({}, session);

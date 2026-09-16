@@ -8,7 +8,9 @@ import type { ComputerProvider } from "@/tools";
 import { validateToolArgument } from "@/tools/tool_argument";
 import type { Tool, ToolProvider } from "@/tools/tools";
 import { AgentMemory, type AgentMemoryManager } from "./agent.memory";
+
 export { AgentMemory, type AgentMemoryManager };
+
 import type { AgentCommunicator, AgentObserver } from "./agent.messaging";
 
 /**
@@ -55,14 +57,14 @@ ${description}
 
 <available_skills>
     ${skills
-            .map((skill) =>
-                `
+        .map((skill) =>
+            `
         <skill>
             <name>${skill.frontMatter.name}</name>
             <description><![CDATA[${skill.frontMatter.description}]]></description>
         </skill>`.trim(),
-            )
-            .join("\n")}
+        )
+        .join("\n")}
 </available_skills>
     `.trim();
 }
@@ -165,18 +167,26 @@ export class AgentManager {
         );
 
         this.unsubscribers.push(
-            comm.on("tool:call", async ({ agentId, toolCallId, tool, args }) => {
-                try {
-                    await this.handleToolCall(agentId, toolCallId, tool, args);
-                } catch (error) {
-                    await this.notifyObservers(
-                        "onError",
-                        agentId,
-                        error,
-                        "tool:call",
-                    );
-                }
-            }),
+            comm.on(
+                "tool:call",
+                async ({ agentId, toolCallId, tool, args }) => {
+                    try {
+                        await this.handleToolCall(
+                            agentId,
+                            toolCallId,
+                            tool,
+                            args,
+                        );
+                    } catch (error) {
+                        await this.notifyObservers(
+                            "onError",
+                            agentId,
+                            error,
+                            "tool:call",
+                        );
+                    }
+                },
+            ),
         );
 
         this.unsubscribers.push(
@@ -213,7 +223,9 @@ export class AgentManager {
     // Creates the agent
     async createAgent(): Promise<AgentHandle> {
         const id =
-            await this.configuration.memoryManager.createAgentMemoryEntry(this.configuration.name);
+            await this.configuration.memoryManager.createAgentMemoryEntry(
+                this.configuration.name,
+            );
 
         if (this.configuration.computerProvider) {
             // TODO: handle lifecycle differences
@@ -230,9 +242,11 @@ export class AgentManager {
         const value = await this.configuration.memoryManager.getAgent(id);
 
         if (!value) {
-            throw new Error(`Something went wrong when attempting to create the agent: ${id}`)
+            throw new Error(
+                `Something went wrong when attempting to create the agent: ${id}`,
+            );
         }
-        return value
+        return value;
     }
 
     // Creates an agent session which will be used by the tools
@@ -240,9 +254,11 @@ export class AgentManager {
         session: AgentSession;
         tools: Tool[];
     }> {
-        let agent = await this.configuration.memoryManager.getAgent(agentId);
+        const agent = await this.configuration.memoryManager.getAgent(agentId);
         if (!agent) {
-            throw new Error(`The agent ${agentId} should exist before creating a new session`)
+            throw new Error(
+                `The agent ${agentId} should exist before creating a new session`,
+            );
         }
         const memory =
             await this.configuration.memoryManager.getAgentMemory(agentId);
@@ -309,7 +325,12 @@ export class AgentManager {
             });
         } catch (error) {
             await this.notifyObservers("onTurnEnd", agentId, error);
-            await this.notifyObservers("onError", agentId, error, "model:execute");
+            await this.notifyObservers(
+                "onError",
+                agentId,
+                error,
+                "model:execute",
+            );
             throw error;
         }
 
@@ -455,7 +476,7 @@ export class AgentManager {
             name: toolName,
             description: "",
             inputSchema: { type: "object", description: "", properties: {} },
-            execute: async () => { },
+            execute: async () => {},
         };
 
         await this.configuration.memoryManager.addTranscriptEntries(agentId, [
@@ -478,27 +499,35 @@ export class AgentManager {
     }
 
     // Get agent by id
-    async getAgentInteraction(id: string): Promise<AgentInteraction | undefined> {
-        const memory = await this.configuration.memoryManager.getAgentMemory(id);
-
-        if (!memory) {
-            throw new Error(`Agent ${id} should have memory to grab`)
+    async getAgentInteraction(
+        id: string,
+    ): Promise<AgentInteraction | undefined> {
+        const agent = await this.configuration.memoryManager.getAgent(id);
+        if (!agent) {
+            return undefined;
         }
+
+        const memory =
+            await this.configuration.memoryManager.getAgentMemory(id);
 
         return {
             id,
             name: memory.name,
-            transcript: memory.transcript
-        }
+            transcript: memory.transcript,
+        };
     }
 
     async getAllAgents(): Promise<string[]> {
         return await this.configuration.memoryManager.getAllAgents();
+    }
+
+    get communicator(): AgentCommunicator {
+        return this.configuration.communicator;
     }
 }
 
 export type AgentInteraction = {
     id: string;
     name: string;
-    transcript: ModelInteraction[]
-}
+    transcript: ModelInteraction[];
+};

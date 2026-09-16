@@ -1,8 +1,8 @@
-import AdmZip from "adm-zip";
+import { afterEach, describe, expect, it } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, describe, expect, it } from "bun:test";
+import AdmZip from "adm-zip";
 import { ZipSkillRepository } from "./zip_skill_repo";
 
 describe("ZipSkillRepository", () => {
@@ -50,7 +50,10 @@ describe("ZipSkillRepository", () => {
         const skills = await repository.getAllSkills();
 
         expect(skills).toHaveLength(2);
-        expect(skills.map(skill => skill.frontMatter.name).sort()).toEqual(["nested-skill", "root-skill"]);
+        expect(skills.map((skill) => skill.frontMatter.name).sort()).toEqual([
+            "nested-skill",
+            "root-skill",
+        ]);
     });
 
     it("filters skills to the configured subdirectory", async () => {
@@ -78,7 +81,6 @@ describe("ZipSkillRepository", () => {
         expect(skills).toHaveLength(1);
         expect(skills[0]?.frontMatter.name).toBe("nested-skill");
         expect(skills[0]?.body.trim()).toBe("Nested body");
-
 
         const repository2 = new ZipSkillRepository(zipPath, "/nested");
         const skills2 = await repository2.getAllSkills();

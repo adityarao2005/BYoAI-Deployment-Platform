@@ -142,7 +142,10 @@ describe("AgentManager Integration", () => {
         const agent = await manager.createAgent();
         expect(agent.id).toBeDefined();
 
-        await communicator.emit("user:message", { agentId: agent.id, content: "Hi there" });
+        await communicator.emit("user:message", {
+            agentId: agent.id,
+            content: "Hi there",
+        });
 
         // Verify events emitted
         const eventNames = communicator.emitted.map((e) => e.event);
@@ -382,7 +385,8 @@ describe("JsonFileAgentMemoryManager", () => {
 
             // Create a new memory manager instance pointing to the same directory
             const memoryManager2 = new JsonFileAgentMemoryManager(tempDir);
-            const retrievedMemory = await memoryManager2.getAgentMemory(agentId);
+            const retrievedMemory =
+                await memoryManager2.getAgentMemory(agentId);
 
             expect(retrievedMemory.computerId).toBe("comp-999");
             expect(retrievedMemory.transcript).toHaveLength(1);

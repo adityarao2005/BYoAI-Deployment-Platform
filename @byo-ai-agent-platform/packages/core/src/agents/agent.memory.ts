@@ -9,7 +9,11 @@ export class AgentMemory {
     computerId?: string;
     name: string;
 
-    constructor(name: string, transcript: ModelInteraction[] = [], computerId?: string) {
+    constructor(
+        name: string,
+        transcript: ModelInteraction[] = [],
+        computerId?: string,
+    ) {
         this.transcript = transcript;
         this.computerId = computerId;
         this.name = name;
@@ -32,7 +36,6 @@ export class AgentMemory {
         return Array.from(pending);
     }
 }
-
 
 /**
  * Interface for managing agent conversation memory, transcripts, and computer provider session state.

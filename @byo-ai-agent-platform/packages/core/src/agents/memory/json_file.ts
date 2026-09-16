@@ -1,8 +1,12 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import {
+    type AgentHandle,
+    AgentMemory,
+    type AgentMemoryManager,
+} from "@/agents";
 import type { ModelInteraction } from "@/models/conversation";
-import { type AgentHandle, AgentMemory, type AgentMemoryManager } from "@/agents";
 
 /**
  * Serialized JSON record schema for persisting agent memory to disk.

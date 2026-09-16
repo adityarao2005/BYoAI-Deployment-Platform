@@ -12,9 +12,12 @@ export interface McpClientFactory {
 export class McpServerToolProvider implements ToolProvider {
     private cachedTools: Map<string, Tool[]> = new Map();
 
-    constructor(private clientFactory: McpClientFactory) { }
+    constructor(private clientFactory: McpClientFactory) {}
 
-    async getToolByName(name: string, agent: AgentHandle): Promise<Tool | null> {
+    async getToolByName(
+        name: string,
+        agent: AgentHandle,
+    ): Promise<Tool | null> {
         const tools = await this.getAllTools(agent);
         return tools.find((tool) => tool.name === name) || null;
     }

@@ -7,7 +7,11 @@ import {
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import type { AgentHandle } from "@/agents";
 import type { ComputerProvider } from "@/computer";
-import type { McpComputerConfig, McpRemoteConfig, McpStdioConfig } from "@/config";
+import type {
+    McpComputerConfig,
+    McpRemoteConfig,
+    McpStdioConfig,
+} from "@/config";
 import type { McpClientFactory } from "./provider";
 
 export async function loadCertOrContent(

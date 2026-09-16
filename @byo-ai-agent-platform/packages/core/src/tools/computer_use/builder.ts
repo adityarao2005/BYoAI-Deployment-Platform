@@ -1,6 +1,15 @@
 import type { Tool } from "@/tools";
-import { toolArray, toolBoolean, toolInteger, toolObject, toolString } from "@/tools/tool_argument";
-import type { GraphicalComputer, HeadlessComputer } from "../../computer/computer";
+import {
+    toolArray,
+    toolBoolean,
+    toolInteger,
+    toolObject,
+    toolString,
+} from "@/tools/tool_argument";
+import type {
+    GraphicalComputer,
+    HeadlessComputer,
+} from "../../computer/computer";
 
 /**
  * Creates Tool objects for headless computer operations.
@@ -17,13 +26,23 @@ export function createHeadlessTools(computer: HeadlessComputer): Tool[] {
                 "Execute command inputs",
                 {
                     command: toolString("The command to execute on the shell."),
-                    cwd: toolString("Working directory for the command execution."),
-                    envVars: toolObject("Environment variables key-value map.", {}, undefined, true),
+                    cwd: toolString(
+                        "Working directory for the command execution.",
+                    ),
+                    envVars: toolObject(
+                        "Environment variables key-value map.",
+                        {},
+                        undefined,
+                        true,
+                    ),
                     stdin: toolString("Input data for standard input."),
                     shell: toolString("Custom shell executable."),
-                    shellArgs: toolArray(toolString("Shell argument"), "Arguments for the shell.")
+                    shellArgs: toolArray(
+                        toolString("Shell argument"),
+                        "Arguments for the shell.",
+                    ),
                 },
-                ["command"]
+                ["command"],
             ),
             execute: async (args: Record<string, any>) => {
                 return computer.execute({
@@ -34,7 +53,7 @@ export function createHeadlessTools(computer: HeadlessComputer): Tool[] {
                     shell: args.shell,
                     shellArgs: args.shellArgs || args.shell_args,
                 });
-            }
+            },
         },
         {
             name: "read_file",
@@ -43,10 +62,12 @@ export function createHeadlessTools(computer: HeadlessComputer): Tool[] {
                 "Read file inputs",
                 {
                     path: toolString("Path to the file to read."),
-                    offset: toolInteger("Optional byte offset to start reading from."),
-                    limit: toolInteger("Optional maximum bytes to read.")
+                    offset: toolInteger(
+                        "Optional byte offset to start reading from.",
+                    ),
+                    limit: toolInteger("Optional maximum bytes to read."),
                 },
-                ["path"]
+                ["path"],
             ),
             execute: async (args: Record<string, any>) => {
                 return computer.readFile({
@@ -54,7 +75,7 @@ export function createHeadlessTools(computer: HeadlessComputer): Tool[] {
                     offset: args.offset,
                     limit: args.limit,
                 });
-            }
+            },
         },
         {
             name: "write_file",
@@ -64,9 +85,11 @@ export function createHeadlessTools(computer: HeadlessComputer): Tool[] {
                 {
                     path: toolString("Path to the file to write."),
                     content: toolString("Content to write to the file."),
-                    append: toolBoolean("Whether to append content to existing file.")
+                    append: toolBoolean(
+                        "Whether to append content to existing file.",
+                    ),
                 },
-                ["path", "content"]
+                ["path", "content"],
             ),
             execute: async (args: Record<string, any>) => {
                 return computer.writeFile({
@@ -74,7 +97,7 @@ export function createHeadlessTools(computer: HeadlessComputer): Tool[] {
                     content: args.content,
                     append: args.append,
                 });
-            }
+            },
         },
         {
             name: "list_directory",
@@ -82,15 +105,15 @@ export function createHeadlessTools(computer: HeadlessComputer): Tool[] {
             inputSchema: toolObject(
                 "List directory inputs",
                 {
-                    path: toolString("Directory path to list.")
+                    path: toolString("Directory path to list."),
                 },
-                ["path"]
+                ["path"],
             ),
             execute: async (args: Record<string, any>) => {
                 return computer.listDirectory({
                     path: args.path,
                 });
-            }
+            },
         },
         {
             name: "get_user_id",
@@ -98,7 +121,7 @@ export function createHeadlessTools(computer: HeadlessComputer): Tool[] {
             inputSchema: toolObject("Get user ID inputs", {}),
             execute: async () => {
                 return computer.getUserId();
-            }
+            },
         },
         {
             name: "get_group_id",
@@ -106,8 +129,8 @@ export function createHeadlessTools(computer: HeadlessComputer): Tool[] {
             inputSchema: toolObject("Get group ID inputs", {}),
             execute: async () => {
                 return computer.getGroupId();
-            }
-        }
+            },
+        },
     ];
 }
 
@@ -122,18 +145,19 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
         {
             name: "capture_screenshot",
             description: "Capture a screenshot of the computer screen.",
-            inputSchema: toolObject(
-                "Capture screenshot inputs",
-                {
-                    x: toolInteger("Optional top-left X coordinate for crop region."),
-                    y: toolInteger("Optional top-left Y coordinate for crop region."),
-                    width: toolInteger("Optional width for crop region."),
-                    height: toolInteger("Optional height for crop region.")
-                }
-            ),
+            inputSchema: toolObject("Capture screenshot inputs", {
+                x: toolInteger(
+                    "Optional top-left X coordinate for crop region.",
+                ),
+                y: toolInteger(
+                    "Optional top-left Y coordinate for crop region.",
+                ),
+                width: toolInteger("Optional width for crop region."),
+                height: toolInteger("Optional height for crop region."),
+            }),
             execute: async (args: Record<string, any> = {}) => {
                 return computer.captureScreenshot(args);
-            }
+            },
         },
         {
             name: "click",
@@ -143,9 +167,11 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
                 {
                     x: toolInteger("X coordinate for click."),
                     y: toolInteger("Y coordinate for click."),
-                    button: toolString("Mouse button (e.g. left, right, middle).")
+                    button: toolString(
+                        "Mouse button (e.g. left, right, middle).",
+                    ),
                 },
-                ["x", "y"]
+                ["x", "y"],
             ),
             execute: async (args: Record<string, any>) => {
                 return computer.click({
@@ -153,7 +179,7 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
                     y: args.y,
                     button: args.button,
                 });
-            }
+            },
         },
         {
             name: "type",
@@ -161,13 +187,13 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
             inputSchema: toolObject(
                 "Type inputs",
                 {
-                    text: toolString("Text to type.")
+                    text: toolString("Text to type."),
                 },
-                ["text"]
+                ["text"],
             ),
             execute: async (args: Record<string, any>) => {
                 return computer.type({ text: args.text });
-            }
+            },
         },
         {
             name: "press_key",
@@ -175,13 +201,13 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
             inputSchema: toolObject(
                 "Press key inputs",
                 {
-                    key: toolString("Key name to press.")
+                    key: toolString("Key name to press."),
                 },
-                ["key"]
+                ["key"],
             ),
             execute: async (args: Record<string, any>) => {
                 return computer.pressKey({ key: args.key });
-            }
+            },
         },
         {
             name: "release_key",
@@ -189,13 +215,13 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
             inputSchema: toolObject(
                 "Release key inputs",
                 {
-                    key: toolString("Key name to release.")
+                    key: toolString("Key name to release."),
                 },
-                ["key"]
+                ["key"],
             ),
             execute: async (args: Record<string, any>) => {
                 return computer.releaseKey({ key: args.key });
-            }
+            },
         },
         {
             name: "press_and_hold_key",
@@ -203,13 +229,13 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
             inputSchema: toolObject(
                 "Press and hold key inputs",
                 {
-                    key: toolString("Key name to press and hold.")
+                    key: toolString("Key name to press and hold."),
                 },
-                ["key"]
+                ["key"],
             ),
             execute: async (args: Record<string, any>) => {
                 return computer.pressAndHoldKey({ key: args.key });
-            }
+            },
         },
         {
             name: "release_all_keys",
@@ -217,20 +243,21 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
             inputSchema: toolObject("Release all keys inputs", {}),
             execute: async () => {
                 return computer.releaseAllKeys();
-            }
+            },
         },
         {
             name: "drag",
-            description: "Drag mouse from starting coordinates to ending coordinates.",
+            description:
+                "Drag mouse from starting coordinates to ending coordinates.",
             inputSchema: toolObject(
                 "Drag inputs",
                 {
                     x1: toolInteger("Start X coordinate."),
                     y1: toolInteger("Start Y coordinate."),
                     x2: toolInteger("End X coordinate."),
-                    y2: toolInteger("End Y coordinate.")
+                    y2: toolInteger("End Y coordinate."),
                 },
-                ["x1", "y1", "x2", "y2"]
+                ["x1", "y1", "x2", "y2"],
             ),
             execute: async (args: Record<string, any>) => {
                 return computer.drag({
@@ -239,7 +266,7 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
                     x2: args.x2,
                     y2: args.y2,
                 });
-            }
+            },
         },
         {
             name: "move_mouse_to",
@@ -248,16 +275,16 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
                 "Move mouse to inputs",
                 {
                     x: toolInteger("X coordinate."),
-                    y: toolInteger("Y coordinate.")
+                    y: toolInteger("Y coordinate."),
                 },
-                ["x", "y"]
+                ["x", "y"],
             ),
             execute: async (args: Record<string, any>) => {
                 return computer.moveMouseTo({
                     x: args.x,
                     y: args.y,
                 });
-            }
+            },
         },
         {
             name: "scroll",
@@ -266,16 +293,16 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
                 "Scroll inputs",
                 {
                     dx: toolInteger("Horizontal scroll delta."),
-                    dy: toolInteger("Vertical scroll delta.")
+                    dy: toolInteger("Vertical scroll delta."),
                 },
-                ["dx", "dy"]
+                ["dx", "dy"],
             ),
             execute: async (args: Record<string, any>) => {
                 return computer.scroll({
                     dx: args.dx,
                     dy: args.dy,
                 });
-            }
+            },
         },
         {
             name: "get_clipboard",
@@ -283,7 +310,7 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
             inputSchema: toolObject("Get clipboard inputs", {}),
             execute: async () => {
                 return computer.getClipboard();
-            }
+            },
         },
         {
             name: "set_clipboard",
@@ -291,13 +318,13 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
             inputSchema: toolObject(
                 "Set clipboard inputs",
                 {
-                    text: toolString("Text to set in clipboard.")
+                    text: toolString("Text to set in clipboard."),
                 },
-                ["text"]
+                ["text"],
             ),
             execute: async (args: Record<string, any>) => {
                 return computer.setClipboard({ text: args.text });
-            }
+            },
         },
         {
             name: "get_screen_size",
@@ -305,7 +332,7 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
             inputSchema: toolObject("Get screen size inputs", {}),
             execute: async () => {
                 return computer.getScreenSize();
-            }
-        }
+            },
+        },
     ];
 }

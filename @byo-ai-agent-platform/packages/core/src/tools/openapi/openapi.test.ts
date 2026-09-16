@@ -103,7 +103,9 @@ describe.each([
         expect(typedSchema.openapi).toMatch(/^3\.1/);
 
         const responseSchema =
-            typedSchema.paths["/pets"].get.responses["200"].content["application/json"].schema;
+            typedSchema.paths["/pets"].get.responses["200"].content[
+                "application/json"
+            ].schema;
 
         expect(responseSchema).toMatchObject(petSchema);
         expect(responseSchema).not.toHaveProperty("$ref");
@@ -115,22 +117,43 @@ import { buildToolsFromSpec, convertOpenAPISchemaToToolArgument } from ".";
 
 describe("convertOpenAPISchemaToToolArgument", () => {
     it("converts primitive schema types correctly", () => {
-        expect(convertOpenAPISchemaToToolArgument({ type: "integer", description: "an age" })).toEqual({
+        expect(
+            convertOpenAPISchemaToToolArgument({
+                type: "integer",
+                description: "an age",
+            }),
+        ).toEqual({
             type: "integer",
             description: "an age",
         });
 
-        expect(convertOpenAPISchemaToToolArgument({ type: "number", description: "a price" })).toEqual({
+        expect(
+            convertOpenAPISchemaToToolArgument({
+                type: "number",
+                description: "a price",
+            }),
+        ).toEqual({
             type: "number",
             description: "a price",
         });
 
-        expect(convertOpenAPISchemaToToolArgument({ type: "boolean", description: "active status" })).toEqual({
+        expect(
+            convertOpenAPISchemaToToolArgument({
+                type: "boolean",
+                description: "active status",
+            }),
+        ).toEqual({
             type: "boolean",
             description: "active status",
         });
 
-        expect(convertOpenAPISchemaToToolArgument({ type: "string", enum: ["cat", "dog"], description: "pet type" })).toEqual({
+        expect(
+            convertOpenAPISchemaToToolArgument({
+                type: "string",
+                enum: ["cat", "dog"],
+                description: "pet type",
+            }),
+        ).toEqual({
             type: "string",
             description: "pet type",
             enum: ["cat", "dog"],
@@ -158,12 +181,20 @@ describe("convertOpenAPISchemaToToolArgument", () => {
             type: "object",
             description: "User details",
             properties: {
-                name: { type: "string", description: "User name", enum: undefined },
+                name: {
+                    type: "string",
+                    description: "User name",
+                    enum: undefined,
+                },
                 age: { type: "integer", description: "User age" },
                 tags: {
                     type: "array",
                     description: "User tags",
-                    items: { type: "string", description: "Tag name", enum: undefined },
+                    items: {
+                        type: "string",
+                        description: "Tag name",
+                        enum: undefined,
+                    },
                 },
             },
             required: ["name"],
@@ -195,7 +226,12 @@ describe("buildToolsFromSpec", () => {
                     operationId: "listPets",
                     summary: "List all pets",
                     parameters: [
-                        { name: "limit", in: "query", schema: { type: "integer" }, required: false },
+                        {
+                            name: "limit",
+                            in: "query",
+                            schema: { type: "integer" },
+                            required: false,
+                        },
                     ],
                 },
                 post: {
@@ -221,7 +257,12 @@ describe("buildToolsFromSpec", () => {
                 get: {
                     summary: "Get pet by ID",
                     parameters: [
-                        { name: "petId", in: "path", required: true, schema: { type: "string" } },
+                        {
+                            name: "petId",
+                            in: "path",
+                            required: true,
+                            schema: { type: "string" },
+                        },
                     ],
                 },
             },
@@ -232,7 +273,7 @@ describe("buildToolsFromSpec", () => {
         const tools = buildToolsFromSpec(doc, sampleConfig);
         expect(tools).toHaveLength(3);
 
-        const toolNames = tools.map(t => t.name);
+        const toolNames = tools.map((t) => t.name);
         expect(toolNames).toContain("test-provider_listPets");
         expect(toolNames).toContain("test-provider_post_pets");
         expect(toolNames).toContain("test-provider_get_pets_petId");
@@ -241,11 +282,15 @@ describe("buildToolsFromSpec", () => {
     it("correctly structures input schema for query and path parameters", () => {
         const tools = buildToolsFromSpec(doc, sampleConfig);
 
-        const listPetsTool = tools.find(t => t.name === "test-provider_listPets")!;
+        const listPetsTool = tools.find(
+            (t) => t.name === "test-provider_listPets",
+        )!;
         expect(listPetsTool.description).toBe("List all pets");
         expect(listPetsTool.inputSchema.properties).toHaveProperty("limit");
 
-        const getPetTool = tools.find(t => t.name === "test-provider_get_pets_petId")!;
+        const getPetTool = tools.find(
+            (t) => t.name === "test-provider_get_pets_petId",
+        )!;
         expect(getPetTool.inputSchema.properties).toHaveProperty("petId");
         expect(getPetTool.inputSchema.required).toEqual(["petId"]);
     });

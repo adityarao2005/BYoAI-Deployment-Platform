@@ -1,6 +1,5 @@
 import type { ModelInput, ModelMessageOutput } from "./conversation";
 
-
 export interface Model {
     execute(input: ModelInput): Promise<ModelMessageOutput[]>;
 }

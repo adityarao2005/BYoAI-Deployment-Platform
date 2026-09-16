@@ -1,18 +1,20 @@
 import { execFile } from "node:child_process";
-import { mkdtemp, access, readdir, readFile, rm } from "node:fs/promises";
+import { access, mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { parse } from "yaml";
-import type { Skill, SkillRepository } from "./skills";
 import type { SkillRepositoryConfig } from "../config/skill_config";
+import type { Skill, SkillRepository } from "./skills";
 
 const execFileAsync = promisify(execFile);
 
 type GitRepositoryConfig = Extract<SkillRepositoryConfig, { type: "git" }>;
 type GitRepositoryAuth = GitRepositoryConfig["auth"];
 
-export function normalizeSkillsSubdirectory(skillsSubdirectory: string): string {
+export function normalizeSkillsSubdirectory(
+    skillsSubdirectory: string,
+): string {
     const normalized = skillsSubdirectory.replace(/^\/+|\/+$/g, "");
 
     if (normalized === "" || normalized === ".") {
@@ -49,7 +51,9 @@ export function buildGitCloneSource(
     const env: NodeJS.ProcessEnv = { ...process.env };
 
     if (auth?.method === "ssh") {
-        const privateKeyPath = escapeForDoubleQuotedShellValue(expandHomeDirectory(auth.privateKeyPath));
+        const privateKeyPath = escapeForDoubleQuotedShellValue(
+            expandHomeDirectory(auth.privateKeyPath),
+        );
         env.GIT_SSH_COMMAND = `ssh -i "${privateKeyPath}" -o IdentitiesOnly=yes`;
         return { source: location, env };
     }
@@ -65,14 +69,19 @@ export function buildGitCloneSource(
 }
 
 async function pathExists(path: string): Promise<boolean> {
-    return access(path).then(() => true, () => false);
+    return access(path).then(
+        () => true,
+        () => false,
+    );
 }
 
 async function findSkillFiles(rootDir: string): Promise<string[]> {
     const skillFiles: string[] = [];
 
     async function walk(currentDirectory: string) {
-        const entries = await readdir(currentDirectory, { withFileTypes: true });
+        const entries = await readdir(currentDirectory, {
+            withFileTypes: true,
+        });
 
         for (const entry of entries) {
             if (entry.name === ".git") {
@@ -98,7 +107,9 @@ async function findSkillFiles(rootDir: string): Promise<string[]> {
 }
 
 function parseSkillMarkdown(fileContent: string, sourcePath: string): Skill {
-    const match = fileContent.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+    const match = fileContent.match(
+        /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/,
+    );
 
     if (!match) {
         throw new Error(`Invalid SKILL.md format in ${sourcePath}`);
@@ -119,7 +130,12 @@ export class GitSkillRepository implements SkillRepository {
     auth?: GitRepositoryAuth | undefined;
     skills: Skill[] = [];
 
-    constructor(location: string, branch: string = "main", skillsSubdirectory: string = "/", auth?: GitRepositoryAuth) {
+    constructor(
+        location: string,
+        branch: string = "main",
+        skillsSubdirectory: string = "/",
+        auth?: GitRepositoryAuth,
+    ) {
         this.location = location;
         this.branch = branch;
         this.skillsSubdirectory = skillsSubdirectory;
@@ -133,18 +149,38 @@ export class GitSkillRepository implements SkillRepository {
 
     async getSkillByName(name: string): Promise<Skill | null> {
         await this.fetchSkillsFromGitRepository();
-        const skill = this.skills.find(currentSkill => currentSkill.frontMatter.name === name);
+        const skill = this.skills.find(
+            (currentSkill) => currentSkill.frontMatter.name === name,
+        );
         return skill ?? null;
     }
 
     async fetchSkillsFromGitRepository(): Promise<void> {
-        const tempDirectory = await mkdtemp(join(tmpdir(), "agent-git-skill-repo-"));
+        const tempDirectory = await mkdtemp(
+            join(tmpdir(), "agent-git-skill-repo-"),
+        );
 
         try {
-            const { source, env } = buildGitCloneSource(this.location, this.auth);
-            await execFileAsync("git", ["clone", "--depth", "1", "--single-branch", "--branch", this.branch, source, tempDirectory], {
-                env,
-            });
+            const { source, env } = buildGitCloneSource(
+                this.location,
+                this.auth,
+            );
+            await execFileAsync(
+                "git",
+                [
+                    "clone",
+                    "--depth",
+                    "1",
+                    "--single-branch",
+                    "--branch",
+                    this.branch,
+                    source,
+                    tempDirectory,
+                ],
+                {
+                    env,
+                },
+            );
 
             await this.populateSkillsFromCheckout(tempDirectory);
         } finally {
@@ -153,8 +189,12 @@ export class GitSkillRepository implements SkillRepository {
     }
 
     async populateSkillsFromCheckout(checkoutDirectory: string): Promise<void> {
-        const normalizedSubdirectory = normalizeSkillsSubdirectory(this.skillsSubdirectory);
-        const skillsRoot = normalizedSubdirectory ? resolve(checkoutDirectory, normalizedSubdirectory) : checkoutDirectory;
+        const normalizedSubdirectory = normalizeSkillsSubdirectory(
+            this.skillsSubdirectory,
+        );
+        const skillsRoot = normalizedSubdirectory
+            ? resolve(checkoutDirectory, normalizedSubdirectory)
+            : checkoutDirectory;
 
         this.skills = [];
 

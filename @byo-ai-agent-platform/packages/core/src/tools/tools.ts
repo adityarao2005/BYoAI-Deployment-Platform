@@ -1,7 +1,6 @@
 import type { AgentHandle, AgentSession } from "@/agents";
 import type { ToolObjectArgument } from "./tool_argument";
 
-
 /**
  * Represents an executable tool for an agent.
  * Each tool has a name, description, schema for input arguments, and an `execute` function.
@@ -52,4 +51,5 @@ export class ToolProviderRegistry {
     }
 }
 
-export const toolProviderRegistry: ToolProviderRegistry = new ToolProviderRegistry();
+export const toolProviderRegistry: ToolProviderRegistry =
+    new ToolProviderRegistry();

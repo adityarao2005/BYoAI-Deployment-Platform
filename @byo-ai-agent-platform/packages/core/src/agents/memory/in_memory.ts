@@ -1,4 +1,8 @@
-import { AgentMemory, type AgentHandle, type AgentMemoryManager } from "@/agents";
+import {
+    type AgentHandle,
+    AgentMemory,
+    type AgentMemoryManager,
+} from "@/agents";
 import type { ModelInteraction } from "@/models/conversation";
 
 /**
@@ -30,7 +34,10 @@ export class InMemoryAgentMemoryManager implements AgentMemoryManager {
         return memory;
     }
 
-    async addTranscriptEntries(agentId: string, conversationEntries: ModelInteraction[]): Promise<void> {
+    async addTranscriptEntries(
+        agentId: string,
+        conversationEntries: ModelInteraction[],
+    ): Promise<void> {
         const memory = await this.getAgentMemory(agentId);
         memory.transcript.push(...conversationEntries);
     }
@@ -41,16 +48,15 @@ export class InMemoryAgentMemoryManager implements AgentMemoryManager {
     }
 
     async getAgent(id: string): Promise<AgentHandle | undefined> {
-        const memory = this.memories.get(id)
+        const memory = this.memories.get(id);
 
-        if (!memory)
-            return undefined
+        if (!memory) return undefined;
 
         return {
             id,
             name: memory.name,
-            computerId: memory.computerId
-        }
+            computerId: memory.computerId,
+        };
     }
 
     async getAllAgents(): Promise<string[]> {

@@ -1,12 +1,14 @@
 import { describe, expect, it, mock } from "bun:test";
+import { type AgentHandle, AgentMemory, type AgentSession } from "@/agents";
+import type {
+    GraphicalComputer,
+    HeadlessComputer,
+} from "../../computer/computer";
 import { createGraphicalTools, createHeadlessTools } from "./builder";
-import type { GraphicalComputer, HeadlessComputer } from "../../computer/computer";
-import { type AgentHandle, type AgentSession, AgentMemory } from "@/agents";
 
 const vi = { fn: mock };
 
 describe("computer tool builder", () => {
-
     const agent: AgentHandle = { id: "test-agent", name: "test-agent" };
     const session: AgentSession = {
         agent,
@@ -16,9 +18,13 @@ describe("computer tool builder", () => {
     };
 
     const mockHeadlessComputer: HeadlessComputer = {
-        execute: vi.fn().mockResolvedValue({ exitCode: 0, stdout: "output", stderr: "" }),
+        execute: vi
+            .fn()
+            .mockResolvedValue({ exitCode: 0, stdout: "output", stderr: "" }),
         executeStream: vi.fn().mockResolvedValue({} as any),
-        readFile: vi.fn().mockResolvedValue({ content: new Uint8Array([65, 66]) }),
+        readFile: vi
+            .fn()
+            .mockResolvedValue({ content: new Uint8Array([65, 66]) }),
         writeFile: vi.fn().mockResolvedValue({ success: true }),
         listDirectory: vi.fn().mockResolvedValue({ files: ["a.txt"] }),
         getUserId: vi.fn().mockResolvedValue({ userId: "1001" }),
@@ -27,7 +33,9 @@ describe("computer tool builder", () => {
 
     const mockGraphicalComputer: GraphicalComputer = {
         ...mockHeadlessComputer,
-        captureScreenshot: vi.fn().mockResolvedValue({ imageData: new Uint8Array([0, 1]) }),
+        captureScreenshot: vi
+            .fn()
+            .mockResolvedValue({ imageData: new Uint8Array([0, 1]) }),
         click: vi.fn().mockResolvedValue({ success: true }),
         type: vi.fn().mockResolvedValue({ success: true }),
         pressKey: vi.fn().mockResolvedValue({ success: true }),
@@ -66,7 +74,10 @@ describe("computer tool builder", () => {
         const clickTool = tools.find((t) => t.name === "click")!;
         const clickRes = await clickTool.execute({ x: 10, y: 20 }, session);
         expect(clickRes).toEqual({ success: true });
-        expect(mockGraphicalComputer.click).toHaveBeenCalledWith({ x: 10, y: 20, button: undefined });
+        expect(mockGraphicalComputer.click).toHaveBeenCalledWith({
+            x: 10,
+            y: 20,
+            button: undefined,
+        });
     });
-
 });

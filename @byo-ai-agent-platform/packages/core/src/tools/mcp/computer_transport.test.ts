@@ -181,14 +181,14 @@ describe("ComputerUseStdioMcpClientFactory", () => {
         };
 
         const mockSession: StreamSession = {
-            writeStdin: mock(async () => { }),
-            closeStdin: mock(async () => { }),
-            onStdout: mock(() => { }),
-            onStderr: mock(() => { }),
-            onExit: mock(() => { }),
-            onError: mock(() => { }),
+            writeStdin: mock(async () => {}),
+            closeStdin: mock(async () => {}),
+            onStdout: mock(() => {}),
+            onStderr: mock(() => {}),
+            onExit: mock(() => {}),
+            onError: mock(() => {}),
             wait: mock(async () => 0),
-            kill: mock(async () => { }),
+            kill: mock(async () => {}),
         };
 
         const mockComputer: HeadlessComputer = {
@@ -206,9 +206,9 @@ describe("ComputerUseStdioMcpClientFactory", () => {
         };
 
         const mockProvider: ComputerProvider = {
-            init: mock(async () => { }),
+            init: mock(async () => {}),
             createComputer: mock(async () => "comp-999"),
-            deleteComputer: mock(async () => { }),
+            deleteComputer: mock(async () => {}),
             getComputer: mock(
                 async (): Promise<ComputerPayload> => ({
                     type: ComputerType.HEADLESS,
@@ -225,7 +225,10 @@ describe("ComputerUseStdioMcpClientFactory", () => {
             args: ["@modelcontextprotocol/server-filesystem", "/tmp"],
         };
 
-        const connectSpy = spyOn(Client.prototype, "connect").mockImplementation(async () => { });
+        const connectSpy = spyOn(
+            Client.prototype,
+            "connect",
+        ).mockImplementation(async () => {});
 
         const factory = new ComputerUseStdioMcpClientFactory(
             mcpConfig,

@@ -50,7 +50,8 @@ export class ComputerStdioClientTransport implements Transport {
                     const message = JSON.parse(trimmed) as JSONRPCMessage;
                     this.onmessage?.(message);
                 } catch (err: unknown) {
-                    const message = err instanceof Error ? err.message : String(err);
+                    const message =
+                        err instanceof Error ? err.message : String(err);
                     this.onerror?.(
                         new Error(
                             `Failed to parse MCP JSON-RPC line: ${message}`,

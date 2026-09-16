@@ -123,53 +123,54 @@ export class ConnectHeadlessRemoteComputer implements HeadlessComputer {
             }
         }
 
+        // biome-ignore lint/suspicious/noAsyncPromiseExecutor: needed for streaming promise
         const waitPromise = new Promise<number>(async (resolve, reject) => {
-            try {
-                const responseStream = await this.basicService.executeStream(
-                    requestGenerator(),
-                );
-                for await (const msg of responseStream) {
-                    switch (msg.output.case) {
-                        case "stdout":
-                            for (const listener of stdoutListeners) {
-                                listener(msg.output.value);
+                try {
+                    const responseStream = this.basicService.executeStream(
+                        requestGenerator(),
+                    );
+                    for await (const msg of responseStream) {
+                        switch (msg.output.case) {
+                            case "stdout":
+                                for (const listener of stdoutListeners) {
+                                    listener(msg.output.value);
+                                }
+                                break;
+                            case "stderr":
+                                for (const listener of stderrListeners) {
+                                    listener(msg.output.value);
+                                }
+                                break;
+                            case "exitCode":
+                                exitCodeResolved = true;
+                                finalExitCode = msg.output.value;
+                                for (const listener of exitListeners) {
+                                    listener(finalExitCode);
+                                }
+                                resolve(finalExitCode);
+                                break;
+                            case "errorMessage": {
+                                const err = new Error(msg.output.value);
+                                streamError = err;
+                                for (const listener of errorListeners) {
+                                    listener(err);
+                                }
+                                reject(err);
+                                break;
                             }
-                            break;
-                        case "stderr":
-                            for (const listener of stderrListeners) {
-                                listener(msg.output.value);
-                            }
-                            break;
-                        case "exitCode":
-                            exitCodeResolved = true;
-                            finalExitCode = msg.output.value;
-                            for (const listener of exitListeners) {
-                                listener(finalExitCode);
-                            }
-                            resolve(finalExitCode);
-                            break;
-                        case "errorMessage": {
-                            const err = new Error(msg.output.value);
-                            streamError = err;
-                            for (const listener of errorListeners) {
-                                listener(err);
-                            }
-                            reject(err);
-                            break;
                         }
                     }
+                    if (!exitCodeResolved) {
+                        const defaultCode = finalExitCode ?? 0;
+                        resolve(defaultCode);
+                    }
+                } catch (err: any) {
+                    streamError = err;
+                    for (const listener of errorListeners) {
+                        listener(err);
+                    }
+                    reject(err);
                 }
-                if (!exitCodeResolved) {
-                    const defaultCode = finalExitCode ?? 0;
-                    resolve(defaultCode);
-                }
-            } catch (err: any) {
-                streamError = err;
-                for (const listener of errorListeners) {
-                    listener(err);
-                }
-                reject(err);
-            }
         });
 
         return {
