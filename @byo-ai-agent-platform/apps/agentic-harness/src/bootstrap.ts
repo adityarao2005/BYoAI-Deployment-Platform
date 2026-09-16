@@ -19,8 +19,8 @@ import {
     AgentConfigSchema
 } from "./agent.config"
 
-import {
-    type ComputerUseToolProviderConfig
+import type {
+    ComputerUseToolProviderConfig
 } from "@byo-ai-agent-platform/core/config";
 import {
     AnthropicModel,
@@ -305,10 +305,6 @@ export function registerToolProviders(
 export interface BootstrappedAgent {
     /** Active AgentManager instance governing the agent lifecycle */
     manager: AgentManager;
-    /** The bootstrapped Agent instance ready to handle input */
-    agent: Agent;
-    /** In-memory communicator for sending messages and receiving agent responses */
-    communicator: InMemoryAgentCommunicator;
 }
 
 /**
@@ -330,7 +326,7 @@ export async function bootstrap(
 ): Promise<BootstrappedAgent> {
     const config = await loadConfigIfAvailable();
 
-    let computer: ComputerProvider | undefined = undefined;
+    let computer: ComputerProvider | undefined ;
 
     if (config) {
         registerModels(config);
@@ -370,11 +366,8 @@ export async function bootstrap(
     });
 
     await manager.init();
-    const agent = await manager.createAgent();
 
     return {
-        manager,
-        agent,
-        communicator,
+        manager
     };
 }

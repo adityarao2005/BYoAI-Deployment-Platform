@@ -6,7 +6,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "start": "bun run src/index.ts",
-    "build": "bun run src/build.ts"
+    "build": "bun run src/build.ts",
+    "dev": "bun run --hot src/index.ts"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.8",
@@ -17,6 +18,7 @@
   },
   "dependencies": {
     "@byo-ai-agent-platform/core": "workspace:*",
-    "adm-zip": "^0.6.0"
+    "adm-zip": "^0.6.0",
+    "hono": "^4.13.8"
   }
 }

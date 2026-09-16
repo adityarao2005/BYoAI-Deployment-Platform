@@ -13,7 +13,7 @@ import type { Tool, ToolProvider } from "@/tools/tools";
  */
 export type Agent = {
     id: string;
-    name?: string;
+    name: string;
     computerId?: string;
 };
 
@@ -23,10 +23,12 @@ export type Agent = {
 export class AgentMemory {
     transcript: ModelInteraction[];
     computerId?: string;
+    name: string;
 
-    constructor(transcript: ModelInteraction[] = [], computerId?: string) {
+    constructor(name: string, transcript: ModelInteraction[] = [], computerId?: string) {
         this.transcript = transcript;
         this.computerId = computerId;
+        this.name = name;
     }
 
     /**
@@ -52,16 +54,28 @@ export class AgentMemory {
  */
 export interface AgentMemoryManager {
     /** Creates a new memory entry for an agent and returns its memory ID */
-    createAgentMemoryEntry(): Promise<string>;
+    createAgentMemoryEntry(name: string): Promise<string>;
+
     /** Retrieves memory for a given agent */
     getAgentMemory(agent: Agent): Promise<AgentMemory>;
+
     /** Appends conversation items to the agent transcript */
     addTranscriptEntries(
         agent: Agent,
         conversationEntries: ModelInteraction[],
     ): Promise<void>;
+
     /** Sets the active computer provider session ID for the agent */
     setComputerId(agent: Agent, computerId: string): Promise<void>;
+
+    /** Sets the name of the agent */
+    setName(agent: Agent, name: string): Promise<void>
+
+    // Get agent by id
+    getAgent(id: string): Promise<Agent | undefined>
+
+    // get all agents
+    getAllAgents(): Promise<Agent[]>
 }
 
 /**
@@ -173,14 +187,14 @@ ${description}
 
 <available_skills>
     ${skills
-        .map((skill) =>
-            `
+            .map((skill) =>
+                `
         <skill>
             <name>${skill.frontMatter.name}</name>
             <description><![CDATA[${skill.frontMatter.description}]]></description>
         </skill>`.trim(),
-        )
-        .join("\n")}
+            )
+            .join("\n")}
 </available_skills>
     `.trim();
 }
@@ -331,26 +345,29 @@ export class AgentManager {
     // Creates the agent
     async createAgent(): Promise<Agent> {
         const id =
-            await this.configuration.memoryManager.createAgentMemoryEntry();
-        let computerId: string | undefined;
+            await this.configuration.memoryManager.createAgentMemoryEntry(this.configuration.name);
+        let agent = await this.getAgent(id)
+
+        if (!agent) {
+            throw new Error("Something went wrong when creating the memory entry")
+        }
 
         if (this.configuration.computerProvider) {
             // TODO: handle lifecycle differences
-            computerId =
+            const computerId =
                 await this.configuration.computerProvider.createComputer();
             if (computerId) {
                 await this.configuration.memoryManager.setComputerId(
-                    { id },
+                    agent,
                     computerId,
                 );
+
+                agent = await this.getAgent(id)
+                if (!agent) {
+                    throw new Error("Something went wrong when creating the memory entry")
+                }
             }
         }
-
-        const agent: Agent = {
-            id,
-            name: this.configuration.name,
-            computerId,
-        };
 
         return agent;
     }
@@ -571,7 +588,7 @@ export class AgentManager {
             name: toolName,
             description: "",
             inputSchema: { type: "object", description: "", properties: {} },
-            execute: async () => {},
+            execute: async () => { },
         };
 
         await this.configuration.memoryManager.addTranscriptEntries(agent, [
@@ -592,4 +609,14 @@ export class AgentManager {
             });
         }
     }
+
+    // Get agent by id
+    async getAgent(id: string): Promise<Agent | undefined> {
+        return await this.configuration.memoryManager.getAgent(id);
+    }
+
+    async getAllAgents(): Promise<Agent[]> {
+        return await this.configuration.memoryManager.getAllAgents()
+    }
+
 }

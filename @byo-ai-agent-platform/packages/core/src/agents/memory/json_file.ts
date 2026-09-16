@@ -1,8 +1,8 @@
+import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import crypto from "node:crypto";
-import { AgentMemory, type Agent, type AgentMemoryManager } from "../agents";
 import type { ModelInteraction } from "@/models/conversation";
+import { type Agent, AgentMemory, type AgentMemoryManager } from "../agents";
 
 /**
  * Serialized JSON record schema for persisting agent memory to disk.
@@ -11,6 +11,7 @@ export interface JsonAgentMemoryRecord {
     id: string;
     computerId?: string;
     transcript: ModelInteraction[];
+    name: string;
 }
 
 /**
@@ -21,7 +22,8 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
     private initialized = false;
 
     constructor(storageDir?: string) {
-        this.storageDir = storageDir ?? path.resolve(process.cwd(), ".agent_memory");
+        this.storageDir =
+            storageDir ?? path.resolve(process.cwd(), ".agent_memory");
     }
 
     private async ensureStorageDir(): Promise<void> {
@@ -44,10 +46,7 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
             const data = await fs.readFile(filePath, "utf-8");
             return JSON.parse(data) as JsonAgentMemoryRecord;
         } catch {
-            return {
-                id: agentId,
-                transcript: [],
-            };
+            throw new Error(`Agent ${agentId} not found`);
         }
     }
 
@@ -59,11 +58,12 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
         await fs.rename(tempPath, filePath);
     }
 
-    async createAgentMemoryEntry(): Promise<string> {
+    async createAgentMemoryEntry(name: string): Promise<string> {
         await this.ensureStorageDir();
         const id = `agent-${crypto.randomUUID()}`;
         const initialRecord: JsonAgentMemoryRecord = {
             id,
+            name,
             transcript: [],
         };
         await this.writeRecord(initialRecord);
@@ -72,10 +72,68 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
 
     async getAgentMemory(agent: Agent): Promise<AgentMemory> {
         const record = await this.readRecord(agent.id);
-        return new AgentMemory(record.transcript ?? [], record.computerId);
+        return new AgentMemory(
+            record.name,
+            record.transcript ?? [],
+            record.computerId,
+        );
     }
 
-    async addTranscriptEntries(agent: Agent, conversationEntries: ModelInteraction[]): Promise<void> {
+    async setName(agent: Agent, name: string): Promise<void> {
+        const record = await this.readRecord(agent.id);
+        record.name = name;
+        await this.writeRecord(record);
+    }
+
+    async getAgent(id: string): Promise<Agent | undefined> {
+        try {
+            const record = await this.readRecord(id);
+
+            return {
+                id: record.id,
+                computerId: record.computerId,
+                name: record.name,
+            };
+        } catch {
+            return undefined;
+        }
+    }
+
+    async getAllAgents(): Promise<Agent[]> {
+        await this.ensureStorageDir();
+        try {
+            const files = await fs.readdir(this.storageDir);
+            const jsonFiles = files.filter((file) => file.endsWith(".json"));
+
+            const records = await Promise.all(
+                jsonFiles.map(async (file) => {
+                    try {
+                        const filePath = path.join(this.storageDir, file);
+                        const data = await fs.readFile(filePath, "utf-8");
+                        const record = JSON.parse(
+                            data,
+                        ) as JsonAgentMemoryRecord;
+                        return {
+                            id: record.id,
+                            name: record.name,
+                            computerId: record.computerId,
+                        } as Agent;
+                    } catch {
+                        return null;
+                    }
+                }),
+            );
+
+            return records.filter((agent): agent is Agent => agent !== null);
+        } catch {
+            return [];
+        }
+    }
+
+    async addTranscriptEntries(
+        agent: Agent,
+        conversationEntries: ModelInteraction[],
+    ): Promise<void> {
         const record = await this.readRecord(agent.id);
         record.transcript.push(...conversationEntries);
         await this.writeRecord(record);

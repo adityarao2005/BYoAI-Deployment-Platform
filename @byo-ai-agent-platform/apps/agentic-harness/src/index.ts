@@ -1,34 +1,30 @@
-import { createInterface } from "node:readline/promises";
+import { Hono } from "hono";
 import { bootstrap } from "./bootstrap";
+import z from "zod";
 
-const { agent, communicator } = await bootstrap();
+const { manager } = await bootstrap();
 
-const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-});
+const app = new Hono()
 
-while (true) {
-    const input = await rl.question(
-        "\nEnter a message for the agent (or 'exit' to quit): ",
-    );
+app.get("/health", (c) => c.json({ healthy: "OK" }))
 
-    if (input.trim().toLowerCase() === "exit") {
-        console.log("Exiting...");
-        process.exit(0);
-    }
+// create agent route
+app.post("/interactions", async (c) => {
+    const agent = await manager.createAgent()
 
-    console.log("<<Processing>>...");
+    return c.json({
+        id: agent.id
+    })
+})
 
-    // Wait until the agent finishes processing this turn
-    await new Promise<void>((resolve) => {
-        const unsubscribe = communicator.on("agent:complete", () => {
-            unsubscribe();
-            resolve();
-        });
-        communicator.emit("user:message", {
-            agent,
-            content: input,
-        });
-    });
-}
+// get all agent interactions 
+app.get("/interactions", async (c) => {
+    const agents = await manager.getAllAgents()
+
+    return c.json(agents.map(a => {
+        return { id: a.id }
+    }))
+})
+
+
+export default app

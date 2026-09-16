@@ -12,7 +12,7 @@ describe("computer tool builder", () => {
         agent,
         name: "test-agent",
         description: "test",
-        memory: new AgentMemory(),
+        memory: new AgentMemory("test-agent"),
     };
 
     const mockHeadlessComputer: HeadlessComputer = {

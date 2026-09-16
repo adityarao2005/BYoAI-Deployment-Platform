@@ -15,7 +15,7 @@ describe("OpenAPIToolProvider Integration Suite", () => {
         agent,
         name: "test-agent",
         description: "test",
-        memory: new AgentMemory(),
+        memory: new AgentMemory("test-agent"),
     };
 
     beforeAll(async () => {

@@ -13,7 +13,7 @@ import { ConsoleAgentObserver } from "./console";
 describe("AgentObserver", () => {
     it("ConsoleAgentObserver logs agent messages, tool call starts, and tool responses without throwing", () => {
         const observer = new ConsoleAgentObserver();
-        const dummyAgent = { id: "test-agent" };
+        const dummyAgent = { id: "test-agent", name: "Test" };
 
         expect(() => {
             observer.onAgentMessage?.(dummyAgent, "Hello there");

@@ -1,34 +1,50 @@
 import { describe, expect, it } from "bun:test";
 import fs from "node:fs/promises";
-import path from "node:path";
 import os from "node:os";
+import path from "node:path";
 import type { Model } from "@/models/models";
-import {
-    AgentMemory,
-    AgentManager,
-    type AgentConfiguration,
-} from "./agents";
-import { InMemoryAgentCommunicator } from "./communication";
-import { InMemoryAgentMemoryManager, JsonFileAgentMemoryManager } from "./memory";
-import type { ModelInteraction, ModelMessageOutput } from "@/models/conversation";
 import type { Tool, ToolProvider } from "@/tools/tools";
+import { type AgentConfiguration, AgentManager, AgentMemory } from "./agents";
+import { InMemoryAgentCommunicator } from "./communication";
+import {
+    InMemoryAgentMemoryManager,
+    JsonFileAgentMemoryManager,
+} from "./memory";
 
 describe("AgentMemory", () => {
     it("correctly computes pending tool calls and handles resolution", () => {
-        const memory = new AgentMemory();
+        const memory = new AgentMemory("test");
 
         expect(memory.getPendingToolCalls()).toEqual([]);
 
         memory.transcript.push({
             type: "tool_call",
             id: "call_1",
-            tool: { name: "test", description: "", inputSchema: { type: "object", description: "", properties: {} }, execute: async () => {} },
+            tool: {
+                name: "test",
+                description: "",
+                inputSchema: {
+                    type: "object",
+                    description: "",
+                    properties: {},
+                },
+                execute: async () => {},
+            },
             arguments: {},
         });
         memory.transcript.push({
             type: "tool_call",
             id: "call_2",
-            tool: { name: "test", description: "", inputSchema: { type: "object", description: "", properties: {} }, execute: async () => {} },
+            tool: {
+                name: "test",
+                description: "",
+                inputSchema: {
+                    type: "object",
+                    description: "",
+                    properties: {},
+                },
+                execute: async () => {},
+            },
             arguments: {},
         });
 
@@ -38,7 +54,16 @@ describe("AgentMemory", () => {
         memory.transcript.push({
             type: "tool_response",
             id: "call_1",
-            tool: { name: "test", description: "", inputSchema: { type: "object", description: "", properties: {} }, execute: async () => {} },
+            tool: {
+                name: "test",
+                description: "",
+                inputSchema: {
+                    type: "object",
+                    description: "",
+                    properties: {},
+                },
+                execute: async () => {},
+            },
             result: "ok",
         });
 
@@ -48,7 +73,16 @@ describe("AgentMemory", () => {
         memory.transcript.push({
             type: "tool_response",
             id: "unknown_id",
-            tool: { name: "test", description: "", inputSchema: { type: "object", description: "", properties: {} }, execute: async () => {} },
+            tool: {
+                name: "test",
+                description: "",
+                inputSchema: {
+                    type: "object",
+                    description: "",
+                    properties: {},
+                },
+                execute: async () => {},
+            },
             result: "ok",
         });
 
@@ -58,7 +92,16 @@ describe("AgentMemory", () => {
         memory.transcript.push({
             type: "tool_response",
             id: "call_2",
-            tool: { name: "test", description: "", inputSchema: { type: "object", description: "", properties: {} }, execute: async () => {} },
+            tool: {
+                name: "test",
+                description: "",
+                inputSchema: {
+                    type: "object",
+                    description: "",
+                    properties: {},
+                },
+                execute: async () => {},
+            },
             result: "ok",
         });
 
@@ -108,14 +151,24 @@ describe("AgentManager Integration", () => {
         expect(eventNames).toContain("agent:message");
         expect(eventNames).toContain("agent:complete");
 
-        const agentMessageEvent = communicator.emitted.find((e) => e.event === "agent:message");
-        expect(agentMessageEvent?.payload.content).toBe("Hello! How can I assist you?");
+        const agentMessageEvent = communicator.emitted.find(
+            (e) => e.event === "agent:message",
+        );
+        expect(agentMessageEvent?.payload.content).toBe(
+            "Hello! How can I assist you?",
+        );
 
         // Verify transcript
         const memory = await memoryManager.getAgentMemory(agent);
         expect(memory.transcript).toHaveLength(2);
-        expect(memory.transcript[0]).toMatchObject({ role: "user", content: "Hi there" });
-        expect(memory.transcript[1]).toMatchObject({ role: "assistant", content: "Hello! How can I assist you?" });
+        expect(memory.transcript[0]).toMatchObject({
+            role: "user",
+            content: "Hi there",
+        });
+        expect(memory.transcript[1]).toMatchObject({
+            role: "assistant",
+            content: "Hello! How can I assist you?",
+        });
 
         manager.destroy();
     });
@@ -191,7 +244,10 @@ describe("AgentManager Integration", () => {
         await manager.init();
 
         const agent = await manager.createAgent();
-        await communicator.emit("user:message", { agent, content: "What is 5 + 7?" });
+        await communicator.emit("user:message", {
+            agent,
+            content: "What is 5 + 7?",
+        });
 
         expect(toolExecuted).toBe(true);
 
@@ -263,7 +319,8 @@ describe("AgentManager Integration", () => {
                     {
                         role: "assistant",
                         type: "message",
-                        content: "I encountered an error trying to run the tool.",
+                        content:
+                            "I encountered an error trying to run the tool.",
                     },
                 ];
             },
@@ -283,12 +340,21 @@ describe("AgentManager Integration", () => {
         await manager.init();
 
         const agent = await manager.createAgent();
-        await communicator.emit("user:message", { agent, content: "Run the failing tool" });
+        await communicator.emit("user:message", {
+            agent,
+            content: "Run the failing tool",
+        });
 
-        const toolCompleteEvent = communicator.emitted.find((e) => e.event === "tool:complete");
-        expect(toolCompleteEvent?.payload.result).toEqual({ error: "Simulated network timeout" });
+        const toolCompleteEvent = communicator.emitted.find(
+            (e) => e.event === "tool:complete",
+        );
+        expect(toolCompleteEvent?.payload.result).toEqual({
+            error: "Simulated network timeout",
+        });
 
-        const agentCompleteEvent = communicator.emitted.find((e) => e.event === "agent:complete");
+        const agentCompleteEvent = communicator.emitted.find(
+            (e) => e.event === "agent:complete",
+        );
         expect(agentCompleteEvent).toBeDefined();
 
         manager.destroy();
@@ -297,12 +363,14 @@ describe("AgentManager Integration", () => {
 
 describe("JsonFileAgentMemoryManager", () => {
     it("persists memory records to JSON files and retrieves them across instances", async () => {
-        const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "agent-memory-test-"));
+        const tempDir = await fs.mkdtemp(
+            path.join(os.tmpdir(), "agent-memory-test-"),
+        );
 
         try {
             const memoryManager1 = new JsonFileAgentMemoryManager(tempDir);
-            const agentId = await memoryManager1.createAgentMemoryEntry();
-            const agent = { id: agentId };
+            const agentId = await memoryManager1.createAgentMemoryEntry("test");
+            const agent = { id: agentId, name: "test" };
 
             await memoryManager1.setComputerId(agent, "comp-999");
             await memoryManager1.addTranscriptEntries(agent, [
@@ -322,6 +390,43 @@ describe("JsonFileAgentMemoryManager", () => {
             expect(retrievedMemory.transcript[0]).toMatchObject({
                 role: "user",
                 content: "Hello persistent memory!",
+            });
+        } finally {
+            await fs.rm(tempDir, { recursive: true, force: true });
+        }
+    });
+
+    it("retrieves single agent and all agents from disk", async () => {
+        const tempDir = await fs.mkdtemp(
+            path.join(os.tmpdir(), "agent-memory-test-"),
+        );
+
+        try {
+            const memoryManager = new JsonFileAgentMemoryManager(tempDir);
+            const id1 = await memoryManager.createAgentMemoryEntry("agent1");
+            const id2 = await memoryManager.createAgentMemoryEntry("agent2");
+
+            const agent1 = await memoryManager.getAgent(id1);
+            expect(agent1).toEqual({
+                id: id1,
+                name: "agent1",
+                computerId: undefined,
+            });
+
+            const nonExistent = await memoryManager.getAgent("non-existent");
+            expect(nonExistent).toBeUndefined();
+
+            const allAgents = await memoryManager.getAllAgents();
+            expect(allAgents).toHaveLength(2);
+            expect(allAgents).toContainEqual({
+                id: id1,
+                name: "agent1",
+                computerId: undefined,
+            });
+            expect(allAgents).toContainEqual({
+                id: id2,
+                name: "agent2",
+                computerId: undefined,
             });
         } finally {
             await fs.rm(tempDir, { recursive: true, force: true });
