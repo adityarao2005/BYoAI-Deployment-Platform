@@ -1,5 +1,4 @@
 import type {
-    ModelInteraction,
     ModelMessageOutput,
 } from "@/models/conversation";
 import type { Model } from "@/models/models";
@@ -7,6 +6,8 @@ import type { Skill, SkillRepository } from "@/skills";
 import type { ComputerProvider } from "@/tools";
 import { validateToolArgument } from "@/tools/tool_argument";
 import type { Tool, ToolProvider } from "@/tools/tools";
+import type { AgentMemory, AgentMemoryManager } from "./agent.memory";
+import type { AgentCommunicator, AgentObserver } from "./agent.messaging";
 
 /**
  * Plain agent identifier.
@@ -16,141 +17,6 @@ export type Agent = {
     name: string;
     computerId?: string;
 };
-
-/**
- * Encapsulates agent state, including conversation transcript, associated computer provider ID, and pending tool calls.
- */
-export class AgentMemory {
-    transcript: ModelInteraction[];
-    computerId?: string;
-    name: string;
-
-    constructor(name: string, transcript: ModelInteraction[] = [], computerId?: string) {
-        this.transcript = transcript;
-        this.computerId = computerId;
-        this.name = name;
-    }
-
-    /**
-     * Computes tool call IDs that have been invoked but not yet answered with a tool response.
-     */
-    getPendingToolCalls(): string[] {
-        const pending = new Set<string>();
-
-        for (const interaction of this.transcript) {
-            if (interaction.type === "tool_call") {
-                pending.add(interaction.id);
-            } else if (interaction.type === "tool_response") {
-                pending.delete(interaction.id);
-            }
-        }
-
-        return Array.from(pending);
-    }
-}
-
-/**
- * Interface for managing agent conversation memory, transcripts, and computer provider session state.
- */
-export interface AgentMemoryManager {
-    /** Creates a new memory entry for an agent and returns its memory ID */
-    createAgentMemoryEntry(name: string): Promise<string>;
-
-    /** Retrieves memory for a given agent */
-    getAgentMemory(agent: Agent): Promise<AgentMemory>;
-
-    /** Appends conversation items to the agent transcript */
-    addTranscriptEntries(
-        agent: Agent,
-        conversationEntries: ModelInteraction[],
-    ): Promise<void>;
-
-    /** Sets the active computer provider session ID for the agent */
-    setComputerId(agent: Agent, computerId: string): Promise<void>;
-
-    /** Sets the name of the agent */
-    setName(agent: Agent, name: string): Promise<void>
-
-    // Get agent by id
-    getAgent(id: string): Promise<Agent | undefined>
-
-    // get all agents
-    getAllAgents(): Promise<Agent[]>
-}
-
-/**
- * Strongly-typed event map for agent asynchronous communication and pub/sub messaging.
- */
-export type AgentEventMap = {
-    "user:message": { agent: Agent; content: string };
-    "agent:message": { agent: Agent; content: string };
-    "agent:run": { agent: Agent };
-    "agent:complete": { agent: Agent };
-    "tool:call": {
-        agent: Agent;
-        toolCallId: string;
-        tool: string;
-        args: Record<string, any>;
-    };
-    "tool:complete": {
-        agent: Agent;
-        toolCallId: string;
-        tool: string;
-        result: any;
-    };
-};
-
-/** Handler callback type for agent events. */
-export type AgentEventHandler<T> = (payload: T) => Promise<void> | void;
-
-/**
- * Event-driven asynchronous pub/sub communicator interface for agents.
- */
-export interface AgentCommunicator {
-    /** Emits an event with payload to registered listeners */
-    emit<K extends keyof AgentEventMap>(
-        event: K,
-        payload: AgentEventMap[K],
-    ): Promise<void>;
-    /** Registers an event listener function and returns an unsubscribe callback */
-    on<K extends keyof AgentEventMap>(
-        event: K,
-        handler: AgentEventHandler<AgentEventMap[K]>,
-    ): () => void;
-}
-
-/**
- * Observer interface for monitoring agent execution lifecycle events (model prompts, tool calls, turn start/end).
- */
-export interface AgentObserver {
-    onTurnStart?(agent: Agent, userMessage: string): Promise<void> | void;
-    onTurnEnd?(agent: Agent, error?: unknown): Promise<void> | void;
-    onModelStart?(agent: Agent, prompt: string): Promise<void> | void;
-    onModelEnd?(
-        agent: Agent,
-        output: ModelMessageOutput[],
-    ): Promise<void> | void;
-    onAgentMessage?(agent: Agent, content: string): Promise<void> | void;
-    onToolCallStart?(
-        agent: Agent,
-        toolCallId: string,
-        tool: string,
-        args: Record<string, any>,
-    ): Promise<void> | void;
-    onToolCallEnd?(
-        agent: Agent,
-        toolCallId: string,
-        tool: string,
-        result: any,
-        error?: unknown,
-    ): Promise<void> | void;
-    onError?(
-        agent: Agent,
-        error: unknown,
-        context?: string,
-    ): Promise<void> | void;
-}
-
 /**
  * Full configuration object for initializing an {@link AgentManager}.
  */
