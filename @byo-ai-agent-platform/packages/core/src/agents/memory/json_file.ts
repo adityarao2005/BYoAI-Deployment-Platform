@@ -1,7 +1,11 @@
+import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import crypto from "node:crypto";
-import { AgentMemory, type Agent, type AgentMemoryManager } from "../agents";
+import {
+    type AgentHandle,
+    AgentMemory,
+    type AgentMemoryManager,
+} from "@/agents";
 import type { ModelInteraction } from "@/models/conversation";
 
 /**
@@ -11,6 +15,7 @@ export interface JsonAgentMemoryRecord {
     id: string;
     computerId?: string;
     transcript: ModelInteraction[];
+    name: string;
 }
 
 /**
@@ -21,7 +26,8 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
     private initialized = false;
 
     constructor(storageDir?: string) {
-        this.storageDir = storageDir ?? path.resolve(process.cwd(), ".agent_memory");
+        this.storageDir =
+            storageDir ?? path.resolve(process.cwd(), ".agent_memory");
     }
 
     private async ensureStorageDir(): Promise<void> {
@@ -44,10 +50,7 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
             const data = await fs.readFile(filePath, "utf-8");
             return JSON.parse(data) as JsonAgentMemoryRecord;
         } catch {
-            return {
-                id: agentId,
-                transcript: [],
-            };
+            throw new Error(`Agent ${agentId} not found`);
         }
     }
 
@@ -59,30 +62,70 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
         await fs.rename(tempPath, filePath);
     }
 
-    async createAgentMemoryEntry(): Promise<string> {
+    async createAgentMemoryEntry(name: string): Promise<string> {
         await this.ensureStorageDir();
         const id = `agent-${crypto.randomUUID()}`;
         const initialRecord: JsonAgentMemoryRecord = {
             id,
+            name,
             transcript: [],
         };
         await this.writeRecord(initialRecord);
         return id;
     }
 
-    async getAgentMemory(agent: Agent): Promise<AgentMemory> {
-        const record = await this.readRecord(agent.id);
-        return new AgentMemory(record.transcript ?? [], record.computerId);
+    async getAgentMemory(agentId: string): Promise<AgentMemory> {
+        const record = await this.readRecord(agentId);
+        return new AgentMemory(
+            record.name,
+            record.transcript ?? [],
+            record.computerId,
+        );
     }
 
-    async addTranscriptEntries(agent: Agent, conversationEntries: ModelInteraction[]): Promise<void> {
-        const record = await this.readRecord(agent.id);
+    async setName(agentId: string, name: string): Promise<void> {
+        const record = await this.readRecord(agentId);
+        record.name = name;
+        await this.writeRecord(record);
+    }
+
+    async getAgent(id: string): Promise<AgentHandle | undefined> {
+        try {
+            const record = await this.readRecord(id);
+
+            return {
+                id: record.id,
+                computerId: record.computerId,
+                name: record.name,
+            };
+        } catch {
+            return undefined;
+        }
+    }
+
+    async getAllAgents(): Promise<string[]> {
+        await this.ensureStorageDir();
+        try {
+            const files = await fs.readdir(this.storageDir);
+            return files
+                .filter((file) => file.endsWith(".json"))
+                .map((file) => file.replace(/\.json$/, ""));
+        } catch {
+            return [];
+        }
+    }
+
+    async addTranscriptEntries(
+        agentId: string,
+        conversationEntries: ModelInteraction[],
+    ): Promise<void> {
+        const record = await this.readRecord(agentId);
         record.transcript.push(...conversationEntries);
         await this.writeRecord(record);
     }
 
-    async setComputerId(agent: Agent, computerId: string): Promise<void> {
-        const record = await this.readRecord(agent.id);
+    async setComputerId(agentId: string, computerId: string): Promise<void> {
+        const record = await this.readRecord(agentId);
         record.computerId = computerId;
         await this.writeRecord(record);
     }

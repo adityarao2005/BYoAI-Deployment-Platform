@@ -1,7 +1,7 @@
+import { afterEach, describe, expect, it } from "bun:test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, describe, expect, it } from "bun:test";
 import { stringify } from "yaml";
 import { loadConfig } from "./bootstrap";
 
@@ -32,7 +32,7 @@ describe("loadConfig", () => {
                     },
                 ],
             }),
-            "utf8"
+            "utf8",
         );
 
         const config = await loadConfig(configPath);
@@ -67,7 +67,7 @@ describe("loadConfig", () => {
                     },
                 ],
             }),
-            "utf8"
+            "utf8",
         );
 
         const config = await loadConfig(configPath);
@@ -93,13 +93,15 @@ models:
 skillRepositories: []
 toolProviders: []
 `,
-            "utf8"
+            "utf8",
         );
 
         try {
             const config = await loadConfig(configPath);
             expect(config.models).toHaveLength(1);
-            expect(config.models[0]?.properties.apiKey).toBe("substituted-gemini-key");
+            expect(config.models[0]?.properties.apiKey).toBe(
+                "substituted-gemini-key",
+            );
         } finally {
             delete process.env.TEST_GEMINI_KEY;
         }
@@ -120,11 +122,10 @@ models:
 skillRepositories: []
 toolProviders: []
 `,
-            "utf8"
+            "utf8",
         );
 
         const config = await loadConfig(configPath);
         expect(config.models[0]?.properties.apiKey).toBe("fallback-key");
     });
 });
-

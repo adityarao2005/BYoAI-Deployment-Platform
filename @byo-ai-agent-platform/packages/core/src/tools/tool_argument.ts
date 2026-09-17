@@ -1,107 +1,129 @@
-
 export type ToolArrayArgument = {
-    type: "array",
-    description: string,
-    items: ToolArgument
-}
+    type: "array";
+    description: string;
+    items: ToolArgument;
+};
 
-export function toolArray(items: ToolArgument, description: string): ToolArrayArgument {
+export function toolArray(
+    items: ToolArgument,
+    description: string,
+): ToolArrayArgument {
     return {
         type: "array",
         description,
-        items
+        items,
     };
 }
 
-export function isToolArrayArgument(arg: ToolArgument): arg is ToolArrayArgument {
+export function isToolArrayArgument(
+    arg: ToolArgument,
+): arg is ToolArrayArgument {
     return arg.type === "array";
 }
 
 export type ToolIntegerArgument = {
-    type: "integer",
-    description: string
-}
+    type: "integer";
+    description: string;
+};
 
-export function isToolIntegerArgument(arg: ToolArgument): arg is ToolIntegerArgument {
+export function isToolIntegerArgument(
+    arg: ToolArgument,
+): arg is ToolIntegerArgument {
     return arg.type === "integer";
 }
 
 export function toolInteger(description: string): ToolIntegerArgument {
     return {
         type: "integer",
-        description
+        description,
     };
 }
 
 export type ToolNumberArgument = {
-    type: "number",
-    description: string
-}
+    type: "number";
+    description: string;
+};
 
 export function toolNumber(description: string): ToolNumberArgument {
     return {
         type: "number",
-        description
+        description,
     };
 }
 
-export function isToolNumberArgument(arg: ToolArgument): arg is ToolNumberArgument {
+export function isToolNumberArgument(
+    arg: ToolArgument,
+): arg is ToolNumberArgument {
     return arg.type === "number";
 }
 
 export type ToolStringArgument = {
-    type: "string",
-    description: string
+    type: "string";
+    description: string;
     enum?: string[] | undefined;
-}
+};
 
-export function toolString(description: string, enumValues?: string[]): ToolStringArgument {
+export function toolString(
+    description: string,
+    enumValues?: string[],
+): ToolStringArgument {
     return {
         type: "string",
         description,
-        enum: enumValues
+        enum: enumValues,
     };
 }
 
-export function isToolStringArgument(arg: ToolArgument): arg is ToolStringArgument {
+export function isToolStringArgument(
+    arg: ToolArgument,
+): arg is ToolStringArgument {
     return arg.type === "string";
 }
 
 export type ToolBooleanArgument = {
-    type: "boolean",
-    description: string
-}
+    type: "boolean";
+    description: string;
+};
 
 export function toolBoolean(description: string): ToolBooleanArgument {
     return {
         type: "boolean",
-        description
+        description,
     };
 }
 
-export function isToolBooleanArgument(arg: ToolArgument): arg is ToolBooleanArgument {
+export function isToolBooleanArgument(
+    arg: ToolArgument,
+): arg is ToolBooleanArgument {
     return arg.type === "boolean";
 }
 
 export type ToolObjectArgument = {
-    type: "object",
-    properties: Record<string, ToolArgument>,
-    description: string,
-    required?: string[] | null,
+    type: "object";
+    properties: Record<string, ToolArgument>;
+    description: string;
+    required?: string[] | null;
     additionalProperties?: boolean | undefined;
-}
+};
 
-export function isToolObjectArgument(arg: ToolArgument): arg is ToolObjectArgument {
+export function isToolObjectArgument(
+    arg: ToolArgument,
+): arg is ToolObjectArgument {
     return arg.type === "object";
 }
 
-export function toolObject(description: string, properties: Record<string, ToolArgument>, required?: string[], additionalProperties?: boolean): ToolObjectArgument {
+export function toolObject(
+    description: string,
+    properties: Record<string, ToolArgument>,
+    required?: string[],
+    additionalProperties?: boolean,
+): ToolObjectArgument {
     return {
         type: "object",
         description,
         properties,
         required: required || null,
-        additionalProperties
+        additionalProperties,
     };
 }
 
@@ -114,14 +136,23 @@ export function validateToolArgument(arg: ToolArgument, value: any): boolean {
         case "integer":
             return Number.isInteger(value);
         case "number":
-            return typeof value === "number" && !Number.isNaN(value) && Number.isFinite(value);
+            return (
+                typeof value === "number" &&
+                !Number.isNaN(value) &&
+                Number.isFinite(value)
+            );
         case "boolean":
             return typeof value === "boolean";
         case "array":
             if (!Array.isArray(value)) return false;
-            return value.every(item => validateToolArgument(arg.items, item));
+            return value.every((item) => validateToolArgument(arg.items, item));
         case "object":
-            if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+            if (
+                typeof value !== "object" ||
+                value === null ||
+                Array.isArray(value)
+            )
+                return false;
 
             // Check required fields safely
             if (arg.required) {
@@ -133,7 +164,9 @@ export function validateToolArgument(arg: ToolArgument, value: any): boolean {
             // Validate properties that exist in the layout definition
             for (const key of Object.keys(arg.properties)) {
                 if (Object.hasOwn(value, key)) {
-                    if (!validateToolArgument(arg.properties[key]!, value[key])) {
+                    if (
+                        !validateToolArgument(arg.properties[key]!, value[key])
+                    ) {
                         return false;
                     }
                 }
@@ -152,4 +185,11 @@ export function validateToolArgument(arg: ToolArgument, value: any): boolean {
     }
 }
 
-export type ToolArgument = ToolArrayArgument | ToolObjectArgument | ToolIntegerArgument | ToolStringArgument | ToolBooleanArgument | ToolNumberArgument | { type: string[]; description: string };
+export type ToolArgument =
+    | ToolArrayArgument
+    | ToolObjectArgument
+    | ToolIntegerArgument
+    | ToolStringArgument
+    | ToolBooleanArgument
+    | ToolNumberArgument
+    | { type: string[]; description: string };

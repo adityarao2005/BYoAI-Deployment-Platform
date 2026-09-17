@@ -1,9 +1,9 @@
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join, dirname } from "node:path";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
 import { afterEach, describe, expect, it } from "bun:test";
+import { execFile } from "node:child_process";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
 
@@ -30,7 +30,17 @@ describe("GitSkillRepository", () => {
         }
 
         await execFileAsync("git", ["-C", repoDir, "add", "."]);
-        await execFileAsync("git", ["-C", repoDir, "-c", "user.name=Test User", "-c", "user.email=test@example.com", "commit", "-m", "initial commit"]);
+        await execFileAsync("git", [
+            "-C",
+            repoDir,
+            "-c",
+            "user.name=Test User",
+            "-c",
+            "user.email=test@example.com",
+            "commit",
+            "-m",
+            "initial commit",
+        ]);
 
         return repoDir;
     }
@@ -59,7 +69,10 @@ describe("GitSkillRepository", () => {
         const skills = await repository.getAllSkills();
 
         expect(skills).toHaveLength(2);
-        expect(skills.map(skill => skill.frontMatter.name).sort()).toEqual(["nested-skill", "root-skill"]);
+        expect(skills.map((skill) => skill.frontMatter.name).sort()).toEqual([
+            "nested-skill",
+            "root-skill",
+        ]);
     });
 
     it("filters git skills to the configured subdirectory", async () => {

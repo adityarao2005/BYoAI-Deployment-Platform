@@ -1,17 +1,21 @@
 import type {
     AgentCommunicator,
-    AgentEventMap,
     AgentEventHandler,
-} from "../agents";
+    AgentEventMap,
+} from "@/agents";
 
 /**
  * In-memory implementation of {@link AgentCommunicator} providing synchronous pub/sub event dispatching and listener management.
  */
 export class InMemoryAgentCommunicator implements AgentCommunicator {
-    public listeners: Map<keyof AgentEventMap, Set<AgentEventHandler<any>>> = new Map();
+    public listeners: Map<keyof AgentEventMap, Set<AgentEventHandler<any>>> =
+        new Map();
     public emitted: Array<{ event: keyof AgentEventMap; payload: any }> = [];
 
-    async emit<K extends keyof AgentEventMap>(event: K, payload: AgentEventMap[K]): Promise<void> {
+    async emit<K extends keyof AgentEventMap>(
+        event: K,
+        payload: AgentEventMap[K],
+    ): Promise<void> {
         this.emitted.push({ event, payload });
         const handlers = this.listeners.get(event);
         if (handlers) {
@@ -21,7 +25,10 @@ export class InMemoryAgentCommunicator implements AgentCommunicator {
         }
     }
 
-    on<K extends keyof AgentEventMap>(event: K, handler: AgentEventHandler<AgentEventMap[K]>): () => void {
+    on<K extends keyof AgentEventMap>(
+        event: K,
+        handler: AgentEventHandler<AgentEventMap[K]>,
+    ): () => void {
         let handlerSet = this.listeners.get(event);
         if (!handlerSet) {
             handlerSet = new Set();

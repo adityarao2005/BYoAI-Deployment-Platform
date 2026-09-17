@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
 import { Client } from "@modelcontextprotocol/client";
-import type { Agent } from "@/agents";
+import type { AgentHandle } from "@/agents";
 import type {
     ComputerPayload,
     ComputerProvider,
@@ -174,7 +174,7 @@ describe("ComputerStdioClientTransport", () => {
 
 describe("ComputerUseStdioMcpClientFactory", () => {
     it("retrieves agent computer and connects ComputerStdioClientTransport", async () => {
-        const agent: Agent = {
+        const agent: AgentHandle = {
             id: "agent-1",
             name: "test-agent",
             computerId: "comp-999",
@@ -225,7 +225,10 @@ describe("ComputerUseStdioMcpClientFactory", () => {
             args: ["@modelcontextprotocol/server-filesystem", "/tmp"],
         };
 
-        const connectSpy = spyOn(Client.prototype, "connect").mockImplementation(async () => {});
+        const connectSpy = spyOn(
+            Client.prototype,
+            "connect",
+        ).mockImplementation(async () => {});
 
         const factory = new ComputerUseStdioMcpClientFactory(
             mcpConfig,

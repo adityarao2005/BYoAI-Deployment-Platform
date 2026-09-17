@@ -28,6 +28,19 @@ bun run --cwd apps/agentic-harness src/index.ts
 
 ---
 
+## HTTP API Endpoints
+
+The harness exposes a Hono HTTP server with the following endpoints:
+
+- `GET /health` - Health check status
+- `POST /interactions` - Create a new agent interaction session
+- `GET /interactions` - List all agent interaction IDs
+- `GET /interactions/:id` - Retrieve agent interaction memory and transcript
+- `POST /interactions/:id` - Post a user message to the agent interaction
+- `GET /interactions/:id/sse` - Subscribe to real-time Server-Sent Events (SSE) for the agent interaction (`user:message`, `agent:message`, `agent:run`, `agent:complete`, `tool:call`, `tool:complete`)
+
+---
+
 ## Configuration (`agent.yaml`)
 
 The harness automatically resolves configuration files in the following order of precedence:

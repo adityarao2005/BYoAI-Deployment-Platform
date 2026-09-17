@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it } from "bun:test";
+import type { AgentHandle } from "@byo-ai-agent-platform/core/agents";
 import {
     McpServerToolProvider,
     OpenAPIToolProvider,
     toolProviderRegistry,
 } from "@byo-ai-agent-platform/core/tools";
 import type { AgentConfig } from "./agent.config";
-import type { Agent } from "@byo-ai-agent-platform/core/agents";
 import { registerComputer, registerToolProviders } from "./bootstrap";
 
 describe("Tool Provider Registration", () => {
@@ -179,7 +179,10 @@ describe("Tool Provider Registration", () => {
             toolProviders: [
                 {
                     type: "computer",
-                    provider: { type: "local", enableGUIToolsIfAvailable: false },
+                    provider: {
+                        type: "local",
+                        enableGUIToolsIfAvailable: false,
+                    },
                 },
                 {
                     type: "computer",
@@ -194,7 +197,9 @@ describe("Tool Provider Registration", () => {
             ],
         };
 
-        expect(() => registerToolProviders(config)).toThrow("There should only be 1 computer use tool provider declared");
+        expect(() => registerToolProviders(config)).toThrow(
+            "There should only be 1 computer use tool provider declared",
+        );
     });
 
     it("requires agent to have computerId when getting tools from registered local provider", async () => {
@@ -218,10 +223,10 @@ describe("Tool Provider Registration", () => {
         expect(providers).toHaveLength(1);
 
         const computerProvider = providers[0];
-        const agent: Agent = { id: "test-agent", name: "test-agent" };
+        const agent: AgentHandle = { id: "test-agent", name: "test-agent" };
 
         await expect(computerProvider?.getAllTools(agent)).rejects.toThrow(
-            "The Agent is not registered with this tool provider and thus the agent does not have a computer id"
+            "The Agent is not registered with this tool provider and thus the agent does not have a computer id",
         );
     });
 
@@ -249,10 +254,10 @@ describe("Tool Provider Registration", () => {
         expect(providers).toHaveLength(1);
 
         const computerProvider = providers[0];
-        const agent: Agent = { id: "test-agent", name: "test-agent" };
+        const agent: AgentHandle = { id: "test-agent", name: "test-agent" };
 
         await expect(computerProvider?.getAllTools(agent)).rejects.toThrow(
-            "The Agent is not registered with this tool provider and thus the agent does not have a computer id"
+            "The Agent is not registered with this tool provider and thus the agent does not have a computer id",
         );
     });
 

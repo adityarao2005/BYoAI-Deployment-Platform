@@ -2,9 +2,13 @@ import RefParser from "@apidevtools/json-schema-ref-parser";
 import { upgrade } from "@scalar/openapi-upgrader";
 import { parse } from "yaml";
 
-export async function normalizeOpenAPIDocument(rawParsed: unknown): Promise<object> {
+export async function normalizeOpenAPIDocument(
+    rawParsed: unknown,
+): Promise<object> {
     if (!rawParsed || typeof rawParsed !== "object") {
-        throw new Error("Invalid spec format: Response did not resolve to a valid JSON/YAML object.");
+        throw new Error(
+            "Invalid spec format: Response did not resolve to a valid JSON/YAML object.",
+        );
     }
 
     // openapi document upgrade to 3.1
@@ -23,7 +27,9 @@ export async function parseSpecURL(specURL: string): Promise<object> {
     });
 
     if (!response.ok) {
-        throw new Error(`Failed to fetch OpenAPI spec from ${specURL}: HTTP ${response.status} ${response.statusText}`);
+        throw new Error(
+            `Failed to fetch OpenAPI spec from ${specURL}: HTTP ${response.status} ${response.statusText}`,
+        );
     }
 
     const text = await response.text();
@@ -31,7 +37,9 @@ export async function parseSpecURL(specURL: string): Promise<object> {
     try {
         rawParsed = parse(text);
     } catch (err) {
-        throw new Error(`Failed to parse response body as valid JSON or YAML: ${err}`);
+        throw new Error(
+            `Failed to parse response body as valid JSON or YAML: ${err}`,
+        );
     }
 
     return normalizeOpenAPIDocument(rawParsed);

@@ -1,6 +1,5 @@
 import z from "zod";
 
-
 const OpenAIPropertiesSchema = z.object({
     // If not provided in YAML, it attempts to read from process.env.OPENAI_API_KEY
     apiKey: z.string().default(() => process.env.OPENAI_API_KEY || ""),

@@ -1,11 +1,21 @@
-import { beforeEach, describe, expect, it } from "bun:test";
-import { modelRegistry } from "@byo-ai-agent-platform/core/models";
+import { afterAll, beforeEach, describe, expect, it } from "bun:test";
+import {
+    modelRegistry,
+    SelfHostedModel,
+} from "@byo-ai-agent-platform/core/models";
 import type { AgentConfig } from "./agent.config";
 import { registerModels } from "./bootstrap";
 
 describe("Model Config Registration", () => {
     beforeEach(() => {
         modelRegistry.getAllModels().clear();
+    });
+
+    afterAll(() => {
+        modelRegistry.registerModel(
+            "test-model",
+            new SelfHostedModel("http://localhost:8080/v1", "test-model"),
+        );
     });
 
     it("registers openai models when valid config is provided", () => {
@@ -152,7 +162,6 @@ describe("Model Config Registration", () => {
                     properties: {
                         apiKey: "",
                         maxTokens: 1024,
-
                     },
                 },
             ],

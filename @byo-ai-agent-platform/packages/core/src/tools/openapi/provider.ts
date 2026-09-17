@@ -1,7 +1,7 @@
 import type { OpenAPIToolProviderConfig } from "@/config/tool_config";
 import type { Tool, ToolProvider } from "@/tools";
-import { parseSpecURL } from "./parser";
 import { buildToolsFromSpec } from "./builder";
+import { parseSpecURL } from "./parser";
 
 export class OpenAPIToolProvider implements ToolProvider {
     config: OpenAPIToolProviderConfig;
@@ -13,7 +13,10 @@ export class OpenAPIToolProvider implements ToolProvider {
 
     private async loadTools(): Promise<Tool[]> {
         if (!this.cachedTools) {
-            const doc = (await parseSpecURL(this.config.specUrl)) as Record<string, any>;
+            const doc = (await parseSpecURL(this.config.specUrl)) as Record<
+                string,
+                any
+            >;
             this.cachedTools = buildToolsFromSpec(doc, this.config);
         }
         return this.cachedTools;
@@ -21,7 +24,7 @@ export class OpenAPIToolProvider implements ToolProvider {
 
     async getToolByName(name: string): Promise<Tool | null> {
         const tools = await this.loadTools();
-        return tools.find(tool => tool.name === name) || null;
+        return tools.find((tool) => tool.name === name) || null;
     }
 
     async getAllTools(): Promise<Tool[]> {

@@ -58,3 +58,4 @@ tasks:
     deps:
       - build
       - computer_controller:build_container_images
+      - agentic_harness:build_container_images

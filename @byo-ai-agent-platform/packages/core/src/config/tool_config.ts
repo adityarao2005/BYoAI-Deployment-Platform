@@ -1,59 +1,68 @@
 import z from "zod";
 
 export const BaseToolProviderConfigSchema = z.object({
-    name: z.string()
-})
+    name: z.string(),
+});
 
 // OpenAPI tool provider
-export const OpenAPIToolProviderConfigSchema = BaseToolProviderConfigSchema.extend({
-    type: z.literal("openapi"),
-    specUrl: z.string(),
-    securityVariables: z.discriminatedUnion("type", [
-        z.object({
-            type: z.literal("apiKey"),
-            key: z.string(),
-            name: z.string().default("X-API-Key"),
-            location: z.enum(["header", "query", "cookie"]).default("header")
-        }),
-        z.object({
-            type: z.literal("bearerToken"),
-            token: z.string()
-        }),
-        z.object({
-            type: z.literal("basicAuth"),
-            username: z.string(),
-            password: z.string(),
-            location: z.enum(["header", "authority"]).default("header")
-        }),
-        z.object({
-            type: z.literal("custom"),
-            headers: z.record(z.string(), z.string()).default({}),
-            queryParams: z.record(z.string(), z.string()).default({}),
-            pathParams: z.record(z.string(), z.string()).default({}),
-            urlAuthority: z.object({
-                user: z.string().optional(),
-                password: z.string().optional()
-            }).optional(),
-        }),
+export const OpenAPIToolProviderConfigSchema =
+    BaseToolProviderConfigSchema.extend({
+        type: z.literal("openapi"),
+        specUrl: z.string(),
+        securityVariables: z.discriminatedUnion("type", [
+            z.object({
+                type: z.literal("apiKey"),
+                key: z.string(),
+                name: z.string().default("X-API-Key"),
+                location: z
+                    .enum(["header", "query", "cookie"])
+                    .default("header"),
+            }),
+            z.object({
+                type: z.literal("bearerToken"),
+                token: z.string(),
+            }),
+            z.object({
+                type: z.literal("basicAuth"),
+                username: z.string(),
+                password: z.string(),
+                location: z.enum(["header", "authority"]).default("header"),
+            }),
+            z.object({
+                type: z.literal("custom"),
+                headers: z.record(z.string(), z.string()).default({}),
+                queryParams: z.record(z.string(), z.string()).default({}),
+                pathParams: z.record(z.string(), z.string()).default({}),
+                urlAuthority: z
+                    .object({
+                        user: z.string().optional(),
+                        password: z.string().optional(),
+                    })
+                    .optional(),
+            }),
 
-        // TODO: implement OAuth2 support in the future when we make this an actual server-side component that can handle the OAuth2 flow. For now, we just define the schema for it.
-        z.object({
-            type: z.literal("oauth2")
-        })
-    ])
-})
+            // TODO: implement OAuth2 support in the future when we make this an actual server-side component that can handle the OAuth2 flow. For now, we just define the schema for it.
+            z.object({
+                type: z.literal("oauth2"),
+            }),
+        ]),
+    });
 
-export type OpenAPIToolProviderConfig = z.infer<typeof OpenAPIToolProviderConfigSchema>;
+export type OpenAPIToolProviderConfig = z.infer<
+    typeof OpenAPIToolProviderConfigSchema
+>;
 
 // Computer Use Tool Providers
 
 // local tool provider
 export const LocalComputerUseToolProviderConfigSchema = z.object({
     type: z.literal("local"),
-    enableGUIToolsIfAvailable: z.boolean()
+    enableGUIToolsIfAvailable: z.boolean(),
 });
 
-export type LocalComputerUseToolProviderConfig = z.infer<typeof LocalComputerUseToolProviderConfigSchema>
+export type LocalComputerUseToolProviderConfig = z.infer<
+    typeof LocalComputerUseToolProviderConfigSchema
+>;
 
 // remote tool provider
 
@@ -67,73 +76,99 @@ export const RemoteComputerUseToolProviderConfigSchema = z.object({
     // TODO: when we work on the on getting user based & session based rbac stuff when we rework the agent harness to be event driven, we need to add a new computerLifetime argument with options for "server", "user", "session"
 
     // security configuration, either bearer token auth or mtls
-    security: z.object({
-        bearerToken: z.string().optional(),
-        mtls: z.object({
-            clientCert: z.string(),
-            clientKey: z.string(),
-            caCert: z.string().optional()
-        }).optional()
-    }).optional(),
+    security: z
+        .object({
+            bearerToken: z.string().optional(),
+            mtls: z
+                .object({
+                    clientCert: z.string(),
+                    clientKey: z.string(),
+                    caCert: z.string().optional(),
+                })
+                .optional(),
+        })
+        .optional(),
 
     // egress - outbound network configuration
-    networkRules: z.object({
-        allowedHosts: z.union([
-            z.string(), // wildcard support like "*" or "*.example.com"
-            z.array(z.string())]).default("*"),
-        deniedHosts: z.union([
-            z.string(), // wildcard support like "*" or "*.example.com"
-            z.array(z.string())]).default([])
-    }).optional(),
+    networkRules: z
+        .object({
+            allowedHosts: z
+                .union([
+                    z.string(), // wildcard support like "*" or "*.example.com"
+                    z.array(z.string()),
+                ])
+                .default("*"),
+            deniedHosts: z
+                .union([
+                    z.string(), // wildcard support like "*" or "*.example.com"
+                    z.array(z.string()),
+                ])
+                .default([]),
+        })
+        .optional(),
 
     // environment variables
-    resources: z.object({
-        cpu: z.union([
-            z.number().positive(),
-            z.string().regex(/^(\d+(\.\d+)?|\d+m)$/, {
-                message: "Must be a number of cores (e.g., 2, 0.5) or millicores (e.g., 500m)",
-            })]),
-        memory: z.string().regex(/^(\d+(?:\.\d+)?)\s*([KMGT]i?B|[KMGT]?)$/i, {
-            message: "Invalid memory format (e.g., '512MB', '4GiB', '2G')",
-        }),
-    }).optional(),
+    resources: z
+        .object({
+            cpu: z.union([
+                z.number().positive(),
+                z.string().regex(/^(\d+(\.\d+)?|\d+m)$/, {
+                    message:
+                        "Must be a number of cores (e.g., 2, 0.5) or millicores (e.g., 500m)",
+                }),
+            ]),
+            memory: z
+                .string()
+                .regex(/^(\d+(?:\.\d+)?)\s*([KMGT]i?B|[KMGT]?)$/i, {
+                    message:
+                        "Invalid memory format (e.g., '512MB', '4GiB', '2G')",
+                }),
+        })
+        .optional(),
 
     // environment
-    environment: z.union([
-        z.array(z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]*=.*$/)),
-        z.record(z.string(), z.string())
-    ]).transform(val => {
-        // if user passed dictonary object, return as-is
-        if (!Array.isArray(val)) {
-            return val
-        }
+    environment: z
+        .union([
+            z.array(z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]*=.*$/)),
+            z.record(z.string(), z.string()),
+        ])
+        .transform((val) => {
+            // if user passed dictonary object, return as-is
+            if (!Array.isArray(val)) {
+                return val;
+            }
 
-        // If the user passed an array of "KEY=VALUE", convert it to a dictionary
-        const envMap: Record<string, string> = {};
-        for (const item of val) {
-            const index = item.indexOf('=');
-            const key = item.slice(0, index);
-            const value = item.slice(index + 1);
-            envMap[key] = value;
-        }
-        return envMap;
-    }).optional(),
+            // If the user passed an array of "KEY=VALUE", convert it to a dictionary
+            const envMap: Record<string, string> = {};
+            for (const item of val) {
+                const index = item.indexOf("=");
+                const key = item.slice(0, index);
+                const value = item.slice(index + 1);
+                envMap[key] = value;
+            }
+            return envMap;
+        })
+        .optional(),
 
     // env file
-    envFile: z.string().optional()
-})
+    envFile: z.string().optional(),
+});
 
-export type RemoteComputerUseToolProviderConfig = z.infer<typeof RemoteComputerUseToolProviderConfigSchema>
+export type RemoteComputerUseToolProviderConfig = z.infer<
+    typeof RemoteComputerUseToolProviderConfigSchema
+>;
 
 export const ComputerUseToolProviderConfigSchema = z.object({
     type: z.literal("computer"),
     provider: z.discriminatedUnion("type", [
         LocalComputerUseToolProviderConfigSchema,
-        RemoteComputerUseToolProviderConfigSchema
-    ])
-})
+        RemoteComputerUseToolProviderConfigSchema,
+    ]),
+});
 
-export type ComputerUseToolProviderConfig = z.infer<typeof ComputerUseToolProviderConfigSchema>;
+export type ComputerUseToolProviderConfig = z.infer<
+    typeof ComputerUseToolProviderConfigSchema
+>;
 
 // mcp server
 export const McpAuthSchema = z.discriminatedUnion("type", [
@@ -150,15 +185,19 @@ export const McpAuthSchema = z.discriminatedUnion("type", [
 
 export type McpAuth = z.infer<typeof McpAuthSchema>;
 
-export const McpRemoteSecuritySchema = z.object({
-    mtls: z.object({
-        clientCert: z.string(),
-        clientKey: z.string(),
-        caCert: z.string().optional(),
-    }).optional(),
-    auth: McpAuthSchema.optional(),
-    headers: z.record(z.string(), z.string()).optional(),
-}).optional();
+export const McpRemoteSecuritySchema = z
+    .object({
+        mtls: z
+            .object({
+                clientCert: z.string(),
+                clientKey: z.string(),
+                caCert: z.string().optional(),
+            })
+            .optional(),
+        auth: McpAuthSchema.optional(),
+        headers: z.record(z.string(), z.string()).optional(),
+    })
+    .optional();
 
 export const McpStdioConfigSchema = BaseToolProviderConfigSchema.extend({
     type: z.literal("mcp"),
@@ -168,13 +207,10 @@ export const McpStdioConfigSchema = BaseToolProviderConfigSchema.extend({
     args: z.array(z.string()).optional(),
     // environment
     cwd: z.string().optional(),
-    env: z.union([
-        z.record(z.string(), z.string())
-    ]).optional(),
-})
+    env: z.union([z.record(z.string(), z.string())]).optional(),
+});
 
-export type McpStdioConfig = z.infer<typeof McpStdioConfigSchema>
-
+export type McpStdioConfig = z.infer<typeof McpStdioConfigSchema>;
 
 /**
  * Configuration schema for MCP server executing over computer provider transport.
@@ -187,12 +223,10 @@ export const McpComputerConfigSchema = BaseToolProviderConfigSchema.extend({
     args: z.array(z.string()).optional(),
     // environment
     cwd: z.string().optional(),
-    env: z.union([
-        z.record(z.string(), z.string())
-    ]).optional(),
-})
+    env: z.union([z.record(z.string(), z.string())]).optional(),
+});
 
-export type McpComputerConfig = z.infer<typeof McpComputerConfigSchema>
+export type McpComputerConfig = z.infer<typeof McpComputerConfigSchema>;
 
 /**
  * Configuration schema for MCP server executing over remote HTTP transport.
@@ -202,9 +236,9 @@ export const McpRemoteConfigSchema = BaseToolProviderConfigSchema.extend({
     transport: z.literal("http"),
     url: z.string(),
     security: McpRemoteSecuritySchema,
-})
+});
 
-export type McpRemoteConfig = z.infer<typeof McpRemoteConfigSchema>
+export type McpRemoteConfig = z.infer<typeof McpRemoteConfigSchema>;
 
 /**
  * Zod discriminated union schema for MCP tool provider configurations (`stdio`, `http`, `computer`).
@@ -212,10 +246,10 @@ export type McpRemoteConfig = z.infer<typeof McpRemoteConfigSchema>
 export const McpToolProviderConfigSchema = z.discriminatedUnion("transport", [
     McpStdioConfigSchema,
     McpRemoteConfigSchema,
-    McpComputerConfigSchema
-])
+    McpComputerConfigSchema,
+]);
 
-export type McpToolProviderConfig = z.infer<typeof McpToolProviderConfigSchema>
+export type McpToolProviderConfig = z.infer<typeof McpToolProviderConfigSchema>;
 
 /**
  * Universal Zod discriminated union schema for tool provider configuration (`openapi`, `computer`, `mcp`).
@@ -223,8 +257,8 @@ export type McpToolProviderConfig = z.infer<typeof McpToolProviderConfigSchema>
 export const ToolProviderConfigSchema = z.discriminatedUnion("type", [
     OpenAPIToolProviderConfigSchema,
     ComputerUseToolProviderConfigSchema,
-    McpToolProviderConfigSchema
-])
+    McpToolProviderConfigSchema,
+]);
 
 /**
  * Configuration type for any tool provider.

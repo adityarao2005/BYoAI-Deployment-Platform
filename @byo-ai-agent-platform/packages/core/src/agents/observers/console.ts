@@ -1,15 +1,15 @@
-import type { Agent, AgentObserver } from "../agents";
+import type { AgentObserver } from "@/agents";
 
 /**
  * Built-in {@link AgentObserver} implementation that logs agent responses, tool calls, tool results, and execution errors to `console`.
  */
 export class ConsoleAgentObserver implements AgentObserver {
-    onAgentMessage(_agent: Agent, content: string): void {
+    onAgentMessage(_agentId: string, content: string): void {
         console.log(`assistant: ${content}`);
     }
 
     onToolCallStart(
-        _agent: Agent,
+        _agentId: string,
         _toolCallId: string,
         tool: string,
         args: Record<string, any>,
@@ -20,7 +20,7 @@ export class ConsoleAgentObserver implements AgentObserver {
     }
 
     onToolCallEnd(
-        _agent: Agent,
+        _agentId: string,
         _toolCallId: string,
         tool: string,
         result: any,
@@ -37,7 +37,7 @@ export class ConsoleAgentObserver implements AgentObserver {
         }
     }
 
-    onTurnEnd(_agent: Agent, error?: unknown): void {
+    onTurnEnd(_agentId: string, error?: unknown): void {
         if (error) {
             const message =
                 error instanceof Error ? error.message : String(error);
@@ -45,7 +45,7 @@ export class ConsoleAgentObserver implements AgentObserver {
         }
     }
 
-    onError(_agent: Agent, error: unknown, context?: string): void {
+    onError(_agentId: string, error: unknown, context?: string): void {
         const prefix = context ? `[Agent error (${context})]` : "[Agent error]";
         const message =
             error instanceof Error

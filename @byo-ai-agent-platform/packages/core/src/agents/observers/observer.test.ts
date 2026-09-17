@@ -1,11 +1,11 @@
 import { describe, expect, it } from "bun:test";
-import type { Model } from "@/models/models";
-import type { Tool, ToolProvider } from "@/tools/tools";
 import {
     type AgentConfiguration,
     AgentManager,
     type AgentObserver,
-} from "../agents";
+} from "@/agents";
+import type { Model } from "@/models/models";
+import type { Tool, ToolProvider } from "@/tools/tools";
 import { InMemoryAgentCommunicator } from "../communication";
 import { InMemoryAgentMemoryManager } from "../memory";
 import { ConsoleAgentObserver } from "./console";
@@ -13,18 +13,18 @@ import { ConsoleAgentObserver } from "./console";
 describe("AgentObserver", () => {
     it("ConsoleAgentObserver logs agent messages, tool call starts, and tool responses without throwing", () => {
         const observer = new ConsoleAgentObserver();
-        const dummyAgent = { id: "test-agent" };
+        const dummyAgentId = "test-agent";
 
         expect(() => {
-            observer.onAgentMessage?.(dummyAgent, "Hello there");
-            observer.onToolCallStart?.(dummyAgent, "call_1", "get_weather", {
+            observer.onAgentMessage?.(dummyAgentId, "Hello there");
+            observer.onToolCallStart?.(dummyAgentId, "call_1", "get_weather", {
                 city: "Boston",
             });
-            observer.onToolCallEnd?.(dummyAgent, "call_1", "get_weather", {
+            observer.onToolCallEnd?.(dummyAgentId, "call_1", "get_weather", {
                 temp: 72,
             });
             observer.onToolCallEnd?.(
-                dummyAgent,
+                dummyAgentId,
                 "call_2",
                 "get_weather",
                 { error: "Network error" },
@@ -37,7 +37,7 @@ describe("AgentObserver", () => {
         const events: string[] = [];
 
         const testObserver: AgentObserver = {
-            onTurnStart(_agent, message) {
+            onTurnStart(_agentId, message) {
                 events.push(`turn_start:${message}`);
             },
             onModelStart() {
@@ -46,13 +46,13 @@ describe("AgentObserver", () => {
             onModelEnd() {
                 events.push("model_end");
             },
-            onAgentMessage(_agent, content) {
+            onAgentMessage(_agentId, content) {
                 events.push(`agent_message:${content}`);
             },
-            onToolCallStart(_agent, id, tool) {
+            onToolCallStart(_agentId, id, tool) {
                 events.push(`tool_call_start:${tool}:${id}`);
             },
-            onToolCallEnd(_agent, id, tool) {
+            onToolCallEnd(_agentId, id, tool) {
                 events.push(`tool_call_end:${tool}:${id}`);
             },
             onTurnEnd() {
@@ -129,7 +129,7 @@ describe("AgentObserver", () => {
         const agent = await manager.createAgent();
 
         await communicator.emit("user:message", {
-            agent,
+            agentId: agent.id,
             content: "Run test tool",
         });
 
@@ -152,10 +152,12 @@ describe("AgentObserver", () => {
         const errorEvents: string[] = [];
 
         const testObserver: AgentObserver = {
-            onError(_agent, error, context) {
-                errorEvents.push(`error:${context}:${(error as Error).message}`);
+            onError(_agentId, error, context) {
+                errorEvents.push(
+                    `error:${context}:${(error as Error).message}`,
+                );
             },
-            onTurnEnd(_agent, error) {
+            onTurnEnd(_agentId, error) {
                 errorEvents.push(`turn_end:${(error as Error).message}`);
             },
         };
@@ -190,7 +192,7 @@ describe("AgentObserver", () => {
         });
 
         await communicator.emit("user:message", {
-            agent,
+            agentId: agent.id,
             content: "Trigger error",
         });
 
@@ -204,4 +206,3 @@ describe("AgentObserver", () => {
         manager.destroy();
     });
 });
-

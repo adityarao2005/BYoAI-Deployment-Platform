@@ -1,27 +1,20 @@
+import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import {
-    type Agent,
+    type AgentCommunicator,
     AgentManager,
     type AgentObserver,
     ConsoleAgentObserver,
     InMemoryAgentCommunicator,
     InMemoryAgentMemoryManager,
 } from "@byo-ai-agent-platform/core/agents";
-
 import {
     type ComputerProvider,
     createComputerProvider,
 } from "@byo-ai-agent-platform/core/computer";
 
-import {
-    type AgentConfig,
-    AgentConfigSchema
-} from "./agent.config"
-
-import {
-    type ComputerUseToolProviderConfig
-} from "@byo-ai-agent-platform/core/config";
+import type { ComputerUseToolProviderConfig } from "@byo-ai-agent-platform/core/config";
 import {
     AnthropicModel,
     GeminiModel,
@@ -35,18 +28,18 @@ import {
     ZipSkillRepository,
 } from "@byo-ai-agent-platform/core/skills";
 import {
+    ComputerUseStdioMcpClientFactory,
     ComputerUseToolProvider,
     loadSkillToolProvider,
-    OpenAPIToolProvider,
-    StreamableHTTPMcpClientFactory,
-    StdioMcpClientFactory,
-    toolProviderRegistry,
     type McpClientFactory,
     McpServerToolProvider,
-    ComputerUseStdioMcpClientFactory,
+    OpenAPIToolProvider,
+    StdioMcpClientFactory,
+    StreamableHTTPMcpClientFactory,
+    toolProviderRegistry,
 } from "@byo-ai-agent-platform/core/tools";
 import { parse } from "yaml";
-import { randomUUID } from "node:crypto";
+import { type AgentConfig, AgentConfigSchema } from "./agent.config";
 
 // ─── Config Loading ──────────────────────────────────────────────────
 // Moved from core/config/config.ts — config loading is an app concern,
@@ -105,7 +98,7 @@ export function interpolateEnvVars(content: string): string {
             const defaultValue = expression.slice(colonDashIndex + 2);
             return process.env[varName] !== undefined &&
                 process.env[varName] !== ""
-                ? process.env[varName]!
+                ? process.env[varName]
                 : defaultValue;
         }
         return process.env[expression] ?? "";
@@ -260,7 +253,6 @@ export function registerToolProviders(
     config: AgentConfig,
     computer?: ComputerProvider,
 ): void {
-
     // Check if a computer is registered, and if so register the ComputerUseToolProvider
     const activeComputer =
         computer !== undefined ? computer : registerComputer(config);
@@ -276,25 +268,34 @@ export function registerToolProviders(
             const openApiProvider = new OpenAPIToolProvider(providerConfig);
             toolProviderRegistry.registerToolProvider(openApiProvider);
         } else if (providerConfig.type === "mcp") {
-            let clientFactory: McpClientFactory
+            let clientFactory: McpClientFactory;
 
             switch (providerConfig.transport) {
                 case "stdio":
-                    clientFactory = new StdioMcpClientFactory(providerConfig)
+                    clientFactory = new StdioMcpClientFactory(providerConfig);
                     break;
                 case "computer":
                     if (activeComputer)
-                        clientFactory = new ComputerUseStdioMcpClientFactory(providerConfig, activeComputer)
+                        clientFactory = new ComputerUseStdioMcpClientFactory(
+                            providerConfig,
+                            activeComputer,
+                        );
                     else {
-                        throw new Error(`Cannot create the mcp tool provider ${providerConfig.name}. There is no computer provider added.`)
+                        throw new Error(
+                            `Cannot create the mcp tool provider ${providerConfig.name}. There is no computer provider added.`,
+                        );
                     }
                     break;
                 case "http":
-                    clientFactory = new StreamableHTTPMcpClientFactory(providerConfig)
+                    clientFactory = new StreamableHTTPMcpClientFactory(
+                        providerConfig,
+                    );
                     break;
             }
 
-            toolProviderRegistry.registerToolProvider(new McpServerToolProvider(clientFactory))
+            toolProviderRegistry.registerToolProvider(
+                new McpServerToolProvider(clientFactory),
+            );
         }
     }
 }
@@ -305,10 +306,8 @@ export function registerToolProviders(
 export interface BootstrappedAgent {
     /** Active AgentManager instance governing the agent lifecycle */
     manager: AgentManager;
-    /** The bootstrapped Agent instance ready to handle input */
-    agent: Agent;
-    /** In-memory communicator for sending messages and receiving agent responses */
-    communicator: InMemoryAgentCommunicator;
+    /** AgentCommunicator instance used by the manager */
+    communicator: AgentCommunicator;
 }
 
 /**
@@ -330,7 +329,7 @@ export async function bootstrap(
 ): Promise<BootstrappedAgent> {
     const config = await loadConfigIfAvailable();
 
-    let computer: ComputerProvider | undefined = undefined;
+    let computer: ComputerProvider | undefined;
 
     if (config) {
         registerModels(config);
@@ -370,11 +369,9 @@ export async function bootstrap(
     });
 
     await manager.init();
-    const agent = await manager.createAgent();
 
     return {
         manager,
-        agent,
         communicator,
     };
 }
