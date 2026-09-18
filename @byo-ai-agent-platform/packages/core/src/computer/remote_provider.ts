@@ -12,6 +12,8 @@ import {
 } from "@connectrpc/connect-node";
 import dotenv from "dotenv";
 import type { RemoteComputerUseToolProviderConfig } from "@/config/tool_config";
+import { ComputerProviderError } from "@/errors/exceptions";
+import { getLogger } from "@/logger";
 import {
     BasicComputerService,
     ComputerProviderService,
@@ -697,12 +699,18 @@ export class RemoteComputerProvider implements ComputerProvider {
         deniedHosts: string[];
     };
 
+    private logger = getLogger("RemoteComputerProvider");
+
     constructor(config: RemoteComputerUseToolProviderConfig) {
         this.config = config;
     }
 
     // initialize the tool provider
     async init() {
+        this.logger.info("Initializing RemoteComputerProvider", {
+            url: this.config.url,
+            image: this.config.image,
+        });
         const transportOptions = await buildTransportOptions(this.config);
         this.transport = createConnectTransport(transportOptions);
 
@@ -726,6 +734,15 @@ export class RemoteComputerProvider implements ComputerProvider {
 
     // create the computers
     async createComputer(): Promise<string> {
+        if (!this.computerProviderService) {
+            await this.init();
+        }
+
+        this.logger.info("Sending createComputer RPC to remote provider", {
+            image: this.config.image,
+            url: this.config.url,
+        });
+
         const createResponse =
             await this.computerProviderService?.createComputer({
                 image: this.config.image,
@@ -736,17 +753,32 @@ export class RemoteComputerProvider implements ComputerProvider {
 
         switch (createResponse?.result.case) {
             case "sessionId":
+                this.logger.info("Remote computer session created successfully", {
+                    sessionId: createResponse.result.value,
+                });
                 return createResponse.result.value;
 
             case "errorMessage":
-                throw new Error(createResponse.result.value);
+                this.logger.error("Remote computer provider creation returned error", {
+                    error: createResponse.result.value,
+                });
+                throw new ComputerProviderError(createResponse.result.value);
             default:
-                throw new Error("Computer Provider was not initialized");
+                this.logger.error("Remote computer provider unexpected response", {
+                    resultCase: createResponse?.result.case,
+                });
+                throw new ComputerProviderError(
+                    "Computer Provider was not initialized or returned an unexpected response",
+                );
         }
     }
 
     // delete the computer
     async deleteComputer(computerId: string): Promise<void> {
+        if (!this.computerProviderService) {
+            await this.init();
+        }
+        this.logger.info("Sending deleteComputer RPC", { computerId });
         await this.computerProviderService?.deleteComputer({
             sessionId: computerId,
         });
@@ -754,15 +786,9 @@ export class RemoteComputerProvider implements ComputerProvider {
 
     // get the computer info
     async getComputer(computerId: string): Promise<ComputerPayload> {
-        if (
-            !this.basicComputerService ||
-            !this.graphicalComputerService ||
-            !this.computerProviderService
-        )
-            return {
-                error: "Computer Provider not initialized",
-                type: ComputerType.UNSPECIFIED,
-            };
+        if (!this.computerProviderService) {
+            await this.init();
+        }
 
         const payload = await this.computerProviderService?.getComputerInfo({
             sessionId: computerId,
@@ -774,8 +800,8 @@ export class RemoteComputerProvider implements ComputerProvider {
                     type: ComputerType.GRAPHICAL,
                     computer: new ConnectGraphicalRemoteComputer(
                         computerId,
-                        this.basicComputerService,
-                        this.graphicalComputerService,
+                        this.basicComputerService!,
+                        this.graphicalComputerService!,
                     ),
                 };
             case ComputerType.HEADLESS:
@@ -783,10 +809,12 @@ export class RemoteComputerProvider implements ComputerProvider {
                     type: ComputerType.HEADLESS,
                     computer: new ConnectHeadlessRemoteComputer(
                         computerId,
-                        this.basicComputerService,
+                        this.basicComputerService!,
                     ),
                 };
             case ComputerType.UNSPECIFIED:
+            default:
+                this.logger.warn("Remote computer info returned UNSPECIFIED type", { computerId });
                 return {
                     error: "Something went wrong on the remote computer provider's side when attempting to get the computer",
                     type: ComputerType.UNSPECIFIED,

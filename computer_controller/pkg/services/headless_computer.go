@@ -12,6 +12,7 @@ import (
 	computer_apiv1 "github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/gen/computer_api/v1"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/gen/computer_api/v1/computer_apiv1connect"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/computer"
+	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/logger"
 )
 
 type BasicComputerService struct {
@@ -22,8 +23,10 @@ func (s *BasicComputerService) Execute(
 	ctx context.Context,
 	req *connect.Request[computer_apiv1.ExecuteRequest],
 ) (*connect.Response[computer_apiv1.ExecuteResponse], error) {
+	logger.Info("Execute RPC called", "sessionId", req.Msg.GetSessionId(), "command", req.Msg.GetCommand())
 	comp, err := s.provider.GetComputer(ctx, req.Msg.GetSessionId())
 	if err != nil {
+		logger.Error("Execute RPC failed to find computer", "sessionId", req.Msg.GetSessionId(), "error", err)
 		return connect.NewResponse(&computer_apiv1.ExecuteResponse{
 			Result: &computer_apiv1.ExecuteResponse_ErrorMessage{
 				ErrorMessage: err.Error(),
@@ -86,6 +89,8 @@ func (s *BasicComputerService) ExecuteStream(
 	if config == nil {
 		return connect.NewError(connect.CodeInvalidArgument, errors.New("first message must be an ExecuteStreamConfig"))
 	}
+
+	logger.Info("ExecuteStream RPC started", "sessionId", config.GetSessionId(), "command", config.GetCommand())
 
 	// 2. Look up the computer
 	comp, err := s.provider.GetComputer(ctx, config.GetSessionId())

@@ -11,7 +11,7 @@ import {
     LoggingAgentObserver,
 } from "@byo-ai-agent-platform/core/agents";
 import { ConfigError } from "@byo-ai-agent-platform/core/errors";
-import { configureLogger } from "@byo-ai-agent-platform/core/logger";
+import { configureLogger, getLogger } from "@byo-ai-agent-platform/core/logger";
 import {
     type ComputerProvider,
     createComputerProvider,
@@ -146,6 +146,8 @@ export async function loadConfigIfAvailable(): Promise<AgentConfig | null> {
 
 // ─── Model Registration ──────────────────────────────────────────────
 
+const logger = getLogger("Bootstrap");
+
 export function registerModels(config: AgentConfig): void {
     for (const modelConfig of config.models) {
         const { name } = modelConfig;
@@ -153,26 +155,31 @@ export function registerModels(config: AgentConfig): void {
         switch (modelConfig.brand) {
             case "openai": {
                 if (!modelConfig.properties.apiKey) {
+                    logger.warn(`Skipping OpenAI model ${name}: missing API key`);
                     continue;
                 }
                 modelRegistry.registerModel(
                     name,
                     new OpenAIModel(name, modelConfig.properties.apiKey),
                 );
+                logger.info(`Registered OpenAI model: ${name}`);
                 break;
             }
             case "gemini": {
                 if (!modelConfig.properties.apiKey) {
+                    logger.warn(`Skipping Gemini model ${name}: missing API key`);
                     continue;
                 }
                 modelRegistry.registerModel(
                     name,
                     new GeminiModel(name, modelConfig.properties.apiKey),
                 );
+                logger.info(`Registered Gemini model: ${name}`);
                 break;
             }
             case "anthropic": {
                 if (!modelConfig.properties.apiKey) {
+                    logger.warn(`Skipping Anthropic model ${name}: missing API key`);
                     continue;
                 }
                 modelRegistry.registerModel(
@@ -183,6 +190,7 @@ export function registerModels(config: AgentConfig): void {
                         modelConfig.properties.maxTokens,
                     ),
                 );
+                logger.info(`Registered Anthropic model: ${name}`);
                 break;
             }
             case "self_hosted": {
@@ -194,6 +202,9 @@ export function registerModels(config: AgentConfig): void {
                         modelConfig.properties.apiKey,
                     ),
                 );
+                logger.info(`Registered Self-Hosted model: ${name}`, {
+                    baseUrl: modelConfig.properties.baseUrl,
+                });
                 break;
             }
         }
@@ -212,6 +223,9 @@ export function registerSkillRepositories(config: AgentConfig): void {
                     repoConfig.headers,
                 );
                 skillRepositoryRegistry.registerSkillRepository(zipRepo);
+                logger.info("Registered Zip skill repository", {
+                    location: repoConfig.location,
+                });
                 break;
             }
             case "git": {
@@ -222,6 +236,10 @@ export function registerSkillRepositories(config: AgentConfig): void {
                     repoConfig.auth,
                 );
                 skillRepositoryRegistry.registerSkillRepository(gitRepo);
+                logger.info("Registered Git skill repository", {
+                    url: repoConfig.url,
+                    branch: repoConfig.branch,
+                });
                 break;
             }
         }
@@ -238,12 +256,15 @@ export function registerComputer(
     );
 
     if (computerConfigs.length > 1) {
-        throw new Error(
+        throw new ConfigError(
             `There should only be 1 computer use tool provider declared, currently these are the declared computer tool providers: ${computerConfigs}`,
         );
     }
 
     if (computerConfigs.length === 1 && computerConfigs[0]) {
+        logger.info("Initializing computer provider", {
+            type: computerConfigs[0].provider.type,
+        });
         return createComputerProvider(computerConfigs[0]);
     }
 
@@ -264,12 +285,16 @@ export function registerToolProviders(
         toolProviderRegistry.registerToolProvider(
             new ComputerUseToolProvider(activeComputer),
         );
+        logger.info("Registered ComputerUseToolProvider");
     }
 
     for (const providerConfig of config.toolProviders) {
         if (providerConfig.type === "openapi") {
             const openApiProvider = new OpenAPIToolProvider(providerConfig);
             toolProviderRegistry.registerToolProvider(openApiProvider);
+            logger.info("Registered OpenAPIToolProvider", {
+                name: providerConfig.name,
+            });
         } else if (providerConfig.type === "mcp") {
             let clientFactory: McpClientFactory;
 
@@ -284,7 +309,7 @@ export function registerToolProviders(
                             activeComputer,
                         );
                     else {
-                        throw new Error(
+                        throw new ConfigError(
                             `Cannot create the mcp tool provider ${providerConfig.name}. There is no computer provider added.`,
                         );
                     }
@@ -299,6 +324,10 @@ export function registerToolProviders(
             toolProviderRegistry.registerToolProvider(
                 new McpServerToolProvider(clientFactory),
             );
+            logger.info("Registered McpServerToolProvider", {
+                name: providerConfig.name,
+                transport: providerConfig.transport,
+            });
         }
     }
 }
@@ -362,6 +391,13 @@ export async function bootstrap(
         new ConsoleAgentObserver(),
     ];
 
+    logger.info("Bootstrapping Agentic Harness", {
+        model: defaultModel,
+        skillReposCount: skillRepos.length,
+        toolProvidersCount: toolProviders.length,
+        hasComputer: computer !== undefined,
+    });
+
     const manager = new AgentManager({
         name: config?.name ?? `agent-${randomUUID()}`,
         description: config?.description ?? "You are a helpful assistant.",
@@ -375,6 +411,10 @@ export async function bootstrap(
     });
 
     await manager.init();
+
+    logger.info("Agentic Harness bootstrap complete", {
+        agentName: config?.name,
+    });
 
     return {
         manager,
