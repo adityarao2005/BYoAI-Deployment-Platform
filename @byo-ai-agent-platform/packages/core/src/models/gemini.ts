@@ -107,16 +107,16 @@ export function normalizeGeminiFunctionResponse(
 
 export class GeminiModel implements Model {
     private client: GoogleGenAI;
-    private modelName: string;
+    readonly name: string;
 
     constructor(modelName: string, apiKey: string) {
-        this.modelName = modelName;
+        this.name = modelName;
         this.client = new GoogleGenAI({ apiKey });
     }
 
     async execute(input: ModelInput): Promise<ModelMessageOutput[]> {
         const response = await this.client.models.generateContent({
-            model: this.modelName,
+            model: this.name,
             contents: toGeminiInteraction(input.history),
             config: {
                 systemInstruction:

@@ -2,6 +2,7 @@ import type { ModelInput, ModelMessageOutput } from "./conversation";
 
 export interface Model {
     execute(input: ModelInput): Promise<ModelMessageOutput[]>;
+    readonly name: string;
 }
 
 // a registry for models, which can be used to register and retrieve models by name

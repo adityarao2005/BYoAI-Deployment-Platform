@@ -392,7 +392,7 @@ export async function bootstrap(
     ];
 
     logger.info("Bootstrapping Agentic Harness", {
-        model: defaultModel,
+        model: defaultModel.name,
         skillReposCount: skillRepos.length,
         toolProvidersCount: toolProviders.length,
         hasComputer: computer !== undefined,
