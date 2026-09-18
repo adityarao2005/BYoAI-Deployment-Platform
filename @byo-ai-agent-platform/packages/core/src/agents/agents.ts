@@ -11,8 +11,8 @@ import { AgentMemory, type AgentMemoryManager } from "./agent.memory";
 
 export { AgentMemory, type AgentMemoryManager };
 
-import type { AgentCommunicator, AgentObserver } from "./agent.messaging";
-
+import type { AgentCommunicator } from "./agent.messaging";
+import type { AgentObserver } from "./agent.observer"
 /**
  * Plain agent identifier.
  */
@@ -57,14 +57,14 @@ ${description}
 
 <available_skills>
     ${skills
-        .map((skill) =>
-            `
+            .map((skill) =>
+                `
         <skill>
             <name>${skill.frontMatter.name}</name>
             <description><![CDATA[${skill.frontMatter.description}]]></description>
         </skill>`.trim(),
-        )
-        .join("\n")}
+            )
+            .join("\n")}
 </available_skills>
     `.trim();
 }
@@ -476,7 +476,7 @@ export class AgentManager {
             name: toolName,
             description: "",
             inputSchema: { type: "object", description: "", properties: {} },
-            execute: async () => {},
+            execute: async () => { },
         };
 
         await this.configuration.memoryManager.addTranscriptEntries(agentId, [
