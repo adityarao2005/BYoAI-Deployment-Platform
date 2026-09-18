@@ -18,7 +18,9 @@ The package is organized into decoupled modules available as named exports:
 
 | Module | Exported Symbols | Description |
 | :--- | :--- | :--- |
-| **`@byo-ai-agent-platform/core/agents`** | `AgentManager`, `AgentMemory`, `InMemoryAgentMemoryManager`, `InMemoryAgentCommunicator`, `ConsoleAgentObserver` | Agent orchestration, state machine, memory, and events. |
+| **`@byo-ai-agent-platform/core/agents`** | `AgentManager`, `AgentMemory`, `InMemoryAgentMemoryManager`, `InMemoryAgentCommunicator`, `ConsoleAgentObserver`, `LoggingAgentObserver` | Agent orchestration, state machine, memory, observers, and events. |
+| **`@byo-ai-agent-platform/core/logger`** | `configureLogger`, `setLogger`, `getLogger`, `ILogger`, `LoggerConfig` | Configurable Winston-backed logger for core library and applications. |
+| **`@byo-ai-agent-platform/core/errors`** | `BYoAIError`, `AgentExecutionError`, `ToolExecutionError`, `ModelProviderError`, `MemoryError`, `ComputerProviderError`, `ConfigError`, `SkillRepositoryError`, `ValidationError` | Centralized domain exception hierarchy. |
 | **`@byo-ai-agent-platform/core/models`** | `OpenAIModel`, `GeminiModel`, `AnthropicModel`, `SelfHostedModel`, `modelRegistry` | LLM model clients and registry. |
 | **`@byo-ai-agent-platform/core/tools`** | `OpenAPIToolProvider`, `ComputerUseToolProvider`, `McpServerToolProvider`, `toolProviderRegistry` | Tool providers including OpenAPI specs, Computer primitives, and MCP servers. |
 | **`@byo-ai-agent-platform/core/skills`** | `ZipSkillRepository`, `GitSkillRepository`, `skillRepositoryRegistry` | Progressive skill loading from Git or Zip repos. |

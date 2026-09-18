@@ -39,18 +39,18 @@ function toAnthropicInteraction(
 
 export class AnthropicModel implements Model {
     private client: Anthropic;
-    private modelName: string;
+    readonly name: string;
     private max_tokens: number;
 
     constructor(modelName: string, apiKey: string, max_tokens: number = 1024) {
-        this.modelName = modelName;
+        this.name = modelName;
         this.client = new Anthropic({ apiKey });
         this.max_tokens = max_tokens;
     }
 
     async execute(input: ModelInput): Promise<ModelMessageOutput[]> {
         const response = await this.client.messages.create({
-            model: this.modelName,
+            model: this.name,
             max_tokens: this.max_tokens,
             system: input.systemPrompt ?? "You are a helpful assistant.",
             messages: toAnthropicInteraction(input.history),

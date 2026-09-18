@@ -36,10 +36,10 @@ function toOpenAIInteraction(
 
 export class OpenAIModel implements Model {
     private client: OpenAI;
-    private modelName: string;
+    readonly name: string
 
     constructor(modelName: string, apiKey: string) {
-        this.modelName = modelName;
+        this.name = modelName;
         this.client = new OpenAI({
             apiKey,
         });
@@ -47,7 +47,7 @@ export class OpenAIModel implements Model {
 
     async execute(input: ModelInput): Promise<ModelMessageOutput[]> {
         const response = await this.client.responses.create({
-            model: this.modelName,
+            model: this.name,
             instructions: input.systemPrompt ?? "You are a helpful assistant.",
             input: toOpenAIInteraction(input.history),
             tools: input.tools.map((tool) => ({

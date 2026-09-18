@@ -45,10 +45,10 @@ function toChatCompletionInteraction(
 
 export class SelfHostedModel implements Model {
     private client: OpenAI;
-    private modelName: string;
+    readonly name: string;
 
     constructor(baseURL: string, modelName: string, apiKey?: string) {
-        this.modelName = modelName;
+        this.name = modelName;
         this.client = new OpenAI({
             baseURL,
             apiKey: apiKey ?? "local-api-key",
@@ -57,7 +57,7 @@ export class SelfHostedModel implements Model {
 
     async execute(input: ModelInput): Promise<ModelMessageOutput[]> {
         const response = await this.client.chat.completions.create({
-            model: this.modelName,
+            model: this.name,
             messages: [
                 {
                     role: "system",

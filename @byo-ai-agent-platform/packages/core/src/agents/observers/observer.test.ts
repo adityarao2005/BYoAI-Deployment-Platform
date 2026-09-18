@@ -9,8 +9,26 @@ import type { Tool, ToolProvider } from "@/tools/tools";
 import { InMemoryAgentCommunicator } from "../communication";
 import { InMemoryAgentMemoryManager } from "../memory";
 import { ConsoleAgentObserver } from "./console";
+import { LoggingAgentObserver } from "./logging";
 
 describe("AgentObserver", () => {
+    it("LoggingAgentObserver outputs structured logs without throwing", () => {
+        const observer = new LoggingAgentObserver();
+        const dummyAgentId = "test-agent";
+
+        expect(() => {
+            observer.onTurnStart?.(dummyAgentId, "Hello agent");
+            observer.onModelStart?.(dummyAgentId, "System prompt");
+            observer.onModelEnd?.(dummyAgentId, []);
+            observer.onAgentMessage?.(dummyAgentId, "Hello user");
+            observer.onToolCallStart?.(dummyAgentId, "call_1", "get_weather", { city: "Boston" });
+            observer.onToolCallEnd?.(dummyAgentId, "call_1", "get_weather", { temp: 72 });
+            observer.onToolCallEnd?.(dummyAgentId, "call_2", "get_weather", null, new Error("Fail"));
+            observer.onError?.(dummyAgentId, new Error("Global error"), "test");
+            observer.onTurnEnd?.(dummyAgentId);
+        }).not.toThrow();
+    });
+
     it("ConsoleAgentObserver logs agent messages, tool call starts, and tool responses without throwing", () => {
         const observer = new ConsoleAgentObserver();
         const dummyAgentId = "test-agent";
