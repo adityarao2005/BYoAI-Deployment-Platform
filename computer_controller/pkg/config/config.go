@@ -78,18 +78,25 @@ func (s ServerNetworkConfig) Address() string {
 	return net.JoinHostPort(s.Host, strconv.Itoa(s.Port))
 }
 
+type LoggingConfig struct {
+	Level  string `yaml:"level,omitempty"`  // "debug", "info", "warn", "error"
+	Format string `yaml:"format,omitempty"` // "text", "json"
+}
+
 type ServerConfig struct {
-	Type   ConfigType          `yaml:"type"`
-	Server ServerNetworkConfig `yaml:"server,omitempty"`
-	Spec   Spec                `yaml:"-"`
+	Type    ConfigType          `yaml:"type"`
+	Server  ServerNetworkConfig `yaml:"server,omitempty"`
+	Logging LoggingConfig       `yaml:"logging,omitempty"`
+	Spec    Spec                `yaml:"-"`
 }
 
 func (c *ServerConfig) UnmarshalYAML(value *yaml.Node) error {
 	// Intermediate struct to capture top-level fields
 	var raw struct {
-		Type   ConfigType          `yaml:"type"`
-		Server ServerNetworkConfig `yaml:"server"`
-		Spec   yaml.Node           `yaml:"spec"`
+		Type    ConfigType          `yaml:"type"`
+		Server  ServerNetworkConfig `yaml:"server"`
+		Logging LoggingConfig       `yaml:"logging"`
+		Spec    yaml.Node           `yaml:"spec"`
 	}
 
 	if err := value.Decode(&raw); err != nil {
@@ -125,6 +132,7 @@ func (c *ServerConfig) UnmarshalYAML(value *yaml.Node) error {
 
 	c.Type = raw.Type
 	c.Server = raw.Server
+	c.Logging = raw.Logging
 
 	switch raw.Type {
 	case TypeLocal:

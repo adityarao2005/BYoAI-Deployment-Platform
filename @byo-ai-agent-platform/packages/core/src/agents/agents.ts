@@ -12,7 +12,9 @@ import { AgentMemory, type AgentMemoryManager } from "./agent.memory";
 export { AgentMemory, type AgentMemoryManager };
 
 import type { AgentCommunicator } from "./agent.messaging";
-import type { AgentObserver } from "./agent.observer"
+import type { AgentObserver } from "./agent.observer";
+import { AgentExecutionError } from "@/errors/exceptions";
+import { getLogger } from "@/logger";
 /**
  * Plain agent identifier.
  */
@@ -89,6 +91,7 @@ export class AgentManager {
     private skills: Skill[] = [];
     private tools: Tool[] | undefined = undefined;
     private unsubscribers: Array<() => void> = [];
+    private logger = getLogger("AgentManager");
 
     constructor(configuration: AgentConfiguration) {
         this.configuration = configuration;
@@ -242,8 +245,9 @@ export class AgentManager {
         const value = await this.configuration.memoryManager.getAgent(id);
 
         if (!value) {
-            throw new Error(
+            throw new AgentExecutionError(
                 `Something went wrong when attempting to create the agent: ${id}`,
+                { agentId: id },
             );
         }
         return value;
@@ -256,8 +260,9 @@ export class AgentManager {
     }> {
         const agent = await this.configuration.memoryManager.getAgent(agentId);
         if (!agent) {
-            throw new Error(
+            throw new AgentExecutionError(
                 `The agent ${agentId} should exist before creating a new session`,
+                { agentId },
             );
         }
         const memory =

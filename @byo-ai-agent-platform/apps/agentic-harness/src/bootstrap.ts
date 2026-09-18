@@ -8,7 +8,10 @@ import {
     ConsoleAgentObserver,
     InMemoryAgentCommunicator,
     InMemoryAgentMemoryManager,
+    LoggingAgentObserver,
 } from "@byo-ai-agent-platform/core/agents";
+import { ConfigError } from "@byo-ai-agent-platform/core/errors";
+import { configureLogger } from "@byo-ai-agent-platform/core/logger";
 import {
     type ComputerProvider,
     createComputerProvider,
@@ -116,7 +119,7 @@ export async function loadConfig(configPath?: string): Promise<AgentConfig> {
     const resolvedConfigPath = configPath ?? (await findConfigPath());
 
     if (!resolvedConfigPath) {
-        throw new Error("No valid config file found.");
+        throw new ConfigError("No valid config file found.");
     }
 
     const configData = await fs.readFile(resolvedConfigPath, "utf8");
@@ -354,7 +357,10 @@ export async function bootstrap(
         ...(skillRepos.length > 0 ? [loadSkillToolProvider(skillRepos)] : []),
     ];
 
-    const observers = options?.observers ?? [new ConsoleAgentObserver()];
+    const observers = options?.observers ?? [
+        new LoggingAgentObserver(),
+        new ConsoleAgentObserver(),
+    ];
 
     const manager = new AgentManager({
         name: config?.name ?? `agent-${randomUUID()}`,

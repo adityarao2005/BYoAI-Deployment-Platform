@@ -11,6 +11,7 @@
         "@types/adm-zip": "^0.5.8",
         "@types/bun": "latest",
         "@types/express": "^5.0.6",
+        "@types/winston": "^2.4.4",
         "express": "^5.0.1"
     },
     "peerDependencies": {
@@ -30,7 +31,8 @@
         "@scalar/openapi-upgrader": "^0.2.15",
         "adm-zip": "^0.6.0",
         "dotenv": "^17.4.2",
-        "openai": "^7.13.0"
+        "openai": "^7.13.0",
+        "winston": "^3.19.0"
     },
     "exports": {
         "./models": "./src/models/index.ts",
@@ -45,6 +47,10 @@
         "./config/*": "./src/config/*",
         "./computer": "./src/computer/index.ts",
         "./computer/*": "./src/computer/*",
+        "./errors": "./src/errors/index.ts",
+        "./errors/*": "./src/errors/*",
+        "./logger": "./src/logger/index.ts",
+        "./logger/*": "./src/logger/*",
         "./*": "./src/*"
     }
 }

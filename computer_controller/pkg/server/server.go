@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,8 +15,51 @@ import (
 
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/computer"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/config"
+	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/logger"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/services"
 )
+
+type responseWriterInterceptor struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (rw *responseWriterInterceptor) WriteHeader(code int) {
+	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
+}
+
+func requestLoggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		rw := &responseWriterInterceptor{ResponseWriter: w, statusCode: http.StatusOK}
+		next.ServeHTTP(rw, r)
+		duration := time.Since(start)
+
+		logger.Info("HTTP Request",
+			"method", r.Method,
+			"path", r.URL.Path,
+			"status", rw.statusCode,
+			"duration", duration.String(),
+			"remote_addr", r.RemoteAddr,
+		)
+	})
+}
+
+func apiKeyAuthMiddleware(expectedKey string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+
+		if authHeader == "" || token != expectedKey {
+			logger.Warn("Unauthorized access attempt", "remote_addr", r.RemoteAddr, "path", r.URL.Path)
+			http.Error(w, "Unauthorized: invalid or missing API key", http.StatusUnauthorized)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
 
 func NewServerHandlerAndProvider(server_config *config.ServerConfig) (http.Handler, computer.IComputerProvider, error) {
 	if server_config == nil {
@@ -41,6 +83,8 @@ func NewServerHandlerAndProvider(server_config *config.ServerConfig) (http.Handl
 		handler = apiKeyAuthMiddleware(server_config.Server.Security.BearerToken, handler)
 	}
 
+	handler = requestLoggingMiddleware(handler)
+
 	return handler, computer_provider, nil
 }
 
@@ -53,29 +97,18 @@ func NewServerHandler(server_config *config.ServerConfig) (http.Handler, error) 
 	return handler, nil
 }
 
-func apiKeyAuthMiddleware(expectedKey string, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
-		token := strings.TrimPrefix(authHeader, "Bearer ")
-
-		if authHeader == "" || token != expectedKey {
-			http.Error(w, "Unauthorized: invalid or missing API key", http.StatusUnauthorized)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
 func RunServer() {
 	server_config, err := config.LoadConfigFromFile()
 	if err != nil {
-		log.Fatalf("unable to load computer.yaml: %v", err)
+		logger.Fatal("unable to load computer.yaml", "error", err)
 	}
+
+	logger.Init(server_config.Logging.Level, server_config.Logging.Format, os.Stdout)
+	logger.Info("Starting Computer Controller Service...", "address", server_config.Server.Address(), "type", server_config.Type)
 
 	handler, _, err := NewServerHandlerAndProvider(server_config)
 	if err != nil {
-		log.Fatalf("unable to create computer provider: %v", err)
+		logger.Fatal("unable to create computer provider", "error", err)
 	}
 
 	server := http.Server{
@@ -88,33 +121,31 @@ func RunServer() {
 
 	go func() {
 		<-sigCh
-		log.Println("Received termination signal, shutting down server...")
+		logger.Info("Received termination signal, shutting down server...")
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
 
 		if err := server.Shutdown(shutdownCtx); err != nil {
-			log.Printf("error shutting down server: %v", err)
+			logger.Error("error shutting down server", "error", err)
 		}
 	}()
 
 	// handle TLS
 	if server_config.Server.Security.HasTLS() {
-		// handle TLS
 		tlsConfig := &tls.Config{
 			MinVersion: tls.VersionTLS12,
 		}
 
-		// if mTLS add client auth and client CAs
 		if server_config.Server.Security.HasMTLS() {
 			caFilePath := server_config.Server.Security.Tls.TlsTrustedCertificates
 			caBytes, err := os.ReadFile(caFilePath)
 			if err != nil {
-				log.Fatalf("failed to read ca cert %q: %v", caFilePath, err)
+				logger.Fatal("failed to read ca cert", "path", caFilePath, "error", err)
 			}
 
 			ca := x509.NewCertPool()
 			if ok := ca.AppendCertsFromPEM(caBytes); !ok {
-				log.Fatalf("failed to parse ca cert %q", caFilePath)
+				logger.Fatal("failed to parse ca cert", "path", caFilePath)
 			}
 
 			tlsConfig.ClientAuth = tls.RequireAndVerifyClientCert
@@ -123,21 +154,22 @@ func RunServer() {
 
 		server.TLSConfig = tlsConfig
 
+		logger.Info("Listening on TLS", "address", server_config.Server.Address())
 		if err := server.ListenAndServeTLS(
 			server_config.Server.Security.Tls.TlsCertificate,
 			server_config.Server.Security.Tls.TlsCertificateKey,
 		); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("failed to start TLS server: %v", err)
+			logger.Fatal("failed to start TLS server", "error", err)
 		}
 	} else {
-		// Non-TLS: Enable HTTP/1.1 and unencrypted HTTP/2 (h2c)
 		protocols := new(http.Protocols)
 		protocols.SetHTTP1(true)
 		protocols.SetUnencryptedHTTP2(true)
 		server.Protocols = protocols
 
+		logger.Info("Listening on HTTP/h2c", "address", server_config.Server.Address())
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("failed to start HTTP server: %v", err)
+			logger.Fatal("failed to start HTTP server", "error", err)
 		}
 	}
 }
