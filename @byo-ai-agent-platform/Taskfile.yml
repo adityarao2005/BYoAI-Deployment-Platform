@@ -69,7 +69,7 @@ tasks:
   compile:target:
     desc: "Compile single binary target (Usage: task compile:target OS=linux ARCH=x64)"
     cmds:
-      - bun build --compile --minify --sourcemap --bytecode --target=bun-{{.OS}}-{{.ARCH}} ./apps/agentic-harness/src/index.ts --outfile ./dist/agentic-harness-{{.OS}}-{{.ARCH}}{{.EXT}}
+      - bun build --compile --minify --sourcemap --target=bun-{{.OS}}-{{.ARCH}} ./apps/agentic-harness/src/index.ts --outfile ./dist/agentic-harness-{{.OS}}-{{.ARCH}}{{.EXT}}
 
   compile:
     desc: Native compile standalone binaries for Linux, Windows, and macOS (x64 & arm64) using Bun
