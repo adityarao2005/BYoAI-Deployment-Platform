@@ -25,6 +25,10 @@ export class ModelRegistry {
     getDefaultModel(): Model | undefined {
         return this.registry.entries().next().value?.[1];
     }
+
+    clear() {
+        this.registry.clear();
+    }
 }
 
 export const modelRegistry = new ModelRegistry();

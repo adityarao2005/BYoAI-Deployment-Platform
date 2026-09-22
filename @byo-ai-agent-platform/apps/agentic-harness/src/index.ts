@@ -24,7 +24,7 @@ app.use(jwk({
     verification: config.security.verify
 }));
 
-app.use(logger(appLogger.info))
+app.use(logger((message, ...rest) => appLogger.info(message, ...rest)))
 
 app.use(async (c, next) => {
     const payload = c.get('jwtPayload');

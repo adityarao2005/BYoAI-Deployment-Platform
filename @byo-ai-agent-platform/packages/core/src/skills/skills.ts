@@ -48,6 +48,10 @@ export class SkillRepositoryRegistry {
     getAllSkillRepositories(): SkillRepository[] {
         return this.registry;
     }
+
+    clear() {
+        this.registry = [];
+    }
 }
 
 export const skillRepositoryRegistry = new SkillRepositoryRegistry();

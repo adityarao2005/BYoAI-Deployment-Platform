@@ -431,4 +431,99 @@ describe("JsonFileAgentMemoryManager", () => {
             await fs.rm(tempDir, { recursive: true, force: true });
         }
     });
+
+    it("scopes agents by user correctly on JsonFileAgentMemoryManager", async () => {
+        const tempDir = await fs.mkdtemp(
+            path.join(os.tmpdir(), "agent-memory-user-test-"),
+        );
+
+        try {
+            const memoryManager = new JsonFileAgentMemoryManager(tempDir);
+            const id1 = await memoryManager.createAgentMemoryEntry("agent-user1", "user-1");
+            const id2 = await memoryManager.createAgentMemoryEntry("agent-user2", "user-2");
+
+            const agent1Owned = await memoryManager.getAgentByUser(id1, "user-1");
+            expect(agent1Owned).toBeDefined();
+            expect(agent1Owned?.userId).toBe("user-1");
+
+            const agent1NotOwned = await memoryManager.getAgentByUser(id1, "user-2");
+            expect(agent1NotOwned).toBeUndefined();
+
+            const user1Agents = await memoryManager.getAllAgentsByUser("user-1");
+            expect(user1Agents).toEqual([id1]);
+
+            const user2Agents = await memoryManager.getAllAgentsByUser("user-2");
+            expect(user2Agents).toEqual([id2]);
+        } finally {
+            await fs.rm(tempDir, { recursive: true, force: true });
+        }
+    });
 });
+
+describe("InMemoryAgentMemoryManager & AgentManager User Scoping", () => {
+    it("scopes agents by user correctly on InMemoryAgentMemoryManager", async () => {
+        const memoryManager = new InMemoryAgentMemoryManager();
+        const id1 = await memoryManager.createAgentMemoryEntry("agent-1", "user-1");
+        const id2 = await memoryManager.createAgentMemoryEntry("agent-2", "user-2");
+
+        const agent1Owned = await memoryManager.getAgentByUser(id1, "user-1");
+        expect(agent1Owned).toBeDefined();
+        expect(agent1Owned?.userId).toBe("user-1");
+
+        const agent1NotOwned = await memoryManager.getAgentByUser(id1, "user-2");
+        expect(agent1NotOwned).toBeUndefined();
+
+        const user1Agents = await memoryManager.getAllAgentsByUser("user-1");
+        expect(user1Agents).toEqual([id1]);
+
+        const user2Agents = await memoryManager.getAllAgentsByUser("user-2");
+        expect(user2Agents).toEqual([id2]);
+    });
+
+    it("AgentManager handles user-scoped interaction methods", async () => {
+        const communicator = new InMemoryAgentCommunicator();
+        const memoryManager = new InMemoryAgentMemoryManager();
+
+        const model: Model = {
+            name: "test",
+            async execute() {
+                return [{ role: "assistant", type: "message", content: "ok" }];
+            },
+        };
+
+        const config: AgentConfiguration = {
+            name: "UserScopeAgent",
+            description: "Test",
+            model,
+            skillRepository: [],
+            toolProviders: [],
+            memoryManager,
+            communicator,
+        };
+
+        const manager = new AgentManager(config);
+        await manager.init();
+
+        const agentU1 = await manager.createAgent("user-1");
+        const agentU2 = await manager.createAgent("user-2");
+
+        // getAgentInteractionByUser for correct user
+        const interactionU1 = await manager.getAgentInteractionByUser(agentU1.id, "user-1");
+        expect(interactionU1).toBeDefined();
+        expect(interactionU1?.userId).toBe("user-1");
+
+        // getAgentInteractionByUser for incorrect user
+        const interactionForbidden = await manager.getAgentInteractionByUser(agentU1.id, "user-2");
+        expect(interactionForbidden).toBeUndefined();
+
+        // getAllAgentsByUser
+        const allU1 = await manager.getAllAgentsByUser("user-1");
+        expect(allU1).toEqual([agentU1.id]);
+
+        const allU2 = await manager.getAllAgentsByUser("user-2");
+        expect(allU2).toEqual([agentU2.id]);
+
+        manager.destroy();
+    });
+});
+
