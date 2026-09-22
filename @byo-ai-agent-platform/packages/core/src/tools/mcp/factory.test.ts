@@ -8,6 +8,7 @@ describe("RemoteMcpClientFactory", () => {
     const dummyAgent: AgentHandle = {
         id: "agent-1",
         name: "test-agent",
+        userId: "user-1",
     };
 
     let connectSpy: any;

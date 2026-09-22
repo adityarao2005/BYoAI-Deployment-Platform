@@ -38,7 +38,9 @@ app.use(async (c, next) => {
 
 // create agent route
 app.post("/interactions", async (c) => {
-    const agent = await manager.createAgent();
+
+    const sub = c.get("jwtPayload").sub
+    const agent = await manager.createAgent(sub);
 
     return c.json({
         id: agent.id,
@@ -47,7 +49,8 @@ app.post("/interactions", async (c) => {
 
 // get all agent interactions
 app.get("/interactions", async (c) => {
-    const agentIds = await manager.getAllAgents();
+    const sub = c.get("jwtPayload").sub
+    const agentIds = await manager.getAllAgentsByUser(sub);
 
     return c.json(
         agentIds.map((id) => {
@@ -59,7 +62,8 @@ app.get("/interactions", async (c) => {
 // get interaction memory
 app.get("/interactions/:id", async (c) => {
     const { id } = c.req.param();
-    const interaction = await manager.getAgentInteraction(id);
+    const sub = c.get("jwtPayload").sub
+    const interaction = await manager.getAgentInteractionByUser(id, sub);
 
     if (!interaction) {
         throw new HTTPException(404, {
@@ -81,7 +85,8 @@ app.post(
     async (c) => {
         // get the id
         const { id } = c.req.param();
-        const interaction = await manager.getAgentInteraction(id);
+        const sub = c.get("jwtPayload").sub
+        const interaction = await manager.getAgentInteractionByUser(id, sub);
 
         if (!interaction) {
             throw new HTTPException(404, {
@@ -103,7 +108,8 @@ app.post(
 
 app.get("/interactions/:id/sse", async (c) => {
     const { id } = c.req.param();
-    const interaction = await manager.getAgentInteraction(id);
+    const sub = c.get("jwtPayload").sub
+    const interaction = await manager.getAgentInteractionByUser(id, sub);
 
     if (!interaction) {
         throw new HTTPException(404, {

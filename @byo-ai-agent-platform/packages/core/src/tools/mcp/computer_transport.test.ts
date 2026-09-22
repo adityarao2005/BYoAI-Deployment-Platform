@@ -177,6 +177,7 @@ describe("ComputerUseStdioMcpClientFactory", () => {
         const agent: AgentHandle = {
             id: "agent-1",
             name: "test-agent",
+            userId: "user-1",
             computerId: "comp-999",
         };
 

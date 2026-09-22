@@ -4,6 +4,8 @@ import {
     type AgentMemoryManager,
 } from "@/agents";
 import type { ModelInteraction } from "@/models/conversation";
+import { ValueSchema } from "@bufbuild/protobuf/wkt";
+import { keyof } from "zod";
 
 /**
  * In-memory implementation of {@link AgentMemoryManager} for managing non-persistent agent conversation state.
@@ -12,9 +14,9 @@ export class InMemoryAgentMemoryManager implements AgentMemoryManager {
     private memories: Map<string, AgentMemory> = new Map();
     private counter = 0;
 
-    async createAgentMemoryEntry(name: string): Promise<string> {
+    async createAgentMemoryEntry(name: string, userId: string): Promise<string> {
         const id = `agent-${++this.counter}`;
-        this.memories.set(id, new AgentMemory(name));
+        this.memories.set(id, new AgentMemory(name, userId));
         return id;
     }
 
@@ -54,12 +56,27 @@ export class InMemoryAgentMemoryManager implements AgentMemoryManager {
 
         return {
             id,
+            userId: memory.userId,
             name: memory.name,
             computerId: memory.computerId,
         };
     }
 
+    async getAgentByUser(id: string, userId: string): Promise<AgentHandle | undefined> {
+        const agent = await this.getAgent(id)
+
+        if (agent?.userId === userId) {
+            return agent
+        }
+
+        return undefined
+    }
+
     async getAllAgents(): Promise<string[]> {
         return Array.from(this.memories.keys());
+    }
+
+    async getAllAgentsByUser(user: string): Promise<string[]> {
+        return this.memories.entries().filter(([key, value]) => value.userId === user).map(([key]) => key).toArray();
     }
 }

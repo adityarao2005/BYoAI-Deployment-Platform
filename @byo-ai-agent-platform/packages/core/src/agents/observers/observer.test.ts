@@ -145,7 +145,7 @@ describe("AgentObserver", () => {
         const manager = new AgentManager(config);
         await manager.init();
 
-        const agent = await manager.createAgent();
+        const agent = await manager.createAgent("user-1");
 
         await communicator.emit("user:message", {
             agentId: agent.id,
@@ -204,7 +204,7 @@ describe("AgentObserver", () => {
 
         const manager = new AgentManager(config);
         await manager.init();
-        const agent = await manager.createAgent();
+        const agent = await manager.createAgent("user-1");
 
         let completed = false;
         communicator.on("agent:complete", () => {

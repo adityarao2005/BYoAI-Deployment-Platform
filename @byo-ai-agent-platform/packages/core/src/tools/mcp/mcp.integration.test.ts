@@ -25,6 +25,7 @@ describe("MCP Integration Test Suite", () => {
     const dummyAgent: AgentHandle = {
         id: "integration-agent-1",
         name: "integration-agent",
+        userId: "user-1",
     };
     const fakeSession = { agent: dummyAgent } as unknown as AgentSession;
 

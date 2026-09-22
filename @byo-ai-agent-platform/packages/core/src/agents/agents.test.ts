@@ -13,7 +13,7 @@ import {
 
 describe("AgentMemory", () => {
     it("correctly computes pending tool calls and handles resolution", () => {
-        const memory = new AgentMemory("test");
+        const memory = new AgentMemory("test", "user-1");
 
         expect(memory.getPendingToolCalls()).toEqual([]);
 
@@ -140,7 +140,7 @@ describe("AgentManager Integration", () => {
         const manager = new AgentManager(config);
         await manager.init();
 
-        const agent = await manager.createAgent();
+        const agent = await manager.createAgent("user-1");
         expect(agent.id).toBeDefined();
 
         await communicator.emit("user:message", {
@@ -248,7 +248,7 @@ describe("AgentManager Integration", () => {
         const manager = new AgentManager(config);
         await manager.init();
 
-        const agent = await manager.createAgent();
+        const agent = await manager.createAgent("user-1");
         await communicator.emit("user:message", {
             agentId: agent.id,
             content: "What is 5 + 7?",
@@ -345,7 +345,7 @@ describe("AgentManager Integration", () => {
         const manager = new AgentManager(config);
         await manager.init();
 
-        const agent = await manager.createAgent();
+        const agent = await manager.createAgent("user-1");
         await communicator.emit("user:message", {
             agentId: agent.id,
             content: "Run the failing tool",
@@ -375,7 +375,7 @@ describe("JsonFileAgentMemoryManager", () => {
 
         try {
             const memoryManager1 = new JsonFileAgentMemoryManager(tempDir);
-            const agentId = await memoryManager1.createAgentMemoryEntry("test");
+            const agentId = await memoryManager1.createAgentMemoryEntry("test", "user-1");
 
             await memoryManager1.setComputerId(agentId, "comp-999");
             await memoryManager1.addTranscriptEntries(agentId, [
@@ -409,13 +409,14 @@ describe("JsonFileAgentMemoryManager", () => {
 
         try {
             const memoryManager = new JsonFileAgentMemoryManager(tempDir);
-            const id1 = await memoryManager.createAgentMemoryEntry("agent1");
-            const id2 = await memoryManager.createAgentMemoryEntry("agent2");
+            const id1 = await memoryManager.createAgentMemoryEntry("agent1", "user-1");
+            const id2 = await memoryManager.createAgentMemoryEntry("agent2", "user-1");
 
             const agent1 = await memoryManager.getAgent(id1);
             expect(agent1).toEqual({
                 id: id1,
                 name: "agent1",
+                userId: "user-1",
                 computerId: undefined,
             });
 
