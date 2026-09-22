@@ -5,6 +5,20 @@ import {
 } from "@byo-ai-agent-platform/core/config";
 import { z } from "zod";
 
+export const AgentSecuritySchema = z.object({
+    jwksUri: z.httpUrl(),
+    alg: z.array(z.enum(['RS256', 'RS384', 'RS512', 'PS256', 'PS384', 'PS512', 'ES256', 'ES384', 'ES512', 'EdDSA'])),
+    verify: z.object({
+        iss: z.string().optional(),
+        nbf: z.boolean().optional().default(true),
+        exp: z.boolean().optional().default(true),
+        iat: z.boolean().optional().default(true),
+        aud: z.union([z.string(), z.array(z.string())]).optional()
+    }).optional()
+})
+
+export type AgentSecurity = z.infer<typeof AgentSecuritySchema> 
+
 /**
  * Zod schema defining the agent configuration file structure (`agent.yaml`).
  */
@@ -14,6 +28,7 @@ export const AgentConfigSchema = z.object({
     models: z.array(ModelConfigSchema),
     skillRepositories: z.array(SkillRepositoryConfigSchema).default([]),
     toolProviders: z.array(ToolProviderConfigSchema).optional().default([]),
+    security: AgentSecuritySchema
 });
 
 /**

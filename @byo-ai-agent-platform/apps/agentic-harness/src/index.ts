@@ -5,12 +5,18 @@ import { HTTPException } from "hono/http-exception";
 import { streamSSE } from "hono/streaming";
 import z from "zod";
 import { bootstrap } from "./bootstrap";
+import { jwk } from "hono/jwk";
 
-const { manager } = await bootstrap();
+const { manager, config } = await bootstrap();
 
-const app = new Hono();
+const app = new Hono()
+    .get("/health", (c) => c.json({ healthy: "OK" }))
+    .use("/*", jwk({
+        jwks_uri: (c) => config.security.jwksUri,
+        alg: config.security.alg,
+        verification: config.security.verify
+    }));
 
-app.get("/health", (c) => c.json({ healthy: "OK" }));
 
 // create agent route
 app.post("/interactions", async (c) => {

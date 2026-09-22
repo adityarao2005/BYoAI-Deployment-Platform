@@ -338,8 +338,9 @@ export function registerToolProviders(
 export interface BootstrappedAgent {
     /** Active AgentManager instance governing the agent lifecycle */
     manager: AgentManager;
-    /** AgentCommunicator instance used by the manager */
-    communicator: AgentCommunicator;
+
+    /** Agent Configuration  */
+    config: AgentConfig;
 }
 
 /**
@@ -363,12 +364,15 @@ export async function bootstrap(
 
     let computer: ComputerProvider | undefined;
 
-    if (config) {
-        registerModels(config);
-        registerSkillRepositories(config);
-        computer = registerComputer(config);
-        registerToolProviders(config, computer);
+    if (!config) {
+        throw new Error("Config was not able to be loaded for reasons unspecified")
     }
+    
+    registerModels(config);
+    registerSkillRepositories(config);
+    computer = registerComputer(config);
+    registerToolProviders(config, computer);
+
 
     const defaultModel = modelRegistry.getDefaultModel();
     if (!defaultModel) {
@@ -418,6 +422,6 @@ export async function bootstrap(
 
     return {
         manager,
-        communicator,
+        config,
     };
 }

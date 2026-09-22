@@ -91,7 +91,6 @@ export class AgentManager {
     private skills: Skill[] = [];
     private tools: Tool[] | undefined = undefined;
     private unsubscribers: Array<() => void> = [];
-    private logger = getLogger("AgentManager");
 
     constructor(configuration: AgentConfiguration) {
         this.configuration = configuration;
@@ -528,6 +527,10 @@ export class AgentManager {
 
     get communicator(): AgentCommunicator {
         return this.configuration.communicator;
+    }
+
+    get memoryManager(): AgentMemoryManager {
+        return this.configuration.memoryManager;
     }
 }
 
