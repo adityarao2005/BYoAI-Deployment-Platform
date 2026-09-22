@@ -14,7 +14,8 @@ export const AgentSecuritySchema = z.object({
         exp: z.boolean().optional().default(true),
         iat: z.boolean().optional().default(true),
         aud: z.union([z.string(), z.array(z.string())]).optional()
-    }).optional()
+    }).optional(),
+    adminRoles: z.array(z.string()).optional()
 })
 
 export type AgentSecurity = z.infer<typeof AgentSecuritySchema> 
