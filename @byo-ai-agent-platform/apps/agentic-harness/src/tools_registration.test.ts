@@ -25,6 +25,10 @@ describe("Tool Provider Registration", () => {
                     securityVariables: { type: "bearerToken", token: "abc" },
                 },
             ],
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         registerToolProviders(config);
@@ -47,6 +51,10 @@ describe("Tool Provider Registration", () => {
                     args: ["server.js"],
                 },
             ],
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         registerToolProviders(config);
@@ -68,6 +76,10 @@ describe("Tool Provider Registration", () => {
                     url: "http://localhost:3000/mcp",
                 },
             ],
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         registerToolProviders(config);
@@ -97,6 +109,10 @@ describe("Tool Provider Registration", () => {
                     args: ["mcp_server.py"],
                 },
             ],
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         const computer = registerComputer(config);
@@ -120,6 +136,10 @@ describe("Tool Provider Registration", () => {
                     args: ["mcp_server.py"],
                 },
             ],
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         expect(() => registerToolProviders(config)).toThrow(
@@ -140,6 +160,10 @@ describe("Tool Provider Registration", () => {
                     },
                 },
             ],
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         registerToolProviders(config);
@@ -164,6 +188,10 @@ describe("Tool Provider Registration", () => {
                     },
                 },
             ],
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         registerToolProviders(config);
@@ -195,6 +223,10 @@ describe("Tool Provider Registration", () => {
                     },
                 },
             ],
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         expect(() => registerToolProviders(config)).toThrow(
@@ -215,6 +247,10 @@ describe("Tool Provider Registration", () => {
                     },
                 },
             ],
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         registerToolProviders(config);
@@ -246,6 +282,10 @@ describe("Tool Provider Registration", () => {
                     },
                 },
             ],
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         registerToolProviders(config);
@@ -274,6 +314,10 @@ describe("Tool Provider Registration", () => {
                     },
                 },
             ],
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         const computer = registerComputer(config);
@@ -289,6 +333,11 @@ describe("Tool Provider Registration", () => {
             models: [],
             skillRepositories: [],
             toolProviders: [],
+            
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         const computer = registerComputer(config);

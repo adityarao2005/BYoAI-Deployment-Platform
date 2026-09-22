@@ -62,6 +62,10 @@ describe("Skill Repository Registration", () => {
                 },
             ],
             toolProviders: [],
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         registerSkillRepositories(config);
@@ -93,6 +97,10 @@ describe("Skill Repository Registration", () => {
                 },
             ],
             toolProviders: [],
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         registerSkillRepositories(config);

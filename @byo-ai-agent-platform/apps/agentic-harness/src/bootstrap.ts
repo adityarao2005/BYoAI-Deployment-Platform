@@ -11,7 +11,7 @@ import {
     LoggingAgentObserver,
 } from "@byo-ai-agent-platform/core/agents";
 import { ConfigError } from "@byo-ai-agent-platform/core/errors";
-import { configureLogger, getLogger } from "@byo-ai-agent-platform/core/logger";
+import { getLogger } from "@byo-ai-agent-platform/core/logger";
 import {
     type ComputerProvider,
     createComputerProvider,

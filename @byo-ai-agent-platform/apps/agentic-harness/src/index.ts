@@ -6,16 +6,34 @@ import { streamSSE } from "hono/streaming";
 import z from "zod";
 import { bootstrap } from "./bootstrap";
 import { jwk } from "hono/jwk";
+import type { JwtVariables } from "hono/jwt";
+import { logger } from "hono/logger";
+import { getLogger } from "@/logger";
 
 const { manager, config } = await bootstrap();
 
-const app = new Hono()
-    .get("/health", (c) => c.json({ healthy: "OK" }))
-    .use("/*", jwk({
-        jwks_uri: (c) => config.security.jwksUri,
-        alg: config.security.alg,
-        verification: config.security.verify
-    }));
+const appLogger = getLogger("AppLogger")
+
+const app = new Hono<{ Variables: JwtVariables }>()
+
+app.get("/health", (c) => c.json({ healthy: "OK" }))
+
+app.use(jwk({
+    jwks_uri: (c) => config.security.jwksUri,
+    alg: config.security.alg,
+    verification: config.security.verify
+}));
+
+app.use(logger(appLogger.info))
+
+app.use(async (c, next) => {
+    const payload = c.get('jwtPayload');
+    const sub = payload?.sub;
+
+    appLogger.debug("Authorized Access:", `Path ${c.req.path}`, `Subject: ${sub}`)
+
+    await next()
+})
 
 
 // create agent route
