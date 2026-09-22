@@ -49,6 +49,10 @@ export class ToolProviderRegistry {
     getAllToolProviders(): ToolProvider[] {
         return this.registry;
     }
+
+    clear() {
+        this.registry = [];
+    }
 }
 
 export const toolProviderRegistry: ToolProviderRegistry =

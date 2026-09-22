@@ -16,6 +16,7 @@ export interface JsonAgentMemoryRecord {
     computerId?: string;
     transcript: ModelInteraction[];
     name: string;
+    userId: string;
 }
 
 /**
@@ -62,13 +63,14 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
         await fs.rename(tempPath, filePath);
     }
 
-    async createAgentMemoryEntry(name: string): Promise<string> {
+    async createAgentMemoryEntry(name: string, userId: string): Promise<string> {
         await this.ensureStorageDir();
         const id = `agent-${crypto.randomUUID()}`;
         const initialRecord: JsonAgentMemoryRecord = {
             id,
             name,
             transcript: [],
+            userId
         };
         await this.writeRecord(initialRecord);
         return id;
@@ -78,6 +80,7 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
         const record = await this.readRecord(agentId);
         return new AgentMemory(
             record.name,
+            record.userId,
             record.transcript ?? [],
             record.computerId,
         );
@@ -95,12 +98,23 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
 
             return {
                 id: record.id,
+                userId: record.userId,
                 computerId: record.computerId,
                 name: record.name,
             };
         } catch {
             return undefined;
         }
+    }
+
+    async getAgentByUser(id: string, userId: string): Promise<AgentHandle | undefined> {
+        const agent = await this.getAgent(id)
+
+        if (agent?.userId === userId) {
+            return agent
+        }
+
+        return undefined
     }
 
     async getAllAgents(): Promise<string[]> {
@@ -113,6 +127,19 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
         } catch {
             return [];
         }
+    }
+
+    async getAllAgentsByUser(userId: string): Promise<string[]> {
+        const agents = await this.getAllAgents()
+
+        const result = []
+        for (const agent of agents) {
+            const value = await this.getAgent(agent)
+            if (value?.userId === userId)
+                result.push(agent)
+        }
+
+        return result
     }
 
     async addTranscriptEntries(

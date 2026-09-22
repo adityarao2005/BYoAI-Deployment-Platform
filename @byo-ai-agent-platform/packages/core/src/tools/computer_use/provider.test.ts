@@ -14,6 +14,7 @@ function createAgent(computerId?: string): AgentHandle {
     return {
         id: "test-agent",
         name: "test-agent",
+        userId: "user-1",
         computerId,
     };
 }

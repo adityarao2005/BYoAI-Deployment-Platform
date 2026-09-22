@@ -8,15 +8,19 @@ export class AgentMemory {
     transcript: ModelInteraction[];
     computerId?: string;
     name: string;
+    userId: string;
 
     constructor(
         name: string,
+        userId: string,
         transcript: ModelInteraction[] = [],
         computerId?: string,
+
     ) {
         this.transcript = transcript;
         this.computerId = computerId;
         this.name = name;
+        this.userId = userId;
     }
 
     /**
@@ -42,7 +46,7 @@ export class AgentMemory {
  */
 export interface AgentMemoryManager {
     /** Creates a new memory entry for an agent and returns its memory ID */
-    createAgentMemoryEntry(name: string): Promise<string>;
+    createAgentMemoryEntry(name: string, userId: string): Promise<string>;
 
     /** Retrieves memory for a given agent */
     getAgentMemory(agentId: string): Promise<AgentMemory>;
@@ -61,7 +65,13 @@ export interface AgentMemoryManager {
 
     // Get agent by id
     getAgent(id: string): Promise<AgentHandle | undefined>;
+    
+    // Get agent by id
+    getAgentByUser(id: string, userId: string): Promise<AgentHandle | undefined>;
 
     // get all agents
     getAllAgents(): Promise<string[]>;
+
+    // get all agents by user
+    getAllAgentsByUser(userId: string): Promise<string[]>
 }

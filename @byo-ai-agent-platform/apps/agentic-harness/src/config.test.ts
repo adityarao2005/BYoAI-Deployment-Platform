@@ -31,6 +31,10 @@ describe("loadConfig", () => {
                         },
                     },
                 ],
+                security: {
+                    jwksUri: "https://example.com",
+                    alg: ["RS256"]
+                }
             }),
             "utf8",
         );
@@ -66,6 +70,10 @@ describe("loadConfig", () => {
                         },
                     },
                 ],
+                security: {
+                    jwksUri: "https://example.com",
+                    alg: ["RS256"]
+                }
             }),
             "utf8",
         );
@@ -92,6 +100,9 @@ models:
       apiKey: "\${TEST_GEMINI_KEY}"
 skillRepositories: []
 toolProviders: []
+security:
+    jwksUri: https://example.com
+    alg: ['RS256']
 `,
             "utf8",
         );
@@ -121,6 +132,9 @@ models:
       apiKey: "\${UNSET_VAR:-fallback-key}"
 skillRepositories: []
 toolProviders: []
+security:
+    jwksUri: "https://example.com"
+    alg: ["RS256"]
 `,
             "utf8",
         );

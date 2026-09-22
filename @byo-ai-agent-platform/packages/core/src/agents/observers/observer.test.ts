@@ -105,6 +105,7 @@ describe("AgentObserver", () => {
 
         let modelTurn = 0;
         const model: Model = {
+            name: "test",
             async execute() {
                 modelTurn++;
                 if (modelTurn === 1) {
@@ -144,7 +145,7 @@ describe("AgentObserver", () => {
         const manager = new AgentManager(config);
         await manager.init();
 
-        const agent = await manager.createAgent();
+        const agent = await manager.createAgent("user-1");
 
         await communicator.emit("user:message", {
             agentId: agent.id,
@@ -181,6 +182,7 @@ describe("AgentObserver", () => {
         };
 
         const failingModel: Model = {
+            name: "test",
             async execute() {
                 throw new Error("Model API failure");
             },
@@ -202,7 +204,7 @@ describe("AgentObserver", () => {
 
         const manager = new AgentManager(config);
         await manager.init();
-        const agent = await manager.createAgent();
+        const agent = await manager.createAgent("user-1");
 
         let completed = false;
         communicator.on("agent:complete", () => {

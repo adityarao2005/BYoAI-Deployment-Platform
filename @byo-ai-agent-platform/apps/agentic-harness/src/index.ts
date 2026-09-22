@@ -5,16 +5,42 @@ import { HTTPException } from "hono/http-exception";
 import { streamSSE } from "hono/streaming";
 import z from "zod";
 import { bootstrap } from "./bootstrap";
+import { jwk } from "hono/jwk";
+import type { JwtVariables } from "hono/jwt";
+import { logger } from "hono/logger";
+import { getLogger } from "@byo-ai-agent-platform/core/logger";
 
-const { manager } = await bootstrap();
+const { manager, config } = await bootstrap();
 
-const app = new Hono();
+const appLogger = getLogger("AppLogger")
 
-app.get("/health", (c) => c.json({ healthy: "OK" }));
+const app = new Hono<{ Variables: JwtVariables }>()
+
+app.get("/health", (c) => c.json({ healthy: "OK" }))
+
+app.use(jwk({
+    jwks_uri: (c) => config.security.jwksUri,
+    alg: config.security.alg,
+    verification: config.security.verify
+}));
+
+app.use(logger((message, ...rest) => appLogger.info(message, ...rest)))
+
+app.use(async (c, next) => {
+    const payload = c.get('jwtPayload');
+    const sub = payload?.sub;
+
+    appLogger.debug("Authorized Access:", `Path ${c.req.path}`, `Subject: ${sub}`)
+
+    await next()
+})
+
 
 // create agent route
 app.post("/interactions", async (c) => {
-    const agent = await manager.createAgent();
+
+    const sub = c.get("jwtPayload").sub
+    const agent = await manager.createAgent(sub);
 
     return c.json({
         id: agent.id,
@@ -23,7 +49,8 @@ app.post("/interactions", async (c) => {
 
 // get all agent interactions
 app.get("/interactions", async (c) => {
-    const agentIds = await manager.getAllAgents();
+    const sub = c.get("jwtPayload").sub
+    const agentIds = await manager.getAllAgentsByUser(sub);
 
     return c.json(
         agentIds.map((id) => {
@@ -35,7 +62,8 @@ app.get("/interactions", async (c) => {
 // get interaction memory
 app.get("/interactions/:id", async (c) => {
     const { id } = c.req.param();
-    const interaction = await manager.getAgentInteraction(id);
+    const sub = c.get("jwtPayload").sub
+    const interaction = await manager.getAgentInteractionByUser(id, sub);
 
     if (!interaction) {
         throw new HTTPException(404, {
@@ -57,7 +85,8 @@ app.post(
     async (c) => {
         // get the id
         const { id } = c.req.param();
-        const interaction = await manager.getAgentInteraction(id);
+        const sub = c.get("jwtPayload").sub
+        const interaction = await manager.getAgentInteractionByUser(id, sub);
 
         if (!interaction) {
             throw new HTTPException(404, {
@@ -79,7 +108,8 @@ app.post(
 
 app.get("/interactions/:id/sse", async (c) => {
     const { id } = c.req.param();
-    const interaction = await manager.getAgentInteraction(id);
+    const sub = c.get("jwtPayload").sub
+    const interaction = await manager.getAgentInteractionByUser(id, sub);
 
     if (!interaction) {
         throw new HTTPException(404, {
@@ -181,6 +211,53 @@ app.get("/interactions/:id/sse", async (c) => {
             }
         }
     });
+});
+
+// admin stuff
+app.use("/admin/*", async (c, next) => {
+    const jwtPayload = c.get("jwtPayload")
+
+    // 1. Standard top-level claims (Auth0 / custom OIDC)
+    const roles: string[] = Array.isArray(jwtPayload?.roles)
+        ? jwtPayload.roles
+        : typeof jwtPayload?.role === "string"
+            ? [jwtPayload.role]
+            : [];
+
+    const providedRoles = new Set(roles)
+    const requiredRolesSet = new Set(config.security.adminRoles ?? [])
+
+    if (requiredRolesSet.intersection(providedRoles).size > 0) {
+        return await next()
+    }
+
+    throw new HTTPException(403, {
+        message: "Forbidden! You do not have valid roles to access this resource."
+    })
+})
+
+// get interaction memory
+app.get("/admin/interactions/:id", async (c) => {
+    const { id } = c.req.param();
+    const interaction = await manager.getAgentInteraction(id);
+
+    if (!interaction) {
+        throw new HTTPException(404, {
+            message: `Agent interaction ${id} does not exist.`,
+        });
+    }
+    return c.json(interaction);
+});
+
+// get all agent interactions
+app.get("/admin/interactions", async (c) => {
+    const agentIds = await manager.getAllAgents();
+
+    return c.json(
+        agentIds.map((id) => {
+            return { id };
+        }),
+    );
 });
 
 export default app;

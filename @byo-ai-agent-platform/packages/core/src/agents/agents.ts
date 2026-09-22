@@ -14,7 +14,6 @@ export { AgentMemory, type AgentMemoryManager };
 import type { AgentCommunicator } from "./agent.messaging";
 import type { AgentObserver } from "./agent.observer";
 import { AgentExecutionError } from "@/errors/exceptions";
-import { getLogger } from "@/logger";
 /**
  * Plain agent identifier.
  */
@@ -22,6 +21,7 @@ export type AgentHandle = {
     id: string;
     name: string;
     computerId?: string;
+    userId: string;
 };
 /**
  * Full configuration object for initializing an {@link AgentManager}.
@@ -77,6 +77,7 @@ ${description}
 export interface AgentSession {
     readonly agent: AgentHandle;
     readonly name: string;
+    readonly userId: string;
     readonly description: string;
     readonly memory: AgentMemory;
     readonly computerProvider?: ComputerProvider;
@@ -91,7 +92,6 @@ export class AgentManager {
     private skills: Skill[] = [];
     private tools: Tool[] | undefined = undefined;
     private unsubscribers: Array<() => void> = [];
-    private logger = getLogger("AgentManager");
 
     constructor(configuration: AgentConfiguration) {
         this.configuration = configuration;
@@ -224,10 +224,11 @@ export class AgentManager {
     }
 
     // Creates the agent
-    async createAgent(): Promise<AgentHandle> {
+    async createAgent(userId: string): Promise<AgentHandle> {
         const id =
             await this.configuration.memoryManager.createAgentMemoryEntry(
                 this.configuration.name,
+                userId
             );
 
         if (this.configuration.computerProvider) {
@@ -283,6 +284,7 @@ export class AgentManager {
                 agent,
                 name: this.configuration.name,
                 description: this.configuration.description,
+                userId: agent.userId,
                 memory,
                 computerProvider: this.configuration.computerProvider,
                 skillRepositories: this.configuration.skillRepository,
@@ -504,9 +506,7 @@ export class AgentManager {
     }
 
     // Get agent by id
-    async getAgentInteraction(
-        id: string,
-    ): Promise<AgentInteraction | undefined> {
+    async getAgentInteraction(id: string): Promise<AgentInteraction | undefined> {
         const agent = await this.configuration.memoryManager.getAgent(id);
         if (!agent) {
             return undefined;
@@ -517,6 +517,25 @@ export class AgentManager {
 
         return {
             id,
+            userId: agent.userId,
+            name: memory.name,
+            transcript: memory.transcript,
+        };
+    }
+
+    // Get agent by id
+    async getAgentInteractionByUser(id: string, userId: string): Promise<AgentInteraction | undefined> {
+        const agent = await this.configuration.memoryManager.getAgentByUser(id, userId);
+        if (!agent) {
+            return undefined;
+        }
+
+        const memory =
+            await this.configuration.memoryManager.getAgentMemory(id);
+
+        return {
+            id,
+            userId: agent.userId,
             name: memory.name,
             transcript: memory.transcript,
         };
@@ -526,13 +545,22 @@ export class AgentManager {
         return await this.configuration.memoryManager.getAllAgents();
     }
 
+    async getAllAgentsByUser(userId: string): Promise<string[]> {
+        return await this.configuration.memoryManager.getAllAgentsByUser(userId)
+    }
+
     get communicator(): AgentCommunicator {
         return this.configuration.communicator;
+    }
+
+    get memoryManager(): AgentMemoryManager {
+        return this.configuration.memoryManager;
     }
 }
 
 export type AgentInteraction = {
     id: string;
     name: string;
+    userId: string;
     transcript: ModelInteraction[];
 };

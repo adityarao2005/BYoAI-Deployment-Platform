@@ -31,6 +31,11 @@ describe("Model Config Registration", () => {
             ],
             skillRepositories: [],
             toolProviders: [],
+            
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         registerModels(config);
@@ -54,6 +59,11 @@ describe("Model Config Registration", () => {
             ],
             skillRepositories: [],
             toolProviders: [],
+            
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         registerModels(config);
@@ -76,6 +86,11 @@ describe("Model Config Registration", () => {
             ],
             skillRepositories: [],
             toolProviders: [],
+            
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         registerModels(config);
@@ -98,6 +113,10 @@ describe("Model Config Registration", () => {
             ],
             skillRepositories: [],
             toolProviders: [],
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         registerModels(config);
@@ -135,6 +154,10 @@ describe("Model Config Registration", () => {
             ],
             skillRepositories: [],
             toolProviders: [],
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         registerModels(config);
@@ -167,6 +190,10 @@ describe("Model Config Registration", () => {
             ],
             skillRepositories: [],
             toolProviders: [],
+            security: {
+                alg: ['RS512'],
+                jwksUri: "https://example.com"
+            }
         };
 
         registerModels(config);

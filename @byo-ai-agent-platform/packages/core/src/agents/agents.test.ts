@@ -13,7 +13,7 @@ import {
 
 describe("AgentMemory", () => {
     it("correctly computes pending tool calls and handles resolution", () => {
-        const memory = new AgentMemory("test");
+        const memory = new AgentMemory("test", "user-1");
 
         expect(memory.getPendingToolCalls()).toEqual([]);
 
@@ -115,6 +115,7 @@ describe("AgentManager Integration", () => {
         const memoryManager = new InMemoryAgentMemoryManager();
 
         const model: Model = {
+            name: "test",
             async execute(_input) {
                 return [
                     {
@@ -139,7 +140,7 @@ describe("AgentManager Integration", () => {
         const manager = new AgentManager(config);
         await manager.init();
 
-        const agent = await manager.createAgent();
+        const agent = await manager.createAgent("user-1");
         expect(agent.id).toBeDefined();
 
         await communicator.emit("user:message", {
@@ -211,6 +212,7 @@ describe("AgentManager Integration", () => {
 
         let turns = 0;
         const model: Model = {
+            name: "test",
             async execute(_input) {
                 turns++;
                 if (turns === 1) {
@@ -246,7 +248,7 @@ describe("AgentManager Integration", () => {
         const manager = new AgentManager(config);
         await manager.init();
 
-        const agent = await manager.createAgent();
+        const agent = await manager.createAgent("user-1");
         await communicator.emit("user:message", {
             agentId: agent.id,
             content: "What is 5 + 7?",
@@ -306,6 +308,7 @@ describe("AgentManager Integration", () => {
 
         let turns = 0;
         const model: Model = {
+            name: "test",
             async execute(_input) {
                 turns++;
                 if (turns === 1) {
@@ -342,7 +345,7 @@ describe("AgentManager Integration", () => {
         const manager = new AgentManager(config);
         await manager.init();
 
-        const agent = await manager.createAgent();
+        const agent = await manager.createAgent("user-1");
         await communicator.emit("user:message", {
             agentId: agent.id,
             content: "Run the failing tool",
@@ -372,7 +375,7 @@ describe("JsonFileAgentMemoryManager", () => {
 
         try {
             const memoryManager1 = new JsonFileAgentMemoryManager(tempDir);
-            const agentId = await memoryManager1.createAgentMemoryEntry("test");
+            const agentId = await memoryManager1.createAgentMemoryEntry("test", "user-1");
 
             await memoryManager1.setComputerId(agentId, "comp-999");
             await memoryManager1.addTranscriptEntries(agentId, [
@@ -406,13 +409,14 @@ describe("JsonFileAgentMemoryManager", () => {
 
         try {
             const memoryManager = new JsonFileAgentMemoryManager(tempDir);
-            const id1 = await memoryManager.createAgentMemoryEntry("agent1");
-            const id2 = await memoryManager.createAgentMemoryEntry("agent2");
+            const id1 = await memoryManager.createAgentMemoryEntry("agent1", "user-1");
+            const id2 = await memoryManager.createAgentMemoryEntry("agent2", "user-1");
 
             const agent1 = await memoryManager.getAgent(id1);
             expect(agent1).toEqual({
                 id: id1,
                 name: "agent1",
+                userId: "user-1",
                 computerId: undefined,
             });
 
@@ -427,4 +431,99 @@ describe("JsonFileAgentMemoryManager", () => {
             await fs.rm(tempDir, { recursive: true, force: true });
         }
     });
+
+    it("scopes agents by user correctly on JsonFileAgentMemoryManager", async () => {
+        const tempDir = await fs.mkdtemp(
+            path.join(os.tmpdir(), "agent-memory-user-test-"),
+        );
+
+        try {
+            const memoryManager = new JsonFileAgentMemoryManager(tempDir);
+            const id1 = await memoryManager.createAgentMemoryEntry("agent-user1", "user-1");
+            const id2 = await memoryManager.createAgentMemoryEntry("agent-user2", "user-2");
+
+            const agent1Owned = await memoryManager.getAgentByUser(id1, "user-1");
+            expect(agent1Owned).toBeDefined();
+            expect(agent1Owned?.userId).toBe("user-1");
+
+            const agent1NotOwned = await memoryManager.getAgentByUser(id1, "user-2");
+            expect(agent1NotOwned).toBeUndefined();
+
+            const user1Agents = await memoryManager.getAllAgentsByUser("user-1");
+            expect(user1Agents).toEqual([id1]);
+
+            const user2Agents = await memoryManager.getAllAgentsByUser("user-2");
+            expect(user2Agents).toEqual([id2]);
+        } finally {
+            await fs.rm(tempDir, { recursive: true, force: true });
+        }
+    });
 });
+
+describe("InMemoryAgentMemoryManager & AgentManager User Scoping", () => {
+    it("scopes agents by user correctly on InMemoryAgentMemoryManager", async () => {
+        const memoryManager = new InMemoryAgentMemoryManager();
+        const id1 = await memoryManager.createAgentMemoryEntry("agent-1", "user-1");
+        const id2 = await memoryManager.createAgentMemoryEntry("agent-2", "user-2");
+
+        const agent1Owned = await memoryManager.getAgentByUser(id1, "user-1");
+        expect(agent1Owned).toBeDefined();
+        expect(agent1Owned?.userId).toBe("user-1");
+
+        const agent1NotOwned = await memoryManager.getAgentByUser(id1, "user-2");
+        expect(agent1NotOwned).toBeUndefined();
+
+        const user1Agents = await memoryManager.getAllAgentsByUser("user-1");
+        expect(user1Agents).toEqual([id1]);
+
+        const user2Agents = await memoryManager.getAllAgentsByUser("user-2");
+        expect(user2Agents).toEqual([id2]);
+    });
+
+    it("AgentManager handles user-scoped interaction methods", async () => {
+        const communicator = new InMemoryAgentCommunicator();
+        const memoryManager = new InMemoryAgentMemoryManager();
+
+        const model: Model = {
+            name: "test",
+            async execute() {
+                return [{ role: "assistant", type: "message", content: "ok" }];
+            },
+        };
+
+        const config: AgentConfiguration = {
+            name: "UserScopeAgent",
+            description: "Test",
+            model,
+            skillRepository: [],
+            toolProviders: [],
+            memoryManager,
+            communicator,
+        };
+
+        const manager = new AgentManager(config);
+        await manager.init();
+
+        const agentU1 = await manager.createAgent("user-1");
+        const agentU2 = await manager.createAgent("user-2");
+
+        // getAgentInteractionByUser for correct user
+        const interactionU1 = await manager.getAgentInteractionByUser(agentU1.id, "user-1");
+        expect(interactionU1).toBeDefined();
+        expect(interactionU1?.userId).toBe("user-1");
+
+        // getAgentInteractionByUser for incorrect user
+        const interactionForbidden = await manager.getAgentInteractionByUser(agentU1.id, "user-2");
+        expect(interactionForbidden).toBeUndefined();
+
+        // getAllAgentsByUser
+        const allU1 = await manager.getAllAgentsByUser("user-1");
+        expect(allU1).toEqual([agentU1.id]);
+
+        const allU2 = await manager.getAllAgentsByUser("user-2");
+        expect(allU2).toEqual([agentU2.id]);
+
+        manager.destroy();
+    });
+});
+

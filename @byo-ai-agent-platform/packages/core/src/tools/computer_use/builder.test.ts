@@ -9,12 +9,13 @@ import { createGraphicalTools, createHeadlessTools } from "./builder";
 const vi = { fn: mock };
 
 describe("computer tool builder", () => {
-    const agent: AgentHandle = { id: "test-agent", name: "test-agent" };
+    const agent: AgentHandle = { id: "test-agent", name: "test-agent", userId: "user-1" };
     const session: AgentSession = {
         agent,
         name: "test-agent",
         description: "test",
-        memory: new AgentMemory("test-agent"),
+        userId: "user-1",
+        memory: new AgentMemory("test-agent", "user-1"),
     };
 
     const mockHeadlessComputer: HeadlessComputer = {
