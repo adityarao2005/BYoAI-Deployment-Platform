@@ -105,6 +105,7 @@ describe("AgentObserver", () => {
 
         let modelTurn = 0;
         const model: Model = {
+            name: "test",
             async execute() {
                 modelTurn++;
                 if (modelTurn === 1) {
@@ -181,6 +182,7 @@ describe("AgentObserver", () => {
         };
 
         const failingModel: Model = {
+            name: "test",
             async execute() {
                 throw new Error("Model API failure");
             },

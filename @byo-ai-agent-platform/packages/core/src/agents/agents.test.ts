@@ -115,6 +115,7 @@ describe("AgentManager Integration", () => {
         const memoryManager = new InMemoryAgentMemoryManager();
 
         const model: Model = {
+            name: "test",
             async execute(_input) {
                 return [
                     {
@@ -211,6 +212,7 @@ describe("AgentManager Integration", () => {
 
         let turns = 0;
         const model: Model = {
+            name: "test",
             async execute(_input) {
                 turns++;
                 if (turns === 1) {
@@ -306,6 +308,7 @@ describe("AgentManager Integration", () => {
 
         let turns = 0;
         const model: Model = {
+            name: "test",
             async execute(_input) {
                 turns++;
                 if (turns === 1) {

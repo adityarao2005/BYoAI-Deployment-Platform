@@ -8,7 +8,7 @@ import { bootstrap } from "./bootstrap";
 import { jwk } from "hono/jwk";
 import type { JwtVariables } from "hono/jwt";
 import { logger } from "hono/logger";
-import { getLogger } from "@/logger";
+import { getLogger } from "@byo-ai-agent-platform/core/logger";
 
 const { manager, config } = await bootstrap();
 
