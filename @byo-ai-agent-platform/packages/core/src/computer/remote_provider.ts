@@ -821,4 +821,35 @@ export class RemoteComputerProvider implements ComputerProvider {
                 };
         }
     }
+
+    async sendSkillsZip(computerId: string, zipData: Buffer): Promise<string> {
+        if (!this.computerProviderService) {
+            await this.init();
+        }
+
+        const CHUNK_SIZE = 64 * 1024;
+        async function* generateChunks() {
+            for (let offset = 0; offset < zipData.length; offset += CHUNK_SIZE) {
+                const chunk = zipData.subarray(offset, offset + CHUNK_SIZE);
+                yield {
+                    sessionId: computerId,
+                    chunk: new Uint8Array(chunk),
+                };
+            }
+        }
+
+        const response =
+            await this.computerProviderService?.sendSkillsZip(generateChunks());
+
+        switch (response?.result.case) {
+            case "skillsPath":
+                return response.result.value;
+            case "errorMessage":
+                throw new ComputerProviderError(response.result.value);
+            default:
+                throw new ComputerProviderError(
+                    "Failed to upload skills zip to remote computer",
+                );
+        }
+    }
 }

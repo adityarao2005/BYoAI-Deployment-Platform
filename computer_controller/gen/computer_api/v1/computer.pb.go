@@ -497,6 +497,140 @@ func (*DeleteComputerResponse) Descriptor() ([]byte, []int) {
 	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{7}
 }
 
+type SendSkillsZipRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	Chunk         []byte                 `protobuf:"bytes,3,opt,name=chunk,proto3" json:"chunk,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendSkillsZipRequest) Reset() {
+	*x = SendSkillsZipRequest{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendSkillsZipRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendSkillsZipRequest) ProtoMessage() {}
+
+func (x *SendSkillsZipRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendSkillsZipRequest.ProtoReflect.Descriptor instead.
+func (*SendSkillsZipRequest) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *SendSkillsZipRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *SendSkillsZipRequest) GetChunk() []byte {
+	if x != nil {
+		return x.Chunk
+	}
+	return nil
+}
+
+type SendSkillsZipResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Result:
+	//
+	//	*SendSkillsZipResponse_ErrorMessage
+	//	*SendSkillsZipResponse_SkillsPath
+	Result        isSendSkillsZipResponse_Result `protobuf_oneof:"result"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SendSkillsZipResponse) Reset() {
+	*x = SendSkillsZipResponse{}
+	mi := &file_computer_api_v1_computer_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SendSkillsZipResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SendSkillsZipResponse) ProtoMessage() {}
+
+func (x *SendSkillsZipResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_computer_api_v1_computer_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SendSkillsZipResponse.ProtoReflect.Descriptor instead.
+func (*SendSkillsZipResponse) Descriptor() ([]byte, []int) {
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *SendSkillsZipResponse) GetResult() isSendSkillsZipResponse_Result {
+	if x != nil {
+		return x.Result
+	}
+	return nil
+}
+
+func (x *SendSkillsZipResponse) GetErrorMessage() string {
+	if x != nil {
+		if x, ok := x.Result.(*SendSkillsZipResponse_ErrorMessage); ok {
+			return x.ErrorMessage
+		}
+	}
+	return ""
+}
+
+func (x *SendSkillsZipResponse) GetSkillsPath() string {
+	if x != nil {
+		if x, ok := x.Result.(*SendSkillsZipResponse_SkillsPath); ok {
+			return x.SkillsPath
+		}
+	}
+	return ""
+}
+
+type isSendSkillsZipResponse_Result interface {
+	isSendSkillsZipResponse_Result()
+}
+
+type SendSkillsZipResponse_ErrorMessage struct {
+	ErrorMessage string `protobuf:"bytes,1,opt,name=error_message,json=errorMessage,proto3,oneof"`
+}
+
+type SendSkillsZipResponse_SkillsPath struct {
+	SkillsPath string `protobuf:"bytes,2,opt,name=skills_path,json=skillsPath,proto3,oneof"`
+}
+
+func (*SendSkillsZipResponse_ErrorMessage) isSendSkillsZipResponse_Result() {}
+
+func (*SendSkillsZipResponse_SkillsPath) isSendSkillsZipResponse_Result() {}
+
 // execute
 type ExecuteRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -514,7 +648,7 @@ type ExecuteRequest struct {
 
 func (x *ExecuteRequest) Reset() {
 	*x = ExecuteRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[8]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -526,7 +660,7 @@ func (x *ExecuteRequest) String() string {
 func (*ExecuteRequest) ProtoMessage() {}
 
 func (x *ExecuteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[8]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -539,7 +673,7 @@ func (x *ExecuteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecuteRequest.ProtoReflect.Descriptor instead.
 func (*ExecuteRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{8}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ExecuteRequest) GetSessionId() string {
@@ -609,7 +743,7 @@ type ExecutionResult struct {
 
 func (x *ExecutionResult) Reset() {
 	*x = ExecutionResult{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[9]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -621,7 +755,7 @@ func (x *ExecutionResult) String() string {
 func (*ExecutionResult) ProtoMessage() {}
 
 func (x *ExecutionResult) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[9]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -634,7 +768,7 @@ func (x *ExecutionResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecutionResult.ProtoReflect.Descriptor instead.
 func (*ExecutionResult) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{9}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ExecutionResult) GetExitCode() int32 {
@@ -671,7 +805,7 @@ type ExecuteResponse struct {
 
 func (x *ExecuteResponse) Reset() {
 	*x = ExecuteResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[10]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -683,7 +817,7 @@ func (x *ExecuteResponse) String() string {
 func (*ExecuteResponse) ProtoMessage() {}
 
 func (x *ExecuteResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[10]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -696,7 +830,7 @@ func (x *ExecuteResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecuteResponse.ProtoReflect.Descriptor instead.
 func (*ExecuteResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{10}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ExecuteResponse) GetResult() isExecuteResponse_Result {
@@ -753,7 +887,7 @@ type ReadFileRequest struct {
 
 func (x *ReadFileRequest) Reset() {
 	*x = ReadFileRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[11]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -765,7 +899,7 @@ func (x *ReadFileRequest) String() string {
 func (*ReadFileRequest) ProtoMessage() {}
 
 func (x *ReadFileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[11]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -778,7 +912,7 @@ func (x *ReadFileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReadFileRequest.ProtoReflect.Descriptor instead.
 func (*ReadFileRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{11}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ReadFileRequest) GetSessionId() string {
@@ -822,7 +956,7 @@ type ReadFileResponse struct {
 
 func (x *ReadFileResponse) Reset() {
 	*x = ReadFileResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[12]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -834,7 +968,7 @@ func (x *ReadFileResponse) String() string {
 func (*ReadFileResponse) ProtoMessage() {}
 
 func (x *ReadFileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[12]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -847,7 +981,7 @@ func (x *ReadFileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReadFileResponse.ProtoReflect.Descriptor instead.
 func (*ReadFileResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{12}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ReadFileResponse) GetResult() isReadFileResponse_Result {
@@ -904,7 +1038,7 @@ type WriteFileRequest struct {
 
 func (x *WriteFileRequest) Reset() {
 	*x = WriteFileRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[13]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -916,7 +1050,7 @@ func (x *WriteFileRequest) String() string {
 func (*WriteFileRequest) ProtoMessage() {}
 
 func (x *WriteFileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[13]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -929,7 +1063,7 @@ func (x *WriteFileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WriteFileRequest.ProtoReflect.Descriptor instead.
 func (*WriteFileRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{13}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *WriteFileRequest) GetSessionId() string {
@@ -968,7 +1102,7 @@ type SuccessWriteResponse struct {
 
 func (x *SuccessWriteResponse) Reset() {
 	*x = SuccessWriteResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[14]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -980,7 +1114,7 @@ func (x *SuccessWriteResponse) String() string {
 func (*SuccessWriteResponse) ProtoMessage() {}
 
 func (x *SuccessWriteResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[14]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -993,7 +1127,7 @@ func (x *SuccessWriteResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuccessWriteResponse.ProtoReflect.Descriptor instead.
 func (*SuccessWriteResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{14}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{16}
 }
 
 type WriteFileResponse struct {
@@ -1009,7 +1143,7 @@ type WriteFileResponse struct {
 
 func (x *WriteFileResponse) Reset() {
 	*x = WriteFileResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[15]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1021,7 +1155,7 @@ func (x *WriteFileResponse) String() string {
 func (*WriteFileResponse) ProtoMessage() {}
 
 func (x *WriteFileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[15]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1034,7 +1168,7 @@ func (x *WriteFileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WriteFileResponse.ProtoReflect.Descriptor instead.
 func (*WriteFileResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{15}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *WriteFileResponse) GetResult() isWriteFileResponse_Result {
@@ -1088,7 +1222,7 @@ type ListDirectoryRequest struct {
 
 func (x *ListDirectoryRequest) Reset() {
 	*x = ListDirectoryRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[16]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1100,7 +1234,7 @@ func (x *ListDirectoryRequest) String() string {
 func (*ListDirectoryRequest) ProtoMessage() {}
 
 func (x *ListDirectoryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[16]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1113,7 +1247,7 @@ func (x *ListDirectoryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDirectoryRequest.ProtoReflect.Descriptor instead.
 func (*ListDirectoryRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{16}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *ListDirectoryRequest) GetSessionId() string {
@@ -1139,7 +1273,7 @@ type SuccessListDirectoryResponse struct {
 
 func (x *SuccessListDirectoryResponse) Reset() {
 	*x = SuccessListDirectoryResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[17]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1151,7 +1285,7 @@ func (x *SuccessListDirectoryResponse) String() string {
 func (*SuccessListDirectoryResponse) ProtoMessage() {}
 
 func (x *SuccessListDirectoryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[17]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1164,7 +1298,7 @@ func (x *SuccessListDirectoryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuccessListDirectoryResponse.ProtoReflect.Descriptor instead.
 func (*SuccessListDirectoryResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{17}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *SuccessListDirectoryResponse) GetFiles() []string {
@@ -1187,7 +1321,7 @@ type ListDirectoryResponse struct {
 
 func (x *ListDirectoryResponse) Reset() {
 	*x = ListDirectoryResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[18]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1199,7 +1333,7 @@ func (x *ListDirectoryResponse) String() string {
 func (*ListDirectoryResponse) ProtoMessage() {}
 
 func (x *ListDirectoryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[18]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1212,7 +1346,7 @@ func (x *ListDirectoryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListDirectoryResponse.ProtoReflect.Descriptor instead.
 func (*ListDirectoryResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{18}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *ListDirectoryResponse) GetResult() isListDirectoryResponse_Result {
@@ -1266,7 +1400,7 @@ type GetUserIdRequest struct {
 
 func (x *GetUserIdRequest) Reset() {
 	*x = GetUserIdRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[19]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1278,7 +1412,7 @@ func (x *GetUserIdRequest) String() string {
 func (*GetUserIdRequest) ProtoMessage() {}
 
 func (x *GetUserIdRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[19]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1291,7 +1425,7 @@ func (x *GetUserIdRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserIdRequest.ProtoReflect.Descriptor instead.
 func (*GetUserIdRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{19}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *GetUserIdRequest) GetSessionId() string {
@@ -1314,7 +1448,7 @@ type GetUserIdResponse struct {
 
 func (x *GetUserIdResponse) Reset() {
 	*x = GetUserIdResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[20]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1326,7 +1460,7 @@ func (x *GetUserIdResponse) String() string {
 func (*GetUserIdResponse) ProtoMessage() {}
 
 func (x *GetUserIdResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[20]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1339,7 +1473,7 @@ func (x *GetUserIdResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserIdResponse.ProtoReflect.Descriptor instead.
 func (*GetUserIdResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{20}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *GetUserIdResponse) GetResult() isGetUserIdResponse_Result {
@@ -1393,7 +1527,7 @@ type GetGroupIdRequest struct {
 
 func (x *GetGroupIdRequest) Reset() {
 	*x = GetGroupIdRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[21]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1405,7 +1539,7 @@ func (x *GetGroupIdRequest) String() string {
 func (*GetGroupIdRequest) ProtoMessage() {}
 
 func (x *GetGroupIdRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[21]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1418,7 +1552,7 @@ func (x *GetGroupIdRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetGroupIdRequest.ProtoReflect.Descriptor instead.
 func (*GetGroupIdRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{21}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *GetGroupIdRequest) GetSessionId() string {
@@ -1441,7 +1575,7 @@ type GetGroupIdResponse struct {
 
 func (x *GetGroupIdResponse) Reset() {
 	*x = GetGroupIdResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[22]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1453,7 +1587,7 @@ func (x *GetGroupIdResponse) String() string {
 func (*GetGroupIdResponse) ProtoMessage() {}
 
 func (x *GetGroupIdResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[22]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1466,7 +1600,7 @@ func (x *GetGroupIdResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetGroupIdResponse.ProtoReflect.Descriptor instead.
 func (*GetGroupIdResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{22}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *GetGroupIdResponse) GetResult() isGetGroupIdResponse_Result {
@@ -1525,7 +1659,7 @@ type ExecuteStreamConfig struct {
 
 func (x *ExecuteStreamConfig) Reset() {
 	*x = ExecuteStreamConfig{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[23]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1537,7 +1671,7 @@ func (x *ExecuteStreamConfig) String() string {
 func (*ExecuteStreamConfig) ProtoMessage() {}
 
 func (x *ExecuteStreamConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[23]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1550,7 +1684,7 @@ func (x *ExecuteStreamConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecuteStreamConfig.ProtoReflect.Descriptor instead.
 func (*ExecuteStreamConfig) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{23}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *ExecuteStreamConfig) GetSessionId() string {
@@ -1610,7 +1744,7 @@ type ExecuteStreamRequest struct {
 
 func (x *ExecuteStreamRequest) Reset() {
 	*x = ExecuteStreamRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[24]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1622,7 +1756,7 @@ func (x *ExecuteStreamRequest) String() string {
 func (*ExecuteStreamRequest) ProtoMessage() {}
 
 func (x *ExecuteStreamRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[24]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1635,7 +1769,7 @@ func (x *ExecuteStreamRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecuteStreamRequest.ProtoReflect.Descriptor instead.
 func (*ExecuteStreamRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{24}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *ExecuteStreamRequest) GetInput() isExecuteStreamRequest_Input {
@@ -1710,7 +1844,7 @@ type ExecuteStreamResponse struct {
 
 func (x *ExecuteStreamResponse) Reset() {
 	*x = ExecuteStreamResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[25]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1722,7 +1856,7 @@ func (x *ExecuteStreamResponse) String() string {
 func (*ExecuteStreamResponse) ProtoMessage() {}
 
 func (x *ExecuteStreamResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[25]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1735,7 +1869,7 @@ func (x *ExecuteStreamResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExecuteStreamResponse.ProtoReflect.Descriptor instead.
 func (*ExecuteStreamResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{25}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *ExecuteStreamResponse) GetOutput() isExecuteStreamResponse_Output {
@@ -1823,7 +1957,7 @@ type CaptureScreenshotRequest struct {
 
 func (x *CaptureScreenshotRequest) Reset() {
 	*x = CaptureScreenshotRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[26]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1835,7 +1969,7 @@ func (x *CaptureScreenshotRequest) String() string {
 func (*CaptureScreenshotRequest) ProtoMessage() {}
 
 func (x *CaptureScreenshotRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[26]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1848,7 +1982,7 @@ func (x *CaptureScreenshotRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CaptureScreenshotRequest.ProtoReflect.Descriptor instead.
 func (*CaptureScreenshotRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{26}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *CaptureScreenshotRequest) GetSessionId() string {
@@ -1895,7 +2029,7 @@ type SuccessCaptureScreenshotResponse struct {
 
 func (x *SuccessCaptureScreenshotResponse) Reset() {
 	*x = SuccessCaptureScreenshotResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[27]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1907,7 +2041,7 @@ func (x *SuccessCaptureScreenshotResponse) String() string {
 func (*SuccessCaptureScreenshotResponse) ProtoMessage() {}
 
 func (x *SuccessCaptureScreenshotResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[27]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1920,7 +2054,7 @@ func (x *SuccessCaptureScreenshotResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuccessCaptureScreenshotResponse.ProtoReflect.Descriptor instead.
 func (*SuccessCaptureScreenshotResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{27}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *SuccessCaptureScreenshotResponse) GetImageData() []byte {
@@ -1943,7 +2077,7 @@ type CaptureScreenshotResponse struct {
 
 func (x *CaptureScreenshotResponse) Reset() {
 	*x = CaptureScreenshotResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[28]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1955,7 +2089,7 @@ func (x *CaptureScreenshotResponse) String() string {
 func (*CaptureScreenshotResponse) ProtoMessage() {}
 
 func (x *CaptureScreenshotResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[28]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1968,7 +2102,7 @@ func (x *CaptureScreenshotResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CaptureScreenshotResponse.ProtoReflect.Descriptor instead.
 func (*CaptureScreenshotResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{28}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *CaptureScreenshotResponse) GetResult() isCaptureScreenshotResponse_Result {
@@ -2024,7 +2158,7 @@ type ClickRequest struct {
 
 func (x *ClickRequest) Reset() {
 	*x = ClickRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[29]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2036,7 +2170,7 @@ func (x *ClickRequest) String() string {
 func (*ClickRequest) ProtoMessage() {}
 
 func (x *ClickRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[29]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2049,7 +2183,7 @@ func (x *ClickRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClickRequest.ProtoReflect.Descriptor instead.
 func (*ClickRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{29}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *ClickRequest) GetSessionId() string {
@@ -2088,7 +2222,7 @@ type SuccessClickResponse struct {
 
 func (x *SuccessClickResponse) Reset() {
 	*x = SuccessClickResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[30]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2100,7 +2234,7 @@ func (x *SuccessClickResponse) String() string {
 func (*SuccessClickResponse) ProtoMessage() {}
 
 func (x *SuccessClickResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[30]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2113,7 +2247,7 @@ func (x *SuccessClickResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuccessClickResponse.ProtoReflect.Descriptor instead.
 func (*SuccessClickResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{30}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{32}
 }
 
 type ClickResponse struct {
@@ -2129,7 +2263,7 @@ type ClickResponse struct {
 
 func (x *ClickResponse) Reset() {
 	*x = ClickResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[31]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2141,7 +2275,7 @@ func (x *ClickResponse) String() string {
 func (*ClickResponse) ProtoMessage() {}
 
 func (x *ClickResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[31]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2154,7 +2288,7 @@ func (x *ClickResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClickResponse.ProtoReflect.Descriptor instead.
 func (*ClickResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{31}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *ClickResponse) GetResult() isClickResponse_Result {
@@ -2208,7 +2342,7 @@ type TypeRequest struct {
 
 func (x *TypeRequest) Reset() {
 	*x = TypeRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[32]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2220,7 +2354,7 @@ func (x *TypeRequest) String() string {
 func (*TypeRequest) ProtoMessage() {}
 
 func (x *TypeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[32]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2233,7 +2367,7 @@ func (x *TypeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TypeRequest.ProtoReflect.Descriptor instead.
 func (*TypeRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{32}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *TypeRequest) GetSessionId() string {
@@ -2258,7 +2392,7 @@ type SuccessTypeResponse struct {
 
 func (x *SuccessTypeResponse) Reset() {
 	*x = SuccessTypeResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[33]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2270,7 +2404,7 @@ func (x *SuccessTypeResponse) String() string {
 func (*SuccessTypeResponse) ProtoMessage() {}
 
 func (x *SuccessTypeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[33]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2283,7 +2417,7 @@ func (x *SuccessTypeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuccessTypeResponse.ProtoReflect.Descriptor instead.
 func (*SuccessTypeResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{33}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{35}
 }
 
 type TypeResponse struct {
@@ -2299,7 +2433,7 @@ type TypeResponse struct {
 
 func (x *TypeResponse) Reset() {
 	*x = TypeResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[34]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2311,7 +2445,7 @@ func (x *TypeResponse) String() string {
 func (*TypeResponse) ProtoMessage() {}
 
 func (x *TypeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[34]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2324,7 +2458,7 @@ func (x *TypeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TypeResponse.ProtoReflect.Descriptor instead.
 func (*TypeResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{34}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *TypeResponse) GetResult() isTypeResponse_Result {
@@ -2378,7 +2512,7 @@ type PressKeyRequest struct {
 
 func (x *PressKeyRequest) Reset() {
 	*x = PressKeyRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[35]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2390,7 +2524,7 @@ func (x *PressKeyRequest) String() string {
 func (*PressKeyRequest) ProtoMessage() {}
 
 func (x *PressKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[35]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2403,7 +2537,7 @@ func (x *PressKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PressKeyRequest.ProtoReflect.Descriptor instead.
 func (*PressKeyRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{35}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *PressKeyRequest) GetSessionId() string {
@@ -2428,7 +2562,7 @@ type SuccessPressKeyResponse struct {
 
 func (x *SuccessPressKeyResponse) Reset() {
 	*x = SuccessPressKeyResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[36]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2440,7 +2574,7 @@ func (x *SuccessPressKeyResponse) String() string {
 func (*SuccessPressKeyResponse) ProtoMessage() {}
 
 func (x *SuccessPressKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[36]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2453,7 +2587,7 @@ func (x *SuccessPressKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuccessPressKeyResponse.ProtoReflect.Descriptor instead.
 func (*SuccessPressKeyResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{36}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{38}
 }
 
 type PressKeyResponse struct {
@@ -2469,7 +2603,7 @@ type PressKeyResponse struct {
 
 func (x *PressKeyResponse) Reset() {
 	*x = PressKeyResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[37]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2481,7 +2615,7 @@ func (x *PressKeyResponse) String() string {
 func (*PressKeyResponse) ProtoMessage() {}
 
 func (x *PressKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[37]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2494,7 +2628,7 @@ func (x *PressKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PressKeyResponse.ProtoReflect.Descriptor instead.
 func (*PressKeyResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{37}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *PressKeyResponse) GetResult() isPressKeyResponse_Result {
@@ -2548,7 +2682,7 @@ type ReleaseKeyRequest struct {
 
 func (x *ReleaseKeyRequest) Reset() {
 	*x = ReleaseKeyRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[38]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2560,7 +2694,7 @@ func (x *ReleaseKeyRequest) String() string {
 func (*ReleaseKeyRequest) ProtoMessage() {}
 
 func (x *ReleaseKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[38]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2573,7 +2707,7 @@ func (x *ReleaseKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReleaseKeyRequest.ProtoReflect.Descriptor instead.
 func (*ReleaseKeyRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{38}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *ReleaseKeyRequest) GetSessionId() string {
@@ -2598,7 +2732,7 @@ type SuccessReleaseKeyResponse struct {
 
 func (x *SuccessReleaseKeyResponse) Reset() {
 	*x = SuccessReleaseKeyResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[39]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2610,7 +2744,7 @@ func (x *SuccessReleaseKeyResponse) String() string {
 func (*SuccessReleaseKeyResponse) ProtoMessage() {}
 
 func (x *SuccessReleaseKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[39]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2623,7 +2757,7 @@ func (x *SuccessReleaseKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuccessReleaseKeyResponse.ProtoReflect.Descriptor instead.
 func (*SuccessReleaseKeyResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{39}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{41}
 }
 
 type ReleaseKeyResponse struct {
@@ -2639,7 +2773,7 @@ type ReleaseKeyResponse struct {
 
 func (x *ReleaseKeyResponse) Reset() {
 	*x = ReleaseKeyResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[40]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2651,7 +2785,7 @@ func (x *ReleaseKeyResponse) String() string {
 func (*ReleaseKeyResponse) ProtoMessage() {}
 
 func (x *ReleaseKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[40]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2664,7 +2798,7 @@ func (x *ReleaseKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReleaseKeyResponse.ProtoReflect.Descriptor instead.
 func (*ReleaseKeyResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{40}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *ReleaseKeyResponse) GetResult() isReleaseKeyResponse_Result {
@@ -2718,7 +2852,7 @@ type PressAndHoldKeyRequest struct {
 
 func (x *PressAndHoldKeyRequest) Reset() {
 	*x = PressAndHoldKeyRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[41]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2730,7 +2864,7 @@ func (x *PressAndHoldKeyRequest) String() string {
 func (*PressAndHoldKeyRequest) ProtoMessage() {}
 
 func (x *PressAndHoldKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[41]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2743,7 +2877,7 @@ func (x *PressAndHoldKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PressAndHoldKeyRequest.ProtoReflect.Descriptor instead.
 func (*PressAndHoldKeyRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{41}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *PressAndHoldKeyRequest) GetSessionId() string {
@@ -2768,7 +2902,7 @@ type SuccessPressAndHoldKeyResponse struct {
 
 func (x *SuccessPressAndHoldKeyResponse) Reset() {
 	*x = SuccessPressAndHoldKeyResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[42]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2780,7 +2914,7 @@ func (x *SuccessPressAndHoldKeyResponse) String() string {
 func (*SuccessPressAndHoldKeyResponse) ProtoMessage() {}
 
 func (x *SuccessPressAndHoldKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[42]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2793,7 +2927,7 @@ func (x *SuccessPressAndHoldKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuccessPressAndHoldKeyResponse.ProtoReflect.Descriptor instead.
 func (*SuccessPressAndHoldKeyResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{42}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{44}
 }
 
 type PressAndHoldKeyResponse struct {
@@ -2809,7 +2943,7 @@ type PressAndHoldKeyResponse struct {
 
 func (x *PressAndHoldKeyResponse) Reset() {
 	*x = PressAndHoldKeyResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[43]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2821,7 +2955,7 @@ func (x *PressAndHoldKeyResponse) String() string {
 func (*PressAndHoldKeyResponse) ProtoMessage() {}
 
 func (x *PressAndHoldKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[43]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2834,7 +2968,7 @@ func (x *PressAndHoldKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PressAndHoldKeyResponse.ProtoReflect.Descriptor instead.
 func (*PressAndHoldKeyResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{43}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *PressAndHoldKeyResponse) GetResult() isPressAndHoldKeyResponse_Result {
@@ -2887,7 +3021,7 @@ type ReleaseAllKeysRequest struct {
 
 func (x *ReleaseAllKeysRequest) Reset() {
 	*x = ReleaseAllKeysRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[44]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2899,7 +3033,7 @@ func (x *ReleaseAllKeysRequest) String() string {
 func (*ReleaseAllKeysRequest) ProtoMessage() {}
 
 func (x *ReleaseAllKeysRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[44]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2912,7 +3046,7 @@ func (x *ReleaseAllKeysRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReleaseAllKeysRequest.ProtoReflect.Descriptor instead.
 func (*ReleaseAllKeysRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{44}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *ReleaseAllKeysRequest) GetSessionId() string {
@@ -2930,7 +3064,7 @@ type SuccessReleaseAllKeysResponse struct {
 
 func (x *SuccessReleaseAllKeysResponse) Reset() {
 	*x = SuccessReleaseAllKeysResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[45]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2942,7 +3076,7 @@ func (x *SuccessReleaseAllKeysResponse) String() string {
 func (*SuccessReleaseAllKeysResponse) ProtoMessage() {}
 
 func (x *SuccessReleaseAllKeysResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[45]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2955,7 +3089,7 @@ func (x *SuccessReleaseAllKeysResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuccessReleaseAllKeysResponse.ProtoReflect.Descriptor instead.
 func (*SuccessReleaseAllKeysResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{45}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{47}
 }
 
 type ReleaseAllKeysResponse struct {
@@ -2971,7 +3105,7 @@ type ReleaseAllKeysResponse struct {
 
 func (x *ReleaseAllKeysResponse) Reset() {
 	*x = ReleaseAllKeysResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[46]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2983,7 +3117,7 @@ func (x *ReleaseAllKeysResponse) String() string {
 func (*ReleaseAllKeysResponse) ProtoMessage() {}
 
 func (x *ReleaseAllKeysResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[46]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2996,7 +3130,7 @@ func (x *ReleaseAllKeysResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReleaseAllKeysResponse.ProtoReflect.Descriptor instead.
 func (*ReleaseAllKeysResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{46}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *ReleaseAllKeysResponse) GetResult() isReleaseAllKeysResponse_Result {
@@ -3053,7 +3187,7 @@ type DragRequest struct {
 
 func (x *DragRequest) Reset() {
 	*x = DragRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[47]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3065,7 +3199,7 @@ func (x *DragRequest) String() string {
 func (*DragRequest) ProtoMessage() {}
 
 func (x *DragRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[47]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3078,7 +3212,7 @@ func (x *DragRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DragRequest.ProtoReflect.Descriptor instead.
 func (*DragRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{47}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *DragRequest) GetSessionId() string {
@@ -3124,7 +3258,7 @@ type SuccessDragResponse struct {
 
 func (x *SuccessDragResponse) Reset() {
 	*x = SuccessDragResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[48]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3136,7 +3270,7 @@ func (x *SuccessDragResponse) String() string {
 func (*SuccessDragResponse) ProtoMessage() {}
 
 func (x *SuccessDragResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[48]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3149,7 +3283,7 @@ func (x *SuccessDragResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuccessDragResponse.ProtoReflect.Descriptor instead.
 func (*SuccessDragResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{48}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{50}
 }
 
 type DragResponse struct {
@@ -3165,7 +3299,7 @@ type DragResponse struct {
 
 func (x *DragResponse) Reset() {
 	*x = DragResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[49]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3177,7 +3311,7 @@ func (x *DragResponse) String() string {
 func (*DragResponse) ProtoMessage() {}
 
 func (x *DragResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[49]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3190,7 +3324,7 @@ func (x *DragResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DragResponse.ProtoReflect.Descriptor instead.
 func (*DragResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{49}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *DragResponse) GetResult() isDragResponse_Result {
@@ -3245,7 +3379,7 @@ type MoveMouseToRequest struct {
 
 func (x *MoveMouseToRequest) Reset() {
 	*x = MoveMouseToRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[50]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3257,7 +3391,7 @@ func (x *MoveMouseToRequest) String() string {
 func (*MoveMouseToRequest) ProtoMessage() {}
 
 func (x *MoveMouseToRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[50]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3270,7 +3404,7 @@ func (x *MoveMouseToRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MoveMouseToRequest.ProtoReflect.Descriptor instead.
 func (*MoveMouseToRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{50}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *MoveMouseToRequest) GetSessionId() string {
@@ -3302,7 +3436,7 @@ type SuccessMoveMouseToResponse struct {
 
 func (x *SuccessMoveMouseToResponse) Reset() {
 	*x = SuccessMoveMouseToResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[51]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3314,7 +3448,7 @@ func (x *SuccessMoveMouseToResponse) String() string {
 func (*SuccessMoveMouseToResponse) ProtoMessage() {}
 
 func (x *SuccessMoveMouseToResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[51]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3327,7 +3461,7 @@ func (x *SuccessMoveMouseToResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuccessMoveMouseToResponse.ProtoReflect.Descriptor instead.
 func (*SuccessMoveMouseToResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{51}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{53}
 }
 
 type MoveMouseToResponse struct {
@@ -3343,7 +3477,7 @@ type MoveMouseToResponse struct {
 
 func (x *MoveMouseToResponse) Reset() {
 	*x = MoveMouseToResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[52]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3355,7 +3489,7 @@ func (x *MoveMouseToResponse) String() string {
 func (*MoveMouseToResponse) ProtoMessage() {}
 
 func (x *MoveMouseToResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[52]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3368,7 +3502,7 @@ func (x *MoveMouseToResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MoveMouseToResponse.ProtoReflect.Descriptor instead.
 func (*MoveMouseToResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{52}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *MoveMouseToResponse) GetResult() isMoveMouseToResponse_Result {
@@ -3423,7 +3557,7 @@ type ScrollRequest struct {
 
 func (x *ScrollRequest) Reset() {
 	*x = ScrollRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[53]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3435,7 +3569,7 @@ func (x *ScrollRequest) String() string {
 func (*ScrollRequest) ProtoMessage() {}
 
 func (x *ScrollRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[53]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3448,7 +3582,7 @@ func (x *ScrollRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScrollRequest.ProtoReflect.Descriptor instead.
 func (*ScrollRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{53}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *ScrollRequest) GetSessionId() string {
@@ -3480,7 +3614,7 @@ type SuccessScrollResponse struct {
 
 func (x *SuccessScrollResponse) Reset() {
 	*x = SuccessScrollResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[54]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3492,7 +3626,7 @@ func (x *SuccessScrollResponse) String() string {
 func (*SuccessScrollResponse) ProtoMessage() {}
 
 func (x *SuccessScrollResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[54]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3505,7 +3639,7 @@ func (x *SuccessScrollResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuccessScrollResponse.ProtoReflect.Descriptor instead.
 func (*SuccessScrollResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{54}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{56}
 }
 
 type ScrollResponse struct {
@@ -3521,7 +3655,7 @@ type ScrollResponse struct {
 
 func (x *ScrollResponse) Reset() {
 	*x = ScrollResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[55]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3533,7 +3667,7 @@ func (x *ScrollResponse) String() string {
 func (*ScrollResponse) ProtoMessage() {}
 
 func (x *ScrollResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[55]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3546,7 +3680,7 @@ func (x *ScrollResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScrollResponse.ProtoReflect.Descriptor instead.
 func (*ScrollResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{55}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *ScrollResponse) GetResult() isScrollResponse_Result {
@@ -3599,7 +3733,7 @@ type GetClipboardRequest struct {
 
 func (x *GetClipboardRequest) Reset() {
 	*x = GetClipboardRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[56]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3611,7 +3745,7 @@ func (x *GetClipboardRequest) String() string {
 func (*GetClipboardRequest) ProtoMessage() {}
 
 func (x *GetClipboardRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[56]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3624,7 +3758,7 @@ func (x *GetClipboardRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetClipboardRequest.ProtoReflect.Descriptor instead.
 func (*GetClipboardRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{56}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *GetClipboardRequest) GetSessionId() string {
@@ -3647,7 +3781,7 @@ type GetClipboardResponse struct {
 
 func (x *GetClipboardResponse) Reset() {
 	*x = GetClipboardResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[57]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3659,7 +3793,7 @@ func (x *GetClipboardResponse) String() string {
 func (*GetClipboardResponse) ProtoMessage() {}
 
 func (x *GetClipboardResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[57]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3672,7 +3806,7 @@ func (x *GetClipboardResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetClipboardResponse.ProtoReflect.Descriptor instead.
 func (*GetClipboardResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{57}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *GetClipboardResponse) GetResult() isGetClipboardResponse_Result {
@@ -3726,7 +3860,7 @@ type SetClipboardRequest struct {
 
 func (x *SetClipboardRequest) Reset() {
 	*x = SetClipboardRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[58]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3738,7 +3872,7 @@ func (x *SetClipboardRequest) String() string {
 func (*SetClipboardRequest) ProtoMessage() {}
 
 func (x *SetClipboardRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[58]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3751,7 +3885,7 @@ func (x *SetClipboardRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetClipboardRequest.ProtoReflect.Descriptor instead.
 func (*SetClipboardRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{58}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *SetClipboardRequest) GetSessionId() string {
@@ -3776,7 +3910,7 @@ type SuccessSetClipboardResponse struct {
 
 func (x *SuccessSetClipboardResponse) Reset() {
 	*x = SuccessSetClipboardResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[59]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3788,7 +3922,7 @@ func (x *SuccessSetClipboardResponse) String() string {
 func (*SuccessSetClipboardResponse) ProtoMessage() {}
 
 func (x *SuccessSetClipboardResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[59]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3801,7 +3935,7 @@ func (x *SuccessSetClipboardResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SuccessSetClipboardResponse.ProtoReflect.Descriptor instead.
 func (*SuccessSetClipboardResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{59}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{61}
 }
 
 type SetClipboardResponse struct {
@@ -3817,7 +3951,7 @@ type SetClipboardResponse struct {
 
 func (x *SetClipboardResponse) Reset() {
 	*x = SetClipboardResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[60]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3829,7 +3963,7 @@ func (x *SetClipboardResponse) String() string {
 func (*SetClipboardResponse) ProtoMessage() {}
 
 func (x *SetClipboardResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[60]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3842,7 +3976,7 @@ func (x *SetClipboardResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetClipboardResponse.ProtoReflect.Descriptor instead.
 func (*SetClipboardResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{60}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *SetClipboardResponse) GetResult() isSetClipboardResponse_Result {
@@ -3895,7 +4029,7 @@ type GetScreenSizeRequest struct {
 
 func (x *GetScreenSizeRequest) Reset() {
 	*x = GetScreenSizeRequest{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[61]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[63]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3907,7 +4041,7 @@ func (x *GetScreenSizeRequest) String() string {
 func (*GetScreenSizeRequest) ProtoMessage() {}
 
 func (x *GetScreenSizeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[61]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[63]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3920,7 +4054,7 @@ func (x *GetScreenSizeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetScreenSizeRequest.ProtoReflect.Descriptor instead.
 func (*GetScreenSizeRequest) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{61}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{63}
 }
 
 func (x *GetScreenSizeRequest) GetSessionId() string {
@@ -3940,7 +4074,7 @@ type ScreenSize struct {
 
 func (x *ScreenSize) Reset() {
 	*x = ScreenSize{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[62]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[64]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3952,7 +4086,7 @@ func (x *ScreenSize) String() string {
 func (*ScreenSize) ProtoMessage() {}
 
 func (x *ScreenSize) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[62]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[64]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3965,7 +4099,7 @@ func (x *ScreenSize) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScreenSize.ProtoReflect.Descriptor instead.
 func (*ScreenSize) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{62}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{64}
 }
 
 func (x *ScreenSize) GetWidth() int32 {
@@ -3995,7 +4129,7 @@ type GetScreenSizeResponse struct {
 
 func (x *GetScreenSizeResponse) Reset() {
 	*x = GetScreenSizeResponse{}
-	mi := &file_computer_api_v1_computer_proto_msgTypes[63]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[65]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4007,7 +4141,7 @@ func (x *GetScreenSizeResponse) String() string {
 func (*GetScreenSizeResponse) ProtoMessage() {}
 
 func (x *GetScreenSizeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_computer_api_v1_computer_proto_msgTypes[63]
+	mi := &file_computer_api_v1_computer_proto_msgTypes[65]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4020,7 +4154,7 @@ func (x *GetScreenSizeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetScreenSizeResponse.ProtoReflect.Descriptor instead.
 func (*GetScreenSizeResponse) Descriptor() ([]byte, []int) {
-	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{63}
+	return file_computer_api_v1_computer_proto_rawDescGZIP(), []int{65}
 }
 
 func (x *GetScreenSizeResponse) GetResult() isGetScreenSizeResponse_Result {
@@ -4104,7 +4238,17 @@ const file_computer_api_v1_computer_proto_rawDesc = "" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\xff\x01R\tsessionId\"\x18\n" +
-	"\x16DeleteComputerResponse\"\xa4\x03\n" +
+	"\x16DeleteComputerResponse\"W\n" +
+	"\x14SendSkillsZipRequest\x12)\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tB\n" +
+	"\xbaH\ar\x05\x10\x01\x18\xff\x01R\tsessionId\x12\x14\n" +
+	"\x05chunk\x18\x03 \x01(\fR\x05chunk\"k\n" +
+	"\x15SendSkillsZipResponse\x12%\n" +
+	"\rerror_message\x18\x01 \x01(\tH\x00R\ferrorMessage\x12!\n" +
+	"\vskills_path\x18\x02 \x01(\tH\x00R\n" +
+	"skillsPathB\b\n" +
+	"\x06result\"\xa4\x03\n" +
 	"\x0eExecuteRequest\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x18\n" +
@@ -4343,11 +4487,12 @@ const file_computer_api_v1_computer_proto_rawDesc = "" +
 	"\fComputerType\x12\x1d\n" +
 	"\x19COMPUTER_TYPE_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16COMPUTER_TYPE_HEADLESS\x10\x01\x12\x1b\n" +
-	"\x17COMPUTER_TYPE_GRAPHICAL\x10\x022\xc5\x02\n" +
+	"\x17COMPUTER_TYPE_GRAPHICAL\x10\x022\xa7\x03\n" +
 	"\x17ComputerProviderService\x12a\n" +
 	"\x0eCreateComputer\x12&.computer_api.v1.CreateComputerRequest\x1a'.computer_api.v1.CreateComputerResponse\x12d\n" +
 	"\x0fGetComputerInfo\x12'.computer_api.v1.GetComputerInfoRequest\x1a(.computer_api.v1.GetComputerInfoResponse\x12a\n" +
-	"\x0eDeleteComputer\x12&.computer_api.v1.DeleteComputerRequest\x1a'.computer_api.v1.DeleteComputerResponse2\xf8\x04\n" +
+	"\x0eDeleteComputer\x12&.computer_api.v1.DeleteComputerRequest\x1a'.computer_api.v1.DeleteComputerResponse\x12`\n" +
+	"\rSendSkillsZip\x12%.computer_api.v1.SendSkillsZipRequest\x1a&.computer_api.v1.SendSkillsZipResponse(\x012\xf8\x04\n" +
 	"\x14BasicComputerService\x12L\n" +
 	"\aExecute\x12\x1f.computer_api.v1.ExecuteRequest\x1a .computer_api.v1.ExecuteResponse\x12O\n" +
 	"\bReadFile\x12 .computer_api.v1.ReadFileRequest\x1a!.computer_api.v1.ReadFileResponse\x12R\n" +
@@ -4387,7 +4532,7 @@ func file_computer_api_v1_computer_proto_rawDescGZIP() []byte {
 }
 
 var file_computer_api_v1_computer_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_computer_api_v1_computer_proto_msgTypes = make([]protoimpl.MessageInfo, 67)
+var file_computer_api_v1_computer_proto_msgTypes = make([]protoimpl.MessageInfo, 69)
 var file_computer_api_v1_computer_proto_goTypes = []any{
 	(ComputerType)(0),                        // 0: computer_api.v1.ComputerType
 	(*ComputerResourceConfig)(nil),           // 1: computer_api.v1.ComputerResourceConfig
@@ -4398,139 +4543,143 @@ var file_computer_api_v1_computer_proto_goTypes = []any{
 	(*GetComputerInfoResponse)(nil),          // 6: computer_api.v1.GetComputerInfoResponse
 	(*DeleteComputerRequest)(nil),            // 7: computer_api.v1.DeleteComputerRequest
 	(*DeleteComputerResponse)(nil),           // 8: computer_api.v1.DeleteComputerResponse
-	(*ExecuteRequest)(nil),                   // 9: computer_api.v1.ExecuteRequest
-	(*ExecutionResult)(nil),                  // 10: computer_api.v1.ExecutionResult
-	(*ExecuteResponse)(nil),                  // 11: computer_api.v1.ExecuteResponse
-	(*ReadFileRequest)(nil),                  // 12: computer_api.v1.ReadFileRequest
-	(*ReadFileResponse)(nil),                 // 13: computer_api.v1.ReadFileResponse
-	(*WriteFileRequest)(nil),                 // 14: computer_api.v1.WriteFileRequest
-	(*SuccessWriteResponse)(nil),             // 15: computer_api.v1.SuccessWriteResponse
-	(*WriteFileResponse)(nil),                // 16: computer_api.v1.WriteFileResponse
-	(*ListDirectoryRequest)(nil),             // 17: computer_api.v1.ListDirectoryRequest
-	(*SuccessListDirectoryResponse)(nil),     // 18: computer_api.v1.SuccessListDirectoryResponse
-	(*ListDirectoryResponse)(nil),            // 19: computer_api.v1.ListDirectoryResponse
-	(*GetUserIdRequest)(nil),                 // 20: computer_api.v1.GetUserIdRequest
-	(*GetUserIdResponse)(nil),                // 21: computer_api.v1.GetUserIdResponse
-	(*GetGroupIdRequest)(nil),                // 22: computer_api.v1.GetGroupIdRequest
-	(*GetGroupIdResponse)(nil),               // 23: computer_api.v1.GetGroupIdResponse
-	(*ExecuteStreamConfig)(nil),              // 24: computer_api.v1.ExecuteStreamConfig
-	(*ExecuteStreamRequest)(nil),             // 25: computer_api.v1.ExecuteStreamRequest
-	(*ExecuteStreamResponse)(nil),            // 26: computer_api.v1.ExecuteStreamResponse
-	(*CaptureScreenshotRequest)(nil),         // 27: computer_api.v1.CaptureScreenshotRequest
-	(*SuccessCaptureScreenshotResponse)(nil), // 28: computer_api.v1.SuccessCaptureScreenshotResponse
-	(*CaptureScreenshotResponse)(nil),        // 29: computer_api.v1.CaptureScreenshotResponse
-	(*ClickRequest)(nil),                     // 30: computer_api.v1.ClickRequest
-	(*SuccessClickResponse)(nil),             // 31: computer_api.v1.SuccessClickResponse
-	(*ClickResponse)(nil),                    // 32: computer_api.v1.ClickResponse
-	(*TypeRequest)(nil),                      // 33: computer_api.v1.TypeRequest
-	(*SuccessTypeResponse)(nil),              // 34: computer_api.v1.SuccessTypeResponse
-	(*TypeResponse)(nil),                     // 35: computer_api.v1.TypeResponse
-	(*PressKeyRequest)(nil),                  // 36: computer_api.v1.PressKeyRequest
-	(*SuccessPressKeyResponse)(nil),          // 37: computer_api.v1.SuccessPressKeyResponse
-	(*PressKeyResponse)(nil),                 // 38: computer_api.v1.PressKeyResponse
-	(*ReleaseKeyRequest)(nil),                // 39: computer_api.v1.ReleaseKeyRequest
-	(*SuccessReleaseKeyResponse)(nil),        // 40: computer_api.v1.SuccessReleaseKeyResponse
-	(*ReleaseKeyResponse)(nil),               // 41: computer_api.v1.ReleaseKeyResponse
-	(*PressAndHoldKeyRequest)(nil),           // 42: computer_api.v1.PressAndHoldKeyRequest
-	(*SuccessPressAndHoldKeyResponse)(nil),   // 43: computer_api.v1.SuccessPressAndHoldKeyResponse
-	(*PressAndHoldKeyResponse)(nil),          // 44: computer_api.v1.PressAndHoldKeyResponse
-	(*ReleaseAllKeysRequest)(nil),            // 45: computer_api.v1.ReleaseAllKeysRequest
-	(*SuccessReleaseAllKeysResponse)(nil),    // 46: computer_api.v1.SuccessReleaseAllKeysResponse
-	(*ReleaseAllKeysResponse)(nil),           // 47: computer_api.v1.ReleaseAllKeysResponse
-	(*DragRequest)(nil),                      // 48: computer_api.v1.DragRequest
-	(*SuccessDragResponse)(nil),              // 49: computer_api.v1.SuccessDragResponse
-	(*DragResponse)(nil),                     // 50: computer_api.v1.DragResponse
-	(*MoveMouseToRequest)(nil),               // 51: computer_api.v1.MoveMouseToRequest
-	(*SuccessMoveMouseToResponse)(nil),       // 52: computer_api.v1.SuccessMoveMouseToResponse
-	(*MoveMouseToResponse)(nil),              // 53: computer_api.v1.MoveMouseToResponse
-	(*ScrollRequest)(nil),                    // 54: computer_api.v1.ScrollRequest
-	(*SuccessScrollResponse)(nil),            // 55: computer_api.v1.SuccessScrollResponse
-	(*ScrollResponse)(nil),                   // 56: computer_api.v1.ScrollResponse
-	(*GetClipboardRequest)(nil),              // 57: computer_api.v1.GetClipboardRequest
-	(*GetClipboardResponse)(nil),             // 58: computer_api.v1.GetClipboardResponse
-	(*SetClipboardRequest)(nil),              // 59: computer_api.v1.SetClipboardRequest
-	(*SuccessSetClipboardResponse)(nil),      // 60: computer_api.v1.SuccessSetClipboardResponse
-	(*SetClipboardResponse)(nil),             // 61: computer_api.v1.SetClipboardResponse
-	(*GetScreenSizeRequest)(nil),             // 62: computer_api.v1.GetScreenSizeRequest
-	(*ScreenSize)(nil),                       // 63: computer_api.v1.ScreenSize
-	(*GetScreenSizeResponse)(nil),            // 64: computer_api.v1.GetScreenSizeResponse
-	nil,                                      // 65: computer_api.v1.CreateComputerRequest.EnvironmentEntry
-	nil,                                      // 66: computer_api.v1.ExecuteRequest.EnvVarsEntry
-	nil,                                      // 67: computer_api.v1.ExecuteStreamConfig.EnvVarsEntry
-	(*durationpb.Duration)(nil),              // 68: google.protobuf.Duration
+	(*SendSkillsZipRequest)(nil),             // 9: computer_api.v1.SendSkillsZipRequest
+	(*SendSkillsZipResponse)(nil),            // 10: computer_api.v1.SendSkillsZipResponse
+	(*ExecuteRequest)(nil),                   // 11: computer_api.v1.ExecuteRequest
+	(*ExecutionResult)(nil),                  // 12: computer_api.v1.ExecutionResult
+	(*ExecuteResponse)(nil),                  // 13: computer_api.v1.ExecuteResponse
+	(*ReadFileRequest)(nil),                  // 14: computer_api.v1.ReadFileRequest
+	(*ReadFileResponse)(nil),                 // 15: computer_api.v1.ReadFileResponse
+	(*WriteFileRequest)(nil),                 // 16: computer_api.v1.WriteFileRequest
+	(*SuccessWriteResponse)(nil),             // 17: computer_api.v1.SuccessWriteResponse
+	(*WriteFileResponse)(nil),                // 18: computer_api.v1.WriteFileResponse
+	(*ListDirectoryRequest)(nil),             // 19: computer_api.v1.ListDirectoryRequest
+	(*SuccessListDirectoryResponse)(nil),     // 20: computer_api.v1.SuccessListDirectoryResponse
+	(*ListDirectoryResponse)(nil),            // 21: computer_api.v1.ListDirectoryResponse
+	(*GetUserIdRequest)(nil),                 // 22: computer_api.v1.GetUserIdRequest
+	(*GetUserIdResponse)(nil),                // 23: computer_api.v1.GetUserIdResponse
+	(*GetGroupIdRequest)(nil),                // 24: computer_api.v1.GetGroupIdRequest
+	(*GetGroupIdResponse)(nil),               // 25: computer_api.v1.GetGroupIdResponse
+	(*ExecuteStreamConfig)(nil),              // 26: computer_api.v1.ExecuteStreamConfig
+	(*ExecuteStreamRequest)(nil),             // 27: computer_api.v1.ExecuteStreamRequest
+	(*ExecuteStreamResponse)(nil),            // 28: computer_api.v1.ExecuteStreamResponse
+	(*CaptureScreenshotRequest)(nil),         // 29: computer_api.v1.CaptureScreenshotRequest
+	(*SuccessCaptureScreenshotResponse)(nil), // 30: computer_api.v1.SuccessCaptureScreenshotResponse
+	(*CaptureScreenshotResponse)(nil),        // 31: computer_api.v1.CaptureScreenshotResponse
+	(*ClickRequest)(nil),                     // 32: computer_api.v1.ClickRequest
+	(*SuccessClickResponse)(nil),             // 33: computer_api.v1.SuccessClickResponse
+	(*ClickResponse)(nil),                    // 34: computer_api.v1.ClickResponse
+	(*TypeRequest)(nil),                      // 35: computer_api.v1.TypeRequest
+	(*SuccessTypeResponse)(nil),              // 36: computer_api.v1.SuccessTypeResponse
+	(*TypeResponse)(nil),                     // 37: computer_api.v1.TypeResponse
+	(*PressKeyRequest)(nil),                  // 38: computer_api.v1.PressKeyRequest
+	(*SuccessPressKeyResponse)(nil),          // 39: computer_api.v1.SuccessPressKeyResponse
+	(*PressKeyResponse)(nil),                 // 40: computer_api.v1.PressKeyResponse
+	(*ReleaseKeyRequest)(nil),                // 41: computer_api.v1.ReleaseKeyRequest
+	(*SuccessReleaseKeyResponse)(nil),        // 42: computer_api.v1.SuccessReleaseKeyResponse
+	(*ReleaseKeyResponse)(nil),               // 43: computer_api.v1.ReleaseKeyResponse
+	(*PressAndHoldKeyRequest)(nil),           // 44: computer_api.v1.PressAndHoldKeyRequest
+	(*SuccessPressAndHoldKeyResponse)(nil),   // 45: computer_api.v1.SuccessPressAndHoldKeyResponse
+	(*PressAndHoldKeyResponse)(nil),          // 46: computer_api.v1.PressAndHoldKeyResponse
+	(*ReleaseAllKeysRequest)(nil),            // 47: computer_api.v1.ReleaseAllKeysRequest
+	(*SuccessReleaseAllKeysResponse)(nil),    // 48: computer_api.v1.SuccessReleaseAllKeysResponse
+	(*ReleaseAllKeysResponse)(nil),           // 49: computer_api.v1.ReleaseAllKeysResponse
+	(*DragRequest)(nil),                      // 50: computer_api.v1.DragRequest
+	(*SuccessDragResponse)(nil),              // 51: computer_api.v1.SuccessDragResponse
+	(*DragResponse)(nil),                     // 52: computer_api.v1.DragResponse
+	(*MoveMouseToRequest)(nil),               // 53: computer_api.v1.MoveMouseToRequest
+	(*SuccessMoveMouseToResponse)(nil),       // 54: computer_api.v1.SuccessMoveMouseToResponse
+	(*MoveMouseToResponse)(nil),              // 55: computer_api.v1.MoveMouseToResponse
+	(*ScrollRequest)(nil),                    // 56: computer_api.v1.ScrollRequest
+	(*SuccessScrollResponse)(nil),            // 57: computer_api.v1.SuccessScrollResponse
+	(*ScrollResponse)(nil),                   // 58: computer_api.v1.ScrollResponse
+	(*GetClipboardRequest)(nil),              // 59: computer_api.v1.GetClipboardRequest
+	(*GetClipboardResponse)(nil),             // 60: computer_api.v1.GetClipboardResponse
+	(*SetClipboardRequest)(nil),              // 61: computer_api.v1.SetClipboardRequest
+	(*SuccessSetClipboardResponse)(nil),      // 62: computer_api.v1.SuccessSetClipboardResponse
+	(*SetClipboardResponse)(nil),             // 63: computer_api.v1.SetClipboardResponse
+	(*GetScreenSizeRequest)(nil),             // 64: computer_api.v1.GetScreenSizeRequest
+	(*ScreenSize)(nil),                       // 65: computer_api.v1.ScreenSize
+	(*GetScreenSizeResponse)(nil),            // 66: computer_api.v1.GetScreenSizeResponse
+	nil,                                      // 67: computer_api.v1.CreateComputerRequest.EnvironmentEntry
+	nil,                                      // 68: computer_api.v1.ExecuteRequest.EnvVarsEntry
+	nil,                                      // 69: computer_api.v1.ExecuteStreamConfig.EnvVarsEntry
+	(*durationpb.Duration)(nil),              // 70: google.protobuf.Duration
 }
 var file_computer_api_v1_computer_proto_depIdxs = []int32{
 	1,  // 0: computer_api.v1.CreateComputerRequest.resources:type_name -> computer_api.v1.ComputerResourceConfig
-	65, // 1: computer_api.v1.CreateComputerRequest.environment:type_name -> computer_api.v1.CreateComputerRequest.EnvironmentEntry
+	67, // 1: computer_api.v1.CreateComputerRequest.environment:type_name -> computer_api.v1.CreateComputerRequest.EnvironmentEntry
 	2,  // 2: computer_api.v1.CreateComputerRequest.network_rules:type_name -> computer_api.v1.NetworkRules
 	0,  // 3: computer_api.v1.GetComputerInfoResponse.type:type_name -> computer_api.v1.ComputerType
-	66, // 4: computer_api.v1.ExecuteRequest.env_vars:type_name -> computer_api.v1.ExecuteRequest.EnvVarsEntry
-	68, // 5: computer_api.v1.ExecuteRequest.wait_delay:type_name -> google.protobuf.Duration
-	10, // 6: computer_api.v1.ExecuteResponse.exec_result:type_name -> computer_api.v1.ExecutionResult
-	15, // 7: computer_api.v1.WriteFileResponse.resp:type_name -> computer_api.v1.SuccessWriteResponse
-	18, // 8: computer_api.v1.ListDirectoryResponse.response:type_name -> computer_api.v1.SuccessListDirectoryResponse
-	67, // 9: computer_api.v1.ExecuteStreamConfig.env_vars:type_name -> computer_api.v1.ExecuteStreamConfig.EnvVarsEntry
-	24, // 10: computer_api.v1.ExecuteStreamRequest.config:type_name -> computer_api.v1.ExecuteStreamConfig
-	28, // 11: computer_api.v1.CaptureScreenshotResponse.response:type_name -> computer_api.v1.SuccessCaptureScreenshotResponse
-	31, // 12: computer_api.v1.ClickResponse.response:type_name -> computer_api.v1.SuccessClickResponse
-	34, // 13: computer_api.v1.TypeResponse.response:type_name -> computer_api.v1.SuccessTypeResponse
-	37, // 14: computer_api.v1.PressKeyResponse.response:type_name -> computer_api.v1.SuccessPressKeyResponse
-	40, // 15: computer_api.v1.ReleaseKeyResponse.response:type_name -> computer_api.v1.SuccessReleaseKeyResponse
-	43, // 16: computer_api.v1.PressAndHoldKeyResponse.response:type_name -> computer_api.v1.SuccessPressAndHoldKeyResponse
-	46, // 17: computer_api.v1.ReleaseAllKeysResponse.response:type_name -> computer_api.v1.SuccessReleaseAllKeysResponse
-	49, // 18: computer_api.v1.DragResponse.response:type_name -> computer_api.v1.SuccessDragResponse
-	52, // 19: computer_api.v1.MoveMouseToResponse.response:type_name -> computer_api.v1.SuccessMoveMouseToResponse
-	55, // 20: computer_api.v1.ScrollResponse.response:type_name -> computer_api.v1.SuccessScrollResponse
-	60, // 21: computer_api.v1.SetClipboardResponse.response:type_name -> computer_api.v1.SuccessSetClipboardResponse
-	63, // 22: computer_api.v1.GetScreenSizeResponse.response:type_name -> computer_api.v1.ScreenSize
+	68, // 4: computer_api.v1.ExecuteRequest.env_vars:type_name -> computer_api.v1.ExecuteRequest.EnvVarsEntry
+	70, // 5: computer_api.v1.ExecuteRequest.wait_delay:type_name -> google.protobuf.Duration
+	12, // 6: computer_api.v1.ExecuteResponse.exec_result:type_name -> computer_api.v1.ExecutionResult
+	17, // 7: computer_api.v1.WriteFileResponse.resp:type_name -> computer_api.v1.SuccessWriteResponse
+	20, // 8: computer_api.v1.ListDirectoryResponse.response:type_name -> computer_api.v1.SuccessListDirectoryResponse
+	69, // 9: computer_api.v1.ExecuteStreamConfig.env_vars:type_name -> computer_api.v1.ExecuteStreamConfig.EnvVarsEntry
+	26, // 10: computer_api.v1.ExecuteStreamRequest.config:type_name -> computer_api.v1.ExecuteStreamConfig
+	30, // 11: computer_api.v1.CaptureScreenshotResponse.response:type_name -> computer_api.v1.SuccessCaptureScreenshotResponse
+	33, // 12: computer_api.v1.ClickResponse.response:type_name -> computer_api.v1.SuccessClickResponse
+	36, // 13: computer_api.v1.TypeResponse.response:type_name -> computer_api.v1.SuccessTypeResponse
+	39, // 14: computer_api.v1.PressKeyResponse.response:type_name -> computer_api.v1.SuccessPressKeyResponse
+	42, // 15: computer_api.v1.ReleaseKeyResponse.response:type_name -> computer_api.v1.SuccessReleaseKeyResponse
+	45, // 16: computer_api.v1.PressAndHoldKeyResponse.response:type_name -> computer_api.v1.SuccessPressAndHoldKeyResponse
+	48, // 17: computer_api.v1.ReleaseAllKeysResponse.response:type_name -> computer_api.v1.SuccessReleaseAllKeysResponse
+	51, // 18: computer_api.v1.DragResponse.response:type_name -> computer_api.v1.SuccessDragResponse
+	54, // 19: computer_api.v1.MoveMouseToResponse.response:type_name -> computer_api.v1.SuccessMoveMouseToResponse
+	57, // 20: computer_api.v1.ScrollResponse.response:type_name -> computer_api.v1.SuccessScrollResponse
+	62, // 21: computer_api.v1.SetClipboardResponse.response:type_name -> computer_api.v1.SuccessSetClipboardResponse
+	65, // 22: computer_api.v1.GetScreenSizeResponse.response:type_name -> computer_api.v1.ScreenSize
 	3,  // 23: computer_api.v1.ComputerProviderService.CreateComputer:input_type -> computer_api.v1.CreateComputerRequest
 	5,  // 24: computer_api.v1.ComputerProviderService.GetComputerInfo:input_type -> computer_api.v1.GetComputerInfoRequest
 	7,  // 25: computer_api.v1.ComputerProviderService.DeleteComputer:input_type -> computer_api.v1.DeleteComputerRequest
-	9,  // 26: computer_api.v1.BasicComputerService.Execute:input_type -> computer_api.v1.ExecuteRequest
-	12, // 27: computer_api.v1.BasicComputerService.ReadFile:input_type -> computer_api.v1.ReadFileRequest
-	14, // 28: computer_api.v1.BasicComputerService.WriteFile:input_type -> computer_api.v1.WriteFileRequest
-	17, // 29: computer_api.v1.BasicComputerService.ListDirectory:input_type -> computer_api.v1.ListDirectoryRequest
-	20, // 30: computer_api.v1.BasicComputerService.GetUserId:input_type -> computer_api.v1.GetUserIdRequest
-	22, // 31: computer_api.v1.BasicComputerService.GetGroupId:input_type -> computer_api.v1.GetGroupIdRequest
-	25, // 32: computer_api.v1.BasicComputerService.ExecuteStream:input_type -> computer_api.v1.ExecuteStreamRequest
-	27, // 33: computer_api.v1.GraphicalComputerService.CaptureScreenshot:input_type -> computer_api.v1.CaptureScreenshotRequest
-	30, // 34: computer_api.v1.GraphicalComputerService.Click:input_type -> computer_api.v1.ClickRequest
-	33, // 35: computer_api.v1.GraphicalComputerService.Type:input_type -> computer_api.v1.TypeRequest
-	36, // 36: computer_api.v1.GraphicalComputerService.PressKey:input_type -> computer_api.v1.PressKeyRequest
-	39, // 37: computer_api.v1.GraphicalComputerService.ReleaseKey:input_type -> computer_api.v1.ReleaseKeyRequest
-	42, // 38: computer_api.v1.GraphicalComputerService.PressAndHoldKey:input_type -> computer_api.v1.PressAndHoldKeyRequest
-	45, // 39: computer_api.v1.GraphicalComputerService.ReleaseAllKeys:input_type -> computer_api.v1.ReleaseAllKeysRequest
-	48, // 40: computer_api.v1.GraphicalComputerService.Drag:input_type -> computer_api.v1.DragRequest
-	51, // 41: computer_api.v1.GraphicalComputerService.MoveMouseTo:input_type -> computer_api.v1.MoveMouseToRequest
-	54, // 42: computer_api.v1.GraphicalComputerService.Scroll:input_type -> computer_api.v1.ScrollRequest
-	57, // 43: computer_api.v1.GraphicalComputerService.GetClipboard:input_type -> computer_api.v1.GetClipboardRequest
-	59, // 44: computer_api.v1.GraphicalComputerService.SetClipboard:input_type -> computer_api.v1.SetClipboardRequest
-	62, // 45: computer_api.v1.GraphicalComputerService.GetScreenSize:input_type -> computer_api.v1.GetScreenSizeRequest
-	4,  // 46: computer_api.v1.ComputerProviderService.CreateComputer:output_type -> computer_api.v1.CreateComputerResponse
-	6,  // 47: computer_api.v1.ComputerProviderService.GetComputerInfo:output_type -> computer_api.v1.GetComputerInfoResponse
-	8,  // 48: computer_api.v1.ComputerProviderService.DeleteComputer:output_type -> computer_api.v1.DeleteComputerResponse
-	11, // 49: computer_api.v1.BasicComputerService.Execute:output_type -> computer_api.v1.ExecuteResponse
-	13, // 50: computer_api.v1.BasicComputerService.ReadFile:output_type -> computer_api.v1.ReadFileResponse
-	16, // 51: computer_api.v1.BasicComputerService.WriteFile:output_type -> computer_api.v1.WriteFileResponse
-	19, // 52: computer_api.v1.BasicComputerService.ListDirectory:output_type -> computer_api.v1.ListDirectoryResponse
-	21, // 53: computer_api.v1.BasicComputerService.GetUserId:output_type -> computer_api.v1.GetUserIdResponse
-	23, // 54: computer_api.v1.BasicComputerService.GetGroupId:output_type -> computer_api.v1.GetGroupIdResponse
-	26, // 55: computer_api.v1.BasicComputerService.ExecuteStream:output_type -> computer_api.v1.ExecuteStreamResponse
-	29, // 56: computer_api.v1.GraphicalComputerService.CaptureScreenshot:output_type -> computer_api.v1.CaptureScreenshotResponse
-	32, // 57: computer_api.v1.GraphicalComputerService.Click:output_type -> computer_api.v1.ClickResponse
-	35, // 58: computer_api.v1.GraphicalComputerService.Type:output_type -> computer_api.v1.TypeResponse
-	38, // 59: computer_api.v1.GraphicalComputerService.PressKey:output_type -> computer_api.v1.PressKeyResponse
-	41, // 60: computer_api.v1.GraphicalComputerService.ReleaseKey:output_type -> computer_api.v1.ReleaseKeyResponse
-	44, // 61: computer_api.v1.GraphicalComputerService.PressAndHoldKey:output_type -> computer_api.v1.PressAndHoldKeyResponse
-	47, // 62: computer_api.v1.GraphicalComputerService.ReleaseAllKeys:output_type -> computer_api.v1.ReleaseAllKeysResponse
-	50, // 63: computer_api.v1.GraphicalComputerService.Drag:output_type -> computer_api.v1.DragResponse
-	53, // 64: computer_api.v1.GraphicalComputerService.MoveMouseTo:output_type -> computer_api.v1.MoveMouseToResponse
-	56, // 65: computer_api.v1.GraphicalComputerService.Scroll:output_type -> computer_api.v1.ScrollResponse
-	58, // 66: computer_api.v1.GraphicalComputerService.GetClipboard:output_type -> computer_api.v1.GetClipboardResponse
-	61, // 67: computer_api.v1.GraphicalComputerService.SetClipboard:output_type -> computer_api.v1.SetClipboardResponse
-	64, // 68: computer_api.v1.GraphicalComputerService.GetScreenSize:output_type -> computer_api.v1.GetScreenSizeResponse
-	46, // [46:69] is the sub-list for method output_type
-	23, // [23:46] is the sub-list for method input_type
+	9,  // 26: computer_api.v1.ComputerProviderService.SendSkillsZip:input_type -> computer_api.v1.SendSkillsZipRequest
+	11, // 27: computer_api.v1.BasicComputerService.Execute:input_type -> computer_api.v1.ExecuteRequest
+	14, // 28: computer_api.v1.BasicComputerService.ReadFile:input_type -> computer_api.v1.ReadFileRequest
+	16, // 29: computer_api.v1.BasicComputerService.WriteFile:input_type -> computer_api.v1.WriteFileRequest
+	19, // 30: computer_api.v1.BasicComputerService.ListDirectory:input_type -> computer_api.v1.ListDirectoryRequest
+	22, // 31: computer_api.v1.BasicComputerService.GetUserId:input_type -> computer_api.v1.GetUserIdRequest
+	24, // 32: computer_api.v1.BasicComputerService.GetGroupId:input_type -> computer_api.v1.GetGroupIdRequest
+	27, // 33: computer_api.v1.BasicComputerService.ExecuteStream:input_type -> computer_api.v1.ExecuteStreamRequest
+	29, // 34: computer_api.v1.GraphicalComputerService.CaptureScreenshot:input_type -> computer_api.v1.CaptureScreenshotRequest
+	32, // 35: computer_api.v1.GraphicalComputerService.Click:input_type -> computer_api.v1.ClickRequest
+	35, // 36: computer_api.v1.GraphicalComputerService.Type:input_type -> computer_api.v1.TypeRequest
+	38, // 37: computer_api.v1.GraphicalComputerService.PressKey:input_type -> computer_api.v1.PressKeyRequest
+	41, // 38: computer_api.v1.GraphicalComputerService.ReleaseKey:input_type -> computer_api.v1.ReleaseKeyRequest
+	44, // 39: computer_api.v1.GraphicalComputerService.PressAndHoldKey:input_type -> computer_api.v1.PressAndHoldKeyRequest
+	47, // 40: computer_api.v1.GraphicalComputerService.ReleaseAllKeys:input_type -> computer_api.v1.ReleaseAllKeysRequest
+	50, // 41: computer_api.v1.GraphicalComputerService.Drag:input_type -> computer_api.v1.DragRequest
+	53, // 42: computer_api.v1.GraphicalComputerService.MoveMouseTo:input_type -> computer_api.v1.MoveMouseToRequest
+	56, // 43: computer_api.v1.GraphicalComputerService.Scroll:input_type -> computer_api.v1.ScrollRequest
+	59, // 44: computer_api.v1.GraphicalComputerService.GetClipboard:input_type -> computer_api.v1.GetClipboardRequest
+	61, // 45: computer_api.v1.GraphicalComputerService.SetClipboard:input_type -> computer_api.v1.SetClipboardRequest
+	64, // 46: computer_api.v1.GraphicalComputerService.GetScreenSize:input_type -> computer_api.v1.GetScreenSizeRequest
+	4,  // 47: computer_api.v1.ComputerProviderService.CreateComputer:output_type -> computer_api.v1.CreateComputerResponse
+	6,  // 48: computer_api.v1.ComputerProviderService.GetComputerInfo:output_type -> computer_api.v1.GetComputerInfoResponse
+	8,  // 49: computer_api.v1.ComputerProviderService.DeleteComputer:output_type -> computer_api.v1.DeleteComputerResponse
+	10, // 50: computer_api.v1.ComputerProviderService.SendSkillsZip:output_type -> computer_api.v1.SendSkillsZipResponse
+	13, // 51: computer_api.v1.BasicComputerService.Execute:output_type -> computer_api.v1.ExecuteResponse
+	15, // 52: computer_api.v1.BasicComputerService.ReadFile:output_type -> computer_api.v1.ReadFileResponse
+	18, // 53: computer_api.v1.BasicComputerService.WriteFile:output_type -> computer_api.v1.WriteFileResponse
+	21, // 54: computer_api.v1.BasicComputerService.ListDirectory:output_type -> computer_api.v1.ListDirectoryResponse
+	23, // 55: computer_api.v1.BasicComputerService.GetUserId:output_type -> computer_api.v1.GetUserIdResponse
+	25, // 56: computer_api.v1.BasicComputerService.GetGroupId:output_type -> computer_api.v1.GetGroupIdResponse
+	28, // 57: computer_api.v1.BasicComputerService.ExecuteStream:output_type -> computer_api.v1.ExecuteStreamResponse
+	31, // 58: computer_api.v1.GraphicalComputerService.CaptureScreenshot:output_type -> computer_api.v1.CaptureScreenshotResponse
+	34, // 59: computer_api.v1.GraphicalComputerService.Click:output_type -> computer_api.v1.ClickResponse
+	37, // 60: computer_api.v1.GraphicalComputerService.Type:output_type -> computer_api.v1.TypeResponse
+	40, // 61: computer_api.v1.GraphicalComputerService.PressKey:output_type -> computer_api.v1.PressKeyResponse
+	43, // 62: computer_api.v1.GraphicalComputerService.ReleaseKey:output_type -> computer_api.v1.ReleaseKeyResponse
+	46, // 63: computer_api.v1.GraphicalComputerService.PressAndHoldKey:output_type -> computer_api.v1.PressAndHoldKeyResponse
+	49, // 64: computer_api.v1.GraphicalComputerService.ReleaseAllKeys:output_type -> computer_api.v1.ReleaseAllKeysResponse
+	52, // 65: computer_api.v1.GraphicalComputerService.Drag:output_type -> computer_api.v1.DragResponse
+	55, // 66: computer_api.v1.GraphicalComputerService.MoveMouseTo:output_type -> computer_api.v1.MoveMouseToResponse
+	58, // 67: computer_api.v1.GraphicalComputerService.Scroll:output_type -> computer_api.v1.ScrollResponse
+	60, // 68: computer_api.v1.GraphicalComputerService.GetClipboard:output_type -> computer_api.v1.GetClipboardResponse
+	63, // 69: computer_api.v1.GraphicalComputerService.SetClipboard:output_type -> computer_api.v1.SetClipboardResponse
+	66, // 70: computer_api.v1.GraphicalComputerService.GetScreenSize:output_type -> computer_api.v1.GetScreenSizeResponse
+	47, // [47:71] is the sub-list for method output_type
+	23, // [23:47] is the sub-list for method input_type
 	23, // [23:23] is the sub-list for extension type_name
 	23, // [23:23] is the sub-list for extension extendee
 	0,  // [0:23] is the sub-list for field type_name
@@ -4547,96 +4696,100 @@ func file_computer_api_v1_computer_proto_init() {
 		(*CreateComputerResponse_ErrorMessage)(nil),
 		(*CreateComputerResponse_SessionId)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[8].OneofWrappers = []any{}
-	file_computer_api_v1_computer_proto_msgTypes[10].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[9].OneofWrappers = []any{
+		(*SendSkillsZipResponse_ErrorMessage)(nil),
+		(*SendSkillsZipResponse_SkillsPath)(nil),
+	}
+	file_computer_api_v1_computer_proto_msgTypes[10].OneofWrappers = []any{}
+	file_computer_api_v1_computer_proto_msgTypes[12].OneofWrappers = []any{
 		(*ExecuteResponse_ErrorMessage)(nil),
 		(*ExecuteResponse_ExecResult)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[11].OneofWrappers = []any{}
-	file_computer_api_v1_computer_proto_msgTypes[12].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[13].OneofWrappers = []any{}
+	file_computer_api_v1_computer_proto_msgTypes[14].OneofWrappers = []any{
 		(*ReadFileResponse_ErrorMessage)(nil),
 		(*ReadFileResponse_Content)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[13].OneofWrappers = []any{}
-	file_computer_api_v1_computer_proto_msgTypes[15].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[15].OneofWrappers = []any{}
+	file_computer_api_v1_computer_proto_msgTypes[17].OneofWrappers = []any{
 		(*WriteFileResponse_ErrorMessage)(nil),
 		(*WriteFileResponse_Resp)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[18].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[20].OneofWrappers = []any{
 		(*ListDirectoryResponse_ErrorMessage)(nil),
 		(*ListDirectoryResponse_Response)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[20].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[22].OneofWrappers = []any{
 		(*GetUserIdResponse_ErrorMessage)(nil),
 		(*GetUserIdResponse_UserId)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[22].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[24].OneofWrappers = []any{
 		(*GetGroupIdResponse_ErrorMessage)(nil),
 		(*GetGroupIdResponse_GroupId)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[23].OneofWrappers = []any{}
-	file_computer_api_v1_computer_proto_msgTypes[24].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[25].OneofWrappers = []any{}
+	file_computer_api_v1_computer_proto_msgTypes[26].OneofWrappers = []any{
 		(*ExecuteStreamRequest_Config)(nil),
 		(*ExecuteStreamRequest_Stdin)(nil),
 		(*ExecuteStreamRequest_CloseStdin)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[25].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[27].OneofWrappers = []any{
 		(*ExecuteStreamResponse_Stdout)(nil),
 		(*ExecuteStreamResponse_Stderr)(nil),
 		(*ExecuteStreamResponse_ExitCode)(nil),
 		(*ExecuteStreamResponse_ErrorMessage)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[26].OneofWrappers = []any{}
-	file_computer_api_v1_computer_proto_msgTypes[28].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[28].OneofWrappers = []any{}
+	file_computer_api_v1_computer_proto_msgTypes[30].OneofWrappers = []any{
 		(*CaptureScreenshotResponse_ErrorMessage)(nil),
 		(*CaptureScreenshotResponse_Response)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[29].OneofWrappers = []any{}
-	file_computer_api_v1_computer_proto_msgTypes[31].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[31].OneofWrappers = []any{}
+	file_computer_api_v1_computer_proto_msgTypes[33].OneofWrappers = []any{
 		(*ClickResponse_ErrorMessage)(nil),
 		(*ClickResponse_Response)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[34].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[36].OneofWrappers = []any{
 		(*TypeResponse_ErrorMessage)(nil),
 		(*TypeResponse_Response)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[37].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[39].OneofWrappers = []any{
 		(*PressKeyResponse_ErrorMessage)(nil),
 		(*PressKeyResponse_Response)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[40].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[42].OneofWrappers = []any{
 		(*ReleaseKeyResponse_ErrorMessage)(nil),
 		(*ReleaseKeyResponse_Response)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[43].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[45].OneofWrappers = []any{
 		(*PressAndHoldKeyResponse_ErrorMessage)(nil),
 		(*PressAndHoldKeyResponse_Response)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[46].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[48].OneofWrappers = []any{
 		(*ReleaseAllKeysResponse_ErrorMessage)(nil),
 		(*ReleaseAllKeysResponse_Response)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[49].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[51].OneofWrappers = []any{
 		(*DragResponse_ErrorMessage)(nil),
 		(*DragResponse_Response)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[52].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[54].OneofWrappers = []any{
 		(*MoveMouseToResponse_ErrorMessage)(nil),
 		(*MoveMouseToResponse_Response)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[55].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[57].OneofWrappers = []any{
 		(*ScrollResponse_ErrorMessage)(nil),
 		(*ScrollResponse_Response)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[57].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[59].OneofWrappers = []any{
 		(*GetClipboardResponse_ErrorMessage)(nil),
 		(*GetClipboardResponse_Text)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[60].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[62].OneofWrappers = []any{
 		(*SetClipboardResponse_ErrorMessage)(nil),
 		(*SetClipboardResponse_Response)(nil),
 	}
-	file_computer_api_v1_computer_proto_msgTypes[63].OneofWrappers = []any{
+	file_computer_api_v1_computer_proto_msgTypes[65].OneofWrappers = []any{
 		(*GetScreenSizeResponse_ErrorMessage)(nil),
 		(*GetScreenSizeResponse_Response)(nil),
 	}
@@ -4646,7 +4799,7 @@ func file_computer_api_v1_computer_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_computer_api_v1_computer_proto_rawDesc), len(file_computer_api_v1_computer_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   67,
+			NumMessages:   69,
 			NumExtensions: 0,
 			NumServices:   3,
 		},

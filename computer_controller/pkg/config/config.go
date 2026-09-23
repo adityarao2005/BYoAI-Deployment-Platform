@@ -84,23 +84,29 @@ type LoggingConfig struct {
 }
 
 type ServerConfig struct {
-	Type    ConfigType          `yaml:"type"`
-	Server  ServerNetworkConfig `yaml:"server,omitempty"`
-	Logging LoggingConfig       `yaml:"logging,omitempty"`
-	Spec    Spec                `yaml:"-"`
+	Type         ConfigType          `yaml:"type"`
+	WorkspaceDir string              `yaml:"workspaceDir,omitempty"`
+	Server       ServerNetworkConfig `yaml:"server,omitempty"`
+	Logging      LoggingConfig       `yaml:"logging,omitempty"`
+	Spec         Spec                `yaml:"-"`
 }
 
 func (c *ServerConfig) UnmarshalYAML(value *yaml.Node) error {
 	// Intermediate struct to capture top-level fields
 	var raw struct {
-		Type    ConfigType          `yaml:"type"`
-		Server  ServerNetworkConfig `yaml:"server"`
-		Logging LoggingConfig       `yaml:"logging"`
-		Spec    yaml.Node           `yaml:"spec"`
+		Type         ConfigType          `yaml:"type"`
+		WorkspaceDir string              `yaml:"workspaceDir"`
+		Server       ServerNetworkConfig `yaml:"server"`
+		Logging      LoggingConfig       `yaml:"logging"`
+		Spec         yaml.Node           `yaml:"spec"`
 	}
 
 	if err := value.Decode(&raw); err != nil {
 		return err
+	}
+
+	if raw.WorkspaceDir == "" {
+		raw.WorkspaceDir = "/workspace"
 	}
 
 	if raw.Server.Host == "" {
@@ -131,6 +137,7 @@ func (c *ServerConfig) UnmarshalYAML(value *yaml.Node) error {
 	raw.Server.Security = sec
 
 	c.Type = raw.Type
+	c.WorkspaceDir = raw.WorkspaceDir
 	c.Server = raw.Server
 	c.Logging = raw.Logging
 

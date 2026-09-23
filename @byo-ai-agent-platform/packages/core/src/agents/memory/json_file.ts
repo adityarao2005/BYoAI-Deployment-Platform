@@ -14,6 +14,7 @@ import type { ModelInteraction } from "@/models/conversation";
 export interface JsonAgentMemoryRecord {
     id: string;
     computerId?: string;
+    skillsPath?: string;
     transcript: ModelInteraction[];
     name: string;
     userId: string;
@@ -83,7 +84,14 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
             record.userId,
             record.transcript ?? [],
             record.computerId,
+            record.skillsPath,
         );
+    }
+
+    async setSkillsPath(agentId: string, skillsPath: string): Promise<void> {
+        const record = await this.readRecord(agentId);
+        record.skillsPath = skillsPath;
+        await this.writeRecord(record);
     }
 
     async setName(agentId: string, name: string): Promise<void> {

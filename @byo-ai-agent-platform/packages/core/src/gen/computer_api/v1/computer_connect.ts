@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { CaptureScreenshotRequest, CaptureScreenshotResponse, ClickRequest, ClickResponse, CreateComputerRequest, CreateComputerResponse, DeleteComputerRequest, DeleteComputerResponse, DragRequest, DragResponse, ExecuteRequest, ExecuteResponse, ExecuteStreamRequest, ExecuteStreamResponse, GetClipboardRequest, GetClipboardResponse, GetComputerInfoRequest, GetComputerInfoResponse, GetGroupIdRequest, GetGroupIdResponse, GetScreenSizeRequest, GetScreenSizeResponse, GetUserIdRequest, GetUserIdResponse, ListDirectoryRequest, ListDirectoryResponse, MoveMouseToRequest, MoveMouseToResponse, PressAndHoldKeyRequest, PressAndHoldKeyResponse, PressKeyRequest, PressKeyResponse, ReadFileRequest, ReadFileResponse, ReleaseAllKeysRequest, ReleaseAllKeysResponse, ReleaseKeyRequest, ReleaseKeyResponse, ScrollRequest, ScrollResponse, SetClipboardRequest, SetClipboardResponse, TypeRequest, TypeResponse, WriteFileRequest, WriteFileResponse } from "./computer_pb.js";
+import { CaptureScreenshotRequest, CaptureScreenshotResponse, ClickRequest, ClickResponse, CreateComputerRequest, CreateComputerResponse, DeleteComputerRequest, DeleteComputerResponse, DragRequest, DragResponse, ExecuteRequest, ExecuteResponse, ExecuteStreamRequest, ExecuteStreamResponse, GetClipboardRequest, GetClipboardResponse, GetComputerInfoRequest, GetComputerInfoResponse, GetGroupIdRequest, GetGroupIdResponse, GetScreenSizeRequest, GetScreenSizeResponse, GetUserIdRequest, GetUserIdResponse, ListDirectoryRequest, ListDirectoryResponse, MoveMouseToRequest, MoveMouseToResponse, PressAndHoldKeyRequest, PressAndHoldKeyResponse, PressKeyRequest, PressKeyResponse, ReadFileRequest, ReadFileResponse, ReleaseAllKeysRequest, ReleaseAllKeysResponse, ReleaseKeyRequest, ReleaseKeyResponse, ScrollRequest, ScrollResponse, SendSkillsZipRequest, SendSkillsZipResponse, SetClipboardRequest, SetClipboardResponse, TypeRequest, TypeResponse, WriteFileRequest, WriteFileResponse } from "./computer_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -38,6 +38,15 @@ export const ComputerProviderService = {
       I: DeleteComputerRequest,
       O: DeleteComputerResponse,
       kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc computer_api.v1.ComputerProviderService.SendSkillsZip
+     */
+    sendSkillsZip: {
+      name: "SendSkillsZip",
+      I: SendSkillsZipRequest,
+      O: SendSkillsZipResponse,
+      kind: MethodKind.ClientStreaming,
     },
   }
 } as const;

@@ -1,6 +1,8 @@
 package server_test
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
@@ -54,7 +56,8 @@ func TestNewServerHandler(t *testing.T) {
 
 func TestServerConnectRPCIntegration(t *testing.T) {
 	cfg := &config.ServerConfig{
-		Type: config.TypeLocal,
+		Type:         config.TypeLocal,
+		WorkspaceDir: t.TempDir(),
 	}
 
 	handler, err := server.NewServerHandler(cfg)
@@ -113,6 +116,119 @@ func TestServerConnectRPCIntegration(t *testing.T) {
 		if deleteResp == nil {
 			t.Fatal("expected non-nil DeleteComputerResponse")
 		}
+	})
+
+	t.Run("ComputerProviderService - SendSkillsZip", func(t *testing.T) {
+		sessionID := "0"
+
+		createZipData := func(skillName, fileContent string) []byte {
+			var buf bytes.Buffer
+			zw := zip.NewWriter(&buf)
+			f, err := zw.Create(skillName + "/SKILL.md")
+			if err != nil {
+				t.Fatalf("failed to create zip entry: %v", err)
+			}
+			if _, err := f.Write([]byte(fileContent)); err != nil {
+				t.Fatalf("failed to write zip entry content: %v", err)
+			}
+			if err := zw.Close(); err != nil {
+				t.Fatalf("failed to close zip writer: %v", err)
+			}
+			return buf.Bytes()
+		}
+
+		t.Run("Valid skills zip stream", func(t *testing.T) {
+			zipBytes := createZipData("code-analysis", "---\nname: code-analysis\n---\n")
+
+			stream := providerClient.SendSkillsZip(ctx)
+
+			chunkSize := 10
+			for i := 0; i < len(zipBytes); i += chunkSize {
+				end := i + chunkSize
+				if end > len(zipBytes) {
+					end = len(zipBytes)
+				}
+				err := stream.Send(&computer_apiv1.SendSkillsZipRequest{
+					SessionId: sessionID,
+					Chunk:     zipBytes[i:end],
+				})
+				if err != nil {
+					t.Fatalf("failed to send zip chunk: %v", err)
+				}
+			}
+
+			resp, err := stream.CloseAndReceive()
+			if err != nil {
+				t.Fatalf("SendSkillsZip RPC failed: %v", err)
+			}
+			skillsPath := resp.Msg.GetSkillsPath()
+			if skillsPath == "" {
+				t.Fatalf("expected non-empty skillsPath, got error: %v", resp.Msg.GetErrorMessage())
+			}
+
+			extractedFile := filepath.Join(skillsPath, "code-analysis", "SKILL.md")
+			data, err := os.ReadFile(extractedFile)
+			if err != nil {
+				t.Fatalf("failed to read extracted skill file %s: %v", extractedFile, err)
+			}
+			if string(data) != "---\nname: code-analysis\n---\n" {
+				t.Errorf("unexpected file content: %s", string(data))
+			}
+		})
+
+		t.Run("Missing sessionId returns validation error", func(t *testing.T) {
+			stream := providerClient.SendSkillsZip(ctx)
+			_ = stream.Send(&computer_apiv1.SendSkillsZipRequest{
+				SessionId: "",
+				Chunk:     []byte("dummy"),
+			})
+
+			_, err := stream.CloseAndReceive()
+			if err == nil {
+				t.Fatal("expected validation error for empty session_id, got nil")
+			}
+			if connect.CodeOf(err) != connect.CodeInvalidArgument {
+				t.Errorf("expected CodeInvalidArgument, got %v: %v", connect.CodeOf(err), err)
+			}
+		})
+
+		t.Run("Invalid sessionID returns error", func(t *testing.T) {
+			stream := providerClient.SendSkillsZip(ctx)
+			err := stream.Send(&computer_apiv1.SendSkillsZipRequest{
+				SessionId: "non-existent-session-id",
+				Chunk:     []byte("dummy"),
+			})
+			if err != nil {
+				t.Fatalf("failed to send request: %v", err)
+			}
+
+			resp, err := stream.CloseAndReceive()
+			if err != nil {
+				t.Fatalf("SendSkillsZip RPC failed: %v", err)
+			}
+			if !strings.Contains(resp.Msg.GetErrorMessage(), "computer session not found") {
+				t.Errorf("expected 'computer session not found' error, got: %v", resp.Msg.GetErrorMessage())
+			}
+		})
+
+		t.Run("Corrupted zip returns error", func(t *testing.T) {
+			stream := providerClient.SendSkillsZip(ctx)
+			err := stream.Send(&computer_apiv1.SendSkillsZipRequest{
+				SessionId: sessionID,
+				Chunk:     []byte("not-a-valid-zip-file-bytes"),
+			})
+			if err != nil {
+				t.Fatalf("failed to send request: %v", err)
+			}
+
+			resp, err := stream.CloseAndReceive()
+			if err != nil {
+				t.Fatalf("SendSkillsZip RPC failed: %v", err)
+			}
+			if !strings.Contains(resp.Msg.GetErrorMessage(), "failed to extract zip") {
+				t.Errorf("expected 'failed to extract zip' error, got: %v", resp.Msg.GetErrorMessage())
+			}
+		})
 	})
 
 	t.Run("BasicComputerService - Execute RPCs", func(t *testing.T) {
