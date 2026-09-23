@@ -79,7 +79,7 @@ func NewServerHandlerAndProvider(server_config *config.ServerConfig) (http.Handl
 		return nil, nil, err
 	}
 
-	services.CreateComputerProviderServiceHandler(mux, computer_provider)
+	services.CreateComputerProviderServiceHandler(mux, computer_provider, server_config.WorkspaceDir)
 	services.CreateBasicComputerServiceHandler(mux, computer_provider)
 	services.CreateGraphicComputerServiceHandler(mux, computer_provider)
 
