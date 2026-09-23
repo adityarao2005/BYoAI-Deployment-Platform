@@ -10,14 +10,13 @@ import {
     InMemoryAgentMemoryManager,
     LoggingAgentObserver,
 } from "@byo-ai-agent-platform/core/agents";
-import { ConfigError } from "@byo-ai-agent-platform/core/errors";
-import { getLogger } from "@byo-ai-agent-platform/core/logger";
 import {
     type ComputerProvider,
     createComputerProvider,
 } from "@byo-ai-agent-platform/core/computer";
-
 import type { ComputerUseToolProviderConfig } from "@byo-ai-agent-platform/core/config";
+import { ConfigError } from "@byo-ai-agent-platform/core/errors";
+import { getLogger } from "@byo-ai-agent-platform/core/logger";
 import {
     AnthropicModel,
     GeminiModel,
@@ -37,8 +36,10 @@ import {
     type McpClientFactory,
     McpServerToolProvider,
     OpenAPIToolProvider,
+    ScratchpadToolProvider,
     StdioMcpClientFactory,
     StreamableHTTPMcpClientFactory,
+    TodosToolProvider,
     toolProviderRegistry,
 } from "@byo-ai-agent-platform/core/tools";
 import { parse } from "yaml";
@@ -155,7 +156,9 @@ export function registerModels(config: AgentConfig): void {
         switch (modelConfig.brand) {
             case "openai": {
                 if (!modelConfig.properties.apiKey) {
-                    logger.warn(`Skipping OpenAI model ${name}: missing API key`);
+                    logger.warn(
+                        `Skipping OpenAI model ${name}: missing API key`,
+                    );
                     continue;
                 }
                 modelRegistry.registerModel(
@@ -167,7 +170,9 @@ export function registerModels(config: AgentConfig): void {
             }
             case "gemini": {
                 if (!modelConfig.properties.apiKey) {
-                    logger.warn(`Skipping Gemini model ${name}: missing API key`);
+                    logger.warn(
+                        `Skipping Gemini model ${name}: missing API key`,
+                    );
                     continue;
                 }
                 modelRegistry.registerModel(
@@ -179,7 +184,9 @@ export function registerModels(config: AgentConfig): void {
             }
             case "anthropic": {
                 if (!modelConfig.properties.apiKey) {
-                    logger.warn(`Skipping Anthropic model ${name}: missing API key`);
+                    logger.warn(
+                        `Skipping Anthropic model ${name}: missing API key`,
+                    );
                     continue;
                 }
                 modelRegistry.registerModel(
@@ -328,6 +335,18 @@ export function registerToolProviders(
                 name: providerConfig.name,
                 transport: providerConfig.transport,
             });
+        } else if (providerConfig.type === "scratchpad") {
+            toolProviderRegistry.registerToolProvider(
+                new ScratchpadToolProvider(),
+            );
+            logger.info("Registered ScratchpadToolProvider", {
+                name: providerConfig.name,
+            });
+        } else if (providerConfig.type === "todos") {
+            toolProviderRegistry.registerToolProvider(new TodosToolProvider());
+            logger.info("Registered TodosToolProvider", {
+                name: providerConfig.name,
+            });
         }
     }
 }
@@ -365,14 +384,15 @@ export async function bootstrap(
     let computer: ComputerProvider | undefined;
 
     if (!config) {
-        throw new Error("Config was not able to be loaded for reasons unspecified")
+        throw new Error(
+            "Config was not able to be loaded for reasons unspecified",
+        );
     }
-    
+
     registerModels(config);
     registerSkillRepositories(config);
     computer = registerComputer(config);
     registerToolProviders(config, computer);
-
 
     const defaultModel = modelRegistry.getDefaultModel();
     if (!defaultModel) {

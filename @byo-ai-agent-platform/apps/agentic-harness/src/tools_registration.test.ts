@@ -3,6 +3,8 @@ import type { AgentHandle } from "@byo-ai-agent-platform/core/agents";
 import {
     McpServerToolProvider,
     OpenAPIToolProvider,
+    ScratchpadToolProvider,
+    TodosToolProvider,
     toolProviderRegistry,
 } from "@byo-ai-agent-platform/core/tools";
 import type { AgentConfig } from "./agent.config";
@@ -26,9 +28,9 @@ describe("Tool Provider Registration", () => {
                 },
             ],
             security: {
-                alg: ['RS512'],
-                jwksUri: "https://example.com"
-            }
+                alg: ["RS512"],
+                jwksUri: "https://example.com",
+            },
         };
 
         registerToolProviders(config);
@@ -36,6 +38,52 @@ describe("Tool Provider Registration", () => {
         const providers = toolProviderRegistry.getAllToolProviders();
         expect(providers).toHaveLength(1);
         expect(providers[0]).toBeInstanceOf(OpenAPIToolProvider);
+    });
+
+    it("registers scratchpad tool provider from config", () => {
+        const config: AgentConfig = {
+            models: [],
+            skillRepositories: [],
+            toolProviders: [
+                {
+                    name: "my-scratchpad-service",
+                    type: "scratchpad",
+                },
+            ],
+            security: {
+                alg: ["RS512"],
+                jwksUri: "https://example.com",
+            },
+        };
+
+        registerToolProviders(config);
+
+        const providers = toolProviderRegistry.getAllToolProviders();
+        expect(providers).toHaveLength(1);
+        expect(providers[0]).toBeInstanceOf(ScratchpadToolProvider);
+    });
+
+    it("registers todos tool provider from config", () => {
+        const config: AgentConfig = {
+            models: [],
+            skillRepositories: [],
+            toolProviders: [
+                {
+                    name: "my-todos-service",
+                    type: "todos",
+                },
+            ],
+            security: {
+                alg: ["RS512"],
+                jwksUri: "https://example.com",
+            },
+        };
+
+        registerToolProviders(config);
+
+        const providers = toolProviderRegistry.getAllToolProviders();
+        expect(providers).toHaveLength(1);
+        expect(providers[0]).toBeInstanceOf(TodosToolProvider);
     });
 
     it("registers mcp stdio tool provider from config", () => {
@@ -52,9 +100,9 @@ describe("Tool Provider Registration", () => {
                 },
             ],
             security: {
-                alg: ['RS512'],
-                jwksUri: "https://example.com"
-            }
+                alg: ["RS512"],
+                jwksUri: "https://example.com",
+            },
         };
 
         registerToolProviders(config);
@@ -77,9 +125,9 @@ describe("Tool Provider Registration", () => {
                 },
             ],
             security: {
-                alg: ['RS512'],
-                jwksUri: "https://example.com"
-            }
+                alg: ["RS512"],
+                jwksUri: "https://example.com",
+            },
         };
 
         registerToolProviders(config);
@@ -110,9 +158,9 @@ describe("Tool Provider Registration", () => {
                 },
             ],
             security: {
-                alg: ['RS512'],
-                jwksUri: "https://example.com"
-            }
+                alg: ["RS512"],
+                jwksUri: "https://example.com",
+            },
         };
 
         const computer = registerComputer(config);
@@ -137,9 +185,9 @@ describe("Tool Provider Registration", () => {
                 },
             ],
             security: {
-                alg: ['RS512'],
-                jwksUri: "https://example.com"
-            }
+                alg: ["RS512"],
+                jwksUri: "https://example.com",
+            },
         };
 
         expect(() => registerToolProviders(config)).toThrow(
@@ -161,9 +209,9 @@ describe("Tool Provider Registration", () => {
                 },
             ],
             security: {
-                alg: ['RS512'],
-                jwksUri: "https://example.com"
-            }
+                alg: ["RS512"],
+                jwksUri: "https://example.com",
+            },
         };
 
         registerToolProviders(config);
@@ -189,9 +237,9 @@ describe("Tool Provider Registration", () => {
                 },
             ],
             security: {
-                alg: ['RS512'],
-                jwksUri: "https://example.com"
-            }
+                alg: ["RS512"],
+                jwksUri: "https://example.com",
+            },
         };
 
         registerToolProviders(config);
@@ -224,9 +272,9 @@ describe("Tool Provider Registration", () => {
                 },
             ],
             security: {
-                alg: ['RS512'],
-                jwksUri: "https://example.com"
-            }
+                alg: ["RS512"],
+                jwksUri: "https://example.com",
+            },
         };
 
         expect(() => registerToolProviders(config)).toThrow(
@@ -248,9 +296,9 @@ describe("Tool Provider Registration", () => {
                 },
             ],
             security: {
-                alg: ['RS512'],
-                jwksUri: "https://example.com"
-            }
+                alg: ["RS512"],
+                jwksUri: "https://example.com",
+            },
         };
 
         registerToolProviders(config);
@@ -259,7 +307,11 @@ describe("Tool Provider Registration", () => {
         expect(providers).toHaveLength(1);
 
         const computerProvider = providers[0];
-        const agent: AgentHandle = { id: "test-agent", name: "test-agent", userId: "user-1" };
+        const agent: AgentHandle = {
+            id: "test-agent",
+            name: "test-agent",
+            userId: "user-1",
+        };
 
         await expect(computerProvider?.getAllTools(agent)).rejects.toThrow(
             "The Agent is not registered with this tool provider and thus the agent does not have a computer id",
@@ -283,9 +335,9 @@ describe("Tool Provider Registration", () => {
                 },
             ],
             security: {
-                alg: ['RS512'],
-                jwksUri: "https://example.com"
-            }
+                alg: ["RS512"],
+                jwksUri: "https://example.com",
+            },
         };
 
         registerToolProviders(config);
@@ -294,7 +346,11 @@ describe("Tool Provider Registration", () => {
         expect(providers).toHaveLength(1);
 
         const computerProvider = providers[0];
-        const agent: AgentHandle = { id: "test-agent", name: "test-agent", userId: "user-1" };
+        const agent: AgentHandle = {
+            id: "test-agent",
+            name: "test-agent",
+            userId: "user-1",
+        };
 
         await expect(computerProvider?.getAllTools(agent)).rejects.toThrow(
             "The Agent is not registered with this tool provider and thus the agent does not have a computer id",
@@ -315,9 +371,9 @@ describe("Tool Provider Registration", () => {
                 },
             ],
             security: {
-                alg: ['RS512'],
-                jwksUri: "https://example.com"
-            }
+                alg: ["RS512"],
+                jwksUri: "https://example.com",
+            },
         };
 
         const computer = registerComputer(config);
@@ -333,11 +389,11 @@ describe("Tool Provider Registration", () => {
             models: [],
             skillRepositories: [],
             toolProviders: [],
-            
+
             security: {
-                alg: ['RS512'],
-                jwksUri: "https://example.com"
-            }
+                alg: ["RS512"],
+                jwksUri: "https://example.com",
+            },
         };
 
         const computer = registerComputer(config);

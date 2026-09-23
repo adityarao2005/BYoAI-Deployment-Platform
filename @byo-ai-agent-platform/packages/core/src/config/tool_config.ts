@@ -251,13 +251,35 @@ export const McpToolProviderConfigSchema = z.discriminatedUnion("transport", [
 
 export type McpToolProviderConfig = z.infer<typeof McpToolProviderConfigSchema>;
 
+// Scratchpad tool provider
+export const ScratchpadToolProviderConfigSchema =
+    BaseToolProviderConfigSchema.extend({
+        type: z.literal("scratchpad"),
+    });
+
+export type ScratchpadToolProviderConfig = z.infer<
+    typeof ScratchpadToolProviderConfigSchema
+>;
+
+// Todos tool provider
+export const TodosToolProviderConfigSchema =
+    BaseToolProviderConfigSchema.extend({
+        type: z.literal("todos"),
+    });
+
+export type TodosToolProviderConfig = z.infer<
+    typeof TodosToolProviderConfigSchema
+>;
+
 /**
- * Universal Zod discriminated union schema for tool provider configuration (`openapi`, `computer`, `mcp`).
+ * Universal Zod discriminated union schema for tool provider configuration (`openapi`, `computer`, `mcp`, `scratchpad`, `todos`).
  */
 export const ToolProviderConfigSchema = z.discriminatedUnion("type", [
     OpenAPIToolProviderConfigSchema,
     ComputerUseToolProviderConfigSchema,
     McpToolProviderConfigSchema,
+    ScratchpadToolProviderConfigSchema,
+    TodosToolProviderConfigSchema,
 ]);
 
 /**
