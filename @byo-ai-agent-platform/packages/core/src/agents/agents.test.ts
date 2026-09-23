@@ -4,7 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import type { Model } from "@/models/models";
 import type { Tool, ToolProvider } from "@/tools/tools";
-import { type AgentConfiguration, AgentManager, AgentMemory } from "./agents";
+import { constructSystemPrompt, type AgentConfiguration, AgentManager, AgentMemory } from "./agents";
+import type { Skill } from "../skills";
 import { InMemoryAgentCommunicator } from "./communication";
 import {
     InMemoryAgentMemoryManager,
@@ -106,6 +107,37 @@ describe("AgentMemory", () => {
         });
 
         expect(memory.getPendingToolCalls()).toEqual([]);
+    });
+});
+
+describe("constructSystemPrompt", () => {
+    it("renders basic system prompt without skillsPath", () => {
+        const prompt = constructSystemPrompt("Bot", "Helper bot", []);
+        expect(prompt).toContain("AI Agent named Bot");
+        expect(prompt).not.toContain("Skills Directory:");
+    });
+
+    it("renders skills directory and skill location tags when skillsPath is present", () => {
+        const skills: Skill[] = [
+            {
+                frontMatter: {
+                    name: "calculator",
+                    description: "Performs math calculations",
+                },
+                body: "calc body",
+            },
+        ];
+
+        const prompt = constructSystemPrompt(
+            "Bot",
+            "Helper bot",
+            skills,
+            "/workspace/agent-123/skills",
+        );
+
+        expect(prompt).toContain("## Skills Directory:");
+        expect(prompt).toContain("/workspace/agent-123/skills");
+        expect(prompt).toContain("<location>/workspace/agent-123/skills/calculator</location>");
     });
 });
 

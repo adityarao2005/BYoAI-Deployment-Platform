@@ -145,6 +145,7 @@ export class AgentExecutor implements IAgentExecutor {
             session.name,
             session.description,
             this.skills,
+            memory.skillsPath,
         );
 
         await this.notifyObservers("onModelStart", agentId, prompt);

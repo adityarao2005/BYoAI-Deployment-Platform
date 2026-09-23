@@ -46,7 +46,25 @@ export function constructSystemPrompt(
     name: string,
     description: string,
     skills: Skill[],
+    skillsPath?: string,
 ): string {
+    const formattedSkills = skills
+        .map((skill) => {
+            const locationTag = skillsPath
+                ? `\n            <location>${path.posix.join(skillsPath, skill.frontMatter.name)}</location>`
+                : "";
+            return `
+        <skill>
+            <name>${skill.frontMatter.name}</name>
+            <description><![CDATA[${skill.frontMatter.description}]]></description>${locationTag}
+        </skill>`.trim();
+        })
+        .join("\n");
+
+    const skillsDirSection = skillsPath
+        ? `\n## Skills Directory:\n\nYour skills and asset files are located on the computer at: ${skillsPath}\n`
+        : "";
+
     return `
 ## Who you are:
 
@@ -55,19 +73,11 @@ You are an AI Agent named ${name}.
 ## Your purpose:
 
 ${description}
-
+${skillsDirSection}
 ## Your skills:
 
 <available_skills>
-    ${skills
-            .map((skill) =>
-                `
-        <skill>
-            <name>${skill.frontMatter.name}</name>
-            <description><![CDATA[${skill.frontMatter.description}]]></description>
-        </skill>`.trim(),
-            )
-            .join("\n")}
+    ${formattedSkills}
 </available_skills>
     `.trim();
 }
@@ -240,13 +250,10 @@ export class AgentManager implements IAgentLifecycleManager {
                                 computerId,
                                 zipBuffer,
                             );
-                            const skills = await repo.getAllSkills();
-                            for (const skill of skills) {
-                                skill.assetTargetLocation = path.join(
-                                    skillsPath,
-                                    skill.frontMatter.name,
-                                );
-                            }
+                            await this.configuration.memoryManager.setSkillsPath(
+                                id,
+                                skillsPath,
+                            );
                         } catch {
                             // Ignore failure to send skills zip if repo export is unavailable
                         }

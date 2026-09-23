@@ -49,6 +49,11 @@ export class InMemoryAgentMemoryManager implements AgentMemoryManager {
         memory.computerId = computerId;
     }
 
+    async setSkillsPath(agentId: string, skillsPath: string): Promise<void> {
+        const memory = await this.getAgentMemory(agentId);
+        memory.skillsPath = skillsPath;
+    }
+
     async getAgent(id: string): Promise<AgentHandle | undefined> {
         const memory = this.memories.get(id);
 

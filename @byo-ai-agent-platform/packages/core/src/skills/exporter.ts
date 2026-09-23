@@ -12,6 +12,7 @@ const execFileAsync = promisify(execFile);
 
 /**
  * Exports all skills and assets from a given SkillRepository into a single ZIP Buffer.
+ * All skills in the output ZIP are placed at the root of the ZIP archive (e.g. /{skillName}/SKILL.md).
  */
 export async function exportSkillRepositoryToZip(
     repo: SkillRepository,
@@ -30,6 +31,8 @@ export async function exportSkillRepositoryToZip(
 async function exportZipSkillRepository(
     repo: ZipSkillRepository,
 ): Promise<Buffer> {
+    let zipBuffer: Buffer;
+
     if (repo.location.startsWith("http://") || repo.location.startsWith("https://")) {
         const response = await fetch(repo.location, {
             method: "GET",
@@ -40,37 +43,62 @@ async function exportZipSkillRepository(
                 `Failed to fetch zip from ${repo.location}. Status: ${response.status}`,
             );
         }
-        const arrayBuffer = await response.arrayBuffer();
-        return Buffer.from(arrayBuffer);
+        zipBuffer = Buffer.from(await response.arrayBuffer());
+    } else {
+        let zipPath = repo.location;
+        if (!path.isAbsolute(zipPath)) {
+            const cwdPath = path.resolve(process.cwd(), zipPath);
+            const existsInCwd = await fs
+                .access(cwdPath)
+                .then(
+                    () => true,
+                    () => false,
+                );
+            if (!existsInCwd && process.env.AGENT_CONFIG_PATH) {
+                const configDirPath = path.resolve(
+                    path.dirname(process.env.AGENT_CONFIG_PATH),
+                    zipPath,
+                );
+                if (
+                    await fs
+                        .access(configDirPath)
+                        .then(
+                            () => true,
+                            () => false,
+                        )
+                ) {
+                    zipPath = configDirPath;
+                }
+            }
+        }
+        zipBuffer = await fs.readFile(zipPath);
     }
 
-    let zipPath = repo.location;
-    if (!path.isAbsolute(zipPath)) {
-        const cwdPath = path.resolve(process.cwd(), zipPath);
-        const existsInCwd = await fs
-            .access(cwdPath)
-            .then(
-                () => true,
-                () => false,
-            );
-        if (!existsInCwd && process.env.AGENT_CONFIG_PATH) {
-            const configDirPath = path.resolve(
-                path.dirname(process.env.AGENT_CONFIG_PATH),
-                zipPath,
-            );
-            if (
-                await fs
-                    .access(configDirPath)
-                    .then(
-                        () => true,
-                        () => false,
-                    )
-            ) {
-                zipPath = configDirPath;
+    const sourceZip = new AdmZip(zipBuffer);
+    const normalizedSubdir =
+        repo.skillsSubdirectory === "/"
+            ? ""
+            : repo.skillsSubdirectory.replace(/^\/+|\/+$/g, "");
+
+    if (!normalizedSubdir || normalizedSubdir === ".") {
+        return zipBuffer;
+    }
+
+    const outputZip = new AdmZip();
+    for (const entry of sourceZip.getEntries()) {
+        const entryPath = entry.entryName.replace(/^\/+/, "");
+        if (entryPath.startsWith(`${normalizedSubdir}/`)) {
+            const relativePath = entryPath.slice(normalizedSubdir.length + 1);
+            if (relativePath) {
+                if (entry.isDirectory) {
+                    outputZip.addFile(`${relativePath}/`, Buffer.alloc(0));
+                } else {
+                    outputZip.addFile(relativePath, entry.getData());
+                }
             }
         }
     }
-    return fs.readFile(zipPath);
+    return outputZip.toBuffer();
 }
 
 async function exportGitSkillRepository(
@@ -102,9 +130,17 @@ async function exportGitSkillRepository(
         const gitMetaDir = path.join(tempDir, ".git");
         await fs.rm(gitMetaDir, { recursive: true, force: true });
 
-        // Zip directory
+        const normalizedSubdir =
+            repo.skillsSubdirectory === "/"
+                ? ""
+                : repo.skillsSubdirectory.replace(/^\/+|\/+$/g, "");
+
+        const targetFolder = normalizedSubdir
+            ? path.join(tempDir, normalizedSubdir)
+            : tempDir;
+
         const zip = new AdmZip();
-        zip.addLocalFolder(tempDir);
+        zip.addLocalFolder(targetFolder);
         return zip.toBuffer();
     } finally {
         await fs.rm(tempDir, { recursive: true, force: true });

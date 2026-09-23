@@ -7,6 +7,7 @@ import type { AgentHandle } from "./agents";
 export class AgentMemory {
     transcript: ModelInteraction[];
     computerId?: string;
+    skillsPath?: string;
     name: string;
     userId: string;
 
@@ -15,10 +16,11 @@ export class AgentMemory {
         userId: string,
         transcript: ModelInteraction[] = [],
         computerId?: string,
-
+        skillsPath?: string,
     ) {
         this.transcript = transcript;
         this.computerId = computerId;
+        this.skillsPath = skillsPath;
         this.name = name;
         this.userId = userId;
     }
@@ -59,6 +61,9 @@ export interface AgentMemoryManager {
 
     /** Sets the active computer provider session ID for the agent */
     setComputerId(agentId: string, computerId: string): Promise<void>;
+
+    /** Sets the root skills directory path on the computer for the agent */
+    setSkillsPath(agentId: string, skillsPath: string): Promise<void>;
 
     /** Sets the name of the agent */
     setName(agentId: string, name: string): Promise<void>;
