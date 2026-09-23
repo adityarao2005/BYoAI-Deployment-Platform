@@ -1,7 +1,10 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import * as fs from "node:fs/promises";
+import * as os from "node:os";
+import * as path from "node:path";
 import * as process from "node:process";
+import AdmZip from "adm-zip";
 import type {
     CaptureScreenshotArgs,
     CaptureScreenshotResult,
@@ -644,5 +647,19 @@ export class LocalComputerProvider implements ComputerProvider {
                 type: ComputerType.UNSPECIFIED,
             }
         );
+    }
+
+    async sendSkillsZip(computerId: string, zipData: Buffer): Promise<string> {
+        let skillsPath = path.join("/workspace", computerId, "skills");
+        try {
+            await fs.mkdir(skillsPath, { recursive: true });
+        } catch {
+            skillsPath = path.join(os.tmpdir(), "workspace", computerId, "skills");
+            await fs.mkdir(skillsPath, { recursive: true });
+        }
+
+        const zip = new AdmZip(zipData);
+        zip.extractAllTo(skillsPath, true);
+        return skillsPath;
     }
 }

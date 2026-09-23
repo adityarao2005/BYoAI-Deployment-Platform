@@ -46,6 +46,9 @@ const (
 	// ComputerProviderServiceDeleteComputerProcedure is the fully-qualified name of the
 	// ComputerProviderService's DeleteComputer RPC.
 	ComputerProviderServiceDeleteComputerProcedure = "/computer_api.v1.ComputerProviderService/DeleteComputer"
+	// ComputerProviderServiceSendSkillsZipProcedure is the fully-qualified name of the
+	// ComputerProviderService's SendSkillsZip RPC.
+	ComputerProviderServiceSendSkillsZipProcedure = "/computer_api.v1.ComputerProviderService/SendSkillsZip"
 	// BasicComputerServiceExecuteProcedure is the fully-qualified name of the BasicComputerService's
 	// Execute RPC.
 	BasicComputerServiceExecuteProcedure = "/computer_api.v1.BasicComputerService/Execute"
@@ -114,6 +117,7 @@ type ComputerProviderServiceClient interface {
 	CreateComputer(context.Context, *connect.Request[v1.CreateComputerRequest]) (*connect.Response[v1.CreateComputerResponse], error)
 	GetComputerInfo(context.Context, *connect.Request[v1.GetComputerInfoRequest]) (*connect.Response[v1.GetComputerInfoResponse], error)
 	DeleteComputer(context.Context, *connect.Request[v1.DeleteComputerRequest]) (*connect.Response[v1.DeleteComputerResponse], error)
+	SendSkillsZip(context.Context) *connect.ClientStreamForClient[v1.SendSkillsZipRequest, v1.SendSkillsZipResponse]
 }
 
 // NewComputerProviderServiceClient constructs a client for the
@@ -145,6 +149,12 @@ func NewComputerProviderServiceClient(httpClient connect.HTTPClient, baseURL str
 			connect.WithSchema(computerProviderServiceMethods.ByName("DeleteComputer")),
 			connect.WithClientOptions(opts...),
 		),
+		sendSkillsZip: connect.NewClient[v1.SendSkillsZipRequest, v1.SendSkillsZipResponse](
+			httpClient,
+			baseURL+ComputerProviderServiceSendSkillsZipProcedure,
+			connect.WithSchema(computerProviderServiceMethods.ByName("SendSkillsZip")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -153,6 +163,7 @@ type computerProviderServiceClient struct {
 	createComputer  *connect.Client[v1.CreateComputerRequest, v1.CreateComputerResponse]
 	getComputerInfo *connect.Client[v1.GetComputerInfoRequest, v1.GetComputerInfoResponse]
 	deleteComputer  *connect.Client[v1.DeleteComputerRequest, v1.DeleteComputerResponse]
+	sendSkillsZip   *connect.Client[v1.SendSkillsZipRequest, v1.SendSkillsZipResponse]
 }
 
 // CreateComputer calls computer_api.v1.ComputerProviderService.CreateComputer.
@@ -170,12 +181,18 @@ func (c *computerProviderServiceClient) DeleteComputer(ctx context.Context, req 
 	return c.deleteComputer.CallUnary(ctx, req)
 }
 
+// SendSkillsZip calls computer_api.v1.ComputerProviderService.SendSkillsZip.
+func (c *computerProviderServiceClient) SendSkillsZip(ctx context.Context) *connect.ClientStreamForClient[v1.SendSkillsZipRequest, v1.SendSkillsZipResponse] {
+	return c.sendSkillsZip.CallClientStream(ctx)
+}
+
 // ComputerProviderServiceHandler is an implementation of the
 // computer_api.v1.ComputerProviderService service.
 type ComputerProviderServiceHandler interface {
 	CreateComputer(context.Context, *connect.Request[v1.CreateComputerRequest]) (*connect.Response[v1.CreateComputerResponse], error)
 	GetComputerInfo(context.Context, *connect.Request[v1.GetComputerInfoRequest]) (*connect.Response[v1.GetComputerInfoResponse], error)
 	DeleteComputer(context.Context, *connect.Request[v1.DeleteComputerRequest]) (*connect.Response[v1.DeleteComputerResponse], error)
+	SendSkillsZip(context.Context, *connect.ClientStream[v1.SendSkillsZipRequest]) (*connect.Response[v1.SendSkillsZipResponse], error)
 }
 
 // NewComputerProviderServiceHandler builds an HTTP handler from the service implementation. It
@@ -203,6 +220,12 @@ func NewComputerProviderServiceHandler(svc ComputerProviderServiceHandler, opts 
 		connect.WithSchema(computerProviderServiceMethods.ByName("DeleteComputer")),
 		connect.WithHandlerOptions(opts...),
 	)
+	computerProviderServiceSendSkillsZipHandler := connect.NewClientStreamHandler(
+		ComputerProviderServiceSendSkillsZipProcedure,
+		svc.SendSkillsZip,
+		connect.WithSchema(computerProviderServiceMethods.ByName("SendSkillsZip")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/computer_api.v1.ComputerProviderService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ComputerProviderServiceCreateComputerProcedure:
@@ -211,6 +234,8 @@ func NewComputerProviderServiceHandler(svc ComputerProviderServiceHandler, opts 
 			computerProviderServiceGetComputerInfoHandler.ServeHTTP(w, r)
 		case ComputerProviderServiceDeleteComputerProcedure:
 			computerProviderServiceDeleteComputerHandler.ServeHTTP(w, r)
+		case ComputerProviderServiceSendSkillsZipProcedure:
+			computerProviderServiceSendSkillsZipHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -230,6 +255,10 @@ func (UnimplementedComputerProviderServiceHandler) GetComputerInfo(context.Conte
 
 func (UnimplementedComputerProviderServiceHandler) DeleteComputer(context.Context, *connect.Request[v1.DeleteComputerRequest]) (*connect.Response[v1.DeleteComputerResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.ComputerProviderService.DeleteComputer is not implemented"))
+}
+
+func (UnimplementedComputerProviderServiceHandler) SendSkillsZip(context.Context, *connect.ClientStream[v1.SendSkillsZipRequest]) (*connect.Response[v1.SendSkillsZipResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("computer_api.v1.ComputerProviderService.SendSkillsZip is not implemented"))
 }
 
 // BasicComputerServiceClient is a client for the computer_api.v1.BasicComputerService service.

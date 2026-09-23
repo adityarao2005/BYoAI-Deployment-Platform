@@ -1,9 +1,10 @@
+import path from "node:path";
 import type {
     ModelInteraction,
     ModelMessageOutput,
 } from "@/models/conversation";
 import type { Model } from "@/models/models";
-import type { Skill, SkillRepository } from "@/skills";
+import { exportSkillRepositoryToZip, type Skill, type SkillRepository } from "@/skills";
 import type { ComputerProvider } from "@/tools";
 import { validateToolArgument } from "@/tools/tool_argument";
 import type { Tool, ToolProvider } from "@/tools/tools";
@@ -230,6 +231,27 @@ export class AgentManager implements IAgentLifecycleManager {
                     id,
                     computerId,
                 );
+
+                if (this.configuration.computerProvider.sendSkillsZip) {
+                    for (const repo of this.configuration.skillRepository) {
+                        try {
+                            const zipBuffer = await exportSkillRepositoryToZip(repo);
+                            const skillsPath = await this.configuration.computerProvider.sendSkillsZip(
+                                computerId,
+                                zipBuffer,
+                            );
+                            const skills = await repo.getAllSkills();
+                            for (const skill of skills) {
+                                skill.assetTargetLocation = path.join(
+                                    skillsPath,
+                                    skill.frontMatter.name,
+                                );
+                            }
+                        } catch {
+                            // Ignore failure to send skills zip if repo export is unavailable
+                        }
+                    }
+                }
             }
         }
 

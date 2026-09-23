@@ -1,8 +1,15 @@
 package services
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
+	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"connectrpc.com/connect"
 	"connectrpc.com/validate"
@@ -14,7 +21,53 @@ import (
 )
 
 type ComputerProviderService struct {
-	provider computer.IComputerProvider
+	provider     computer.IComputerProvider
+	workspaceDir string
+}
+
+func extractZip(zipBytes []byte, targetDir string) error {
+	zipReader, err := zip.NewReader(bytes.NewReader(zipBytes), int64(len(zipBytes)))
+	if err != nil {
+		return fmt.Errorf("failed to open zip reader: %w", err)
+	}
+
+	for _, file := range zipReader.File {
+		cleanPath := filepath.Clean(file.Name)
+		if strings.HasPrefix(cleanPath, "..") || filepath.IsAbs(cleanPath) {
+			continue
+		}
+
+		filePath := filepath.Join(targetDir, cleanPath)
+		if file.FileInfo().IsDir() {
+			if err := os.MkdirAll(filePath, 0755); err != nil {
+				return fmt.Errorf("failed to create directory %s: %w", filePath, err)
+			}
+			continue
+		}
+
+		if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
+			return fmt.Errorf("failed to create parent directory for %s: %w", filePath, err)
+		}
+
+		srcFile, err := file.Open()
+		if err != nil {
+			return fmt.Errorf("failed to open zip entry %s: %w", file.Name, err)
+		}
+
+		dstFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+		if err != nil {
+			srcFile.Close()
+			return fmt.Errorf("failed to create file %s: %w", filePath, err)
+		}
+
+		_, err = io.Copy(dstFile, srcFile)
+		srcFile.Close()
+		dstFile.Close()
+		if err != nil {
+			return fmt.Errorf("failed to write file %s: %w", filePath, err)
+		}
+	}
+	return nil
 }
 
 func toComputerConfig(req *computer_apiv1.CreateComputerRequest) computer.ComputerConfig {
@@ -109,8 +162,89 @@ func (s *ComputerProviderService) DeleteComputer(
 	return connect.NewResponse(&computer_apiv1.DeleteComputerResponse{}), nil
 }
 
-func CreateComputerProviderServiceHandler(mux *http.ServeMux, provider computer.IComputerProvider) {
-	svc := &ComputerProviderService{provider: provider}
+func (s *ComputerProviderService) SendSkillsZip(
+	ctx context.Context,
+	stream *connect.ClientStream[computer_apiv1.SendSkillsZipRequest],
+) (*connect.Response[computer_apiv1.SendSkillsZipResponse], error) {
+	logger.Info("SendSkillsZip RPC called")
+
+	var sessionID string
+	var zipBuf bytes.Buffer
+
+	for stream.Receive() {
+		msg := stream.Msg()
+		if sessionID == "" {
+			sessionID = msg.GetSessionId()
+		}
+		if len(msg.GetChunk()) > 0 {
+			zipBuf.Write(msg.GetChunk())
+		}
+	}
+
+	if err := stream.Err(); err != nil {
+		logger.Error("SendSkillsZip stream receiving failed", "error", err)
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	}
+
+	if sessionID == "" {
+		return connect.NewResponse(&computer_apiv1.SendSkillsZipResponse{
+			Result: &computer_apiv1.SendSkillsZipResponse_ErrorMessage{
+				ErrorMessage: "session_id is required",
+			},
+		}), nil
+	}
+
+	comp, err := s.provider.GetComputer(ctx, sessionID)
+	if err != nil {
+		logger.Error("SendSkillsZip RPC failed to locate computer", "sessionID", sessionID, "error", err)
+		return connect.NewResponse(&computer_apiv1.SendSkillsZipResponse{
+			Result: &computer_apiv1.SendSkillsZipResponse_ErrorMessage{
+				ErrorMessage: fmt.Sprintf("computer session not found: %s", sessionID),
+			},
+		}), nil
+	}
+	_ = comp
+
+	workspaceDir := s.workspaceDir
+	if workspaceDir == "" {
+		workspaceDir = "/workspace"
+	}
+
+	skillsPath := filepath.Join(workspaceDir, sessionID, "skills")
+	if err := os.MkdirAll(skillsPath, 0755); err != nil {
+		logger.Error("SendSkillsZip failed to create skills target directory", "path", skillsPath, "error", err)
+		return connect.NewResponse(&computer_apiv1.SendSkillsZipResponse{
+			Result: &computer_apiv1.SendSkillsZipResponse_ErrorMessage{
+				ErrorMessage: fmt.Sprintf("failed to create target skills directory: %v", err),
+			},
+		}), nil
+	}
+
+	if zipBuf.Len() > 0 {
+		if err := extractZip(zipBuf.Bytes(), skillsPath); err != nil {
+			logger.Error("SendSkillsZip failed to extract skills zip", "sessionID", sessionID, "error", err)
+			return connect.NewResponse(&computer_apiv1.SendSkillsZipResponse{
+				Result: &computer_apiv1.SendSkillsZipResponse_ErrorMessage{
+					ErrorMessage: fmt.Sprintf("failed to extract zip: %v", err),
+				},
+			}), nil
+		}
+	}
+
+	logger.Info("SendSkillsZip completed successfully", "sessionID", sessionID, "skillsPath", skillsPath)
+	return connect.NewResponse(&computer_apiv1.SendSkillsZipResponse{
+		Result: &computer_apiv1.SendSkillsZipResponse_SkillsPath{
+			SkillsPath: skillsPath,
+		},
+	}), nil
+}
+
+func CreateComputerProviderServiceHandler(mux *http.ServeMux, provider computer.IComputerProvider, workspaceDir ...string) {
+	wsDir := "/workspace"
+	if len(workspaceDir) > 0 && workspaceDir[0] != "" {
+		wsDir = workspaceDir[0]
+	}
+	svc := &ComputerProviderService{provider: provider, workspaceDir: wsDir}
 	path, handler := computer_apiv1connect.NewComputerProviderServiceHandler(
 		svc,
 		connect.WithInterceptors(validate.NewInterceptor()),

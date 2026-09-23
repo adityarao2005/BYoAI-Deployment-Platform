@@ -63,10 +63,26 @@ message DeleteComputerRequest {
 message DeleteComputerResponse {
 }
 
+message SendSkillsZipRequest {
+    string session_id = 1 [(buf.validate.field).string = {
+        min_len: 1
+        max_len: 255
+    }];
+    bytes chunk = 3;
+}
+
+message SendSkillsZipResponse {
+    oneof result {
+        string error_message = 1;
+        string skills_path = 2;
+    }
+}
+
 service ComputerProviderService {
     rpc CreateComputer(CreateComputerRequest) returns (CreateComputerResponse);
     rpc GetComputerInfo(GetComputerInfoRequest) returns (GetComputerInfoResponse);
     rpc DeleteComputer(DeleteComputerRequest) returns (DeleteComputerResponse);
+    rpc SendSkillsZip(stream SendSkillsZipRequest) returns (SendSkillsZipResponse);
 }
 
 /// headless computer service

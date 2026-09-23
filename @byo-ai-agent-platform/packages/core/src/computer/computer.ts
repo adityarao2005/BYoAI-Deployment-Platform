@@ -312,4 +312,12 @@ export interface ComputerProvider {
      * @param computerId computer id
      */
     deleteComputer(computerId: string): Promise<void>;
+
+    /**
+     * Uploads and extracts a skills ZIP archive to the target computer session.
+     * Returns the path on the computer where the skills are stored.
+     * @param computerId computer id
+     * @param zipData ZIP archive bytes
+     */
+    sendSkillsZip?(computerId: string, zipData: Buffer): Promise<string>;
 }
