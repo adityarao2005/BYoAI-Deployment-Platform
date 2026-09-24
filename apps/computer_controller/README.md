@@ -10,13 +10,15 @@ It exposes ConnectRPC services over HTTP/1.1 and unencrypted HTTP/2 (h2c) on por
 
 The Computer Controller server loads its configuration from a YAML file named `computer.yaml` located in the working directory where the server is executed.
 
-### Configuration Schema
+---
 
-| Field | Type | Required | Description |
-| --- | --- | --- | --- |
-| `type` | String | Yes | Provider type. Must be either `local` or `docker`. |
-| `server` | Object | No | Server network settings (`host` and `port`). |
-| `spec` | Object | No | Provider-specific configuration. Only allowed when `type` is `docker`. |
+### Configuration Schema Overview
+
+| Field | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `type` | String | Yes | N/A | Provider type. Must be either `local` or `docker`. |
+| `server` | Object | No | `{}` | Server network settings (`host`, `port`, `security`). |
+| `spec` | Object | No | `{}` | Provider-specific Docker configuration (only valid when `type: docker`). |
 
 #### Server Network Settings (`server`)
 
@@ -24,13 +26,13 @@ The Computer Controller server loads its configuration from a YAML file named `c
 | --- | --- | --- | --- |
 | `host` | String | `"localhost"` | Listening host IP or hostname (e.g. `"localhost"`, `"0.0.0.0"`). |
 | `port` | Integer | `8080` | Listening port number (1-65535). |
-| `security` | Object | Optional | Security settings (`apiKey` and `tls`). |
+| `security` | Object | Optional | Security settings (`bearerToken`, `apiKey`, and `tls`). |
 
 #### Security Settings (`server.security`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `apiKey` | String | `""` | Bearer token for authentication. Supports environment variable expansion (e.g., `"${CC_API_KEY}"`). |
+| `bearerToken` / `apiKey` | String | `""` | Bearer token for client authentication. Supports environment variable expansion (e.g., `"${CC_API_KEY}"`). |
 | `tls` | Object | Optional | TLS server configuration (`tlsCertificate`, `tlsCertificateKey`, `tlsTrustedCertificates`). |
 
 ##### TLS Settings (`server.security.tls`)
@@ -41,42 +43,78 @@ The Computer Controller server loads its configuration from a YAML file named `c
 | `tlsCertificateKey` | String | `""` | Path to TLS certificate private key PEM file. |
 | `tlsTrustedCertificates` | String | `""` | Path to CA bundle file for mTLS client verification. Enables mTLS when specified. |
 
----
-
-### 1. Local Mode (`type: local`)
-
-Executes commands and file operations directly on the host operating system. When `type` is set to `local`, the `spec` field **must be omitted**.
-
-#### Example `computer.yaml`
-```yaml
-type: local
-server:
-  host: "localhost"
-  port: 8080
-  security:
-    apiKey: "${CC_API_KEY}"
-    tls:
-      tlsCertificate: "/path/to/server.crt"
-      tlsCertificateKey: "/path/to/server.key"
-      tlsTrustedCertificates: "/path/to/ca.crt"
-```
-
----
-
-### 2. Docker Mode (`type: docker`)
-
-Manages sandboxed Docker containers for execution. Supports custom daemon sockets, TLS authentication, and image pull policies.
-
-#### Docker Spec Fields (`spec`)
+#### Docker Provider Spec Fields (`spec`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `host` | String | `""` (Docker default) | Docker daemon socket address (e.g. `"unix:///var/run/docker.sock"` or `"tcp://127.0.0.1:2375"`). |
 | `apiVersion` | String | `""` | Docker API version string (e.g. `"1.41"`). |
 | `certPath` | String | `""` | Directory path containing TLS certs (`ca.pem`, `cert.pem`, `key.pem`). |
-| `imagePullPolicy` | String | `"IfNotPresent"` | Container image pull policy. Must be one of `IfNotPresent`, `Always`, or `Never`. |
+| `imagePullPolicy` | String | `"IfNotPresent"` | Container image pull policy (`IfNotPresent`, `Always`, or `Never`). |
 
-#### Example `computer.yaml`
+---
+
+### Configuration Examples & Snippets
+
+#### 1. Minimal Local Host Mode
+
+Executes commands directly on the host machine listening on `localhost:8080`:
+
+```yaml
+type: local
+server:
+  host: "localhost"
+  port: 8080
+```
+
+#### 2. Local Mode with Bearer Token Authentication
+
+Enforces bearer token authentication for all ConnectRPC client requests:
+
+```yaml
+type: local
+server:
+  host: "0.0.0.0"
+  port: 8080
+  security:
+    bearerToken: "${CC_API_KEY:-'my-secret-token'}"
+```
+
+#### 3. Local Mode with HTTPS (TLS Encryption)
+
+Encrypts server traffic using TLS server certificates:
+
+```yaml
+type: local
+server:
+  host: "0.0.0.0"
+  port: 8443
+  security:
+    tls:
+      tlsCertificate: "/etc/ssl/certs/server.crt"
+      tlsCertificateKey: "/etc/ssl/certs/server.key"
+```
+
+#### 4. Local Mode with Mutual TLS (mTLS) Client Verification
+
+Requires clients to present a valid TLS certificate signed by the trusted CA bundle:
+
+```yaml
+type: local
+server:
+  host: "0.0.0.0"
+  port: 8443
+  security:
+    tls:
+      tlsCertificate: "/etc/ssl/certs/server.crt"
+      tlsCertificateKey: "/etc/ssl/certs/server.key"
+      tlsTrustedCertificates: "/etc/ssl/certs/ca-bundle.crt"
+```
+
+#### 5. Docker Mode (Standard Unix Socket)
+
+Spawns sandboxed Docker containers via local Docker daemon Unix socket:
+
 ```yaml
 type: docker
 server:
@@ -84,16 +122,32 @@ server:
   port: 8080
 spec:
   host: "unix:///var/run/docker.sock"
-  apiVersion: "1.41"
-  certPath: "/etc/docker/certs"
   imagePullPolicy: "IfNotPresent"
+```
+
+#### 6. Docker Mode (Remote Docker Daemon over TCP with TLS Certs)
+
+Connects to a remote Docker engine host using TLS client certificates:
+
+```yaml
+type: docker
+server:
+  host: "0.0.0.0"
+  port: 8080
+  security:
+    bearerToken: "${CC_API_KEY}"
+spec:
+  host: "tcp://192.168.1.100:2376"
+  apiVersion: "1.41"
+  certPath: "/etc/docker/client-certs" # Contains ca.pem, cert.pem, key.pem
+  imagePullPolicy: "Always"
 ```
 
 ---
 
 ### Network Access Control & Egress Firewalling (Docker Mode)
 
-When `CreateComputer` is invoked with `networkRules` (`allowedHosts` and/or `deniedHosts`), the Computer Controller enforces non-root container network sandboxing:
+When `CreateComputer` is invoked by an agent harness with `networkRules` (`allowedHosts` and/or `deniedHosts`), the Computer Controller enforces non-root container network sandboxing:
 
 1. **Internal Bridge Network (`Internal: true`)**:
    - Each session with network rules creates an isolated internal Docker bridge network (`byoai-net-<session_id>`) with **no default internet gateway**.
@@ -102,9 +156,31 @@ When `CreateComputer` is invoked with `networkRules` (`allowedHosts` and/or `den
    - An in-process Go HTTP/CONNECT and RFC 1928 SOCKS5 proxy server (`EgressProxy`) runs on the host bound to the bridge network interface.
    - Container environment variables (`HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`, `all_proxy`) route web and raw TCP traffic (PostgreSQL, DB2, SSH, Redis) through `host.docker.internal:<proxy_port>`.
    - Host rules support exact hostnames (`api.openai.com`), domain wildcards (`*.github.com`), individual IPs (`1.1.1.1`), and CIDR subnets (`10.0.0.0/8`). `deniedHosts` takes priority over `allowedHosts`.
-3. **Non-Root & Image-Agnostic**:
-   - Requires **no host `root` privileges or `sudo`** (compatible with Rootless Docker, Rootless Podman, and unprivileged host users).
-   - Compatible with any container image, including `FROM scratch` or minimal images (no binaries or `iptables` required inside the container).
+
+#### Agent Harness Network Rules Snippet (`agent.yaml`)
+
+```yaml
+toolProviders:
+  - type: computer
+    provider:
+      type: remote
+      url: "http://localhost:8080"
+      image: "alpine:latest"
+      security:
+        bearerToken: "apiKey"
+      networkRules:
+        allowedHosts:
+          - "*.github.com"
+          - "api.openai.com"
+        deniedHosts:
+          - "10.0.0.0/8"
+```
+
+---
+
+### Example Configuration Files in Repository
+
+- **[Docker Mode Example (`computer.yaml`)](file:///home/aditya/projects/BYoAI-Deployment-Platform/examples/docker-computer-use/computer.yaml)**: Complete Docker provider configuration with bearer token authentication.
 
 ---
 

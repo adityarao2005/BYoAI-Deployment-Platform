@@ -60,46 +60,102 @@ If an environment variable is unset and no default is specified, it evaluates to
 
 ## Configuration Reference & Schema
 
-Below is the structure of `agent.yaml`:
+### Configuration Resolution Order
+
+The harness resolves configuration files in the following order of precedence:
+
+1. **`AGENT_CONFIG_PATH` environment variable** (highest priority override)
+2. **Local file**: `./agent.yaml` in the current working directory
+3. **System file**: `/etc/agent/agent.yaml` (Linux/container standard path)
+
+### Environment Variable Interpolation
+
+`agent.yaml` supports environment variable expansion directly in the file:
+- **Basic variable**: `${OPENAI_API_KEY}`
+- **Fallback default**: `${MAX_TOKENS:-4096}`
+
+If an environment variable is unset and no default is specified, it evaluates to an empty string `""`.
+
+---
+
+### Configuration Sections
+
+#### 1. Identity Metadata (`name`, `description`)
+
+Optional top-level identity fields for descriptive logging and metrics:
 
 ```yaml
-# Agent Identity (Optional)
-name: my-autonomous-agent
-description: "An agent equipped with OpenAPI tools, skills, and computer execution."
+name: autonomous-research-agent
+description: "Agent equipped with OpenAPI tools, skills, and computer execution capabilities."
+```
 
-# Models (Required)
-# Registers LLM providers. Note: Multi-model routing/fallback is currently not supported;
-# the harness uses the first valid registered model in this list as the active model for the agent.
+---
+
+#### 2. Models (`models`)
+
+Configures LLM providers. The harness uses the first valid registered model in the list as the active LLM.
+
+##### OpenAI Model
+
+```yaml
 models:
   - name: gpt-4o
     brand: openai
     properties:
       apiKey: ${OPENAI_API_KEY}
+```
 
-  - name: gemini-1.5-pro
+##### Gemini Model
+
+```yaml
+models:
+  - name: gemini-2.5-flash
     brand: gemini
     properties:
       apiKey: ${GEMINI_API_KEY}
+```
 
+##### Anthropic Claude Model
+
+```yaml
+models:
   - name: claude-3-5-sonnet
     brand: anthropic
     properties:
       apiKey: ${ANTHROPIC_API_KEY}
       maxTokens: 4096
+```
 
-  - name: local-llama
+##### Self-Hosted / Local LLM (vLLM, Ollama, llama.cpp)
+
+```yaml
+models:
+  - name: local-gemma
     brand: self_hosted
     properties:
       baseUrl: "http://localhost:8080/v1"
       apiKey: ${LOCAL_LLM_API_KEY:-""}
+```
 
-# Skill Repositories (Optional)
-# Load skill packs containing SKILL.md guidelines and scripts.
+---
+
+#### 3. Skill Repositories (`skillRepositories`)
+
+Progressive skill packs containing `SKILL.md` procedural guides and helper scripts.
+
+##### Zip Archive Skill Pack
+
+```yaml
 skillRepositories:
   - type: zip
-    location: "https://example.com/skills/pet-skills.zip"
+    location: "https://example.com/skills/pet-skills.zip" # URL or local zip path
     skillsSubdirectory: "/"
+```
 
+##### Git Repository Skill Pack (with SSH Auth)
+
+```yaml
+skillRepositories:
   - type: git
     url: "git@github.com:example/agent-skills.git"
     branch: main
@@ -107,38 +163,85 @@ skillRepositories:
     auth:
       method: ssh
       privateKeyPath: "~/.ssh/id_ed25519"
+```
 
-# Tool Providers (Optional)
-# Equip the agent with external capabilities (OpenAPI, Computer Use, MCP).
+---
+
+#### 4. Tool Providers (`toolProviders`)
+
+##### A. Computer Use Tool Provider (`type: computer`)
+
+Equips the agent with bash execution, file read/write, and optional GUI automation.
+
+###### Local Host Execution
+```yaml
 toolProviders:
-  # 1. Computer Execution Tool Provider (Local or Remote sandbox)
   - type: computer
     provider:
       type: local
       enableGUIToolsIfAvailable: true
+```
 
-  # Alternatively, remote computer controller container:
-  # - type: computer
-  #   provider:
-  #     type: remote
-  #     url: "http://localhost:50051"
-  #     image: "byoai/sandbox:latest"
-  #     enableGUIToolsIfAvailable: false
-  #     environment:
-  #       ENV_VAR: "value"
+###### Remote Docker Sandbox Execution
+```yaml
+toolProviders:
+  - type: computer
+    provider:
+      type: remote
+      url: "http://localhost:8080"
+      image: "alpine:latest"
+      enableGUIToolsIfAvailable: false
+      security:
+        apiKey: "${CC_API_KEY}" # Bearer token matching computer.yaml
+      resources:
+        cpu: "2"
+        memory: "4GiB"
+      networkRules:
+        allowedHosts:
+          - "*.github.com"
+          - "api.openai.com"
+        deniedHosts:
+          - "10.0.0.0/8"
+```
 
-  # 2. OpenAPI Tool Provider
+##### B. OpenAPI Tool Provider (`type: openapi`)
+
+Dynamically parses an OpenAPI v2/v3 spec and exposes API endpoints as callable agent tools.
+
+```yaml
+toolProviders:
   - type: openapi
     name: petstore
-    specUrl: "https://petstore.swagger.io/v2/swagger.json"
+    specUrl: "https://petstore.swagger.io/v2/swagger.json" # Or specPath: "./specs/petstore.json"
     securityVariables:
       type: apiKey
       key: ${PETSTORE_API_KEY:-"special-key"}
       name: api_key
-      location: header
+      location: header # header, query, or cookie
+```
 
-  # 3. Model Context Protocol (MCP) Tool Providers
-  # stdio transport (local binary/script execution)
+###### Bearer & Basic Auth Examples
+
+```yaml
+# Bearer Token Auth
+securityVariables:
+  type: bearerToken
+  token: ${API_BEARER_TOKEN}
+
+# Basic Auth
+securityVariables:
+  type: basicAuth
+  username: ${SERVICE_USER}
+  password: ${SERVICE_PASS}
+```
+
+##### C. Model Context Protocol (MCP) Tool Provider (`type: mcp`)
+
+Exposes MCP tools via `stdio`, `http`, or in-sandbox `computer` transport.
+
+###### Standard Input/Output (stdio) Transport
+```yaml
+toolProviders:
   - name: sqlite-mcp
     type: mcp
     transport: stdio
@@ -148,14 +251,22 @@ toolProviders:
       - "@modelcontextprotocol/server-sqlite"
       - "--db-path"
       - "./test.db"
+```
 
-  # http transport (remote MCP server)
+###### HTTP SSE / Streamable HTTP Transport
+```yaml
+toolProviders:
   - name: remote-mcp
     type: mcp
     transport: http
     url: "http://localhost:8080/mcp"
+    security:
+      bearerToken: ${MCP_TOKEN}
+```
 
-  # computer transport (MCP server executed inside the registered computer provider sandbox)
+###### Sandbox Computer Transport (Executes MCP server inside computer container)
+```yaml
+toolProviders:
   - name: sandbox-mcp
     type: mcp
     transport: computer
@@ -163,6 +274,30 @@ toolProviders:
     args:
       - "/app/mcp_server.py"
 ```
+
+##### D. Built-in Utilities (`scratchpad` & `todos`)
+
+###### Scratchpad Provider (Inter-turn working memory notes)
+```yaml
+toolProviders:
+  - type: scratchpad
+    name: scratchpad
+```
+
+###### Todos Provider (Progress tracking checklist)
+```yaml
+toolProviders:
+  - type: todos
+    name: todos
+```
+
+---
+
+### Full Example Configurations in Repository
+
+- **[Pet Adoption Agent (`agent.yaml`)](file:///home/aditya/projects/BYoAI-Deployment-Platform/examples/pet-adoption-agent/agent.yaml)**: OpenAPI + Zip Skills + Gemini LLM.
+- **[Local Computer Use Agent (`agent.yaml`)](file:///home/aditya/projects/BYoAI-Deployment-Platform/examples/computer-use-agent-local/agent.yaml)**: Local host computer execution + Gemini LLM.
+- **[Docker Computer Use Agent (`agent.yaml`)](file:///home/aditya/projects/BYoAI-Deployment-Platform/examples/docker-computer-use/agent.yaml)**: Remote Docker sandbox computer execution + Gemini LLM.
 
 ---
 
