@@ -1,2 +1,4 @@
 .task
 /testdata
+node_modules
+dist
