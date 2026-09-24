@@ -107,6 +107,12 @@ export class AgentExecutor implements IAgentExecutor {
             ).flat();
         }
 
+        const authContext = this.configuration.userTokenManager
+            ? await this.configuration.userTokenManager.getUserToken(
+                  agent.userId,
+              )
+            : undefined;
+
         return {
             session: {
                 agent,
@@ -116,6 +122,7 @@ export class AgentExecutor implements IAgentExecutor {
                 memory,
                 computerProvider: this.configuration.computerProvider,
                 skillRepositories: this.configuration.skillRepository,
+                authContext,
             },
             tools: this.tools ?? [],
         };

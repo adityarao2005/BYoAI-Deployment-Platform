@@ -8,6 +8,7 @@ import {
     ConsoleAgentObserver,
     InMemoryAgentCommunicator,
     InMemoryAgentMemoryManager,
+    InMemoryUserTokenManager,
     LoggingAgentObserver,
 } from "@byo-ai-agent-platform/core/agents";
 import {
@@ -403,6 +404,7 @@ export async function bootstrap(
 
     const communicator = new InMemoryAgentCommunicator();
     const memoryManager = new InMemoryAgentMemoryManager();
+    const tokenManager = new InMemoryUserTokenManager();
 
     const skillRepos = skillRepositoryRegistry.getAllSkillRepositories();
     const toolProviders = [
@@ -429,6 +431,7 @@ export async function bootstrap(
         skillRepository: skillRepos,
         toolProviders,
         memoryManager,
+        userTokenManager: tokenManager,
         communicator,
         computerProvider: computer,
         observers,

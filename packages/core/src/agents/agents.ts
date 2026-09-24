@@ -14,6 +14,7 @@ export { AgentMemory, type AgentMemoryManager };
 
 import type { AgentCommunicator } from "./agent.messaging";
 import type { AgentObserver } from "./agent.observer";
+import type { AuthContext, UserTokenManager } from "./agent.auth";
 import { AgentExecutionError } from "@/errors/exceptions";
 /**
  * Plain agent identifier.
@@ -37,6 +38,7 @@ export type AgentConfiguration = {
     readonly communicator: AgentCommunicator;
     readonly computerProvider?: ComputerProvider;
     readonly observers?: AgentObserver[];
+    readonly userTokenManager?: UserTokenManager;
 };
 
 /**
@@ -93,6 +95,7 @@ export interface AgentSession {
     readonly memory: AgentMemory;
     readonly computerProvider?: ComputerProvider;
     readonly skillRepositories?: SkillRepository[];
+    readonly authContext?: AuthContext;
 }
 
 import { AgentExecutor, type IAgentExecutor } from "./agent.executor";

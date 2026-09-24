@@ -1,11 +1,11 @@
 import type { Client } from "@modelcontextprotocol/client";
-import type { AgentHandle } from "@/agents";
+import type { AgentHandle, AgentSession } from "@/agents";
 import { type Tool, type ToolProvider, toolObject, toolString } from "@/tools";
 
 export interface McpClientFactory {
     readonly name: string;
 
-    createClient(agent: AgentHandle): Promise<Client>;
+    createClient(agent: AgentHandle, session?: AgentSession): Promise<Client>;
 }
 
 // mcp server tool provider, supports only tools and resources for now
@@ -22,8 +22,8 @@ export class McpServerToolProvider implements ToolProvider {
         return tools.find((tool) => tool.name === name) || null;
     }
 
-    private async getToolsAndResources(agent: AgentHandle) {
-        const client = await this.clientFactory.createClient(agent);
+    private async getToolsAndResources(agent: AgentHandle, session?: AgentSession) {
+        const client = await this.clientFactory.createClient(agent, session);
         try {
             const { tools } = await client.listTools();
             const { resources } = await client.listResources();
@@ -43,8 +43,9 @@ export class McpServerToolProvider implements ToolProvider {
         agent: AgentHandle,
         toolName: string,
         args: Record<string, any>,
+        session?: AgentSession,
     ) {
-        const client = await this.clientFactory.createClient(agent);
+        const client = await this.clientFactory.createClient(agent, session);
         try {
             const result = await client.callTool({
                 name: toolName,
@@ -65,8 +66,8 @@ export class McpServerToolProvider implements ToolProvider {
         }
     }
 
-    private async readMcpResource(agent: AgentHandle, uri: string) {
-        const client = await this.clientFactory.createClient(agent);
+    private async readMcpResource(agent: AgentHandle, uri: string, session?: AgentSession) {
+        const client = await this.clientFactory.createClient(agent, session);
         try {
             const result = await client.readResource({ uri });
             return result.contents;
@@ -103,8 +104,8 @@ export class McpServerToolProvider implements ToolProvider {
                     description: tool.description || "Input schema",
                     required,
                 },
-                execute: async (args: Record<string, any>) => {
-                    return await this.executeMcpTool(agent, tool.name, args);
+                execute: async (args: Record<string, any>, session?: AgentSession) => {
+                    return await this.executeMcpTool(agent, tool.name, args, session);
                 },
             });
         }
@@ -116,8 +117,8 @@ export class McpServerToolProvider implements ToolProvider {
             inputSchema: toolObject("Schema Object for tool call input", {
                 uri: toolString("URI of the resource"),
             }),
-            execute: async ({ uri }: { uri: string }) => {
-                return await this.readMcpResource(agent, uri);
+            execute: async ({ uri }: { uri: string }, session?: AgentSession) => {
+                return await this.readMcpResource(agent, uri, session);
             },
         });
 
