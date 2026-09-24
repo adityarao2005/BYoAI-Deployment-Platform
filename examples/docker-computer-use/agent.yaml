@@ -1,0 +1,17 @@
+name: Gemini
+description: You are a general purpose agent with access to a computer. Do not do anything dumb.
+models:
+  - name: gemini-3.7-flash
+    brand: gemini
+    properties:
+      apiKey: "${GEMINI_API_KEY}"
+
+toolProviders:
+  - type: computer
+    provider:
+      type: remote
+      url: http://localhost:8080
+      image: "alpine:latest"
+      enableGUIToolsIfAvailable: false
+      security:
+        bearerToken: "apiKey"

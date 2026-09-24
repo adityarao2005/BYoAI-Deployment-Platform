@@ -4,10 +4,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
-# Set default paths for this example (can be overridden if desired)
+# Set default paths for this example
 export AGENT_CONFIG_PATH="${AGENT_CONFIG_PATH:-${SCRIPT_DIR}/agent.yaml}"
 
-# Only GEMINI_API_KEY is required for the default model
 if [ -z "${GEMINI_API_KEY:-}" ]; then
     echo "Error: Missing required environment variable: GEMINI_API_KEY" >&2
     echo "" >&2
@@ -26,12 +25,15 @@ if [ ! -f "$AGENT_CONFIG_PATH" ]; then
 fi
 
 echo "========================================="
-echo " Starting Computer Use Agent"
+echo " Starting Docker Computer Use Agent"
 echo "========================================="
 echo " Config: $AGENT_CONFIG_PATH"
-echo " Mode:   Local Computer Execution"
+echo " Mode:   Remote Docker Execution (http://localhost:8080)"
 echo " Model:  gemini"
 echo "========================================="
+echo ""
+echo "Note: Ensure Computer Controller is running with Docker mode."
+echo "      (e.g. cd apps/computer_controller && task run)"
 echo ""
 
 exec bun run "${REPO_ROOT}/apps/agentic-harness/src/index.ts"

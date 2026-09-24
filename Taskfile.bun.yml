@@ -3,11 +3,6 @@
 version: '3'
 
 tasks:
-  clean:
-    desc: Clean build outputs and dependencies
-    cmds:
-      - rm -rf packages/*/dist apps/*/dist dist node_modules packages/*/node_modules apps/*/node_modules
-
   install:
     desc: Install dependencies using bun
     run: once
@@ -51,13 +46,6 @@ tasks:
     desc: Run unit tests (alias for root Taskfile compatibility)
     cmds:
       - task: test
-
-  full_test:
-    desc: Integration tests for agentic harness
-    cmds:
-      - SELF_HOSTED_MODEL_BASE_URL=http://localhost:8080/v1 bun test
-    deps:
-      - install
 
   build:
     desc: Build all packages and apps in the monorepo
@@ -109,7 +97,7 @@ tasks:
     deps:
       - compile
     cmds:
-      - docker build -f docker/Dockerfile --target {{.TARGET}} -t agentic-harness:{{.TARGET}} .
+      - docker build -f apps/agentic-harness/docker/Dockerfile --target {{.TARGET}} -t agentic-harness:{{.TARGET}} .
 
   build_container_images:
     desc: Build container images for agentic harness targets (distroless, debian, redhat, ubi10-minimal)

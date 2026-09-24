@@ -16,7 +16,7 @@ When configured with a `computer` tool provider, the agent receives native execu
 ## Directory Structure
 
 ```
-examples/computer-use-agent/
+examples/computer-use-agent-local/
 ├── README.md        # This documentation
 ├── agent.yaml       # Computer use agent configuration
 └── run-agent.sh     # Launch script
@@ -76,4 +76,4 @@ Or as a single command:
 GEMINI_API_KEY="your-gemini-api-key" ./run-agent.sh
 ```
 
-> **Note**: Do not run untrusted prompts against the local computer provider without appropriate sandboxing. For isolated execution, spin up `computer_controller/` with Docker provider mode enabled.
+> **Note**: Do not run untrusted prompts against the local computer provider without appropriate sandboxing. For isolated execution, spin up `apps/computer_controller/` with Docker provider mode enabled.

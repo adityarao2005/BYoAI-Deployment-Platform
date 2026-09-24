@@ -47,4 +47,4 @@ echo " Model:  gemini"
 echo "========================================="
 echo ""
 
-exec bun run "${REPO_ROOT}/@byo-ai-agent-platform/apps/agentic-harness/src/index.ts"
+exec bun run "${REPO_ROOT}/apps/agentic-harness/src/index.ts"

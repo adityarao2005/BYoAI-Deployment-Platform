@@ -2,9 +2,11 @@ version: v2
 modules:
   - path: .
     excludes:
-      - '@byo-ai-agent-platform'
-      - computer_controller
+      - packages
+      - apps
       - local_models
+      - node_modules
+      - dist
 
 
 deps:
