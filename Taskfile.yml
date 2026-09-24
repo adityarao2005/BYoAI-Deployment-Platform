@@ -26,7 +26,7 @@ tasks:
     desc: Generate protobuf stubs
     run: once
     sources:
-      - 'apps/computer_api/**/*.proto'
+      - 'computer_api/**/*.proto'
       - buf.yaml
       - buf.gen.yaml
       - buf.lock

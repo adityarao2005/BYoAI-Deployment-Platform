@@ -1,4 +1,4 @@
-# Computer Controller (`computer_controller/`)
+# Computer Controller (`apps/computer_controller/`)
 
 The **Computer Controller** is a Golang-based daemon service that provides remote OS execution primitives for AI Agents in sandboxed environments.
 
@@ -115,16 +115,16 @@ You can build the Computer Controller binary using `task` or Go tools:
 ### Using `task` (Root or Local)
 ```bash
 # From repository root
-task build
+task computer_controller:build
 
-# Or from computer_controller directory
-cd computer_controller
+# Or from apps/computer_controller directory
+cd apps/computer_controller
 task build
 ```
 
 ### Using Go CLI
 ```bash
-cd computer_controller
+cd apps/computer_controller
 go build -v -o bin/controller ./cmd/controller
 ```
 
@@ -132,7 +132,7 @@ go build -v -o bin/controller ./cmd/controller
 
 ## Running the Server
 
-1. **Prepare `computer.yaml`** in your current working directory (e.g., inside `computer_controller/`):
+1. **Prepare `computer.yaml`** in your current working directory (e.g., inside `apps/computer_controller/`):
    ```yaml
    type: local
    ```
@@ -140,17 +140,17 @@ go build -v -o bin/controller ./cmd/controller
 2. **Start the Controller Service**:
    - **Using `task`**:
      ```bash
-     cd computer_controller
+     cd apps/computer_controller
      task run
      ```
    - **Using `go run`**:
      ```bash
-     cd computer_controller
+     cd apps/computer_controller
      go run ./cmd/controller
      ```
    - **Using compiled binary**:
      ```bash
-     cd computer_controller
+     cd apps/computer_controller
      ./bin/controller
      ```
 
@@ -166,8 +166,8 @@ Runs standard unit tests for config parsing, provider instantiation, and local e
 # From repository root
 task unit_test
 
-# Or inside computer_controller
-cd computer_controller
+# Or inside apps/computer_controller
+cd apps/computer_controller
 task test
 # equivalent to: go test -v ./...
 ```
@@ -175,7 +175,7 @@ task test
 ### Docker Integration Tests
 Runs tests that interact with an active Docker daemon (requires a running Docker daemon):
 ```bash
-cd computer_controller
+cd apps/computer_controller
 task docker_test
 # equivalent to: DOCKER_INTEGRATION_TEST=1 go test -v ./...
 ```
@@ -202,7 +202,7 @@ Multi-stage Docker targets are provided in `docker/Dockerfile` with strict user 
 
 Build all images:
 ```bash
-cd computer_controller
+cd apps/computer_controller
 task build_container_images
 ```
 

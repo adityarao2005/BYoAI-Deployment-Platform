@@ -10,32 +10,45 @@ Use this skill when verifying changes, executing test suites, or building projec
 
 Run commands from the repository root:
 
+- **Generate Protobuf Stubs**:
+
+  ```bash
+  task generate_proto
+  ```
+
 - **Unit Tests**:
 
   ```bash
   task unit_test
   ```
 
-  Executes `vitest` unit tests inside `agentic_harness/`.
+  Executes tests across sub-projects (`apps/agentic-harness/`, `packages/core/`, and `apps/computer_controller/`).
 
-- **Integration Tests**:
+- **Build**:
 
   ```bash
-  task integration_test
+  task build
   ```
 
-  Spins up the local model server (e.g. Gemma 4 / Ollama server in `local_models`), executes end-to-end tests against the harness, and tears down the model server. Use this sparingly and only when not very confident in the changes that you made being handled by unit tests. Furthermore, try to run these tests only once. If you are modifying the local_models, 
+  Builds all packages and apps in the monorepo.
 
 ## Individual Sub-project Execution
 
-- **Agent Platform Monorepo (`@byo-ai-agent-platform/`)**:
+- **TypeScript Monorepo**:
 
   ```bash
-  cd @byo-ai-agent-platform
-  task lint         # Run Biome lint
-  task typecheck    # Run tsc --noEmit
-  task test         # Run bun test
-  task build        # Run bun build across workspaces
+  bun run lint         # Run Biome lint
+  bun run typecheck    # Run tsc --noEmit
+  bun test             # Run bun test
+  bun run build        # Run bun build across workspaces
+  ```
+
+- **Computer Controller (`apps/computer_controller/`)**:
+
+  ```bash
+  cd apps/computer_controller
+  task test            # Run Go unit tests
+  task build           # Build Go binary
   ```
 
 - **Python Local Models (`local_models/`)**:

@@ -39,7 +39,7 @@ The architecture for this will be like this:
     - Each of these frontends when sending the job to run, will post the "prompt" into the inbound message queue of the AI Agent. Then it'll be listening/awaiting upon the response from the Agent (this would be the completion response, which in the case of the chat based interaction may be a question). Chat based items can queue messages.
 4. We will also have a Deployment Manager CRD type which will manage and monitor all AI models, AI Agents, and frontends that exist in the namespace
 
-## Computer Controller Architecture (`computer_controller/`)
+## Computer Controller Architecture (`apps/computer_controller/`)
 
 The **Computer Controller** is a Golang-based service running inside target sandboxes/pods to expose OS execution primitives to AI Agents:
 - **Transport**: ConnectRPC (`connectrpc.com/connect`) over HTTP/1.1 and HTTP/2 (h2c) listening on configurable address (defaults to `localhost:8080`). Supports unary RPCs, HTTP streaming (SSE), and gRPC / JSON requests.
@@ -54,7 +54,7 @@ The **Computer Controller** is a Golang-based service running inside target sand
 
 The admins working on building their AI Agents can either manage it via Kubernetes or through the admin console.
 
-## Computer Use Tool Provider Architecture (`agentic_harness/src/tools/computer_use/`)
+## Computer Use Tool Provider Architecture (`packages/core/src/tools/computer_use/`)
 
 The TypeScript Agent Harness integrates computer use capabilities via a decoupled provider architecture:
 - **Interfaces (`computer.ts`)**:

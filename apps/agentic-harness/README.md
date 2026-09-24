@@ -17,13 +17,12 @@ bun install
 
 **Using root `task` command (Recommended):**
 ```bash
-task run_harness
+task agentic_harness:run
 ```
 
 **Using `bun` directly:**
 ```bash
-cd @byo-ai-agent-platform
-bun run --cwd apps/agentic-harness src/index.ts
+bun run --filter @byo-ai-agent-platform/agentic-harness start
 ```
 
 ---
@@ -172,6 +171,10 @@ toolProviders:
 Unit tests for harness configuration, model registration, skill loading, and tool provider initialization can be executed via:
 
 ```bash
-cd @byo-ai-agent-platform/apps/agentic-harness
+# From repository root
+task agentic_harness:test
+
+# Or inside apps/agentic-harness
+cd apps/agentic-harness
 bun test
 ```
