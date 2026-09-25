@@ -1,13 +1,17 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
 	"strings"
 
+	"github.com/adityarao2005/BYoAI-Deployment-Platform/shell_cli/pkg/auth"
+	"github.com/adityarao2005/BYoAI-Deployment-Platform/shell_cli/pkg/client"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/shell_cli/pkg/config"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/shell_cli/pkg/tui"
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 var (
@@ -20,6 +24,7 @@ func main() {
 		interactive    bool
 		nonInteractive bool
 		runSetup       bool
+		runLogin       bool
 		showVersion    bool
 	)
 
@@ -29,6 +34,7 @@ func main() {
 	flag.BoolVar(&nonInteractive, "n", false, "Run prompt in non-interactive batch mode")
 	flag.BoolVar(&nonInteractive, "non-interactive", false, "Run prompt in non-interactive batch mode")
 	flag.BoolVar(&runSetup, "setup", false, "Run the interactive configuration setup wizard")
+	flag.BoolVar(&runLogin, "login", false, "Perform OAuth login flow")
 	flag.BoolVar(&showVersion, "v", false, "Show version")
 	flag.BoolVar(&showVersion, "version", false, "Show version")
 
@@ -59,7 +65,7 @@ func main() {
 
 	// First-run detection or explicit setup flag
 	if runSetup || !config.ConfigExists(resolvedPath) {
-		fmt.Println("No configuration found. Launching first-run setup wizard...")
+		fmt.Println("Launching configuration setup wizard...")
 		var initialCfg *config.Config
 		if config.ConfigExists(resolvedPath) {
 			initialCfg, _ = config.LoadConfig(resolvedPath)
@@ -79,6 +85,37 @@ func main() {
 		os.Exit(1)
 	}
 
+	tokenStore, err := auth.NewTokenStore("")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to initialize token store: %v\n", err)
+		os.Exit(1)
+	}
+
+	pkceCfg := auth.PKCEFlowConfig{
+		IssuerURI: cfg.OAuthIssuerURI,
+		ClientID:  cfg.OAuthClientID,
+		Scopes:    cfg.OAuthScopes,
+	}
+
+	// Login flag or check existing tokens
+	tokens, _ := tokenStore.Load()
+	if runLogin || (tokens == nil && cfg.OAuthIssuerURI != "") {
+		fmt.Println("Authenticating with OAuth provider...")
+		result, err := auth.RunPKCEFlow(context.Background(), pkceCfg)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Authentication failed: %v\n", err)
+			os.Exit(1)
+		}
+		if err := tokenStore.SaveFromPKCEResult(result); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to save tokens: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("✔ Successfully authenticated!")
+		if runLogin {
+			return
+		}
+	}
+
 	promptArgs := flag.Args()
 	prompt := strings.Join(promptArgs, " ")
 
@@ -89,9 +126,12 @@ func main() {
 		selectedMode = "non-interactive"
 	}
 
-	fmt.Printf("BYoAI Shell CLI (v%s)\n", version)
-	fmt.Printf("Mode: %s | Harness: %s\n", selectedMode, cfg.AgentHarnessURI)
-	if prompt != "" {
-		fmt.Printf("Initial prompt: %s\n", prompt)
+	harnessClient := client.NewHarnessClient(cfg.AgentHarnessURI, tokenStore, &pkceCfg)
+	model := tui.NewAppModel(harnessClient, selectedMode, prompt)
+
+	p := tea.NewProgram(model, tea.WithAltScreen())
+	if _, err := p.Run(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error running Shell CLI: %v\n", err)
+		os.Exit(1)
 	}
 }

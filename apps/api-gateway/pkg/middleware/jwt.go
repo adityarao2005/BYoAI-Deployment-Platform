@@ -21,9 +21,9 @@ func ClaimsFromContext(ctx context.Context) (jwt.MapClaims, bool) {
 
 // JWTMiddlewareConfig holds JWKS and claim validation settings.
 type JWTMiddlewareConfig struct {
-	JWKS        keyfunc.Keyfunc
-	Issuer      string // Expected "iss" claim (empty = skip validation)
-	Audience    string // Expected "aud" claim (empty = skip validation)
+	JWKS     keyfunc.Keyfunc
+	Issuer   string // Expected "iss" claim (empty = skip validation)
+	Audience string // Expected "aud" claim (empty = skip validation)
 }
 
 // NewJWTMiddleware creates an HTTP middleware that validates Bearer JWT tokens.

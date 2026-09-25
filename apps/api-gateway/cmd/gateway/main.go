@@ -10,10 +10,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/MicahParks/keyfunc/v3"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/api_gateway/pkg/config"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/api_gateway/pkg/middleware"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/api_gateway/pkg/proxy"
-	"github.com/MicahParks/keyfunc/v3"
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
 )

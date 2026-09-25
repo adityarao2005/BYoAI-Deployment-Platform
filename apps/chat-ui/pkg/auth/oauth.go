@@ -12,9 +12,9 @@ import (
 
 // OAuthManager handles OAuth2 Authorization Code flow with PKCE.
 type OAuthManager struct {
-	Config        *oauth2.Config
-	CallbackPath  string
-	IssuerURI     string
+	Config       *oauth2.Config
+	CallbackPath string
+	IssuerURI    string
 }
 
 // NewOAuthManager creates a new OAuthManager from config values.

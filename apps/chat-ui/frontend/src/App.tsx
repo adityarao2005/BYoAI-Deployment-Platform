@@ -1,11 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { Sidebar } from '@/components/Sidebar';
 import { ChatView } from '@/components/ChatView';
 import type { Interaction, ChatMessage, UserProfile } from '@/types';
+import {
+  fetchCurrentUser,
+  fetchInteractions,
+  createInteraction,
+  getInteraction,
+  sendMessage,
+  subscribeInteractionSSE,
+} from '@/lib/api';
 
 export function App() {
-  const [user] = useState<UserProfile>({
+  const [user, setUser] = useState<UserProfile>({
     name: 'Dev User',
     email: 'user@example.com',
     isAuthenticated: true,
@@ -13,28 +21,20 @@ export function App() {
 
   const [interactions, setInteractions] = useState<Interaction[]>([
     {
-      id: 'int-1',
+      id: 'int-demo-1',
       title: 'Repository Architecture Analysis',
       mode: 'interactive',
       status: 'idle',
       createdAt: new Date(Date.now() - 3600000).toISOString(),
       updatedAt: new Date(Date.now() - 1800000).toISOString(),
     },
-    {
-      id: 'int-2',
-      title: 'Batch Code Review (Non-Interactive)',
-      mode: 'non-interactive',
-      status: 'completed',
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-      updatedAt: new Date(Date.now() - 85000000).toISOString(),
-    },
   ]);
 
-  const [selectedId, setSelectedId] = useState<string | null>('int-1');
-  const [isAgentRunning] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>('int-demo-1');
+  const [isAgentRunning, setIsAgentRunning] = useState(false);
 
   const [messages, setMessages] = useState<Record<string, ChatMessage[]>>({
-    'int-1': [
+    'int-demo-1': [
       {
         id: 'm1',
         role: 'user',
@@ -48,46 +48,120 @@ export function App() {
         timestamp: new Date(Date.now() - 1750000).toISOString(),
       },
     ],
-    'int-2': [
-      {
-        id: 'm3',
-        role: 'user',
-        content: 'Analyze all security vulnerabilities in the latest release.',
-        timestamp: new Date(Date.now() - 86400000).toISOString(),
-      },
-      {
-        id: 'm4',
-        role: 'assistant',
-        content: 'Completed scan: zero critical vulnerabilities found across all Go and TypeScript modules.',
-        timestamp: new Date(Date.now() - 85000000).toISOString(),
-      },
-    ],
   });
 
-  const handleSelectInteraction = (id: string) => {
-    setSelectedId(id);
-  };
+  const unsubscribeRef = useRef<(() => void) | null>(null);
 
-  const handleNewChat = (mode: 'interactive' | 'non-interactive') => {
-    const newId = `int-${Date.now()}`;
+  // Load user profile on mount
+  useEffect(() => {
+    fetchCurrentUser().then((u) => {
+      if (u) setUser(u);
+    });
+  }, []);
+
+  // Load interactions from backend
+  useEffect(() => {
+    fetchInteractions().then((serverInteractions) => {
+      if (serverInteractions.length > 0) {
+        setInteractions(serverInteractions);
+        setSelectedId(serverInteractions[0].id);
+      }
+    });
+  }, []);
+
+  // Connect SSE for active interaction
+  useEffect(() => {
+    if (unsubscribeRef.current) {
+      unsubscribeRef.current();
+      unsubscribeRef.current = null;
+    }
+
+    if (!selectedId || selectedId.startsWith('int-demo-')) {
+      return;
+    }
+
+    // Fetch existing transcript
+    getInteraction(selectedId).then((detail) => {
+      if (detail && detail.transcript) {
+        const parsedMsgs: ChatMessage[] = detail.transcript
+          .filter((t) => t.role === 'user' || t.role === 'assistant')
+          .map((t, idx) => ({
+            id: `msg-${idx}-${Date.now()}`,
+            role: (t.role || 'assistant') as 'user' | 'assistant',
+            content: t.content || '',
+            timestamp: t.timestamp || new Date().toISOString(),
+          }));
+
+        setMessages((prev) => ({
+          ...prev,
+          [selectedId]: parsedMsgs,
+        }));
+      }
+    });
+
+    // Subscribe to live SSE events
+    const unsub = subscribeInteractionSSE(
+      selectedId,
+      (event, data) => {
+        if (event === 'agent:message') {
+          const payload = data as { text?: string; content?: string };
+          const text = payload?.text || payload?.content || (typeof data === 'string' ? data : JSON.stringify(data));
+          const aiMsg: ChatMessage = {
+            id: `msg-ai-${Date.now()}`,
+            role: 'assistant',
+            content: text,
+            timestamp: new Date().toISOString(),
+          };
+          setMessages((prev) => ({
+            ...prev,
+            [selectedId]: [...(prev[selectedId] || []), aiMsg],
+          }));
+          setIsAgentRunning(true);
+        } else if (event === 'agent:complete') {
+          setIsAgentRunning(false);
+        }
+      },
+      () => {
+        setIsAgentRunning(false);
+      }
+    );
+
+    unsubscribeRef.current = unsub;
+
+    return () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
+    };
+  }, [selectedId]);
+
+  const handleSelectInteraction = useCallback((id: string) => {
+    setSelectedId(id);
+    setIsAgentRunning(false);
+  }, []);
+
+  const handleNewChat = useCallback(async (mode: 'interactive' | 'non-interactive') => {
+    const created = await createInteraction(mode);
+    const newId = created?.id || `int-${Date.now()}`;
     const newInteraction: Interaction = {
       id: newId,
-      title: mode === 'interactive' ? 'New Interactive Session' : 'New Non-Interactive Task',
+      title: mode === 'interactive' ? `Interactive Session (${newId.slice(0, 8)})` : `Task (${newId.slice(0, 8)})`,
       mode,
       status: 'idle',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    setInteractions([newInteraction, ...interactions]);
+    setInteractions((prev) => [newInteraction, ...prev]);
     setSelectedId(newId);
-    setMessages({
-      ...messages,
+    setMessages((prev) => ({
+      ...prev,
       [newId]: [],
-    });
-  };
+    }));
+  }, []);
 
-  const handleSendMessage = (content: string) => {
+  const handleSendMessage = useCallback(async (content: string) => {
     if (!selectedId) return;
 
     const userMsg: ChatMessage = {
@@ -97,18 +171,41 @@ export function App() {
       timestamp: new Date().toISOString(),
     };
 
-    const currentMsgs = messages[selectedId] || [];
-    setMessages({
-      ...messages,
-      [selectedId]: [...currentMsgs, userMsg],
-    });
-  };
+    setMessages((prev) => ({
+      ...prev,
+      [selectedId]: [...(prev[selectedId] || []), userMsg],
+    }));
+
+    setIsAgentRunning(true);
+
+    if (!selectedId.startsWith('int-demo-')) {
+      const ok = await sendMessage(selectedId, content);
+      if (!ok) {
+        setIsAgentRunning(false);
+      }
+    } else {
+      // Demo response simulation for demo mode
+      setTimeout(() => {
+        const demoReply: ChatMessage = {
+          id: `msg-demo-${Date.now()}`,
+          role: 'assistant',
+          content: `Simulated response: Received "${content}". The agent is working correctly.`,
+          timestamp: new Date().toISOString(),
+        };
+        setMessages((prev) => ({
+          ...prev,
+          [selectedId]: [...(prev[selectedId] || []), demoReply],
+        }));
+        setIsAgentRunning(false);
+      }, 1200);
+    }
+  }, [selectedId]);
 
   const currentInteraction = interactions.find((i) => i.id === selectedId) || null;
   const currentMessages = selectedId ? messages[selectedId] || [] : [];
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 overflow-hidden">
+    <div className="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 overflow-hidden font-sans antialiased">
       <Navbar user={user} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
