@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+tasks:
+  build:
+    desc: Build the Shell CLI binary
+    run: once
+    sources:
+      - '**/*.go'
+      - go.mod
+      - go.sum
+    generates:
+      - bin/byoai
+    cmds:
+      - go fmt ./...
+      - go mod tidy
+      - CGO_ENABLED=0 go build -v -ldflags="-s -w" -o bin/byoai ./cmd/byoai
+
+  test:
+    desc: Run unit tests for Shell CLI
+    run: once
+    sources:
+      - '**/*.go'
+      - go.mod
+      - go.sum
+    cmds:
+      - go test -v ./...
+
+  run:
+    desc: Run the Shell CLI locally
+    cmds:
+      - go run ./cmd/byoai

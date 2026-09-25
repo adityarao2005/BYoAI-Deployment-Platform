@@ -8,19 +8,35 @@ includes:
   computer_controller:
     taskfile: apps/computer_controller/Taskfile.yml
     dir: apps/computer_controller
+  api_gateway:
+    taskfile: apps/api-gateway/Taskfile.yml
+    dir: apps/api-gateway
+  chat_ui:
+    taskfile: apps/chat-ui/Taskfile.yml
+    dir: apps/chat-ui
+  shell_cli:
+    taskfile: apps/shell-cli/Taskfile.yml
+    dir: apps/shell-cli
 
 tasks:
   unit_test:
-    desc: Test the agentic harness and computer controller
+    desc: Test all packages and apps across the monorepo
     deps:
       - agentic_harness:unit_test
       - computer_controller:test
+      - api_gateway:test
+      - chat_ui:test
+      - shell_cli:test
+
   build:
-    desc: Builds agentic harness and computer controller
+    desc: Builds all packages and apps across the monorepo
     deps:
       - unit_test
       - computer_controller:build
       - agentic_harness:build
+      - api_gateway:build
+      - chat_ui:build
+      - shell_cli:build
 
   generate_proto:
     desc: Generate protobuf stubs

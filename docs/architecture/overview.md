@@ -41,5 +41,9 @@ The platform uses custom Kubernetes Custom Resource Definitions (CRDs) to manage
 
 ## Architecture Sitemap
 
-- **[Agent Harness & Authentication](harness-and-auth.md)**: Details on the TypeScript Agent Harness, event-driven messaging, `UserTokenManager`, and context-driven OAuth2 token propagation.
+- **[Agent Harness & Authentication](harness.md)**: Details on the TypeScript Agent Harness, event-driven messaging, `UserTokenManager`, and context-driven OAuth2 token propagation.
 - **[Computer Controller & Sandboxing](computer-controller.md)**: Details on the Golang `computer_controller` daemon, ConnectRPC primitives, Docker sandboxing, and MCP stdio transport.
+- **Frontend Applications (`apps/`)**:
+  - **API Gateway (`apps/api-gateway/`)**: Go OAuth Resource Server proxying programmatic client/SDK requests to the Agentic Harness.
+  - **Chat UI (`apps/chat-ui/`)**: React + Tailwind + shadcn/ui frontend served by a Go backend OAuth confidential client.
+  - **Shell CLI (`apps/shell-cli/`)**: Go + Bubble Tea TUI terminal client using OAuth PKCE for developer workflows.
