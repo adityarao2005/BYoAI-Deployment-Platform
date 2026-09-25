@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+tasks:
+  build_frontend:
+    desc: Build Chat UI React frontend
+    dir: frontend
+    run: once
+    sources:
+      - 'src/**/*'
+      - 'index.html'
+      - 'package.json'
+      - 'vite.config.ts'
+      - 'tsconfig*.json'
+    generates:
+      - 'dist/**/*'
+    cmds:
+      - bun run build
+
+  build:
+    desc: Build the Chat UI binary
+    deps:
+      - build_frontend
+    run: once
+    sources:
+      - '**/*.go'
+      - go.mod
+      - go.sum
+      - 'frontend/dist/**/*'
+    generates:
+      - bin/chat-ui
+    cmds:
+      - go fmt ./...
+      - go mod tidy
+      - CGO_ENABLED=0 go build -v -ldflags="-s -w" -o bin/chat-ui ./cmd/server
+
+  test:
+    desc: Run unit tests for Chat UI
+    run: once
+    sources:
+      - '**/*.go'
+      - go.mod
+      - go.sum
+    cmds:
+      - go test -v ./...
+
+  run:
+    desc: Run the Chat UI server locally
+    cmds:
+      - go run ./cmd/server
