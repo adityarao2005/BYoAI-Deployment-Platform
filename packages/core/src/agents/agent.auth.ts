@@ -3,7 +3,6 @@
  */
 export interface AuthContext {
     accessToken?: string;
-    idToken?: string;
     tokenType?: string;
     expiresAt?: number;
     extraHeaders?: Record<string, string>;

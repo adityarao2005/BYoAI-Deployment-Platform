@@ -38,7 +38,6 @@ app.use(async (c, next) => {
 
         await manager.userTokenManager.setUserToken(sub, {
             accessToken: rawToken,
-            idToken: typeof payload?.id_token === "string" ? payload.id_token : undefined,
             extraHeaders: {
                 ...(authHeader ? { authorization: authHeader } : {}),
             },

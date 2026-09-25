@@ -26,13 +26,11 @@ describe("UserTokenManager & OAuth2 Token Propagation", () => {
 
         await manager.setUserToken("user-1", {
             accessToken: "secret-access-token-123",
-            idToken: "id-token-456",
         });
 
         const token = await manager.getUserToken("user-1");
         expect(token).toBeDefined();
         expect(token?.accessToken).toBe("secret-access-token-123");
-        expect(token?.idToken).toBe("id-token-456");
 
         await manager.clearUserToken("user-1");
         expect(await manager.getUserToken("user-1")).toBeUndefined();
