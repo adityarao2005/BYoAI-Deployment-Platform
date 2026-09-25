@@ -20,3 +20,10 @@ toolProviders:
       name: api_key
       key: "special-key"
       location: header
+
+security:
+  jwksUri: "${OAUTH_JWKS_URI:-http://localhost:8090/default/jwks}"
+  alg:
+    - RS256
+  verify:
+    iss: "${OAUTH_ISSUER_URI:-http://localhost:8090/default}"

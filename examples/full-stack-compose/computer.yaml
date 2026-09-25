@@ -1,0 +1,6 @@
+type: local
+server:
+  host: "0.0.0.0"
+  port: 8080
+  security:
+    bearerToken: "${CC_API_KEY:-dev-computer-key}"

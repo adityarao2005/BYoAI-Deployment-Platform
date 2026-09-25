@@ -11,3 +11,11 @@ toolProviders:
     provider:
       type: local
       enableGUIToolsIfAvailable: false
+
+security:
+  jwksUri: "${OAUTH_JWKS_URI:-http://localhost:8090/default/jwks}"
+  alg:
+    - RS256
+  verify:
+    iss: "${OAUTH_ISSUER_URI:-http://localhost:8090/default}"
+

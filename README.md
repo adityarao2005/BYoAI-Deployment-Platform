@@ -28,6 +28,8 @@ For detailed configuration schema, build, run, and test guides, see [apps/comput
 
 Explore runnable agent configurations in [`examples/`](examples/):
 
+- **[Full Stack Docker Compose Orchestration](examples/full-stack-compose/README.md)** (`examples/full-stack-compose/`):
+  Demonstrates end-to-end multi-container orchestration with Docker Compose, combining the Agentic Harness, sandboxed Computer Controller, Chat UI web frontend, OpenAPI tools, and a lightweight self-hosted OAuth2/OIDC identity provider.
 - **[Pet Adoption & Store Agent](examples/pet-adoption-agent/README.md)** (`examples/pet-adoption-agent/`):
   Demonstrates dynamic OpenAPI tool execution against Swagger Petstore, progressive skill loading from a packaged zip archive, and interactive console observability.
 - **[Local Computer Use Agent](examples/computer-use-agent-local/README.md)** (`examples/computer-use-agent-local/`):

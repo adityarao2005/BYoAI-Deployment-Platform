@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 
 	"go.yaml.in/yaml/v3"
 )
@@ -136,6 +137,7 @@ func (c *ServerConfig) UnmarshalYAML(value *yaml.Node) error {
 
 	raw.Server.Security = sec
 
+	raw.Type = ConfigType(strings.ToLower(string(raw.Type)))
 	c.Type = raw.Type
 	c.WorkspaceDir = raw.WorkspaceDir
 	c.Server = raw.Server

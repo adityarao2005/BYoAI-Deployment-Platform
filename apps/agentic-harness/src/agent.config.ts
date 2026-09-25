@@ -6,7 +6,14 @@ import {
 import { z } from "zod";
 
 export const AgentSecuritySchema = z.object({
-    jwksUri: z.httpUrl(),
+    jwksUri: z.string().refine((val) => {
+        try {
+            const u = new URL(val);
+            return u.protocol === "http:" || u.protocol === "https:";
+        } catch {
+            return false;
+        }
+    }, { message: "jwksUri must be a valid HTTP or HTTPS URL" }),
     alg: z.array(z.enum(['RS256', 'RS384', 'RS512', 'PS256', 'PS384', 'PS512', 'ES256', 'ES384', 'ES512', 'EdDSA'])),
     verify: z.object({
         iss: z.string().optional(),
