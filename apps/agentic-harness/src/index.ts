@@ -38,6 +38,7 @@ app.use(async (c, next) => {
 
         await manager.userTokenManager.setUserToken(sub, {
             accessToken: rawToken,
+            expiresAt: typeof payload?.exp === "number" ? payload.exp : undefined,
             extraHeaders: {
                 ...(authHeader ? { authorization: authHeader } : {}),
             },

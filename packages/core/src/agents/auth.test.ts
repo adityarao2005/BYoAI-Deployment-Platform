@@ -34,6 +34,33 @@ describe("UserTokenManager & OAuth2 Token Propagation", () => {
 
         await manager.clearUserToken("user-1");
         expect(await manager.getUserToken("user-1")).toBeUndefined();
+        manager.destroy();
+    });
+
+    it("automatically deletes tokens upon expiration using timers and lazy checks", async () => {
+        const manager = new InMemoryUserTokenManager();
+
+        // 1. Expired in the past (lazy check)
+        await manager.setUserToken("user-past", {
+            accessToken: "old-token",
+            expiresAt: Math.floor(Date.now() / 1000) - 100, // 100 seconds ago
+        });
+        expect(await manager.getUserToken("user-past")).toBeUndefined();
+
+        // 2. Short expiry timer check (50ms in the future)
+        const expSeconds = (Date.now() + 50) / 1000;
+        await manager.setUserToken("user-timer", {
+            accessToken: "short-token",
+            expiresAt: expSeconds,
+        });
+
+        expect(await manager.getUserToken("user-timer")).toBeDefined();
+
+        // Wait 70ms for timer to trigger
+        await new Promise((resolve) => setTimeout(resolve, 70));
+        expect(await manager.getUserToken("user-timer")).toBeUndefined();
+
+        manager.destroy();
     });
 
     it("attaches authContext to AgentSession when userTokenManager is configured", async () => {
