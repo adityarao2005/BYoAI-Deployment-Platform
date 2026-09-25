@@ -148,6 +148,34 @@ func RunPKCEFlow(ctx context.Context, cfg PKCEFlowConfig) (*PKCEFlowResult, erro
 	}, nil
 }
 
+// RefreshToken exchanges a refresh token for new access and refresh tokens.
+func RefreshToken(ctx context.Context, cfg PKCEFlowConfig, refreshToken string) (*PKCEFlowResult, error) {
+	oauthCfg := &oauth2.Config{
+		ClientID: cfg.ClientID,
+		Scopes:   cfg.Scopes,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  cfg.IssuerURI + "/authorize",
+			TokenURL: cfg.IssuerURI + "/token",
+		},
+	}
+
+	tokenSource := oauthCfg.TokenSource(ctx, &oauth2.Token{
+		RefreshToken: refreshToken,
+	})
+
+	tok, err := tokenSource.Token()
+	if err != nil {
+		return nil, fmt.Errorf("token refresh failed: %w", err)
+	}
+
+	return &PKCEFlowResult{
+		AccessToken:  tok.AccessToken,
+		RefreshToken: tok.RefreshToken,
+		TokenType:    tok.TokenType,
+		Expiry:       tok.Expiry,
+	}, nil
+}
+
 type callbackResult struct {
 	code string
 	err  error

@@ -10,8 +10,11 @@ import (
 	"syscall"
 	"time"
 
+	chatui "github.com/adityarao2005/BYoAI-Deployment-Platform/chat_ui"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/chat_ui/pkg/auth"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/chat_ui/pkg/config"
+	"github.com/adityarao2005/BYoAI-Deployment-Platform/chat_ui/pkg/proxy"
+	"github.com/adityarao2005/BYoAI-Deployment-Platform/chat_ui/pkg/server"
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
 )
@@ -55,6 +58,24 @@ func main() {
 		cfg.OAuthCallbackPath,
 	)
 
+	// Initialize harness proxy
+	harnessProxy, err := proxy.NewHarnessProxy(proxy.Config{
+		TargetURL:    cfg.AgentHarnessURI,
+		SessionStore: sessionStore,
+	})
+	if err != nil {
+		slog.Error("Failed to create harness proxy", "error", err)
+		os.Exit(1)
+	}
+
+	// Initialize SPA static handler
+	distFS, err := chatui.DistFS()
+	if err != nil {
+		slog.Error("Failed to initialize static dist FS", "error", err)
+		os.Exit(1)
+	}
+	spaHandler := server.NewSPAHandler(distFS, "index.html")
+
 	r := chi.NewRouter()
 	r.Use(chimw.RequestID)
 	r.Use(chimw.RealIP)
@@ -76,16 +97,14 @@ func main() {
 		r.Get("/me", auth.HandleMe(sessionStore))
 	})
 
-	// Protected API routes — proxy to harness (Phase 3)
+	// Protected API routes — proxy to harness
 	r.Group(func(r chi.Router) {
 		r.Use(auth.RequireAuth(sessionStore))
-
-		r.HandleFunc("/api/*", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusNotImplemented)
-			_, _ = w.Write([]byte(`{"error":"API proxy not implemented yet — Phase 3"}`))
-		})
+		r.Handle("/api/*", harnessProxy)
 	})
+
+	// Static SPA handler for all non-API and non-auth routes
+	r.Handle("/*", spaHandler)
 
 	srv := &http.Server{
 		Addr:         cfg.ListenAddr,
