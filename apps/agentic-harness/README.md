@@ -32,10 +32,10 @@ bun run --filter @byo-ai-agent-platform/agentic-harness start
 The harness exposes a Hono HTTP server with the following endpoints:
 
 - `GET /health` - Health check status
-- `POST /interactions` - Create a new agent interaction session
+- `POST /interactions` - Create a new agent interaction session (optional JSON body: `{ "mode": "interactive" | "non-interactive" }`)
 - `GET /interactions` - List all agent interaction IDs
-- `GET /interactions/:id` - Retrieve agent interaction memory and transcript
-- `POST /interactions/:id` - Post a user message to the agent interaction
+- `GET /interactions/:id` - Retrieve agent interaction memory, transcript, and mode
+- `POST /interactions/:id` - Post a user message to the agent interaction (rejects with 400 Bad Request if session is non-interactive and transcript already contains messages)
 - `GET /interactions/:id/sse` - Subscribe to real-time Server-Sent Events (SSE) for the agent interaction (`user:message`, `agent:message`, `agent:run`, `agent:complete`, `tool:call`, `tool:complete`)
 
 ---

@@ -113,7 +113,7 @@ describe("AgentMemory", () => {
 
 describe("constructSystemPrompt", () => {
     it("renders basic system prompt without skillsPath", () => {
-        const prompt = constructSystemPrompt("Bot", "Helper bot", []);
+        const prompt = constructSystemPrompt("Bot", "Helper bot", "interactive", []);
         expect(prompt).toContain("AI Agent named Bot");
         expect(prompt).not.toContain("Skills Directory:");
     });
@@ -132,6 +132,7 @@ describe("constructSystemPrompt", () => {
         const prompt = constructSystemPrompt(
             "Bot",
             "Helper bot",
+            "interactive",
             skills,
             "/workspace/agent-123/skills",
         );
@@ -139,6 +140,11 @@ describe("constructSystemPrompt", () => {
         expect(prompt).toContain("## Skills Directory:");
         expect(prompt).toContain("/workspace/agent-123/skills");
         expect(prompt).toContain("<location>/workspace/agent-123/skills/calculator</location>");
+    });
+
+    it("renders non-interactive note when mode is non-interactive", () => {
+        const prompt = constructSystemPrompt("Bot", "Helper bot", "non-interactive", []);
+        expect(prompt).toContain("Note: You are being run in non-interactive mode");
     });
 });
 

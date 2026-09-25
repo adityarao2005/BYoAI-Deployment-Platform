@@ -5,6 +5,7 @@ import {
     type AgentHandle,
     AgentMemory,
     type AgentMemoryManager,
+    type InteractiveMode,
 } from "@/agents";
 import type { ModelInteraction } from "@/models/conversation";
 
@@ -18,6 +19,7 @@ export interface JsonAgentMemoryRecord {
     transcript: ModelInteraction[];
     name: string;
     userId: string;
+    mode?: InteractiveMode;
 }
 
 /**
@@ -64,14 +66,19 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
         await fs.rename(tempPath, filePath);
     }
 
-    async createAgentMemoryEntry(name: string, userId: string): Promise<string> {
+    async createAgentMemoryEntry(
+        name: string,
+        userId: string,
+        mode: InteractiveMode = "interactive",
+    ): Promise<string> {
         await this.ensureStorageDir();
         const id = `agent-${crypto.randomUUID()}`;
         const initialRecord: JsonAgentMemoryRecord = {
             id,
             name,
             transcript: [],
-            userId
+            userId,
+            mode,
         };
         await this.writeRecord(initialRecord);
         return id;
@@ -85,6 +92,7 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
             record.transcript ?? [],
             record.computerId,
             record.skillsPath,
+            record.mode ?? "interactive",
         );
     }
 

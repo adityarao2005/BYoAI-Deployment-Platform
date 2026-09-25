@@ -47,6 +47,7 @@ export type AgentConfiguration = {
 export function constructSystemPrompt(
     name: string,
     description: string,
+    mode: InteractiveMode,
     skills: Skill[],
     skillsPath?: string,
 ): string {
@@ -76,12 +77,22 @@ You are an AI Agent named ${name}.
 
 ${description}
 ${skillsDirSection}
+
+${mode === "non-interactive" ? "Note: You are being run in non-interactive mode, this means the user has asked you to complete some task and be done, do not ask a follow up question or request for any user input." : ""}
+
 ## Your skills:
 
 <available_skills>
     ${formattedSkills}
 </available_skills>
     `.trim();
+}
+
+export type InteractiveMode = "interactive" | "non-interactive";
+
+export interface CreateAgentProps {
+    userId: string;
+    mode?: InteractiveMode;
 }
 
 /**
@@ -96,6 +107,7 @@ export interface AgentSession {
     readonly computerProvider?: ComputerProvider;
     readonly skillRepositories?: SkillRepository[];
     readonly authContext?: AuthContext;
+    readonly mode: InteractiveMode;
 }
 
 import { AgentExecutor, type IAgentExecutor } from "./agent.executor";
@@ -106,7 +118,7 @@ export { AgentExecutor, type IAgentExecutor };
  * Interface for agent lifecycle management (creation, listing, transcript queries).
  */
 export interface IAgentLifecycleManager {
-    createAgent(userId: string): Promise<AgentHandle>;
+    createAgent(props: CreateAgentProps | string): Promise<AgentHandle>;
     getAgentInteraction(id: string): Promise<AgentInteraction | undefined>;
     getAgentInteractionByUser(
         id: string,
@@ -228,11 +240,15 @@ export class AgentManager implements IAgentLifecycleManager {
     }
 
     // Creates the agent
-    async createAgent(userId: string): Promise<AgentHandle> {
+    async createAgent(props: CreateAgentProps | string): Promise<AgentHandle> {
+        const userId = typeof props === "string" ? props : props.userId;
+        const mode =
+            typeof props === "object" && props.mode ? props.mode : "interactive";
         const id =
             await this.configuration.memoryManager.createAgentMemoryEntry(
                 this.configuration.name,
                 userId,
+                mode,
             );
 
         if (this.configuration.computerProvider) {
@@ -341,6 +357,7 @@ export class AgentManager implements IAgentLifecycleManager {
             userId: agent.userId,
             name: memory.name,
             transcript: memory.transcript,
+            mode: memory.mode,
         };
     }
 
@@ -365,6 +382,7 @@ export class AgentManager implements IAgentLifecycleManager {
             userId: agent.userId,
             name: memory.name,
             transcript: memory.transcript,
+            mode: memory.mode,
         };
     }
 
@@ -396,4 +414,5 @@ export type AgentInteraction = {
     name: string;
     userId: string;
     transcript: ModelInteraction[];
+    mode: InteractiveMode;
 };

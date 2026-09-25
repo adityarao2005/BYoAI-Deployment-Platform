@@ -16,6 +16,7 @@ describe("computer tool builder", () => {
         description: "test",
         userId: "user-1",
         memory: new AgentMemory("test-agent", "user-1"),
+        mode: "interactive",
     };
 
     const mockHeadlessComputer: HeadlessComputer = {
