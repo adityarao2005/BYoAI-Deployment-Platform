@@ -3,8 +3,20 @@
 version: '3'
 
 tasks:
+  install_frontend:
+    desc: Install Chat UI frontend dependencies
+    dir: frontend
+    run: once
+    sources:
+      - 'package.json'
+      - 'bun.lock'
+    cmds:
+      - bun install
+
   build_frontend:
     desc: Build Chat UI React frontend
+    deps:
+      - install_frontend
     dir: frontend
     run: once
     sources:
@@ -37,11 +49,14 @@ tasks:
 
   test:
     desc: Run unit tests for Chat UI
+    deps:
+      - build_frontend
     run: once
     sources:
       - '**/*.go'
       - go.mod
       - go.sum
+      - 'frontend/dist/**/*'
     cmds:
       - go test -v ./...
 
