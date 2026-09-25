@@ -1,5 +1,5 @@
-name: Petty
-description: You are a pet adoption agent helping people adopt pets.
+name: PetAdoptionAgent
+description: A helpful AI assistant capable of managing pet adoptions, querying inventory, and performing safe computer actions in a sandboxed container.
 models:
   - name: gemini-3.7-flash
     brand: gemini
@@ -8,7 +8,7 @@ models:
 
 skillRepositories:
   - type: zip
-    location: "${AGENT_SKILLS_PATH:-skills.zip}"
+    location: "${AGENT_SKILLS_PATH:-/workspace/skills.zip}"
     skillsSubdirectory: "/skills/"
 
 toolProviders:
@@ -21,8 +21,17 @@ toolProviders:
       key: "special-key"
       location: header
 
+  - type: computer
+    provider:
+      type: remote
+      url: "${COMPUTER_CONTROLLER_URI:-http://computer-controller:8080}"
+      image: "alpine:latest"
+      enableGUIToolsIfAvailable: false
+      security:
+        bearerToken: "${CC_API_KEY:-dev-computer-key}"
+
 security:
-  jwksUri: "${OAUTH_JWKS_URI:-http://localhost:8090/default/jwks}"
+  jwksUri: "${OAUTH_JWKS_URI:-http://oauth-provider:8080/default/jwks}"
   alg:
     - RS256
   verify:

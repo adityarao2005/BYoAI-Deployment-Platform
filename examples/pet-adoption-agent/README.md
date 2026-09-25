@@ -1,34 +1,75 @@
 # Pet Adoption & Store Agent Example
 
-This example demonstrates how to build and run an interactive Pet Store & Adoption Assistant using the `@byo-ai-agent-platform` agentic harness.
+This example demonstrates how to deploy and interact with a complete **Pet Store & Adoption Assistant** using the `@byo-ai-agent-platform` architecture.
 
-It highlights three core platform capabilities:
-1. **Dynamic OpenAPI Tool Integration**: Automatically loads and transforms the Swagger Petstore OpenAPI v2 specification (`https://petstore.swagger.io/v2/swagger.json`) into callable tools (`petstore_findPetsByStatus`, `petstore_getPetById`, `petstore_placeOrder`, etc.).
-2. **Progressive Skill Loading**: Discovers and loads task-oriented procedural guides on-demand from a packaged ZIP archive (`skills.zip`).
-3. **Turn-Based Observability**: Streams model reasoning, tool invocations, tool outputs, and lifecycle diagnostics directly to the terminal via `ConsoleAgentObserver`.
+It supports two execution modes:
+1. **Full-Stack Docker Compose (Recommended)**: Orchestrates the Chat UI web frontend, Mock OAuth2/OIDC provider, Computer Controller daemon, and Agentic Harness runtime in isolated Docker containers.
+2. **Direct CLI / Local Harness**: Runs the agent harness locally with Bun, connecting to OpenAPI tools and progressive skills.
 
 ---
 
-## Directory Structure
+## 🏛️ Architecture Overview
+
+```mermaid
+graph TD
+    Browser["User Browser<br/>(http://localhost:8081)"]
+    
+    subgraph "Docker Compose Network (byoai)"
+        OAuth["OAuth / OIDC Provider<br/>(Mock OAuth2 Server)<br/>:8090 / :8080"]
+        ChatUI["Chat UI Backend & SPA<br/>(chat-ui:latest)<br/>:8081"]
+        Harness["Agentic Harness Runtime<br/>(agentic-harness:latest)<br/>:3000"]
+        CC["Computer Controller Daemon<br/>(computer-controller:distroless)<br/>:8080"]
+        ExtAPI["Swagger Petstore API<br/>(https://petstore.swagger.io)"]
+    end
+
+    Browser -->|"1. Open & Click Login"| ChatUI
+    ChatUI -->|"2. Redirect to /authorize"| OAuth
+    Browser -->|"3. Submit credentials"| OAuth
+    OAuth -->|"4. Return Auth Code to /callback"| ChatUI
+    ChatUI -->|"5. Exchange Code for JWT Token"| OAuth
+    ChatUI -->|"6. Proxy SSE Chat + Bearer JWT"| Harness
+    Harness -->|"7. Verify JWT via JWKS (/default/jwks)"| OAuth
+    Harness -->|"8. Execute Sandbox Tasks (ConnectRPC)"| CC
+    Harness -->|"9. Query Pet Inventory / Orders"| ExtAPI
+```
+
+---
+
+## 📦 Services in the Stack
+
+| Service | Container Image | Port (Host:Container) | Description |
+|---|---|---|---|
+| **`oauth-provider`** | `ghcr.io/navikt/mock-oauth2-server:2.1.10` | `8090:8080` | Lightweight self-hosted OIDC / OAuth2 identity provider with login UI and JWKS token verification. |
+| **`computer-controller`** | `computer-controller:distroless` | `8080:8080` | Go daemon running sandboxed computer execution primitives (ConnectRPC). |
+| **`agentic-harness`** | `agentic-harness:latest` | `3000:3000` | Core agent runtime running Bun + TypeScript. Evaluates LLM instructions, OpenAPI tools, and skills. |
+| **`chat-ui`** | `chat-ui:latest` | `8081:8081` | Full-featured chat interface built with React 19, Tailwind CSS v4, and Go confidential OAuth client backend. |
+
+---
+
+## 📂 Directory Structure
 
 ```
 examples/pet-adoption-agent/
-├── README.md                      # This documentation
-├── agent.yaml                     # Agent configuration (models, skills repo, OpenAPI tools)
-├── create-skills-zip-file.sh      # Packaging script for the skills directory
-├── run-agent.sh                   # Runner script with environment validation
-├── .gitignore                     # Ignores generated zip files
-├── skills/                        # Procedural skill definitions
+├── README.md                  # This documentation
+├── agent.yaml                 # Agent configuration (models, skills repo, OpenAPI tools, computer tools)
+├── computer.yaml              # Computer controller daemon configuration
+├── compose.yaml               # Docker Compose orchestration file
+├── .env.example               # Environment variables template
+├── .gitignore                 # Ignores generated zip and env files
+├── create-skills-zip-file.sh  # Packaging script for the skills directory
+├── run-compose.sh             # Interactive Docker Compose launcher
+├── run-agent.sh               # Local standalone agent runner
+├── skills/                    # Procedural skill definitions
 │   ├── pet-store-inventory/
-│   │   └── SKILL.md               # Procedures for querying and summarizing inventory
+│   │   └── SKILL.md           # Procedures for querying and summarizing inventory
 │   └── pet-adoption-workflow/
-│       └── SKILL.md               # Step-by-step workflow for adopting & ordering pets
-└── skills.zip                     # (Generated) Packaged skills repository archive
+│       └── SKILL.md           # Step-by-step workflow for adopting & ordering pets
+└── skills.zip                 # (Generated) Packaged skills repository archive
 ```
 
 ---
 
-## Available Skills
+## 🛠️ Available Skills
 
 - **`pet-store-inventory`**:
   - Invoked when the user inquires about available pets, species, or general inventory counts.
@@ -39,84 +80,65 @@ examples/pet-adoption-agent/
 
 ---
 
-## Prerequisites
+## 🚀 Quick Start (Docker Compose)
 
-- [Bun](https://bun.sh/) (v1.0 or later)
-- `zip` utility (for creating `skills.zip`)
-- A valid **Gemini API Key** (`GEMINI_API_KEY`)
+### 1. Build Container Images
 
----
+From the root of the repository, build all project packages and Docker container images:
 
-## Quickstart
+```bash
+task build_container_images
+```
 
-### 1. Package the Skills (Optional)
+### 2. Configure Environment
 
-`skills.zip` will be generated automatically by `run-agent.sh` if it does not already exist. You can also manually package the `skills/` folder into `skills.zip` at any time by running:
+Copy `.env.example` to `.env` and set your `GEMINI_API_KEY`:
+
+```bash
+cp .env.example .env
+```
+
+### 3. Start the Full Stack
+
+Launch the stack using the orchestrator script:
+
+```bash
+./run-compose.sh
+```
+
+Or directly with Docker Compose:
 
 ```bash
 ./create-skills-zip-file.sh
+docker compose up
 ```
 
-This packages:
-```
-skills/
-├── pet-adoption-workflow/SKILL.md
-└── pet-store-inventory/SKILL.md
-```
+### 4. Interact via Web UI
 
-### 2. Run the Agent
+1. Open your browser at [http://localhost:8081](http://localhost:8081).
+2. Click **Login** and authenticate through the mock identity provider (enter any username, e.g. `alice`).
+3. Try sample prompts:
+   - *"What available pets do we have in the inventory?"*
+   - *"Help me adopt pet ID 1 and place an order."*
+   - *"Check the current hostname, user ID, and directory contents using your computer tools."*
 
-Run `run-agent.sh` providing your `GEMINI_API_KEY` (config and skills paths are automatically resolved to `agent.yaml` and `skills.zip`):
+---
+
+## 💻 Standalone Local Execution
+
+To run the agent locally without Docker containers:
 
 ```bash
 export GEMINI_API_KEY="your-gemini-api-key"
 ./run-agent.sh
 ```
 
-Or as a single command:
-
-```bash
-GEMINI_API_KEY="your-gemini-api-key" ./run-agent.sh
-```
-
-*(Optional: You can still override `AGENT_CONFIG_PATH` or `AGENT_SKILLS_PATH` if using custom files).*
-
 ---
 
-## Example Interaction Walkthrough
+## 🛑 Stopping the Stack
 
-Once started, the agent enters an interactive REPL loop:
+To stop and remove running containers:
 
-### 1. Inquire about store inventory
-```text
-Enter a message for the agent (or 'exit' to quit): Hello! What pets do you have available?
-<<Processing>>...
-Tool call: load_skill with arguments: {"skillName":"pet-store-inventory"}
-Tool response: load_skill with result: {"success":true,"content":"..."}
-Tool call: petstore_findPetsByStatus with arguments: {"status":["available"]}
-Tool response: petstore_findPetsByStatus with result: [...]
-assistant: We have several wonderful pets ready for adoption! Here are a few:
-- Cooper (Cat, ID: 118556) - Calm
-- Lucy (Cat, ID: 140468) - Energetic
-- Bella (Dog, ID: 249895) - Calm
-```
-
-### 2. Ask for details and initiate adoption
-```text
-Enter a message for the agent (or 'exit' to quit): I'd like to adopt Lucy the cat!
-<<Processing>>...
-Tool call: load_skill with arguments: {"skillName":"pet-adoption-workflow"}
-Tool response: load_skill with result: {"success":true,"content":"..."}
-Tool call: petstore_getPetById with arguments: {"petId":140468}
-Tool response: petstore_getPetById with result: {"id":140468,"name":"Lucy","status":"available"}
-assistant: Lucy (Cat #140468) is currently available! Would you like me to place the adoption order now?
-```
-
-### 3. Confirm adoption
-```text
-Enter a message for the agent (or 'exit' to quit): Yes please, go ahead!
-<<Processing>>...
-Tool call: petstore_placeOrder with arguments: {"petId":140468,"quantity":1,"status":"placed","complete":true,...}
-Tool response: petstore_placeOrder with result: {"id":987654,"petId":140468,"status":"placed"}
-assistant: Congratulations! Your adoption order for Lucy has been placed (Order ID: #987654).
+```bash
+docker compose down
 ```
