@@ -62,19 +62,13 @@ tasks:
       - task: test
 
   build_container_image:
-    desc: Build a specific container target image
+    desc: Build the Agentic Harness container image
     cmds:
-      - docker build -f apps/agentic-harness/docker/Dockerfile --target {{.TARGET}} -t agentic-harness:{{.TARGET}} .
+      - docker build -f apps/agentic-harness/docker/Dockerfile -t agentic-harness:latest .
 
   build_container_images:
-    desc: Build container images for agentic harness targets (distroless, debian, redhat, ubi10-minimal)
+    desc: Build all container images for Agentic Harness
     deps:
       - task: build_container_image
-        vars: { TARGET: 'distroless' }
-      - task: build_container_image
-        vars: { TARGET: 'debian' }
-      - task: build_container_image
-        vars: { TARGET: 'redhat' }
-      - task: build_container_image
-        vars: { TARGET: 'ubi10-minimal' }
+
 

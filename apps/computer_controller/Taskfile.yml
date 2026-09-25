@@ -43,22 +43,14 @@ tasks:
       - build
       - test
     cmds:
-      - docker build -f docker/Dockerfile --target {{.TARGET}} -t computer-controller:{{.TARGET}} .
+      - docker build -f docker/Dockerfile --target {{.TARGET | default "scratch"}} -t computer-controller:{{.TARGET | default "latest"}} .
 
   build_container_images:
-    desc: Build all container images for local and docker/podman targets
+    desc: Build container images for computer controller (scratch, distroless, podman)
     deps:
       - task: build_container_image
-        vars: { TARGET: 'local-scratch' }
+        vars: { TARGET: 'scratch' }
       - task: build_container_image
-        vars: { TARGET: 'local-alpine' }
+        vars: { TARGET: 'distroless' }
       - task: build_container_image
-        vars: { TARGET: 'local-debian' }
-      - task: build_container_image
-        vars: { TARGET: 'local-redhat' }
-      - task: build_container_image
-        vars: { TARGET: 'docker-podman-redhat' }
-      - task: build_container_image
-        vars: { TARGET: 'docker-podman-debian' }
-      - task: build_container_image
-        vars: { TARGET: 'docker-podman-alpine' }
+        vars: { TARGET: 'podman' }
