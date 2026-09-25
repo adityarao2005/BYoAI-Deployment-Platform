@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/api_gateway/pkg/config"
+	"github.com/adityarao2005/BYoAI-Deployment-Platform/api_gateway/pkg/middleware"
+	"github.com/MicahParks/keyfunc/v3"
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
 )
@@ -40,6 +42,7 @@ func main() {
 	slog.Info("Starting API Gateway",
 		"listen_addr", cfg.ListenAddr,
 		"agent_harness_uri", cfg.AgentHarnessURI,
+		"jwks_uri", cfg.JWKSURI,
 	)
 
 	r := chi.NewRouter()
@@ -48,12 +51,46 @@ func main() {
 	r.Use(chimw.Logger)
 	r.Use(chimw.Recoverer)
 
-	// Health check endpoint
+	// CORS middleware
+	r.Use(middleware.NewCORSMiddleware(middleware.DefaultCORSConfig()))
+
+	// Health check endpoint (no JWT required)
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"status":"ok","app":"api-gateway"}`))
 	})
+
+	// JWT middleware — only applied when JWKS_URI is configured
+	if cfg.JWKSURI != "" {
+		jwks, err := keyfunc.NewDefault([]string{cfg.JWKSURI})
+		if err != nil {
+			slog.Error("Failed to create JWKS keyfunc", "error", err, "jwks_uri", cfg.JWKSURI)
+			os.Exit(1)
+		}
+
+		jwtMW := middleware.NewJWTMiddleware(middleware.JWTMiddlewareConfig{
+			JWKS:     jwks,
+			Issuer:   cfg.JWTIssuer,
+			Audience: cfg.JWTAudience,
+		})
+
+		// All routes under /* require valid JWT
+		r.Group(func(r chi.Router) {
+			r.Use(jwtMW)
+
+			// Placeholder: reverse proxy routes will be added in Phase 3
+			r.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusNotImplemented)
+				_, _ = w.Write([]byte(`{"error":"proxy not implemented yet"}`))
+			})
+		})
+
+		slog.Info("JWT middleware enabled", "jwks_uri", cfg.JWKSURI, "issuer", cfg.JWTIssuer, "audience", cfg.JWTAudience)
+	} else {
+		slog.Warn("JWKS_URI not configured — JWT validation is DISABLED. All requests will pass through without authentication.")
+	}
 
 	srv := &http.Server{
 		Addr:         cfg.ListenAddr,
