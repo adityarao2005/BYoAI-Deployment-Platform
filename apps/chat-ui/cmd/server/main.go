@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/adityarao2005/BYoAI-Deployment-Platform/chat_ui/pkg/auth"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/chat_ui/pkg/config"
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
@@ -43,17 +44,47 @@ func main() {
 		"oauth_issuer_uri", cfg.OAuthIssuerURI,
 	)
 
+	// Initialize session store
+	sessionStore := auth.NewCookieSessionStore(cfg.SessionSecret)
+
+	// Initialize OAuth manager
+	oauthMgr := auth.NewOAuthManager(
+		cfg.OAuthIssuerURI,
+		cfg.OAuthClientID,
+		cfg.OAuthClientSecret,
+		cfg.OAuthCallbackPath,
+	)
+
 	r := chi.NewRouter()
 	r.Use(chimw.RequestID)
 	r.Use(chimw.RealIP)
 	r.Use(chimw.Logger)
 	r.Use(chimw.Recoverer)
 
-	// Health endpoint
+	// Health endpoint (no auth required)
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"status":"ok","app":"chat-ui"}`))
+	})
+
+	// Auth routes (no auth required)
+	r.Route("/auth", func(r chi.Router) {
+		r.Get("/login", oauthMgr.HandleLogin(sessionStore))
+		r.Get("/callback", oauthMgr.HandleCallback(sessionStore))
+		r.Post("/logout", auth.HandleLogout(sessionStore))
+		r.Get("/me", auth.HandleMe(sessionStore))
+	})
+
+	// Protected API routes — proxy to harness (Phase 3)
+	r.Group(func(r chi.Router) {
+		r.Use(auth.RequireAuth(sessionStore))
+
+		r.HandleFunc("/api/*", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusNotImplemented)
+			_, _ = w.Write([]byte(`{"error":"API proxy not implemented yet — Phase 3"}`))
+		})
 	})
 
 	srv := &http.Server{
