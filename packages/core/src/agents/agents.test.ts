@@ -11,6 +11,7 @@ import {
     InMemoryAgentMemoryManager,
     JsonFileAgentMemoryManager,
 } from "./memory";
+import { InMemoryUserTokenManager } from "./auth";
 
 describe("AgentMemory", () => {
     it("correctly computes pending tool calls and handles resolution", () => {
@@ -145,6 +146,7 @@ describe("AgentManager Integration", () => {
     it("creates an agent and handles basic message turn via communicator events", async () => {
         const communicator = new InMemoryAgentCommunicator();
         const memoryManager = new InMemoryAgentMemoryManager();
+        const tokenManager = new InMemoryUserTokenManager();
 
         const model: Model = {
             name: "test",
@@ -167,6 +169,7 @@ describe("AgentManager Integration", () => {
             toolProviders: [],
             memoryManager,
             communicator,
+            userTokenManager: tokenManager
         };
 
         const manager = new AgentManager(config);
@@ -212,6 +215,7 @@ describe("AgentManager Integration", () => {
     it("handles tool calling loop and completes when all tool calls resolve", async () => {
         const communicator = new InMemoryAgentCommunicator();
         const memoryManager = new InMemoryAgentMemoryManager();
+        const tokenManager = new InMemoryUserTokenManager();
 
         let toolExecuted = false;
 
@@ -275,6 +279,7 @@ describe("AgentManager Integration", () => {
             toolProviders: [toolProvider],
             memoryManager,
             communicator,
+            userTokenManager: tokenManager
         };
 
         const manager = new AgentManager(config);
@@ -312,6 +317,7 @@ describe("AgentManager Integration", () => {
     it("safely handles tool execution errors without crashing the manager", async () => {
         const communicator = new InMemoryAgentCommunicator();
         const memoryManager = new InMemoryAgentMemoryManager();
+        const tokenManager = new InMemoryUserTokenManager();
 
         const failingTool: Tool = {
             name: "fail_tool",
@@ -372,6 +378,7 @@ describe("AgentManager Integration", () => {
             toolProviders: [toolProvider],
             memoryManager,
             communicator,
+            userTokenManager: tokenManager 
         };
 
         const manager = new AgentManager(config);
@@ -515,6 +522,7 @@ describe("InMemoryAgentMemoryManager & AgentManager User Scoping", () => {
     it("AgentManager handles user-scoped interaction methods", async () => {
         const communicator = new InMemoryAgentCommunicator();
         const memoryManager = new InMemoryAgentMemoryManager();
+        const tokenManager = new InMemoryUserTokenManager();
 
         const model: Model = {
             name: "test",
@@ -531,6 +539,7 @@ describe("InMemoryAgentMemoryManager & AgentManager User Scoping", () => {
             toolProviders: [],
             memoryManager,
             communicator,
+            userTokenManager: tokenManager
         };
 
         const manager = new AgentManager(config);

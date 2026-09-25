@@ -2,7 +2,6 @@ import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import {
-    type AgentCommunicator,
     AgentManager,
     type AgentObserver,
     ConsoleAgentObserver,

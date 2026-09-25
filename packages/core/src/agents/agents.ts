@@ -38,7 +38,7 @@ export type AgentConfiguration = {
     readonly communicator: AgentCommunicator;
     readonly computerProvider?: ComputerProvider;
     readonly observers?: AgentObserver[];
-    readonly userTokenManager?: UserTokenManager;
+    readonly userTokenManager: UserTokenManager;
 };
 
 /**
@@ -384,6 +384,10 @@ export class AgentManager implements IAgentLifecycleManager {
 
     get memoryManager(): AgentMemoryManager {
         return this.configuration.memoryManager;
+    }
+
+    get userTokenManager(): UserTokenManager {
+        return this.configuration.userTokenManager;
     }
 }
 
