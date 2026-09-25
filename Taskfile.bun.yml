@@ -54,30 +54,6 @@ tasks:
     deps:
       - install
 
-  compile:target:
-    desc: "Compile single binary target (Usage: task compile:target OS=linux ARCH=x64)"
-    cmds:
-      - bun build --compile --minify --sourcemap --target=bun-{{.OS}}-{{.ARCH}} ./apps/agentic-harness/src/index.ts --outfile ./dist/agentic-harness-{{.OS}}-{{.ARCH}}{{.EXT}}
-
-  compile:
-    desc: Native compile standalone binaries for Linux, Windows, and macOS (x64 & arm64) using Bun
-    cmds:
-      - mkdir -p dist
-      - task: compile:target
-        vars: { OS: linux, ARCH: x64 }
-      - task: compile:target
-        vars: { OS: linux, ARCH: arm64 }
-      - task: compile:target
-        vars: { OS: windows, ARCH: x64, EXT: .exe }
-      - task: compile:target
-        vars: { OS: windows, ARCH: arm64, EXT: .exe }
-      - task: compile:target
-        vars: { OS: darwin, ARCH: x64 }
-      - task: compile:target
-        vars: { OS: darwin, ARCH: arm64 }
-    deps:
-      - install
-
   check:
     desc: Run linting, typechecking, and tests
     cmds:
@@ -85,17 +61,8 @@ tasks:
       - task: typecheck
       - task: test
 
-  run:
-    desc: Run the agentic harness application
-    cmds:
-      - bun run --filter @byo-ai-agent-platform/agentic-harness start
-    deps:
-      - build
-
   build_container_image:
     desc: Build a specific container target image
-    deps:
-      - compile
     cmds:
       - docker build -f apps/agentic-harness/docker/Dockerfile --target {{.TARGET}} -t agentic-harness:{{.TARGET}} .
 
@@ -110,3 +77,4 @@ tasks:
         vars: { TARGET: 'redhat' }
       - task: build_container_image
         vars: { TARGET: 'ubi10-minimal' }
+
