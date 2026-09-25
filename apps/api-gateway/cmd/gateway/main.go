@@ -12,6 +12,7 @@ import (
 
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/api_gateway/pkg/config"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/api_gateway/pkg/middleware"
+	"github.com/adityarao2005/BYoAI-Deployment-Platform/api_gateway/pkg/proxy"
 	"github.com/MicahParks/keyfunc/v3"
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
@@ -45,6 +46,15 @@ func main() {
 		"jwks_uri", cfg.JWKSURI,
 	)
 
+	// Create reverse proxy to agentic-harness
+	proxyHandler, err := proxy.NewProxy(proxy.Config{
+		TargetURL: cfg.AgentHarnessURI,
+	})
+	if err != nil {
+		slog.Error("Failed to initialize reverse proxy", "error", err)
+		os.Exit(1)
+	}
+
 	r := chi.NewRouter()
 	r.Use(chimw.RequestID)
 	r.Use(chimw.RealIP)
@@ -61,7 +71,7 @@ func main() {
 		_, _ = w.Write([]byte(`{"status":"ok","app":"api-gateway"}`))
 	})
 
-	// JWT middleware — only applied when JWKS_URI is configured
+	// JWT middleware — applied when JWKS_URI is configured
 	if cfg.JWKSURI != "" {
 		jwks, err := keyfunc.NewDefault([]string{cfg.JWKSURI})
 		if err != nil {
@@ -75,21 +85,16 @@ func main() {
 			Audience: cfg.JWTAudience,
 		})
 
-		// All routes under /* require valid JWT
+		// Protected proxy group
 		r.Group(func(r chi.Router) {
 			r.Use(jwtMW)
-
-			// Placeholder: reverse proxy routes will be added in Phase 3
-			r.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusNotImplemented)
-				_, _ = w.Write([]byte(`{"error":"proxy not implemented yet"}`))
-			})
+			r.Handle("/*", proxyHandler)
 		})
 
 		slog.Info("JWT middleware enabled", "jwks_uri", cfg.JWKSURI, "issuer", cfg.JWTIssuer, "audience", cfg.JWTAudience)
 	} else {
 		slog.Warn("JWKS_URI not configured — JWT validation is DISABLED. All requests will pass through without authentication.")
+		r.Handle("/*", proxyHandler)
 	}
 
 	srv := &http.Server{
