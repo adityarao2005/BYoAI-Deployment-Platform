@@ -5,7 +5,7 @@ import {
     type StreamableHTTPClientTransportOptions,
 } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
-import type { AgentHandle } from "@/agents";
+import type { AgentHandle, AgentSession } from "@/agents";
 import type { ComputerProvider } from "@/computer";
 import type {
     McpComputerConfig,
@@ -36,17 +36,29 @@ export class StreamableHTTPMcpClientFactory implements McpClientFactory {
         this.name = config.name;
     }
 
-    private async buildTransportOptions(): Promise<StreamableHTTPClientTransportOptions> {
+    private async buildTransportOptions(
+        session?: AgentSession,
+    ): Promise<StreamableHTTPClientTransportOptions> {
         const headers: Record<string, string> = {
             ...(this.config.security?.headers ?? {}),
         };
 
         const auth = this.config.security?.auth;
+        let tokenProvider: (() => Promise<string>) | undefined = undefined;
+
         if (auth?.type === "basic") {
             const credentials = Buffer.from(
                 `${auth.username}:${auth.password}`,
             ).toString("base64");
             headers["Authorization"] = `Basic ${credentials}`;
+        } else if (auth?.type === "bearer") {
+            tokenProvider = async () => auth.token;
+        } else if (auth?.type === "oauth2") {
+            // OAuth2 token propagation ONLY occurs if security auth type is oauth2
+            if (session?.authContext?.accessToken) {
+                const userToken = session.authContext.accessToken;
+                tokenProvider = async () => userToken;
+            }
         }
 
         const requestInit: RequestInit & { tls?: Record<string, any> } = {
@@ -67,23 +79,20 @@ export class StreamableHTTPMcpClientFactory implements McpClientFactory {
 
         const transportOptions: StreamableHTTPClientTransportOptions = {
             requestInit,
-            authProvider:
-                auth?.type === "bearer"
-                    ? { token: async () => auth.token }
-                    : undefined,
+            authProvider: tokenProvider ? { token: tokenProvider } : undefined,
         };
 
         return transportOptions;
     }
 
-    async createClient(_agent: AgentHandle): Promise<Client> {
+    async createClient(_agent: AgentHandle, session?: AgentSession): Promise<Client> {
         const client = new Client({
             name: this.name,
             version: this.version ?? "1.0.0",
             description: this.description,
         });
 
-        const transportOptions = await this.buildTransportOptions();
+        const transportOptions = await this.buildTransportOptions(session);
         const transport = new StreamableHTTPClientTransport(
             new URL(this.config.url),
             transportOptions,

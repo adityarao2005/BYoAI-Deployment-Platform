@@ -27,13 +27,28 @@ app.use(jwk({
 app.use(logger((message, ...rest) => appLogger.info(message, ...rest)))
 
 app.use(async (c, next) => {
-    const payload = c.get('jwtPayload');
+    const payload = c.get("jwtPayload");
     const sub = payload?.sub;
 
-    appLogger.debug("Authorized Access:", `Path ${c.req.path}`, `Subject: ${sub}`)
+    if (sub) {
+        const authHeader = c.req.header("authorization");
+        const rawToken = authHeader?.startsWith("Bearer ")
+            ? authHeader.slice(7)
+            : undefined;
 
-    await next()
-})
+        await manager.userTokenManager.setUserToken(sub, {
+            accessToken: rawToken,
+            expiresAt: typeof payload?.exp === "number" ? payload.exp : undefined,
+            extraHeaders: {
+                ...(authHeader ? { authorization: authHeader } : {}),
+            },
+        });
+    }
+
+    appLogger.debug("Authorized Access:", `Path ${c.req.path}`, `Subject: ${sub}`);
+
+    await next();
+});
 
 
 // create agent route

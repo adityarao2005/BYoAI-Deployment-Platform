@@ -1,3 +1,4 @@
+import type { AgentSession } from "@/agents";
 import type { OpenAPIToolProviderConfig } from "@/config/tool_config";
 import type { Tool } from "@/tools";
 import { type ToolObjectArgument, toolObject } from "@/tools/tool_argument";
@@ -184,7 +185,7 @@ export function buildToolsFromSpec(
                 name: toolName,
                 description,
                 inputSchema,
-                async execute(args: Record<string, any> = {}) {
+                async execute(args: Record<string, any> = {}, session?: AgentSession) {
                     return executeOpenAPIOperation({
                         method,
                         pathKey,
@@ -193,6 +194,7 @@ export function buildToolsFromSpec(
                         bodySchemaObj,
                         config,
                         args,
+                        session,
                     });
                 },
             };

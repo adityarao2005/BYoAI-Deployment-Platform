@@ -1,3 +1,4 @@
+import type { AgentSession } from "@/agents";
 import type { OpenAPIToolProviderConfig } from "@/config/tool_config";
 
 export interface ExecuteOperationOptions {
@@ -8,6 +9,7 @@ export interface ExecuteOperationOptions {
     bodySchemaObj: any;
     config: OpenAPIToolProviderConfig;
     args: Record<string, any>;
+    session?: AgentSession;
 }
 
 export async function executeOpenAPIOperation({
@@ -18,6 +20,7 @@ export async function executeOpenAPIOperation({
     bodySchemaObj,
     config,
     args,
+    session,
 }: ExecuteOperationOptions): Promise<any> {
     // 1. Path parameter replacement
     let resolvedPath = pathKey;
@@ -112,6 +115,11 @@ export async function executeOpenAPIOperation({
                     fullUrl.username = sec.urlAuthority.user;
                 if (sec.urlAuthority.password)
                     fullUrl.password = sec.urlAuthority.password;
+            }
+        } else if (sec.type === "oauth2") {
+            // OAuth2 token propagation ONLY occurs if security is configured as oauth2
+            if (session?.authContext?.accessToken) {
+                headers["Authorization"] = `Bearer ${session.authContext.accessToken}`;
             }
         }
     }

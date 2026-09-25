@@ -181,6 +181,9 @@ export const McpAuthSchema = z.discriminatedUnion("type", [
         username: z.string(),
         password: z.string(),
     }),
+    z.object({
+        type: z.literal("oauth2"),
+    }),
 ]);
 
 export type McpAuth = z.infer<typeof McpAuthSchema>;

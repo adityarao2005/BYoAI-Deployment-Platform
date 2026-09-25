@@ -3,6 +3,7 @@ import {
     type AgentConfiguration,
     AgentManager,
     type AgentObserver,
+    InMemoryUserTokenManager,
 } from "@/agents";
 import type { Model } from "@/models/models";
 import type { Tool, ToolProvider } from "@/tools/tools";
@@ -130,6 +131,7 @@ describe("AgentObserver", () => {
 
         const communicator = new InMemoryAgentCommunicator();
         const memoryManager = new InMemoryAgentMemoryManager();
+        const tokenManager = new InMemoryUserTokenManager();
 
         const config: AgentConfiguration = {
             name: "TestAgent",
@@ -140,6 +142,7 @@ describe("AgentObserver", () => {
             memoryManager,
             communicator,
             observers: [testObserver],
+            userTokenManager: tokenManager
         };
 
         const manager = new AgentManager(config);
@@ -190,6 +193,7 @@ describe("AgentObserver", () => {
 
         const communicator = new InMemoryAgentCommunicator();
         const memoryManager = new InMemoryAgentMemoryManager();
+        const tokenManager = new InMemoryUserTokenManager();
 
         const config: AgentConfiguration = {
             name: "TestAgent",
@@ -200,6 +204,7 @@ describe("AgentObserver", () => {
             memoryManager,
             communicator,
             observers: [testObserver],
+            userTokenManager: tokenManager
         };
 
         const manager = new AgentManager(config);
