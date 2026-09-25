@@ -202,6 +202,7 @@ app.get("/interactions/:id/sse", async (c) => {
             "agent:message",
             "agent:run",
             "agent:complete",
+            "agent:error",
             "tool:call",
             "tool:complete",
         ];
