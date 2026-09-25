@@ -52,15 +52,27 @@ app.use(async (c, next) => {
 
 
 // create agent route
-app.post("/interactions", async (c) => {
+app.post(
+    "/interactions",
+    zv(
+        "json",
+        z.object({
+            mode: z.enum(["interactive", "non-interactive"]).optional(),
+        }).optional(),
+    ),
+    async (c) => {
+        const sub = c.get("jwtPayload").sub;
+        const body = c.req.valid("json");
+        const agent = await manager.createAgent({
+            userId: sub,
+            mode: body?.mode ?? "interactive",
+        });
 
-    const sub = c.get("jwtPayload").sub
-    const agent = await manager.createAgent(sub);
-
-    return c.json({
-        id: agent.id,
-    });
-});
+        return c.json({
+            id: agent.id,
+        });
+    },
+);
 
 // get all agent interactions
 app.get("/interactions", async (c) => {
@@ -109,9 +121,16 @@ app.post(
             });
         }
 
+        if (interaction.mode === "non-interactive" && interaction.transcript.length > 0) {
+            throw new HTTPException(400, {
+                message: `Cannot post message to non-interactive agent session ${id} which already has transcript messages.`,
+            });
+        }
+
         // send message to agent
         const body = await c.req.valid("json");
         await manager.sendMessageToAgent(id, body.message);
+        return c.json({ success: true });
     },
 );
 

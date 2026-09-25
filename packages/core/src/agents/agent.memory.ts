@@ -1,5 +1,5 @@
 import type { ModelInteraction } from "@/models";
-import type { AgentHandle } from "./agents";
+import type { AgentHandle, InteractiveMode } from "./agents";
 
 /**
  * Encapsulates agent state, including conversation transcript, associated computer provider ID, and pending tool calls.
@@ -10,6 +10,7 @@ export class AgentMemory {
     skillsPath?: string;
     name: string;
     userId: string;
+    mode: InteractiveMode;
 
     constructor(
         name: string,
@@ -17,12 +18,14 @@ export class AgentMemory {
         transcript: ModelInteraction[] = [],
         computerId?: string,
         skillsPath?: string,
+        mode: InteractiveMode = "interactive",
     ) {
         this.transcript = transcript;
         this.computerId = computerId;
         this.skillsPath = skillsPath;
         this.name = name;
         this.userId = userId;
+        this.mode = mode;
     }
 
     /**
@@ -48,7 +51,11 @@ export class AgentMemory {
  */
 export interface AgentMemoryManager {
     /** Creates a new memory entry for an agent and returns its memory ID */
-    createAgentMemoryEntry(name: string, userId: string): Promise<string>;
+    createAgentMemoryEntry(
+        name: string,
+        userId: string,
+        mode?: InteractiveMode,
+    ): Promise<string>;
 
     /** Retrieves memory for a given agent */
     getAgentMemory(agentId: string): Promise<AgentMemory>;

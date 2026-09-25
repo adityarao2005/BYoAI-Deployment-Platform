@@ -224,4 +224,48 @@ describe("Harness API & Security Integration", () => {
         expect(adminGetBody.id).toBe(id);
         expect(adminGetBody.userId).toBe("user-1");
     });
+
+    it("handles non-interactive interaction creation and prevents posting follow-up messages", async () => {
+        const createRes = await app.request("/interactions", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${user1Token}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ mode: "non-interactive" }),
+        });
+        expect(createRes.status).toBe(200);
+        const { id } = (await createRes.json()) as { id: string };
+
+        const getRes = await app.request(`/interactions/${id}`, {
+            headers: {
+                Authorization: `Bearer ${user1Token}`,
+            },
+        });
+        expect(getRes.status).toBe(200);
+        const interaction = (await getRes.json()) as { id: string; mode: string };
+        expect(interaction.mode).toBe("non-interactive");
+
+        // First message when transcript is empty succeeds
+        const firstMsgRes = await app.request(`/interactions/${id}`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${user1Token}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ message: "Hello non-interactive" }),
+        });
+        expect(firstMsgRes.status).toBe(200);
+
+        // Second message when transcript is no longer empty returns 400
+        const secondMsgRes = await app.request(`/interactions/${id}`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${user1Token}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ message: "Follow-up message" }),
+        });
+        expect(secondMsgRes.status).toBe(400);
+    });
 });

@@ -123,12 +123,21 @@ export class AgentExecutor implements IAgentExecutor {
                 computerProvider: this.configuration.computerProvider,
                 skillRepositories: this.configuration.skillRepository,
                 authContext,
+                mode: memory.mode ?? "interactive",
             },
             tools: this.tools ?? [],
         };
     }
 
     async sendMessage(agentId: string, message: string): Promise<void> {
+        const memory =
+            await this.configuration.memoryManager.getAgentMemory(agentId);
+        if (memory.mode === "non-interactive" && memory.transcript.length > 0) {
+            throw new AgentExecutionError(
+                `Cannot send message to non-interactive agent ${agentId} with existing transcript messages`,
+                { agentId },
+            );
+        }
         await this.notifyObservers("onTurnStart", agentId, message);
         await this.configuration.memoryManager.addTranscriptEntries(agentId, [
             {
@@ -151,6 +160,7 @@ export class AgentExecutor implements IAgentExecutor {
         const prompt = constructSystemPrompt(
             session.name,
             session.description,
+            session.mode,
             this.skills,
             memory.skillsPath,
         );

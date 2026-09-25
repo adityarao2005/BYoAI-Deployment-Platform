@@ -1,0 +1,41 @@
+# Root .dockerignore
+node_modules
+**/node_modules
+.cache
+**/.cache
+
+
+# Git and Editor metadata
+.git
+.gitignore
+.agents
+.gemini
+.idea
+.vscode
+*.log
+
+# Python artifacts
+__pycache__
+**/*.pyc
+.venv
+**/venv
+local_models/.venv
+
+# Coverage and test artifacts
+coverage
+**/*.coverprofile
+node_modules
+Dockerfile*
+docker-compose*
+.dockerignore
+.git
+.gitignore
+README.md
+LICENSE
+.vscode
+Makefile
+helm-charts
+.env
+.editorconfig
+.idea
+coverage*

@@ -2,10 +2,9 @@ import {
     type AgentHandle,
     AgentMemory,
     type AgentMemoryManager,
+    type InteractiveMode,
 } from "@/agents";
 import type { ModelInteraction } from "@/models/conversation";
-import { ValueSchema } from "@bufbuild/protobuf/wkt";
-import { keyof } from "zod";
 
 /**
  * In-memory implementation of {@link AgentMemoryManager} for managing non-persistent agent conversation state.
@@ -14,9 +13,16 @@ export class InMemoryAgentMemoryManager implements AgentMemoryManager {
     private memories: Map<string, AgentMemory> = new Map();
     private counter = 0;
 
-    async createAgentMemoryEntry(name: string, userId: string): Promise<string> {
+    async createAgentMemoryEntry(
+        name: string,
+        userId: string,
+        mode: InteractiveMode = "interactive",
+    ): Promise<string> {
         const id = `agent-${++this.counter}`;
-        this.memories.set(id, new AgentMemory(name, userId));
+        this.memories.set(
+            id,
+            new AgentMemory(name, userId, [], undefined, undefined, mode),
+        );
         return id;
     }
 

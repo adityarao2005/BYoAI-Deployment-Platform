@@ -54,30 +54,6 @@ tasks:
     deps:
       - install
 
-  compile:target:
-    desc: "Compile single binary target (Usage: task compile:target OS=linux ARCH=x64)"
-    cmds:
-      - bun build --compile --minify --sourcemap --target=bun-{{.OS}}-{{.ARCH}} ./apps/agentic-harness/src/index.ts --outfile ./dist/agentic-harness-{{.OS}}-{{.ARCH}}{{.EXT}}
-
-  compile:
-    desc: Native compile standalone binaries for Linux, Windows, and macOS (x64 & arm64) using Bun
-    cmds:
-      - mkdir -p dist
-      - task: compile:target
-        vars: { OS: linux, ARCH: x64 }
-      - task: compile:target
-        vars: { OS: linux, ARCH: arm64 }
-      - task: compile:target
-        vars: { OS: windows, ARCH: x64, EXT: .exe }
-      - task: compile:target
-        vars: { OS: windows, ARCH: arm64, EXT: .exe }
-      - task: compile:target
-        vars: { OS: darwin, ARCH: x64 }
-      - task: compile:target
-        vars: { OS: darwin, ARCH: arm64 }
-    deps:
-      - install
-
   check:
     desc: Run linting, typechecking, and tests
     cmds:
@@ -85,28 +61,18 @@ tasks:
       - task: typecheck
       - task: test
 
-  run:
-    desc: Run the agentic harness application
-    cmds:
-      - bun run --filter @byo-ai-agent-platform/agentic-harness start
+  build_container_image:
+    desc: Build the Agentic Harness container image
     deps:
       - build
-
-  build_container_image:
-    desc: Build a specific container target image
-    deps:
-      - compile
+      - test
     cmds:
-      - docker build -f apps/agentic-harness/docker/Dockerfile --target {{.TARGET}} -t agentic-harness:{{.TARGET}} .
+      - docker build -f apps/agentic-harness/docker/Dockerfile -t agentic-harness:latest .
+
 
   build_container_images:
-    desc: Build container images for agentic harness targets (distroless, debian, redhat, ubi10-minimal)
+    desc: Build all container images for Agentic Harness
     deps:
       - task: build_container_image
-        vars: { TARGET: 'distroless' }
-      - task: build_container_image
-        vars: { TARGET: 'debian' }
-      - task: build_container_image
-        vars: { TARGET: 'redhat' }
-      - task: build_container_image
-        vars: { TARGET: 'ubi10-minimal' }
+
+
