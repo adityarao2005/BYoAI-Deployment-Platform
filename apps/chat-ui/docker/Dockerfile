@@ -21,13 +21,13 @@ COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /bin/chat-ui ./cmd/server
 
 # Final stage
-FROM alpine:3.21
-
-RUN apk --no-cache add ca-certificates
+FROM gcr.io/distroless/static-debian12:nonroot
 
 WORKDIR /app
 COPY --from=backend-builder /bin/chat-ui /app/chat-ui
 
+USER 65532:65532
 EXPOSE 8081
 
 ENTRYPOINT ["/app/chat-ui"]
+

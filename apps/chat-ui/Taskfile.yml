@@ -49,3 +49,17 @@ tasks:
     desc: Run the Chat UI server locally
     cmds:
       - go run ./cmd/server
+
+  build_container_image:
+    desc: Build Chat UI container image
+    deps:
+      - build
+      - test
+    cmds:
+      - docker build -f docker/Dockerfile -t chat-ui:latest .
+
+  build_container_images:
+    desc: Build all container images for Chat UI
+    deps:
+      - task: build_container_image
+

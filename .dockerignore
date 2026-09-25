@@ -1,0 +1,29 @@
+# Root .dockerignore
+node_modules
+**/node_modules
+dist
+**/dist
+bin
+**/bin
+.cache
+**/.cache
+
+# Git and Editor metadata
+.git
+.gitignore
+.agents
+.gemini
+.idea
+.vscode
+*.log
+
+# Python artifacts
+__pycache__
+**/*.pyc
+.venv
+**/venv
+local_models/.venv
+
+# Coverage and test artifacts
+coverage
+**/*.coverprofile

@@ -60,3 +60,6 @@ tasks:
       - build
       - computer_controller:build_container_images
       - agentic_harness:build_container_images
+      - api_gateway:build_container_images
+      - chat_ui:build_container_images
+      - shell_cli:build_container_images

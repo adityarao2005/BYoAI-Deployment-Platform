@@ -31,3 +31,17 @@ tasks:
     desc: Run the API Gateway locally
     cmds:
       - go run ./cmd/gateway
+
+  build_container_image:
+    desc: Build API Gateway container image
+    deps:
+      - build
+      - test
+    cmds:
+      - docker build -f docker/Dockerfile -t api-gateway:latest .
+
+  build_container_images:
+    desc: Build all container images for API Gateway
+    deps:
+      - task: build_container_image
+

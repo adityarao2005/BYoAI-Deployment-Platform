@@ -31,3 +31,17 @@ tasks:
     desc: Run the Shell CLI locally
     cmds:
       - go run ./cmd/byoai
+
+  build_container_image:
+    desc: Build Shell CLI container image
+    deps:
+      - build
+      - test
+    cmds:
+      - docker build -f docker/Dockerfile -t shell-cli:latest .
+
+  build_container_images:
+    desc: Build all container images for Shell CLI
+    deps:
+      - task: build_container_image
+

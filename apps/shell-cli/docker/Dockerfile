@@ -11,11 +11,12 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /bin/byoai ./cmd/byoai
 
 # Final stage
-FROM alpine:3.21
-
-RUN apk --no-cache add ca-certificates
+FROM gcr.io/distroless/static-debian12:nonroot
 
 WORKDIR /app
 COPY --from=builder /bin/byoai /usr/local/bin/byoai
 
+USER 65532:65532
+
 ENTRYPOINT ["/usr/local/bin/byoai"]
+
