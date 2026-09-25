@@ -2,7 +2,7 @@
 
 The Platform to Deploy AI Agents.
 
-View design docs in [docs/design/](docs/design/).
+View architecture documentation in [docs/architecture/](docs/architecture/).
 
 ## Architecture & Sub-projects
 
