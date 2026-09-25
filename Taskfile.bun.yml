@@ -63,8 +63,12 @@ tasks:
 
   build_container_image:
     desc: Build the Agentic Harness container image
+    deps:
+      - build
+      - test
     cmds:
       - docker build -f apps/agentic-harness/docker/Dockerfile -t agentic-harness:latest .
+
 
   build_container_images:
     desc: Build all container images for Agentic Harness

@@ -1,12 +1,9 @@
 # Root .dockerignore
 node_modules
 **/node_modules
-dist
-**/dist
-bin
-**/bin
 .cache
 **/.cache
+
 
 # Git and Editor metadata
 .git
