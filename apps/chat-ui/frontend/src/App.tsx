@@ -7,7 +7,6 @@ import {
   fetchCurrentUser,
   fetchInteractions,
   createInteraction,
-  getInteraction,
   sendMessage,
   subscribeInteractionSSE,
 } from '@/lib/api';
@@ -23,7 +22,7 @@ export function App() {
   const [messages, setMessages] = useState<Record<string, ChatMessage[]>>({});
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
-  // Check auth and load initial interactions
+  // Check auth and load initial interactions list
   useEffect(() => {
     let isMounted = true;
 
@@ -64,7 +63,7 @@ export function App() {
     };
   }, []);
 
-  // Connect SSE for active interaction
+  // Subscribe to real-time SSE stream for active interaction
   useEffect(() => {
     if (unsubscribeRef.current) {
       unsubscribeRef.current();
@@ -75,48 +74,65 @@ export function App() {
       return;
     }
 
-    // Fetch existing transcript
-    getInteraction(selectedId).then((detail) => {
-      if (detail && detail.transcript) {
-        const parsedMsgs: ChatMessage[] = detail.transcript
-          .filter((t) => t.role === 'user' || t.role === 'assistant')
-          .map((t, idx) => ({
-            id: `msg-${idx}-${Date.now()}`,
-            role: (t.role || 'assistant') as 'user' | 'assistant',
-            content: t.content || '',
-            timestamp: t.timestamp || new Date().toISOString(),
-          }));
-
-        setMessages((prev) => ({
-          ...prev,
-          [selectedId]: parsedMsgs,
-        }));
-      }
+    // Initialize messages bucket if needed
+    setMessages((prev) => {
+      if (prev[selectedId]) return prev;
+      return { ...prev, [selectedId]: [] };
     });
 
-    // Subscribe to live SSE events from harness
+    // Pure SSE streaming from backend
     const unsub = subscribeInteractionSSE(
       selectedId,
       (event, data) => {
-        if (event === 'agent:message') {
+        if (event === 'user:message') {
           const payload = data as { content?: string; text?: string };
-          const text =
-            payload?.content ||
-            payload?.text ||
-            (typeof data === 'string' ? data : '');
+          const text = payload?.content || payload?.text || (typeof data === 'string' ? data : '');
           if (text) {
-            const aiMsg: ChatMessage = {
-              id: `msg-ai-${Date.now()}`,
-              role: 'assistant',
-              content: text,
-              timestamp: new Date().toISOString(),
-            };
-            setMessages((prev) => ({
-              ...prev,
-              [selectedId]: [...(prev[selectedId] || []), aiMsg],
-            }));
+            setMessages((prev) => {
+              const current = prev[selectedId] || [];
+              const exists = current.some((m) => m.role === 'user' && m.content === text);
+              if (exists) return prev;
+              return {
+                ...prev,
+                [selectedId]: [
+                  ...current,
+                  {
+                    id: `msg-u-${Date.now()}-${Math.random()}`,
+                    role: 'user',
+                    content: text,
+                    timestamp: new Date().toISOString(),
+                  },
+                ],
+              };
+            });
+          }
+        } else if (event === 'agent:message') {
+          const payload = data as { content?: string; text?: string };
+          const text = payload?.content || payload?.text || (typeof data === 'string' ? data : '');
+          if (text) {
+            setMessages((prev) => {
+              const current = prev[selectedId] || [];
+              const exists = current.some((m) => m.role === 'assistant' && m.content === text);
+              if (exists) return prev;
+              return {
+                ...prev,
+                [selectedId]: [
+                  ...current,
+                  {
+                    id: `msg-ai-${Date.now()}-${Math.random()}`,
+                    role: 'assistant',
+                    content: text,
+                    timestamp: new Date().toISOString(),
+                  },
+                ],
+              };
+            });
             setErrorMessage(null);
           }
+          setIsAgentRunning(false);
+        } else if (event === 'agent:run') {
+          setIsAgentRunning(true);
+        } else if (event === 'agent:complete') {
           setIsAgentRunning(false);
         } else if (event === 'agent:error') {
           const payload = data as { error?: string; message?: string; context?: string };
@@ -140,13 +156,10 @@ export function App() {
             setErrorMessage(errorText);
           }
           setIsAgentRunning(false);
-        } else if (event === 'agent:complete') {
-          setIsAgentRunning(false);
         }
       },
       (err) => {
-        // SSE transport errors/reconnections should not inject fake harness errors
-        console.debug('SSE transport event:', err);
+        console.debug('SSE stream status event:', err);
       }
     );
 
@@ -206,6 +219,7 @@ export function App() {
         timestamp: new Date().toISOString(),
       };
 
+      // Optimistically show user message while backend emits it on SSE stream
       setMessages((prev) => ({
         ...prev,
         [selectedId]: [...(prev[selectedId] || []), userMsg],

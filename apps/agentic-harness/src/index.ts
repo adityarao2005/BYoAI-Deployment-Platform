@@ -151,51 +151,72 @@ app.get("/interactions/:id/sse", async (c) => {
         });
     }
 
+    c.header("X-Accel-Buffering", "no");
+    c.header("Cache-Control", "no-cache, no-transform");
+
     return streamSSE(c, async (stream) => {
-        const queue: Array<{ event: string; data: string }> = [];
-        let wakeUp: (() => void) | null = null;
+        await stream.writeSSE({
+            event: "connected",
+            data: JSON.stringify({ agentId: id }),
+        });
 
-        const pushEvent = (event: string, payload: any) => {
-            queue.push({
-                event,
-                data: JSON.stringify(payload),
-            });
-            if (wakeUp) {
-                wakeUp();
-                wakeUp = null;
-            }
-        };
-
-        // Drain chat transcript history into SSE stream
+        // Drain chat transcript history into SSE stream immediately
         for (const entry of interaction.transcript) {
             if (entry.type === "message") {
                 if (entry.role === "user") {
-                    pushEvent("user:message", {
-                        agentId: id,
-                        content: entry.content,
+                    await stream.writeSSE({
+                        event: "user:message",
+                        data: JSON.stringify({
+                            agentId: id,
+                            content: entry.content,
+                        }),
                     });
                 } else if (entry.role === "assistant") {
-                    pushEvent("agent:message", {
-                        agentId: id,
-                        content: entry.content,
+                    await stream.writeSSE({
+                        event: "agent:message",
+                        data: JSON.stringify({
+                            agentId: id,
+                            content: entry.content,
+                        }),
                     });
                 }
             } else if (entry.type === "tool_call") {
-                pushEvent("tool:call", {
-                    agentId: id,
-                    toolCallId: entry.id,
-                    tool: entry.tool.name,
-                    args: entry.arguments,
+                await stream.writeSSE({
+                    event: "tool:call",
+                    data: JSON.stringify({
+                        agentId: id,
+                        toolCallId: entry.id,
+                        tool: entry.tool.name,
+                        args: entry.arguments,
+                    }),
                 });
             } else if (entry.type === "tool_response") {
-                pushEvent("tool:complete", {
-                    agentId: id,
-                    toolCallId: entry.id,
-                    tool: entry.tool.name,
-                    result: entry.result,
+                await stream.writeSSE({
+                    event: "tool:complete",
+                    data: JSON.stringify({
+                        agentId: id,
+                        toolCallId: entry.id,
+                        tool: entry.tool.name,
+                        result: entry.result,
+                    }),
                 });
             }
         }
+
+        // Direct async write chain to guarantee zero-latency event delivery in strict order
+        let writeChain = Promise.resolve();
+        const writeEvent = (event: string, payload: any) => {
+            writeChain = writeChain
+                .then(async () => {
+                    if (!stream.aborted) {
+                        await stream.writeSSE({
+                            event,
+                            data: JSON.stringify(payload),
+                        });
+                    }
+                })
+                .catch(() => {});
+        };
 
         const eventNames: Array<keyof AgentEventMap> = [
             "user:message",
@@ -210,7 +231,7 @@ app.get("/interactions/:id/sse", async (c) => {
         const unsubscribers = eventNames.map((eventName) =>
             manager.communicator.on(eventName, (payload) => {
                 if (payload.agentId === id) {
-                    pushEvent(eventName, payload);
+                    writeEvent(eventName, payload);
                 }
             }),
         );
@@ -222,22 +243,14 @@ app.get("/interactions/:id/sse", async (c) => {
         });
 
         try {
+            // Keep stream open with periodic keepalive ping
             while (!stream.aborted) {
-                if (queue.length === 0) {
-                    await new Promise<void>((resolve) => {
-                        wakeUp = resolve;
-                        stream.onAbort(() => resolve());
+                await stream.sleep(15000);
+                if (!stream.aborted) {
+                    await stream.writeSSE({
+                        event: "ping",
+                        data: JSON.stringify({ timestamp: Date.now() }),
                     });
-                }
-
-                while (queue.length > 0 && !stream.aborted) {
-                    const item = queue.shift();
-                    if (item) {
-                        await stream.writeSSE({
-                            event: item.event,
-                            data: item.data,
-                        });
-                    }
                 }
             }
         } finally {
