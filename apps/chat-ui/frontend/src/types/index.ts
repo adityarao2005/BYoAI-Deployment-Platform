@@ -14,9 +14,10 @@ export interface Interaction {
 
 export interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant' | 'system' | 'tool';
+  role: 'user' | 'assistant' | 'system' | 'tool' | 'error';
   content: string;
   timestamp: string;
+  isError?: boolean;
   toolCall?: {
     name: string;
     args?: Record<string, unknown>;

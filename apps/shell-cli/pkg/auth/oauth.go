@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"os"
 	"os/exec"
 	"runtime"
 	"time"
@@ -39,13 +40,28 @@ type PKCEFlowResult struct {
 // It starts an ephemeral localhost server, opens the browser, waits for the callback,
 // exchanges the code for tokens, and returns the result.
 func RunPKCEFlow(ctx context.Context, cfg PKCEFlowConfig) (*PKCEFlowResult, error) {
-	// Find a random available port
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		return nil, fmt.Errorf("failed to start callback listener: %w", err)
+	var listener net.Listener
+	var err error
+
+	callbackPortStr := os.Getenv("BYOAI_CALLBACK_PORT")
+	if callbackPortStr != "" {
+		listener, err = net.Listen("tcp", ":"+callbackPortStr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to start callback listener on port %s: %w", callbackPortStr, err)
+		}
+	} else {
+		// Try default port 8085 first, fallback to dynamic port :0
+		listener, err = net.Listen("tcp", ":8085")
+		if err != nil {
+			listener, err = net.Listen("tcp", ":0")
+			if err != nil {
+				return nil, fmt.Errorf("failed to start callback listener: %w", err)
+			}
+		}
 	}
+
 	port := listener.Addr().(*net.TCPAddr).Port
-	redirectURI := fmt.Sprintf("http://127.0.0.1:%d/callback", port)
+	redirectURI := fmt.Sprintf("http://localhost:%d/callback", port)
 
 	oauthCfg := &oauth2.Config{
 		ClientID:    cfg.ClientID,

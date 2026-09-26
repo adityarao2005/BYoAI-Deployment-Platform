@@ -152,11 +152,18 @@ export class AgentManager implements IAgentLifecycleManager {
                 try {
                     await this.executor.runTurn(agentId);
                 } catch (error) {
+                    const errorMessage =
+                        error instanceof Error ? error.message : String(error);
                     await this.executor.notifyError(
                         agentId,
                         error,
                         "agent:run",
                     );
+                    await this.configuration.communicator.emit("agent:error", {
+                        agentId,
+                        error: errorMessage,
+                        context: "agent:run",
+                    });
                     await this.configuration.communicator.emit(
                         "agent:complete",
                         {
@@ -172,11 +179,18 @@ export class AgentManager implements IAgentLifecycleManager {
                 try {
                     await this.executor.sendMessage(agentId, content);
                 } catch (error) {
+                    const errorMessage =
+                        error instanceof Error ? error.message : String(error);
                     await this.executor.notifyError(
                         agentId,
                         error,
                         "user:message",
                     );
+                    await this.configuration.communicator.emit("agent:error", {
+                        agentId,
+                        error: errorMessage,
+                        context: "user:message",
+                    });
                     await this.configuration.communicator.emit(
                         "agent:complete",
                         {

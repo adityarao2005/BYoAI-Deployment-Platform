@@ -23,7 +23,14 @@ export async function fetchCurrentUser(): Promise<UserProfile | null> {
   try {
     const res = await fetch('/auth/me');
     if (!res.ok) return null;
-    return await res.json();
+    const data = await res.json();
+    const isAuthed = Boolean(data.authenticated ?? data.isAuthenticated);
+    return {
+      name: data.name || (isAuthed ? 'Authenticated User' : ''),
+      email: data.email || '',
+      picture: data.picture,
+      isAuthenticated: isAuthed,
+    };
   } catch {
     return null;
   }
@@ -71,16 +78,27 @@ export async function getInteraction(id: string): Promise<HarnessInteractionDeta
   }
 }
 
-export async function sendMessage(id: string, message: string): Promise<boolean> {
+export async function sendMessage(id: string, message: string): Promise<{ success: boolean; error?: string }> {
   try {
     const res = await fetch(`/api/interactions/${encodeURIComponent(id)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message }),
     });
-    return res.ok;
-  } catch {
-    return false;
+    if (!res.ok) {
+      let errorMsg = `Server error (${res.status})`;
+      try {
+        const data = await res.json();
+        if (data.message) errorMsg = data.message;
+        else if (data.error) errorMsg = data.error;
+      } catch {
+        // use default errorMsg
+      }
+      return { success: false, error: errorMsg };
+    }
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Network error sending message to agent harness' };
   }
 }
 
@@ -93,10 +111,13 @@ export function subscribeInteractionSSE(
 
   const eventTypes = [
     'agent:message',
-    'tool:call',
-    'tool:result',
+    'agent:run',
     'agent:complete',
-    'error',
+    'agent:error',
+    'tool:call',
+    'tool:complete',
+    'tool:result',
+    'user:message',
   ];
 
   for (const evtName of eventTypes) {

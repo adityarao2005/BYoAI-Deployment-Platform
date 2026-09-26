@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 echo "========================================================"
-echo " BYoAI Platform - Full Stack Docker Compose Orchestrator"
+echo " BYoAI Platform - Local Computer Use Compose Launcher"
 echo "========================================================"
 
 # Check if .env exists, or prompt / load from environment
@@ -26,15 +26,9 @@ if [ -z "${GEMINI_API_KEY:-}" ]; then
     fi
 fi
 
-# Ensure skills.zip is packaged
-if [ ! -f "${SCRIPT_DIR}/skills.zip" ]; then
-    echo "Packaging skills archive..."
-    bash "${SCRIPT_DIR}/create-skills-zip-file.sh"
-fi
-
 # Check if container images exist, or prompt to build them
 echo "Checking required container images..."
-REQUIRED_IMAGES=("agentic-harness:latest" "computer-controller:distroless" "chat-ui:latest")
+REQUIRED_IMAGES=("agentic-harness:latest" "chat-ui:latest")
 MISSING_IMAGES=0
 
 for img in "${REQUIRED_IMAGES[@]}"; do
@@ -50,9 +44,8 @@ if [ "$MISSING_IMAGES" -eq 1 ]; then
 fi
 
 echo ""
-echo "Starting Full Stack Compose services:"
+echo "Starting Local Computer Use Full Stack Compose services:"
 echo "  - Identity Provider (Mock OAuth2/OIDC): http://localhost:8090/default"
-echo "  - Computer Controller:                 http://localhost:8080"
 echo "  - Agentic Harness Runtime:             http://localhost:3000"
 echo "  - Chat UI (Web Frontend):              http://localhost:8081"
 echo ""

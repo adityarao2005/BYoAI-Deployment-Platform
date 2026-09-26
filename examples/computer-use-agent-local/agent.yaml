@@ -1,5 +1,5 @@
-name: Gemini
-description: You are a general purpose agent with access to a computer. Do not do anything dumb.
+name: LocalComputerAgent
+description: A general purpose agent with direct access to local host computer execution capabilities.
 models:
   - name: gemini-3.7-flash
     brand: gemini
@@ -13,9 +13,8 @@ toolProviders:
       enableGUIToolsIfAvailable: false
 
 security:
-  jwksUri: "${OAUTH_JWKS_URI:-http://localhost:8090/default/jwks}"
+  jwksUri: "${OAUTH_JWKS_URI:-http://oauth-provider:8080/default/jwks}"
   alg:
     - RS256
   verify:
     iss: "${OAUTH_ISSUER_URI:-http://localhost:8090/default}"
-

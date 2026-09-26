@@ -7,122 +7,159 @@ import {
   fetchCurrentUser,
   fetchInteractions,
   createInteraction,
-  getInteraction,
   sendMessage,
   subscribeInteractionSSE,
 } from '@/lib/api';
 
 export function App() {
-  const [user, setUser] = useState<UserProfile>({
-    name: 'Dev User',
-    email: 'user@example.com',
-    isAuthenticated: true,
-  });
-
-  const [interactions, setInteractions] = useState<Interaction[]>([
-    {
-      id: 'int-demo-1',
-      title: 'Repository Architecture Analysis',
-      mode: 'interactive',
-      status: 'idle',
-      createdAt: new Date(Date.now() - 3600000).toISOString(),
-      updatedAt: new Date(Date.now() - 1800000).toISOString(),
-    },
-  ]);
-
-  const [selectedId, setSelectedId] = useState<string | null>('int-demo-1');
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [interactions, setInteractions] = useState<Interaction[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isAgentRunning, setIsAgentRunning] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [messages, setMessages] = useState<Record<string, ChatMessage[]>>({
-    'int-demo-1': [
-      {
-        id: 'm1',
-        role: 'user',
-        content: 'Hello! Can you help me inspect the architecture of the BYoAI deployment platform?',
-        timestamp: new Date(Date.now() - 1800000).toISOString(),
-      },
-      {
-        id: 'm2',
-        role: 'assistant',
-        content: 'I would be happy to help. The platform consists of the Agentic Harness, Computer Controller, API Gateway, Chat UI, and Shell CLI.',
-        timestamp: new Date(Date.now() - 1750000).toISOString(),
-      },
-    ],
-  });
-
+  const [messages, setMessages] = useState<Record<string, ChatMessage[]>>({});
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
-  // Load user profile on mount
+  // Check auth and load initial interactions list
   useEffect(() => {
-    fetchCurrentUser().then((u) => {
-      if (u) setUser(u);
-    });
-  }, []);
+    let isMounted = true;
 
-  // Load interactions from backend
-  useEffect(() => {
-    fetchInteractions().then((serverInteractions) => {
-      if (serverInteractions.length > 0) {
+    async function init() {
+      try {
+        const currentUser = await fetchCurrentUser();
+        if (!currentUser || !currentUser.isAuthenticated) {
+          // Unauthenticated -> redirect to sign in
+          window.location.href = '/auth/login';
+          return;
+        }
+
+        if (!isMounted) return;
+        setUser(currentUser);
+
+        const serverInteractions = await fetchInteractions();
+        if (!isMounted) return;
+
         setInteractions(serverInteractions);
-        setSelectedId(serverInteractions[0].id);
+        if (serverInteractions.length > 0) {
+          setSelectedId(serverInteractions[0].id);
+        } else {
+          setSelectedId(null);
+        }
+      } catch (err) {
+        console.error('Failed to initialize app', err);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
-    });
+    }
+
+    init();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  // Connect SSE for active interaction
+  // Subscribe to real-time SSE stream for active interaction
   useEffect(() => {
     if (unsubscribeRef.current) {
       unsubscribeRef.current();
       unsubscribeRef.current = null;
     }
 
-    if (!selectedId || selectedId.startsWith('int-demo-')) {
+    if (!selectedId) {
       return;
     }
 
-    // Fetch existing transcript
-    getInteraction(selectedId).then((detail) => {
-      if (detail && detail.transcript) {
-        const parsedMsgs: ChatMessage[] = detail.transcript
-          .filter((t) => t.role === 'user' || t.role === 'assistant')
-          .map((t, idx) => ({
-            id: `msg-${idx}-${Date.now()}`,
-            role: (t.role || 'assistant') as 'user' | 'assistant',
-            content: t.content || '',
-            timestamp: t.timestamp || new Date().toISOString(),
-          }));
-
-        setMessages((prev) => ({
-          ...prev,
-          [selectedId]: parsedMsgs,
-        }));
-      }
+    // Initialize messages bucket if needed
+    setMessages((prev) => {
+      if (prev[selectedId]) return prev;
+      return { ...prev, [selectedId]: [] };
     });
 
-    // Subscribe to live SSE events
+    // Pure SSE streaming from backend
     const unsub = subscribeInteractionSSE(
       selectedId,
       (event, data) => {
-        if (event === 'agent:message') {
-          const payload = data as { text?: string; content?: string };
-          const text = payload?.text || payload?.content || (typeof data === 'string' ? data : JSON.stringify(data));
-          const aiMsg: ChatMessage = {
-            id: `msg-ai-${Date.now()}`,
-            role: 'assistant',
-            content: text,
-            timestamp: new Date().toISOString(),
-          };
-          setMessages((prev) => ({
-            ...prev,
-            [selectedId]: [...(prev[selectedId] || []), aiMsg],
-          }));
+        if (event === 'user:message') {
+          const payload = data as { content?: string; text?: string };
+          const text = payload?.content || payload?.text || (typeof data === 'string' ? data : '');
+          if (text) {
+            setMessages((prev) => {
+              const current = prev[selectedId] || [];
+              const exists = current.some((m) => m.role === 'user' && m.content === text);
+              if (exists) return prev;
+              return {
+                ...prev,
+                [selectedId]: [
+                  ...current,
+                  {
+                    id: `msg-u-${Date.now()}-${Math.random()}`,
+                    role: 'user',
+                    content: text,
+                    timestamp: new Date().toISOString(),
+                  },
+                ],
+              };
+            });
+          }
+        } else if (event === 'agent:message') {
+          const payload = data as { content?: string; text?: string };
+          const text = payload?.content || payload?.text || (typeof data === 'string' ? data : '');
+          if (text) {
+            setMessages((prev) => {
+              const current = prev[selectedId] || [];
+              const exists = current.some((m) => m.role === 'assistant' && m.content === text);
+              if (exists) return prev;
+              return {
+                ...prev,
+                [selectedId]: [
+                  ...current,
+                  {
+                    id: `msg-ai-${Date.now()}-${Math.random()}`,
+                    role: 'assistant',
+                    content: text,
+                    timestamp: new Date().toISOString(),
+                  },
+                ],
+              };
+            });
+            setErrorMessage(null);
+          }
+          setIsAgentRunning(false);
+        } else if (event === 'agent:run') {
           setIsAgentRunning(true);
         } else if (event === 'agent:complete') {
           setIsAgentRunning(false);
+        } else if (event === 'agent:error') {
+          const payload = data as { error?: string; message?: string; context?: string };
+          const errorText =
+            payload?.error ||
+            payload?.message ||
+            (typeof data === 'string' && data !== '{}' ? data : '');
+
+          if (errorText) {
+            const errorMsg: ChatMessage = {
+              id: `msg-err-${Date.now()}`,
+              role: 'error',
+              isError: true,
+              content: errorText,
+              timestamp: new Date().toISOString(),
+            };
+            setMessages((prev) => ({
+              ...prev,
+              [selectedId]: [...(prev[selectedId] || []), errorMsg],
+            }));
+            setErrorMessage(errorText);
+          }
+          setIsAgentRunning(false);
         }
       },
-      () => {
-        setIsAgentRunning(false);
+      (err) => {
+        console.debug('SSE stream status event:', err);
       }
     );
 
@@ -139,14 +176,23 @@ export function App() {
   const handleSelectInteraction = useCallback((id: string) => {
     setSelectedId(id);
     setIsAgentRunning(false);
+    setErrorMessage(null);
   }, []);
 
   const handleNewChat = useCallback(async (mode: 'interactive' | 'non-interactive') => {
+    setErrorMessage(null);
     const created = await createInteraction(mode);
-    const newId = created?.id || `int-${Date.now()}`;
+    if (!created?.id) {
+      setErrorMessage('Failed to create new interaction session. Please try again.');
+      return;
+    }
+    const newId = created.id;
     const newInteraction: Interaction = {
       id: newId,
-      title: mode === 'interactive' ? `Interactive Session (${newId.slice(0, 8)})` : `Task (${newId.slice(0, 8)})`,
+      title:
+        mode === 'interactive'
+          ? `Interactive Session (${newId.slice(0, 8)})`
+          : `Task (${newId.slice(0, 8)})`,
       mode,
       status: 'idle',
       createdAt: new Date().toISOString(),
@@ -161,52 +207,68 @@ export function App() {
     }));
   }, []);
 
-  const handleSendMessage = useCallback(async (content: string) => {
-    if (!selectedId) return;
+  const handleSendMessage = useCallback(
+    async (content: string) => {
+      if (!selectedId) return;
 
-    const userMsg: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      role: 'user',
-      content,
-      timestamp: new Date().toISOString(),
-    };
+      setErrorMessage(null);
+      const userMsg: ChatMessage = {
+        id: `msg-${Date.now()}`,
+        role: 'user',
+        content,
+        timestamp: new Date().toISOString(),
+      };
 
-    setMessages((prev) => ({
-      ...prev,
-      [selectedId]: [...(prev[selectedId] || []), userMsg],
-    }));
+      // Optimistically show user message while backend emits it on SSE stream
+      setMessages((prev) => ({
+        ...prev,
+        [selectedId]: [...(prev[selectedId] || []), userMsg],
+      }));
 
-    setIsAgentRunning(true);
+      setIsAgentRunning(true);
 
-    if (!selectedId.startsWith('int-demo-')) {
-      const ok = await sendMessage(selectedId, content);
-      if (!ok) {
+      const result = await sendMessage(selectedId, content);
+      if (!result.success) {
         setIsAgentRunning(false);
-      }
-    } else {
-      // Demo response simulation for demo mode
-      setTimeout(() => {
-        const demoReply: ChatMessage = {
-          id: `msg-demo-${Date.now()}`,
-          role: 'assistant',
-          content: `Simulated response: Received "${content}". The agent is working correctly.`,
+        const errorText = result.error || 'Failed to send message to the agent harness.';
+        const errMsg: ChatMessage = {
+          id: `msg-err-${Date.now()}`,
+          role: 'error',
+          isError: true,
+          content: errorText,
           timestamp: new Date().toISOString(),
         };
         setMessages((prev) => ({
           ...prev,
-          [selectedId]: [...(prev[selectedId] || []), demoReply],
+          [selectedId]: [...(prev[selectedId] || []), errMsg],
         }));
-        setIsAgentRunning(false);
-      }, 1200);
-    }
-  }, [selectedId]);
+        setErrorMessage(errorText);
+      }
+    },
+    [selectedId]
+  );
+
+  const handleDismissError = useCallback(() => {
+    setErrorMessage(null);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen w-screen bg-slate-950 text-slate-100">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+          <span className="text-sm text-slate-400">Loading BYoAI Chat...</span>
+        </div>
+      </div>
+    );
+  }
 
   const currentInteraction = interactions.find((i) => i.id === selectedId) || null;
   const currentMessages = selectedId ? messages[selectedId] || [] : [];
 
   return (
     <div className="flex flex-col h-screen w-screen bg-slate-950 text-slate-100 overflow-hidden font-sans antialiased">
-      <Navbar user={user} />
+      <Navbar user={user || { name: '', email: '', isAuthenticated: false }} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
           interactions={interactions}
@@ -218,7 +280,10 @@ export function App() {
           interaction={currentInteraction}
           messages={currentMessages}
           isAgentRunning={isAgentRunning}
+          errorMessage={errorMessage}
+          onDismissError={handleDismissError}
           onSendMessage={handleSendMessage}
+          onNewChat={handleNewChat}
         />
       </div>
     </div>
