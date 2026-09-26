@@ -2,9 +2,10 @@
 
 This example demonstrates how to deploy and interact with a complete **Pet Store & Adoption Assistant** using the `@byo-ai-agent-platform` architecture.
 
-It supports two execution modes:
-1. **Full-Stack Docker Compose (Recommended)**: Orchestrates the Chat UI web frontend, Mock OAuth2/OIDC provider, Computer Controller daemon, and Agentic Harness runtime in isolated Docker containers.
-2. **Direct CLI / Local Harness**: Runs the agent harness locally with Bun, connecting to OpenAPI tools and progressive skills.
+It supports multiple interaction modes:
+1. **Docker Compose with Web Chat UI**: Orchestrates the Chat UI web frontend, Mock OAuth2/OIDC provider, Computer Controller daemon, and Agentic Harness runtime in isolated Docker containers.
+2. **Terminal Shell CLI with Docker Backend**: Runs the backend services (Mock OAuth2, Computer Controller, Agentic Harness) in Docker and connects the native local Shell CLI (`shell-cli`).
+3. **Direct CLI / Local Harness**: Runs the agent harness locally with Bun, connecting to OpenAPI tools and progressive skills.
 
 ---
 
@@ -13,6 +14,7 @@ It supports two execution modes:
 ```mermaid
 graph TD
     Browser["User Browser<br/>(http://localhost:8081)"]
+    Terminal["User Terminal<br/>(Local Shell CLI)"]
     
     subgraph "Docker Compose Network (byoai)"
         OAuth["OAuth / OIDC Provider<br/>(Mock OAuth2 Server)<br/>:8090 / :8080"]
@@ -22,15 +24,16 @@ graph TD
         ExtAPI["Swagger Petstore API<br/>(https://petstore.swagger.io)"]
     end
 
-    Browser -->|"1. Open & Click Login"| ChatUI
-    ChatUI -->|"2. Redirect to /authorize"| OAuth
-    Browser -->|"3. Submit credentials"| OAuth
-    OAuth -->|"4. Return Auth Code to /callback"| ChatUI
-    ChatUI -->|"5. Exchange Code for JWT Token"| OAuth
-    ChatUI -->|"6. Proxy SSE Chat + Bearer JWT"| Harness
-    Harness -->|"7. Verify JWT via JWKS (/default/jwks)"| OAuth
-    Harness -->|"8. Execute Sandbox Tasks (ConnectRPC)"| CC
-    Harness -->|"9. Query Pet Inventory / Orders"| ExtAPI
+    Browser -->|"Web: Open & Click Login"| ChatUI
+    ChatUI -->|"Web: OAuth Authorization Code Flow"| OAuth
+    ChatUI -->|"Web: Proxy SSE Chat + Bearer JWT"| Harness
+    
+    Terminal -->|"Shell: Interactive TUI / Batch Prompt"| Harness
+    Terminal -->|"Shell: OAuth PKCE Flow"| OAuth
+
+    Harness -->|"Verify JWT via JWKS (/default/jwks)"| OAuth
+    Harness -->|"Execute Sandbox Tasks (ConnectRPC)"| CC
+    Harness -->|"Query Pet Inventory / Orders"| ExtAPI
 ```
 
 ---
@@ -42,7 +45,7 @@ graph TD
 | **`oauth-provider`** | `ghcr.io/navikt/mock-oauth2-server:2.1.10` | `8090:8080` | Lightweight self-hosted OIDC / OAuth2 identity provider with login UI and JWKS token verification. |
 | **`computer-controller`** | `computer-controller:distroless` | `8080:8080` | Go daemon running sandboxed computer execution primitives (ConnectRPC). |
 | **`agentic-harness`** | `agentic-harness:latest` | `3000:3000` | Core agent runtime running Bun + TypeScript. Evaluates LLM instructions, OpenAPI tools, and skills. |
-| **`chat-ui`** | `chat-ui:latest` | `8081:8081` | Full-featured chat interface built with React 19, Tailwind CSS v4, and Go confidential OAuth client backend. |
+| **`chat-ui`** | `chat-ui:latest` | `8081:8081` | Full-featured chat interface built with React 19, Tailwind CSS v4, and Go confidential OAuth client backend (`compose.yaml`). |
 
 ---
 
@@ -54,10 +57,12 @@ examples/pet-adoption-agent/
 ├── agent.yaml                 # Agent configuration (models, skills repo, OpenAPI tools, computer tools)
 ├── computer.yaml              # Computer controller daemon configuration
 ├── compose.yaml               # Docker Compose orchestration file
+├── shell-config.yaml          # Shell CLI configuration
 ├── .env.example               # Environment variables template
 ├── .gitignore                 # Ignores generated zip and env files
 ├── create-skills-zip-file.sh  # Packaging script for the skills directory
-├── run-compose.sh             # Interactive Docker Compose launcher
+├── run-compose.sh             # Interactive Docker Compose launcher (Chat UI)
+├── run-shell.sh               # Interactive launcher for local Shell CLI + Docker backend
 ├── run-agent.sh               # Local standalone agent runner
 ├── skills/                    # Procedural skill definitions
 │   ├── pet-store-inventory/
@@ -98,7 +103,15 @@ Copy `.env.example` to `.env` and set your `GEMINI_API_KEY`:
 cp .env.example .env
 ```
 
-### 3. Start the Full Stack
+Ensure skills are packaged:
+
+```bash
+./create-skills-zip-file.sh
+```
+
+---
+
+### Option A: Web Chat UI Frontend
 
 Launch the stack using the orchestrator script:
 
@@ -109,18 +122,41 @@ Launch the stack using the orchestrator script:
 Or directly with Docker Compose:
 
 ```bash
-./create-skills-zip-file.sh
-docker compose up
+docker compose -f compose.yaml up
 ```
 
-### 4. Interact via Web UI
+Open [http://localhost:8081](http://localhost:8081) in your browser and click **Login**.
 
-1. Open your browser at [http://localhost:8081](http://localhost:8081).
-2. Click **Login** and authenticate through the mock identity provider (enter any username, e.g. `alice`).
-3. Try sample prompts:
-   - *"What available pets do we have in the inventory?"*
-   - *"Help me adopt pet ID 1 and place an order."*
-   - *"Check the current hostname, user ID, and directory contents using your computer tools."*
+---
+
+### Option B: Terminal Shell CLI
+
+Launch the stack using the interactive launcher (runs the backend services in Docker and connects the local Shell CLI):
+
+```bash
+./run-shell.sh
+```
+
+Or manually:
+
+```bash
+# 1. Start backend services in Docker
+docker compose -f compose.yaml up -d oauth-provider computer-controller agentic-harness
+
+# 2. Run the local Shell CLI binary
+../../apps/shell-cli/bin/byoai -config shell-config.yaml
+```
+
+When prompted for authorization, your default browser will open automatically (or visit the displayed URL) to authenticate.
+
+---
+
+### Sample Prompts
+
+Try asking the agent:
+- *"What available pets do we have in the inventory?"*
+- *"Help me adopt pet ID 1 and place an order."*
+- *"Check the current hostname, user ID, and directory contents using your computer tools."*
 
 ---
 
@@ -140,5 +176,5 @@ export GEMINI_API_KEY="your-gemini-api-key"
 To stop and remove running containers:
 
 ```bash
-docker compose down
+docker compose -f compose.yaml down
 ```

@@ -1,0 +1,12 @@
+# Shell CLI configuration for Pet Adoption Agent Docker environment
+agent_harness_uri: "http://localhost:3000"
+oauth_issuer_uri: "http://localhost:8090/default"
+oauth_client_id: "byoai-shell-cli"
+oauth_scopes:
+  - openid
+  - profile
+  - email
+  - agent:read
+  - agent:write
+default_mode: "interactive"
+theme: "dark"
