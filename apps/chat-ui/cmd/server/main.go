@@ -97,14 +97,12 @@ func main() {
 		r.Get("/me", auth.HandleMe(sessionStore))
 	})
 
-	// Protected API routes — proxy to harness
+	// Protected routes (require valid OAuth session)
 	r.Group(func(r chi.Router) {
 		r.Use(auth.RequireAuth(sessionStore))
 		r.Handle("/api/*", harnessProxy)
+		r.Handle("/*", spaHandler)
 	})
-
-	// Static SPA handler for all non-API and non-auth routes
-	r.Handle("/*", spaHandler)
 
 	srv := &http.Server{
 		Addr:         cfg.ListenAddr,

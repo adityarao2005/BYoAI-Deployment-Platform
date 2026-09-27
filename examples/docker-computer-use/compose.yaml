@@ -1,7 +1,7 @@
-# Docker Compose orchestration for BYoAI Full Stack deployment
+# Docker Compose orchestration for Docker Computer Use Agent Full Stack deployment
 # Includes:
 #   - Mock OAuth2/OIDC Provider (ghcr.io/navikt/mock-oauth2-server) on port 8090
-#   - Computer Controller daemon (computer-controller:distroless) on port 8080
+#   - Computer Controller daemon (computer-controller:distroless) with Docker socket on port 8080
 #   - Agentic Harness runtime (agentic-harness:latest) on port 3000
 #   - Chat UI web frontend (chat-ui:latest) on port 8081
 
@@ -11,7 +11,7 @@ services:
   # ---------------------------------------------------------------------------
   oauth-provider:
     image: ghcr.io/navikt/mock-oauth2-server:2.1.10
-    container_name: byoai-oauth-provider
+    container_name: byoai-docker-cu-oauth-provider
     ports:
       - "8090:8080"
     environment:
@@ -19,16 +19,17 @@ services:
       SERVER_HOSTNAME: 0.0.0.0
 
   # ---------------------------------------------------------------------------
-  # Computer Controller Daemon
+  # Computer Controller Daemon (Docker Mode)
   # ---------------------------------------------------------------------------
   computer-controller:
     image: computer-controller:distroless
-    container_name: byoai-computer-controller
+    container_name: byoai-docker-cu-computer-controller
     ports:
       - "8080:8080"
     environment:
       CC_API_KEY: ${CC_API_KEY:-dev-computer-key}
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./computer.yaml:/workspace/computer.yaml:ro
 
   # ---------------------------------------------------------------------------
@@ -36,18 +37,16 @@ services:
   # ---------------------------------------------------------------------------
   agentic-harness:
     image: agentic-harness:latest
-    container_name: byoai-agentic-harness
+    container_name: byoai-docker-cu-agentic-harness
     ports:
       - "3000:3000"
     environment:
       AGENT_CONFIG_PATH: /workspace/agent.yaml
-      AGENT_SKILLS_PATH: /workspace/skills.zip
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       CC_API_KEY: ${CC_API_KEY:-dev-computer-key}
       PORT: 3000
     volumes:
       - ./agent.yaml:/workspace/agent.yaml:ro
-      - ./skills.zip:/workspace/skills.zip:ro
     depends_on:
       - oauth-provider
       - computer-controller
@@ -57,7 +56,7 @@ services:
   # ---------------------------------------------------------------------------
   chat-ui:
     image: chat-ui:latest
-    container_name: byoai-chat-ui
+    container_name: byoai-docker-cu-chat-ui
     ports:
       - "8081:8081"
     environment:

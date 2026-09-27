@@ -7,6 +7,7 @@ export type AgentEventMap = {
     "agent:message": { agentId: string; content: string };
     "agent:run": { agentId: string };
     "agent:complete": { agentId: string };
+    "agent:error": { agentId: string; error: string; context?: string };
     "tool:call": {
         agentId: string;
         toolCallId: string;

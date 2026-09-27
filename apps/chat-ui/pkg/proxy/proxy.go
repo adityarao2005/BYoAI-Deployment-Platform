@@ -53,6 +53,13 @@ func NewHarnessProxy(cfg Config) (http.Handler, error) {
 			}
 		},
 		FlushInterval: -1, // Enable unbuffered streaming for SSE
+		ModifyResponse: func(resp *http.Response) error {
+			if strings.HasPrefix(resp.Header.Get("Content-Type"), "text/event-stream") {
+				resp.Header.Set("X-Accel-Buffering", "no")
+				resp.Header.Set("Cache-Control", "no-cache, no-transform")
+			}
+			return nil
+		},
 		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
 			slog.Error("Chat UI proxy upstream error",
 				"target", target.String(),
