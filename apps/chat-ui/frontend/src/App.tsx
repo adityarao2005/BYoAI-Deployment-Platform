@@ -15,9 +15,11 @@ export function App() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [isAgentRunning, setIsAgentRunning] = useState(false);
+  const [runningInteractions, setRunningInteractions] = useState<Record<string, boolean>>({});
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const isAgentRunning = Boolean(selectedId && runningInteractions[selectedId]);
 
   const [messages, setMessages] = useState<Record<string, ChatMessage[]>>({});
   const unsubscribeRef = useRef<(() => void) | null>(null);
@@ -84,17 +86,26 @@ export function App() {
     const unsub = subscribeInteractionSSE(
       selectedId,
       (event, data) => {
+        const payload = data as {
+          agentId?: string;
+          content?: string;
+          text?: string;
+          error?: string;
+          message?: string;
+          context?: string;
+        };
+        const eventAgentId = payload?.agentId || selectedId;
+
         if (event === 'user:message') {
-          const payload = data as { content?: string; text?: string };
           const text = payload?.content || payload?.text || (typeof data === 'string' ? data : '');
           if (text) {
             setMessages((prev) => {
-              const current = prev[selectedId] || [];
+              const current = prev[eventAgentId] || [];
               const exists = current.some((m) => m.role === 'user' && m.content === text);
               if (exists) return prev;
               return {
                 ...prev,
-                [selectedId]: [
+                [eventAgentId]: [
                   ...current,
                   {
                     id: `msg-u-${Date.now()}-${Math.random()}`,
@@ -107,16 +118,15 @@ export function App() {
             });
           }
         } else if (event === 'agent:message') {
-          const payload = data as { content?: string; text?: string };
           const text = payload?.content || payload?.text || (typeof data === 'string' ? data : '');
           if (text) {
             setMessages((prev) => {
-              const current = prev[selectedId] || [];
+              const current = prev[eventAgentId] || [];
               const exists = current.some((m) => m.role === 'assistant' && m.content === text);
               if (exists) return prev;
               return {
                 ...prev,
-                [selectedId]: [
+                [eventAgentId]: [
                   ...current,
                   {
                     id: `msg-ai-${Date.now()}-${Math.random()}`,
@@ -129,13 +139,22 @@ export function App() {
             });
             setErrorMessage(null);
           }
-          setIsAgentRunning(false);
         } else if (event === 'agent:run') {
-          setIsAgentRunning(true);
+          setRunningInteractions((prev) => ({
+            ...prev,
+            [eventAgentId]: true,
+          }));
         } else if (event === 'agent:complete') {
-          setIsAgentRunning(false);
+          setRunningInteractions((prev) => ({
+            ...prev,
+            [eventAgentId]: false,
+          }));
         } else if (event === 'agent:error') {
-          const payload = data as { error?: string; message?: string; context?: string };
+          setRunningInteractions((prev) => ({
+            ...prev,
+            [eventAgentId]: false,
+          }));
+
           const errorText =
             payload?.error ||
             payload?.message ||
@@ -151,11 +170,10 @@ export function App() {
             };
             setMessages((prev) => ({
               ...prev,
-              [selectedId]: [...(prev[selectedId] || []), errorMsg],
+              [eventAgentId]: [...(prev[eventAgentId] || []), errorMsg],
             }));
             setErrorMessage(errorText);
           }
-          setIsAgentRunning(false);
         }
       },
       (err) => {
@@ -175,7 +193,6 @@ export function App() {
 
   const handleSelectInteraction = useCallback((id: string) => {
     setSelectedId(id);
-    setIsAgentRunning(false);
     setErrorMessage(null);
   }, []);
 
@@ -201,6 +218,10 @@ export function App() {
 
     setInteractions((prev) => [newInteraction, ...prev]);
     setSelectedId(newId);
+    setRunningInteractions((prev) => ({
+      ...prev,
+      [newId]: false,
+    }));
     setMessages((prev) => ({
       ...prev,
       [newId]: [],
@@ -212,6 +233,11 @@ export function App() {
       if (!selectedId) return;
 
       setErrorMessage(null);
+      setRunningInteractions((prev) => ({
+        ...prev,
+        [selectedId]: true,
+      }));
+
       const userMsg: ChatMessage = {
         id: `msg-${Date.now()}`,
         role: 'user',
@@ -225,25 +251,27 @@ export function App() {
         [selectedId]: [...(prev[selectedId] || []), userMsg],
       }));
 
-      setIsAgentRunning(true);
-
-      const result = await sendMessage(selectedId, content);
-      if (!result.success) {
-        setIsAgentRunning(false);
-        const errorText = result.error || 'Failed to send message to the agent harness.';
-        const errMsg: ChatMessage = {
-          id: `msg-err-${Date.now()}`,
-          role: 'error',
-          isError: true,
-          content: errorText,
-          timestamp: new Date().toISOString(),
-        };
-        setMessages((prev) => ({
-          ...prev,
-          [selectedId]: [...(prev[selectedId] || []), errMsg],
-        }));
-        setErrorMessage(errorText);
-      }
+      sendMessage(selectedId, content).then((result) => {
+        if (!result.success) {
+          const errorText = result.error || 'Failed to send message to the agent harness.';
+          const errMsg: ChatMessage = {
+            id: `msg-err-${Date.now()}`,
+            role: 'error',
+            isError: true,
+            content: errorText,
+            timestamp: new Date().toISOString(),
+          };
+          setMessages((prev) => ({
+            ...prev,
+            [selectedId]: [...(prev[selectedId] || []), errMsg],
+          }));
+          setErrorMessage(errorText);
+          setRunningInteractions((prev) => ({
+            ...prev,
+            [selectedId]: false,
+          }));
+        }
+      });
     },
     [selectedId]
   );

@@ -8,9 +8,6 @@ includes:
   computer_controller:
     taskfile: apps/computer_controller/Taskfile.yml
     dir: apps/computer_controller
-  api_gateway:
-    taskfile: apps/api-gateway/Taskfile.yml
-    dir: apps/api-gateway
   chat_ui:
     taskfile: apps/chat-ui/Taskfile.yml
     dir: apps/chat-ui
@@ -24,7 +21,6 @@ tasks:
     deps:
       - agentic_harness:unit_test
       - computer_controller:test
-      - api_gateway:test
       - chat_ui:test
       - shell_cli:test
 
@@ -34,7 +30,6 @@ tasks:
       - unit_test
       - computer_controller:build
       - agentic_harness:build
-      - api_gateway:build
       - chat_ui:build
       - shell_cli:build
 
@@ -60,6 +55,5 @@ tasks:
       - build
       - computer_controller:build_container_images
       - agentic_harness:build_container_images
-      - api_gateway:build_container_images
       - chat_ui:build_container_images
       - shell_cli:build_container_images

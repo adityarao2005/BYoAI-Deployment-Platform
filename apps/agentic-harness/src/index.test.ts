@@ -269,3 +269,43 @@ describe("Harness API & Security Integration", () => {
         expect(secondMsgRes.status).toBe(400);
     });
 });
+
+describe("POST /interactions/:id non-blocking behavior", () => {
+    it("POST returns immediately without blocking on agent turn execution", async () => {
+        // Create an interaction
+        const createRes = await app.request("/interactions", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${user1Token}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ mode: "interactive" }),
+        });
+        expect(createRes.status).toBe(200);
+        const { id } = (await createRes.json()) as { id: string };
+
+        // Measure POST response time — it should return almost instantly,
+        // not block for the model execution time.
+        const start = performance.now();
+        const sendRes = await app.request(`/interactions/${id}`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${user1Token}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ message: "Hello agent" }),
+        });
+        const elapsed = performance.now() - start;
+
+        expect(sendRes.status).toBe(200);
+        const body = (await sendRes.json()) as { success: boolean };
+        expect(body.success).toBe(true);
+
+        // The POST should return in well under 1 second — the model execution
+        // happens asynchronously. If it blocked, it would take whatever the
+        // model.execute() mock takes (which for the SelfHostedModel mock would
+        // likely timeout or take seconds).
+        expect(elapsed).toBeLessThan(1000);
+    });
+});
+

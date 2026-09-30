@@ -105,11 +105,10 @@ func main() {
 	})
 
 	srv := &http.Server{
-		Addr:         cfg.ListenAddr,
-		Handler:      r,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 60 * time.Second,
-		IdleTimeout:  120 * time.Second,
+		Addr:              cfg.ListenAddr,
+		Handler:           r,
+		ReadHeaderTimeout: 15 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
 
 	sigChan := make(chan os.Signal, 1)

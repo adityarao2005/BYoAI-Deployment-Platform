@@ -12,6 +12,30 @@ import {
     JsonFileAgentMemoryManager,
 } from "./memory";
 import { InMemoryUserTokenManager } from "./auth";
+import type { AgentEventMap } from "./agent.messaging";
+
+/**
+ * Helper that returns a promise which resolves when the given event
+ * is emitted on the communicator. Used by tests to wait for the
+ * asynchronous fire-and-forget agent turn to complete.
+ */
+function waitForEvent<K extends keyof AgentEventMap>(
+    communicator: InMemoryAgentCommunicator,
+    event: K,
+    timeoutMs = 5000,
+): Promise<AgentEventMap[K]> {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(
+            () => reject(new Error(`Timed out waiting for '${event}' event`)),
+            timeoutMs,
+        );
+        const unsub = communicator.on(event, (payload) => {
+            clearTimeout(timer);
+            unsub();
+            resolve(payload);
+        });
+    });
+}
 
 describe("AgentMemory", () => {
     it("correctly computes pending tool calls and handles resolution", () => {
@@ -184,10 +208,15 @@ describe("AgentManager Integration", () => {
         const agent = await manager.createAgent("user-1");
         expect(agent.id).toBeDefined();
 
+        const completionPromise = waitForEvent(communicator, "agent:complete");
+
         await communicator.emit("user:message", {
             agentId: agent.id,
             content: "Hi there",
         });
+
+        // Wait for the async agent turn to complete
+        await completionPromise;
 
         // Verify events emitted
         const eventNames = communicator.emitted.map((e) => e.event);
@@ -292,10 +321,14 @@ describe("AgentManager Integration", () => {
         await manager.init();
 
         const agent = await manager.createAgent("user-1");
+        const completionPromise = waitForEvent(communicator, "agent:complete");
+
         await communicator.emit("user:message", {
             agentId: agent.id,
             content: "What is 5 + 7?",
         });
+
+        await completionPromise;
 
         expect(toolExecuted).toBe(true);
 
@@ -391,10 +424,14 @@ describe("AgentManager Integration", () => {
         await manager.init();
 
         const agent = await manager.createAgent("user-1");
+        const completionPromise = waitForEvent(communicator, "agent:complete");
+
         await communicator.emit("user:message", {
             agentId: agent.id,
             content: "Run the failing tool",
         });
+
+        await completionPromise;
 
         const toolCompleteEvent = communicator.emitted.find(
             (e) => e.event === "tool:complete",

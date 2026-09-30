@@ -5,12 +5,35 @@ import {
     type AgentObserver,
     InMemoryUserTokenManager,
 } from "@/agents";
+import type { AgentEventMap } from "@/agents/agent.messaging";
 import type { Model } from "@/models/models";
 import type { Tool, ToolProvider } from "@/tools/tools";
 import { InMemoryAgentCommunicator } from "../communication";
 import { InMemoryAgentMemoryManager } from "../memory";
 import { ConsoleAgentObserver } from "./console";
 import { LoggingAgentObserver } from "./logging";
+
+/**
+ * Helper that returns a promise which resolves when the given event
+ * is emitted on the communicator.
+ */
+function waitForEvent<K extends keyof AgentEventMap>(
+    communicator: InMemoryAgentCommunicator,
+    event: K,
+    timeoutMs = 5000,
+): Promise<AgentEventMap[K]> {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(
+            () => reject(new Error(`Timed out waiting for '${event}' event`)),
+            timeoutMs,
+        );
+        const unsub = communicator.on(event, (payload) => {
+            clearTimeout(timer);
+            unsub();
+            resolve(payload);
+        });
+    });
+}
 
 describe("AgentObserver", () => {
     it("LoggingAgentObserver outputs structured logs without throwing", () => {
@@ -149,11 +172,14 @@ describe("AgentObserver", () => {
         await manager.init();
 
         const agent = await manager.createAgent("user-1");
+        const completionPromise = waitForEvent(communicator, "agent:complete");
 
         await communicator.emit("user:message", {
             agentId: agent.id,
             content: "Run test tool",
         });
+
+        await completionPromise;
 
         expect(events).toEqual([
             "turn_start:Run test tool",
@@ -216,10 +242,14 @@ describe("AgentObserver", () => {
             completed = true;
         });
 
+        const completionPromise = waitForEvent(communicator, "agent:complete");
+
         await communicator.emit("user:message", {
             agentId: agent.id,
             content: "Trigger error",
         });
+
+        await completionPromise;
 
         expect(errorEvents).toEqual([
             "turn_end:Model API failure",
