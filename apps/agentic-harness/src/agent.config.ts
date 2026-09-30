@@ -33,6 +33,7 @@ export type AgentSecurity = z.infer<typeof AgentSecuritySchema>
 export const AgentConfigSchema = z.object({
     name: z.string().optional(),
     description: z.string().optional(),
+    rules: z.array(z.string()).default([]),
     models: z.array(ModelConfigSchema),
     skillRepositories: z.array(SkillRepositoryConfigSchema).default([]),
     toolProviders: z.array(ToolProviderConfigSchema).optional().default([]),

@@ -39,6 +39,7 @@ export type AgentConfiguration = {
     readonly computerProvider?: ComputerProvider;
     readonly observers?: AgentObserver[];
     readonly userTokenManager: UserTokenManager;
+    readonly rules?: string[];
 };
 
 /**
@@ -50,6 +51,7 @@ export function constructSystemPrompt(
     mode: InteractiveMode,
     skills: Skill[],
     skillsPath?: string,
+    rules: string[] = [],
 ): string {
     const formattedSkills = skills
         .map((skill) => {
@@ -68,6 +70,11 @@ export function constructSystemPrompt(
         ? `\n## Skills Directory:\n\nYour skills and asset files are located on the computer at: ${skillsPath}\n`
         : "";
 
+    const rulesSection =
+        rules && rules.length > 0
+            ? `\n## Rules & Compliance:\n\nYou MUST adhere to the following rules at all times:\n${rules.map((rule, idx) => `${idx + 1}. ${rule}`).join("\n")}\n`
+            : "";
+
     return `
 ## Who you are:
 
@@ -76,8 +83,7 @@ You are an AI Agent named ${name}.
 ## Your purpose:
 
 ${description}
-${skillsDirSection}
-
+${skillsDirSection}${rulesSection}
 ${mode === "non-interactive" ? "Note: You are being run in non-interactive mode, this means the user has asked you to complete some task and be done, do not ask a follow up question or request for any user input." : ""}
 
 ## Your skills:
@@ -108,6 +114,7 @@ export interface AgentSession {
     readonly skillRepositories?: SkillRepository[];
     readonly authContext?: AuthContext;
     readonly mode: InteractiveMode;
+    readonly rules?: string[];
 }
 
 import { AgentExecutor, type IAgentExecutor } from "./agent.executor";
@@ -244,6 +251,44 @@ export class AgentManager implements IAgentLifecycleManager {
                 },
             ),
         );
+
+        const handleAccept = async ({
+            agentId,
+            toolCallId,
+        }: { agentId: string; toolCallId: string }) => {
+            try {
+                await this.executor.acceptToolCall(agentId, toolCallId);
+            } catch (error) {
+                await this.executor.notifyError(
+                    agentId,
+                    error,
+                    "tool:accept",
+                );
+            }
+        };
+
+        const handleReject = async ({
+            agentId,
+            toolCallId,
+            reason,
+        }: { agentId: string; toolCallId: string; reason?: string }) => {
+            try {
+                await this.executor.rejectToolCall(
+                    agentId,
+                    toolCallId,
+                    reason,
+                );
+            } catch (error) {
+                await this.executor.notifyError(
+                    agentId,
+                    error,
+                    "tool:reject",
+                );
+            }
+        };
+
+        this.unsubscribers.push(comm.on("tool:accept", handleAccept));
+        this.unsubscribers.push(comm.on("tool:reject", handleReject));
     }
 
     destroy(): void {
@@ -352,6 +397,23 @@ export class AgentManager implements IAgentLifecycleManager {
             toolCallId,
             result,
         );
+    }
+
+    // Accept tool call
+    async acceptToolCall(
+        agentId: string,
+        toolCallId: string,
+    ): Promise<void> {
+        return this.executor.acceptToolCall(agentId, toolCallId);
+    }
+
+    // Reject tool call
+    async rejectToolCall(
+        agentId: string,
+        toolCallId: string,
+        reason?: string,
+    ): Promise<void> {
+        return this.executor.rejectToolCall(agentId, toolCallId, reason);
     }
 
     // Get agent by id

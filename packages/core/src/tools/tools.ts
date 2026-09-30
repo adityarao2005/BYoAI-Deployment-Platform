@@ -9,6 +9,7 @@ export interface Tool {
     name: string;
     description?: string;
     inputSchema: ToolObjectArgument; // JSON Schema for input validation
+    requires_user_input?: boolean;
 
     /**
      * Executes the tool call given input arguments and session context.

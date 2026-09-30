@@ -2,6 +2,10 @@ import z from "zod";
 
 export const BaseToolProviderConfigSchema = z.object({
     name: z.string(),
+    allowedTools: z.array(z.string()).optional(),
+    disallowedTools: z.array(z.string()).optional(),
+    rejectedTools: z.array(z.string()).optional(),
+    userInputTools: z.array(z.string()).optional(),
 });
 
 // OpenAPI tool provider
@@ -164,6 +168,10 @@ export const ComputerUseToolProviderConfigSchema = z.object({
         LocalComputerUseToolProviderConfigSchema,
         RemoteComputerUseToolProviderConfigSchema,
     ]),
+    allowedTools: z.array(z.string()).optional(),
+    disallowedTools: z.array(z.string()).optional(),
+    rejectedTools: z.array(z.string()).optional(),
+    userInputTools: z.array(z.string()).optional(),
 });
 
 export type ComputerUseToolProviderConfig = z.infer<
