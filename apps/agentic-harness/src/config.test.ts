@@ -142,4 +142,56 @@ security:
         const config = await loadConfig(configPath);
         expect(config.models[0]?.properties.apiKey).toBe("fallback-key");
     });
+
+    it("parses rules from agent.yaml and resolves file imports", async () => {
+        tempConfigDir = await mkdtemp(join(tmpdir(), "agent-rules-test-"));
+        const rulesFilePath = join(tempConfigDir, "rules.txt");
+        await writeFile(rulesFilePath, "Imported file rule 1\n# Comment to ignore\nImported file rule 2\n", "utf8");
+
+        const configPath = join(tempConfigDir, "agent.yaml");
+        await writeFile(
+            configPath,
+            `
+models:
+  - name: test-model
+    brand: gemini
+    properties:
+      apiKey: "test-key"
+rules:
+  - "Inline rule 1"
+  - file: "${rulesFilePath}"
+security:
+  jwksUri: "https://example.com"
+  alg: ["RS256"]
+`,
+            "utf8",
+        );
+
+        const config = await loadConfig(configPath);
+        expect(config.rules).toEqual(["Inline rule 1", { file: rulesFilePath }]);
+
+        const { resolveRules } = await import("./bootstrap");
+        const resolved = await resolveRules(config.rules ?? [], tempConfigDir);
+        expect(resolved).toEqual([
+            "Inline rule 1",
+            "Imported file rule 1",
+            "Imported file rule 2",
+        ]);
+    });
+
+    it("successfully loads and parses all repository example agent.yaml files", async () => {
+        const exampleConfigs = [
+            join(__dirname, "../../../examples/compliance-governed-agent/agent.yaml"),
+            join(__dirname, "../../../examples/pet-adoption-agent/agent.yaml"),
+            join(__dirname, "../../../examples/computer-use-agent-local/agent.yaml"),
+            join(__dirname, "../../../examples/docker-computer-use/agent.yaml"),
+            join(__dirname, "../../../examples/mcp-agent/agent.yaml"),
+        ];
+
+        for (const configPath of exampleConfigs) {
+            const config = await loadConfig(configPath);
+            expect(config.models.length).toBeGreaterThan(0);
+            expect(config.toolProviders.length).toBeGreaterThan(0);
+        }
+    });
 });

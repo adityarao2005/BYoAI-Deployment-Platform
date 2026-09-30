@@ -1,0 +1,102 @@
+name: ComplianceGovernedAgent
+description: An enterprise assistant demonstrating compliance rules, tool filtering, human-in-the-loop approvals, and strict computer use permissions.
+
+models:
+  - name: gemini-3.7-flash
+    brand: gemini
+    properties:
+      apiKey: "${GEMINI_API_KEY}"
+
+# Global Agent Rules & Compliance Guidelines
+# Combines inline text rules and external policy files (rules.txt)
+rules:
+  - "Act professionally and explain your actions clearly."
+  - "Never bypass user confirmation requests for state-mutating actions."
+  - file: ./rules.txt
+
+toolProviders:
+  # 1. OpenAPI Tool Provider with tool filtering and user confirmation requirements
+  - name: petstore
+    type: openapi
+    specUrl: "https://petstore.swagger.io/v2/swagger.json"
+    securityVariables:
+      type: apiKey
+      name: api_key
+      key: "${PETSTORE_API_KEY:-special-key}"
+      location: header
+    # Whitelist allowed tools
+    allowedTools:
+      - "getPetById"
+      - "findPetsByStatus"
+      - "addPet"
+      - "updatePet"
+      - "getOrderById"
+      - "placeOrder"
+    # Blacklist dangerous or administrative tools completely
+    disallowedTools:
+      - "*delete*"
+      - "*Delete*"
+    # Operations that modify state require human confirmation in interactive mode
+    userInputTools:
+      - "addPet"
+      - "updatePet*"
+      - "placeOrder"
+
+  # 2. Computer Use Tool Provider with fine-grained security rules
+  - type: computer
+    provider:
+      type: local
+      enableGUIToolsIfAvailable: false
+    # Tool-level filtering
+    allowedTools:
+      - "read_file"
+      - "write_file"
+      - "execute"
+      - "list_directory"
+    # Disallow identity inspection
+    disallowedTools:
+      - "get_user_id"
+      - "get_group_id"
+    # Destructive/writing operations require explicit user approval
+    userInputTools:
+      - "write_file"
+      - "execute"
+    # Sandbox filesystem & command execution permissions
+    permissions:
+      read:
+        allowed:
+          - "/workspace"
+          - "/tmp/*"
+          - "./*"
+        disallowed:
+          - "/etc/*"
+          - "/root/.ssh/*"
+          - "/home/*/.ssh/*"
+          - "*.env"
+          - "*.key"
+      write:
+        allowed:
+          - "/workspace/output/*"
+          - "/tmp/*"
+        disallowed:
+          - "/workspace/secret.key"
+          - "*.env"
+      execute:
+        allowed:
+          - "find *"
+          - "ls *"
+          - "cat *"
+          - "git status"
+          - "echo *"
+        disallowed:
+          - "bash"
+          - "sh"
+          - "git commit*"
+          - "rm -rf *"
+
+security:
+  jwksUri: "${OAUTH_JWKS_URI:-http://oauth-provider:8080/default/jwks}"
+  alg:
+    - RS256
+  verify:
+    iss: "${OAUTH_ISSUER_URI:-http://localhost:8090/default}"

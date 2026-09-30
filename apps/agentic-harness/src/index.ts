@@ -135,6 +135,45 @@ app.post(
     },
 );
 
+// accept or reject a pending tool call requiring user approval
+app.post(
+    "/interactions/:id/tools/:toolCallId/decision",
+    zv(
+        "json",
+        z.object({
+            action: z.enum(["accept", "reject"]),
+            reason: z.string().optional(),
+        }),
+    ),
+    async (c) => {
+        const { id, toolCallId } = c.req.param();
+        const sub = c.get("jwtPayload").sub;
+        const interaction = await manager.getAgentInteractionByUser(id, sub);
+
+        if (!interaction) {
+            throw new HTTPException(404, {
+                message: `Agent interaction ${id} does not exist.`,
+            });
+        }
+
+        const body = await c.req.valid("json");
+        if (body.action === "accept") {
+            await manager.communicator.emit("tool:accept", {
+                agentId: id,
+                toolCallId,
+            });
+        } else {
+            await manager.communicator.emit("tool:reject", {
+                agentId: id,
+                toolCallId,
+                reason: body.reason,
+            });
+        }
+
+        return c.json({ success: true, action: body.action });
+    },
+);
+
 // design for SSE
 // we create a map of readable streams (by id)
 // then we first drain all the events then we pipe the
@@ -191,6 +230,23 @@ app.get("/interactions/:id/sse", async (c) => {
                         args: entry.arguments,
                     }),
                 });
+
+                if (entry.tool.requires_user_input) {
+                    const isAnswered = interaction.transcript.some(
+                        (t) => t.type === "tool_response" && t.id === entry.id,
+                    );
+                    if (!isAnswered) {
+                        await stream.writeSSE({
+                            event: "tool:approval_required",
+                            data: JSON.stringify({
+                                agentId: id,
+                                toolCallId: entry.id,
+                                tool: entry.tool.name,
+                                args: entry.arguments,
+                            }),
+                        });
+                    }
+                }
             } else if (entry.type === "tool_response") {
                 await stream.writeSSE({
                     event: "tool:complete",
@@ -227,6 +283,7 @@ app.get("/interactions/:id/sse", async (c) => {
             "agent:error",
             "tool:call",
             "tool:complete",
+            "tool:approval_required",
         ];
 
         const unsubscribers = eventNames.map((eventName) =>

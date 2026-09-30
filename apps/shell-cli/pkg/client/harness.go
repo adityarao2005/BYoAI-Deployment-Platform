@@ -229,3 +229,39 @@ func (c *HarnessClient) ListInteractions(ctx context.Context) ([]InteractionSumm
 
 	return list, nil
 }
+
+// SendToolDecision sends an approval or rejection for a pending tool call requiring confirmation.
+func (c *HarnessClient) SendToolDecision(ctx context.Context, interactionID, toolCallID, action string, reason ...string) error {
+	token, err := c.getValidToken(ctx)
+	if err != nil {
+		return err
+	}
+
+	payload := map[string]string{"action": action}
+	if len(reason) > 0 && reason[0] != "" {
+		payload["reason"] = reason[0]
+	}
+
+	reqBody, _ := json.Marshal(payload)
+	url := fmt.Sprintf("%s/interactions/%s/tools/%s/decision", c.baseURL, interactionID, toolCallID)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(reqBody))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("send tool decision request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("send tool decision failed (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	return nil
+}

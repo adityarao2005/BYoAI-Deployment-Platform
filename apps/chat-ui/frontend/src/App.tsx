@@ -8,6 +8,7 @@ import {
   fetchInteractions,
   createInteraction,
   sendMessage,
+  sendToolDecision,
   subscribeInteractionSSE,
 } from '@/lib/api';
 
@@ -149,6 +150,122 @@ export function App() {
             ...prev,
             [eventAgentId]: false,
           }));
+        } else if (event === 'tool:call') {
+          const tcPayload = data as {
+            agentId?: string;
+            toolCallId?: string;
+            tool?: string;
+            args?: Record<string, unknown>;
+          };
+          const toolCallId = tcPayload?.toolCallId || `tc-${Date.now()}`;
+          const toolName = tcPayload?.tool || 'tool';
+          const args = tcPayload?.args;
+
+          setMessages((prev) => {
+            const current = prev[eventAgentId] || [];
+            const exists = current.some((m) => m.toolCall?.id === toolCallId);
+            if (exists) return prev;
+            return {
+              ...prev,
+              [eventAgentId]: [
+                ...current,
+                {
+                  id: `msg-tool-${toolCallId}`,
+                  role: 'tool',
+                  content: `Tool: ${toolName}`,
+                  timestamp: new Date().toISOString(),
+                  toolCall: {
+                    id: toolCallId,
+                    name: toolName,
+                    args,
+                    decision: 'pending',
+                  },
+                },
+              ],
+            };
+          });
+        } else if (event === 'tool:approval_required') {
+          const reqPayload = data as {
+            agentId?: string;
+            toolCallId?: string;
+            tool?: string;
+            args?: Record<string, unknown>;
+          };
+          const toolCallId = reqPayload?.toolCallId;
+          const toolName = reqPayload?.tool || 'tool';
+          const args = reqPayload?.args;
+
+          setMessages((prev) => {
+            const current = prev[eventAgentId] || [];
+            const idx = current.findIndex((m) => m.toolCall?.id === toolCallId);
+            if (idx !== -1) {
+              const updated = [...current];
+              const existingCall = updated[idx].toolCall!;
+              updated[idx] = {
+                ...updated[idx],
+                toolCall: {
+                  ...existingCall,
+                  requires_user_input: true,
+                  decision: existingCall.decision ?? 'pending',
+                },
+              };
+              return { ...prev, [eventAgentId]: updated };
+            }
+
+            return {
+              ...prev,
+              [eventAgentId]: [
+                ...current,
+                {
+                  id: `msg-tool-${toolCallId}`,
+                  role: 'tool',
+                  content: `Approval Required: ${toolName}`,
+                  timestamp: new Date().toISOString(),
+                  toolCall: {
+                    id: toolCallId,
+                    name: toolName,
+                    args,
+                    requires_user_input: true,
+                    decision: 'pending',
+                  },
+                },
+              ],
+            };
+          });
+        } else if (event === 'tool:complete') {
+          const compPayload = data as {
+            agentId?: string;
+            toolCallId?: string;
+            tool?: string;
+            result?: unknown;
+          };
+          const toolCallId = compPayload?.toolCallId;
+          const result = compPayload?.result;
+
+          setMessages((prev) => {
+            const current = prev[eventAgentId] || [];
+            const idx = current.findIndex((m) => m.toolCall?.id === toolCallId);
+            if (idx !== -1) {
+              const updated = [...current];
+              const existingCall = updated[idx].toolCall!;
+              const isRejected = Boolean(
+                result &&
+                  typeof result === 'object' &&
+                  'rejected' in result &&
+                  (result as { rejected: boolean }).rejected
+              );
+              updated[idx] = {
+                ...updated[idx],
+                toolCall: {
+                  ...existingCall,
+                  result,
+                  decision: isRejected ? 'rejected' : 'accepted',
+                },
+              };
+              return { ...prev, [eventAgentId]: updated };
+            }
+            return prev;
+          });
         } else if (event === 'agent:error') {
           setRunningInteractions((prev) => ({
             ...prev,
@@ -280,6 +397,37 @@ export function App() {
     setErrorMessage(null);
   }, []);
 
+  const handleToolDecision = useCallback(
+    async (toolCallId: string, action: 'accept' | 'reject') => {
+      if (!selectedId) return;
+
+      // Optimistically update tool call status in messages
+      setMessages((prev) => {
+        const current = prev[selectedId] || [];
+        const idx = current.findIndex((m) => m.toolCall?.id === toolCallId);
+        if (idx !== -1) {
+          const updated = [...current];
+          const existingCall = updated[idx].toolCall!;
+          updated[idx] = {
+            ...updated[idx],
+            toolCall: {
+              ...existingCall,
+              decision: action === 'accept' ? 'accepted' : 'rejected',
+            },
+          };
+          return { ...prev, [selectedId]: updated };
+        }
+        return prev;
+      });
+
+      const res = await sendToolDecision(selectedId, toolCallId, action);
+      if (!res.success && res.error) {
+        setErrorMessage(res.error);
+      }
+    },
+    [selectedId]
+  );
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen w-screen bg-slate-950 text-slate-100">
@@ -311,6 +459,7 @@ export function App() {
           errorMessage={errorMessage}
           onDismissError={handleDismissError}
           onSendMessage={handleSendMessage}
+          onToolDecision={handleToolDecision}
           onNewChat={handleNewChat}
         />
       </div>

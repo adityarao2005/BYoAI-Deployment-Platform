@@ -7,15 +7,21 @@ import {
     type Tool,
     type ToolProvider,
 } from "@/tools";
+import type { ComputerPermissions } from "./permissions";
 
 // abstract computer use tool provider
 export class ComputerUseToolProvider implements ToolProvider {
     // hash based on agent name
     private cachedTools: Map<string, Tool[]> = new Map();
     private provider: ComputerProvider;
+    private permissions?: ComputerPermissions;
 
-    constructor(provider: ComputerProvider) {
+    constructor(
+        provider: ComputerProvider,
+        permissions?: ComputerPermissions,
+    ) {
         this.provider = provider;
+        this.permissions = permissions;
     }
 
     async getToolByName(
@@ -52,13 +58,19 @@ export class ComputerUseToolProvider implements ToolProvider {
 
             // headless tools
             case ComputerType.HEADLESS:
-                tools = createHeadlessTools(payload.computer);
+                tools = createHeadlessTools(
+                    payload.computer,
+                    this.permissions,
+                );
                 break;
 
             // graphical toools
             case ComputerType.GRAPHICAL:
                 tools = [
-                    ...createHeadlessTools(payload.computer),
+                    ...createHeadlessTools(
+                        payload.computer,
+                        this.permissions,
+                    ),
                     ...createGraphicalTools(payload.computer),
                 ];
                 break;

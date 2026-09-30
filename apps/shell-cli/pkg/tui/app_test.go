@@ -537,3 +537,117 @@ func TestAppModel_FullSSEIntegration(t *testing.T) {
 		t.Error("Expected system completion message")
 	}
 }
+
+func TestAppModel_HandleSSEEvent_ToolApprovalRequired(t *testing.T) {
+	harnessClient := newTestHarnessClient(t, "http://fake:9999")
+	model := NewAppModel(harnessClient, "interactive", "")
+	model.interactionID = "test-id"
+
+	evt := client.SSEEvent{
+		Event: client.EventToolApprovalReq,
+		Data:  `{"agentId":"test-id","toolCallId":"tc-123","tool":"dangerous_tool","args":{"cmd":"rm -rf"}}`,
+	}
+
+	updated := model.handleSSEEvent(evt)
+
+	if updated.pendingApproval == nil {
+		t.Fatal("Expected pendingApproval to be set")
+	}
+	if updated.pendingApproval.ToolCallID != "tc-123" {
+		t.Errorf("Expected toolCallId tc-123, got %s", updated.pendingApproval.ToolCallID)
+	}
+	if updated.pendingApproval.Tool != "dangerous_tool" {
+		t.Errorf("Expected tool dangerous_tool, got %s", updated.pendingApproval.Tool)
+	}
+	if len(updated.messages) != 1 {
+		t.Fatalf("Expected 1 message, got %d", len(updated.messages))
+	}
+	if !strings.Contains(updated.messages[0].Content, "dangerous_tool") {
+		t.Errorf("Expected dangerous_tool in content: %s", updated.messages[0].Content)
+	}
+}
+
+func TestAppModel_Update_KeyEnter_ToolApprovalAccept(t *testing.T) {
+	harnessClient := newTestHarnessClient(t, "http://fake:9999")
+	model := NewAppModel(harnessClient, "interactive", "")
+	model.interactionID = "test-id"
+	model.isAgentRunning = true
+	model.pendingApproval = &PendingToolApproval{
+		ToolCallID: "tc-123",
+		Tool:       "dangerous_tool",
+		Args:       map[string]any{"cmd": "echo hi"},
+	}
+
+	model.input.SetValue("yes")
+	updated, cmd := model.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m := updated.(AppModel)
+
+	if cmd == nil {
+		t.Fatal("Expected cmd to be returned for sendToolDecisionCmd")
+	}
+	if m.pendingApproval != nil {
+		t.Error("Expected pendingApproval to be cleared after decision")
+	}
+	found := false
+	for _, msg := range m.messages {
+		if strings.Contains(msg.Content, "Accepted tool call: dangerous_tool") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("Expected accepted tool call message in messages")
+	}
+}
+
+func TestAppModel_Update_KeyEnter_ToolApprovalReject(t *testing.T) {
+	harnessClient := newTestHarnessClient(t, "http://fake:9999")
+	model := NewAppModel(harnessClient, "interactive", "")
+	model.interactionID = "test-id"
+	model.isAgentRunning = true
+	model.pendingApproval = &PendingToolApproval{
+		ToolCallID: "tc-123",
+		Tool:       "dangerous_tool",
+		Args:       map[string]any{"cmd": "echo hi"},
+	}
+
+	model.input.SetValue("no")
+	updated, cmd := model.Update(tea.KeyMsg{Type: tea.KeyEnter})
+	m := updated.(AppModel)
+
+	if cmd == nil {
+		t.Fatal("Expected cmd to be returned for sendToolDecisionCmd")
+	}
+	if m.pendingApproval != nil {
+		t.Error("Expected pendingApproval to be cleared after decision")
+	}
+	found := false
+	for _, msg := range m.messages {
+		if strings.Contains(msg.Content, "Rejected tool call: dangerous_tool") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("Expected rejected tool call message in messages")
+	}
+}
+
+func TestAppModel_HandleSSEEvent_ToolCompleteClearsApproval(t *testing.T) {
+	harnessClient := newTestHarnessClient(t, "http://fake:9999")
+	model := NewAppModel(harnessClient, "interactive", "")
+	model.pendingApproval = &PendingToolApproval{
+		ToolCallID: "tc-123",
+		Tool:       "dangerous_tool",
+	}
+
+	evt := client.SSEEvent{
+		Event: client.EventToolComplete,
+		Data:  `{"agentId":"test-id","toolCallId":"tc-123","tool":"dangerous_tool","result":{"success":true}}`,
+	}
+
+	updated := model.handleSSEEvent(evt)
+	if updated.pendingApproval != nil {
+		t.Error("Expected pendingApproval to be cleared after tool:complete for matching toolCallId")
+	}
+}

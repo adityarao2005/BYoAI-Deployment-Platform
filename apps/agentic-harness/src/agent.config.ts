@@ -27,16 +27,26 @@ export const AgentSecuritySchema = z.object({
 
 export type AgentSecurity = z.infer<typeof AgentSecuritySchema> 
 
+export const RuleEntrySchema = z.union([
+    z.string(),
+    z.object({
+        file: z.string(),
+    }),
+]);
+
+export type RuleEntry = z.infer<typeof RuleEntrySchema>;
+
 /**
  * Zod schema defining the agent configuration file structure (`agent.yaml`).
  */
 export const AgentConfigSchema = z.object({
     name: z.string().optional(),
     description: z.string().optional(),
+    rules: z.array(RuleEntrySchema).default([]).optional(),
     models: z.array(ModelConfigSchema),
     skillRepositories: z.array(SkillRepositoryConfigSchema).default([]),
     toolProviders: z.array(ToolProviderConfigSchema).optional().default([]),
-    security: AgentSecuritySchema
+    security: AgentSecuritySchema,
 });
 
 /**

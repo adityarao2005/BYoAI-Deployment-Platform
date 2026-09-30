@@ -309,3 +309,76 @@ describe("POST /interactions/:id non-blocking behavior", () => {
     });
 });
 
+describe("POST /interactions/:id/tools/:toolCallId/decision", () => {
+    it("handles tool decision accept and reject requests", async () => {
+        // Create an interaction
+        const createRes = await app.request("/interactions", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${user1Token}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ mode: "interactive" }),
+        });
+        expect(createRes.status).toBe(200);
+        const { id } = (await createRes.json()) as { id: string };
+
+        // Decision accept
+        const acceptRes = await app.request(
+            `/interactions/${id}/tools/call-123/decision`,
+            {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${user1Token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ action: "accept" }),
+            },
+        );
+        expect(acceptRes.status).toBe(200);
+        expect(await acceptRes.json()).toEqual({ success: true, action: "accept" });
+
+        // Decision reject
+        const rejectRes = await app.request(
+            `/interactions/${id}/tools/call-123/decision`,
+            {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${user1Token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ action: "reject", reason: "Denied by user" }),
+            },
+        );
+        expect(rejectRes.status).toBe(200);
+        expect(await rejectRes.json()).toEqual({ success: true, action: "reject" });
+
+        // Invalid decision action returns 400
+        const invalidRes = await app.request(
+            `/interactions/${id}/tools/call-123/decision`,
+            {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${user1Token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ action: "invalid_action" }),
+            },
+        );
+        expect(invalidRes.status).toBe(400);
+
+        // Non-existent interaction returns 404
+        const notFoundRes = await app.request(
+            `/interactions/non-existent-id/tools/call-123/decision`,
+            {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${user1Token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ action: "accept" }),
+            },
+        );
+        expect(notFoundRes.status).toBe(404);
+    });
+});

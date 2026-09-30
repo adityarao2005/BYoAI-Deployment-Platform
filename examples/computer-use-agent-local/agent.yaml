@@ -6,11 +6,29 @@ models:
     properties:
       apiKey: "${GEMINI_API_KEY}"
 
+rules:
+  - "Do not read or modify sensitive host files in /etc or user ssh keys."
+  - "Refrain from spawning raw interactive shells."
+
 toolProviders:
   - type: computer
     provider:
       type: local
       enableGUIToolsIfAvailable: false
+    permissions:
+      read:
+        disallowed:
+          - "/etc/*"
+          - "/root/.ssh/*"
+          - "/home/*/.ssh/*"
+      write:
+        disallowed:
+          - "/etc/*"
+      execute:
+        disallowed:
+          - "bash"
+          - "sh"
+          - "rm -rf *"
 
 security:
   jwksUri: "${OAUTH_JWKS_URI:-http://oauth-provider:8080/default/jwks}"

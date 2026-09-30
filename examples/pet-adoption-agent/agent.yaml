@@ -6,6 +6,10 @@ models:
     properties:
       apiKey: "${GEMINI_API_KEY}"
 
+rules:
+  - "Always verify customer requirements before placing pet adoption orders."
+  - "Do not delete pet records or existing orders without explicit user confirmation."
+
 skillRepositories:
   - type: zip
     location: "${AGENT_SKILLS_PATH:-/workspace/skills.zip}"
@@ -20,6 +24,9 @@ toolProviders:
       name: api_key
       key: "special-key"
       location: header
+    userInputTools:
+      - "deletePet"
+      - "deleteOrder"
 
   - type: computer
     provider:
@@ -29,6 +36,23 @@ toolProviders:
       enableGUIToolsIfAvailable: false
       security:
         bearerToken: "${CC_API_KEY:-dev-computer-key}"
+    permissions:
+      read:
+        allowed:
+          - "/workspace"
+          - "/tmp/*"
+        disallowed:
+          - "/etc/shadow"
+          - "/root/*"
+      write:
+        allowed:
+          - "/workspace/*"
+          - "/tmp/*"
+      execute:
+        disallowed:
+          - "bash"
+          - "sh"
+          - "rm -rf *"
 
 security:
   jwksUri: "${OAUTH_JWKS_URI:-http://oauth-provider:8080/default/jwks}"

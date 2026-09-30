@@ -1,0 +1,62 @@
+name: McpAgent
+description: An intelligent assistant demonstrating Model Context Protocol (MCP) tool integration, resource inspection, and human-in-the-loop approvals.
+
+models:
+  - name: gemini-3.7-flash
+    brand: gemini
+    properties:
+      apiKey: "${GEMINI_API_KEY}"
+
+# Global Rules & Compliance Guidelines
+# Combines inline rules with external policy rules.txt
+rules:
+  - "Always format calculation steps and final answers clearly."
+  - "Before writing or modifying memory notes, confirm the key and value with the user."
+  - file: ./rules.txt
+
+toolProviders:
+  # 1. MCP Stdio Transport: Spawns the local MCP server as a subprocess
+  - name: system_mcp
+    type: mcp
+    transport: stdio
+    command: bun
+    args:
+      - "run"
+      - "${MCP_SERVER_SCRIPT:-./examples/mcp-agent/server.ts}"
+    # Tool governance applied to MCP tools
+    allowedTools:
+      - "system_mcp_tools_calculate"
+      - "system_mcp_tools_fetch_system_status"
+      - "system_mcp_tools_store_note"
+      - "system_mcp_read_resource"
+      - "system_mcp_list_resources"
+    userInputTools:
+      - "system_mcp_tools_store_note"
+
+  # 2. Example: Remote MCP Server over HTTP (e.g. enterprise tools, web scrapers)
+  # - name: remote_mcp
+  #   type: mcp
+  #   transport: http
+  #   url: "https://mcp.internal.acme.corp/sse"
+  #   security:
+  #     auth:
+  #       type: bearer
+  #       token: "${REMOTE_MCP_TOKEN}"
+  #     headers:
+  #       X-Environment: "production"
+
+  # 3. Example: Containerized MCP Server inside Computer Controller Sandbox
+  # - name: sandbox_sqlite
+  #   type: mcp
+  #   transport: computer
+  #   command: "uvx"
+  #   args: ["mcp-server-sqlite", "--db-path", "/workspace/app.db"]
+
+# Security & Authentication configuration
+security:
+  jwksUri: "${OAUTH_JWKS_URI:-http://oauth-provider:8080/default/jwks}"
+  alg:
+    - RS256
+  verify:
+    iss: "${OAUTH_ISSUER_URI:-http://localhost:8090/default}"
+

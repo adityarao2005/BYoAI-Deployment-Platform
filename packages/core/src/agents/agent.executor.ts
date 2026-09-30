@@ -27,11 +27,18 @@ export interface IAgentExecutor {
         toolName: string,
         toolCallId: string,
         result: any,
+        skipRun?: boolean,
     ): Promise<void>;
     createAgentSession(agentId: string): Promise<{
         session: AgentSession;
         tools: Tool[];
     }>;
+    acceptToolCall(agentId: string, toolCallId: string): Promise<void>;
+    rejectToolCall(
+        agentId: string,
+        toolCallId: string,
+        reason?: string,
+    ): Promise<void>;
 }
 
 /**
@@ -124,6 +131,7 @@ export class AgentExecutor implements IAgentExecutor {
                 skillRepositories: this.configuration.skillRepository,
                 authContext,
                 mode: memory.mode ?? "interactive",
+                rules: this.configuration.rules ?? [],
             },
             tools: this.tools ?? [],
         };
@@ -163,16 +171,22 @@ export class AgentExecutor implements IAgentExecutor {
             session.mode,
             this.skills,
             memory.skillsPath,
+            this.configuration.rules ?? [],
         );
 
         await this.notifyObservers("onModelStart", agentId, prompt);
+
+        const toolsForModel =
+            session.mode === "non-interactive"
+                ? tools.filter((tool) => !tool.requires_user_input)
+                : tools;
 
         let output: ModelMessageOutput[];
         try {
             output = await this.configuration.model.execute({
                 history: memory.transcript,
                 systemPrompt: prompt,
-                tools,
+                tools: toolsForModel,
             });
         } catch (error) {
             await this.notifyObservers("onTurnEnd", agentId, error);
@@ -278,6 +292,49 @@ export class AgentExecutor implements IAgentExecutor {
             return;
         }
 
+        if (tool.requires_user_input) {
+            if (session.mode === "interactive") {
+                await this.configuration.communicator.emit(
+                    "tool:approval_required",
+                    {
+                        agentId,
+                        toolCallId,
+                        tool: tool.name,
+                        args,
+                    },
+                );
+                return;
+            }
+
+            const errorResult = {
+                error: `Tool ${tool.name} requires user confirmation and is not available in non-interactive mode.`,
+            };
+            await this.notifyObservers(
+                "onToolCallEnd",
+                agentId,
+                toolCallId,
+                tool.name,
+                errorResult,
+            );
+            await this.configuration.communicator.emit("tool:complete", {
+                agentId,
+                toolCallId,
+                tool: tool.name,
+                result: errorResult,
+            });
+            return;
+        }
+
+        await this.executeTool(agentId, toolCallId, tool, session, args);
+    }
+
+    private async executeTool(
+        agentId: string,
+        toolCallId: string,
+        tool: Tool,
+        session: AgentSession,
+        args: Record<string, any>,
+    ): Promise<void> {
         try {
             const output = await tool.execute(args, session);
             await this.notifyObservers(
@@ -317,7 +374,18 @@ export class AgentExecutor implements IAgentExecutor {
         toolName: string,
         toolCallId: string,
         result: any,
+        skipRun = false,
     ): Promise<void> {
+        const memory =
+            await this.configuration.memoryManager.getAgentMemory(agentId);
+
+        const existing = memory.transcript.find(
+            (e) => e.type === "tool_response" && e.id === toolCallId,
+        );
+        if (existing) {
+            return;
+        }
+
         const { tools } = await this.createAgentSession(agentId);
         const matchingTool = tools.find((t) => t.name === toolName);
 
@@ -337,13 +405,112 @@ export class AgentExecutor implements IAgentExecutor {
             },
         ]);
 
-        const memory =
+        const updatedMemory =
             await this.configuration.memoryManager.getAgentMemory(agentId);
 
-        if (memory.getPendingToolCalls().length === 0) {
+        if (!skipRun && updatedMemory.getPendingToolCalls().length === 0) {
             await this.configuration.communicator.emit("agent:run", {
                 agentId,
             });
         }
+    }
+
+    async acceptToolCall(
+        agentId: string,
+        toolCallId: string,
+    ): Promise<void> {
+        const memory =
+            await this.configuration.memoryManager.getAgentMemory(agentId);
+        const pendingCalls = memory.getPendingToolCalls();
+        if (!pendingCalls.includes(toolCallId)) {
+            throw new AgentExecutionError(
+                `No pending tool call with ID ${toolCallId} found for agent ${agentId}`,
+                { agentId },
+            );
+        }
+
+        const toolCall = memory.transcript.find(
+            (entry) => entry.type === "tool_call" && entry.id === toolCallId,
+        );
+        if (!toolCall || toolCall.type !== "tool_call") {
+            throw new AgentExecutionError(
+                `Tool call ${toolCallId} not found in transcript for agent ${agentId}`,
+                { agentId },
+            );
+        }
+
+        const { session, tools } = await this.createAgentSession(agentId);
+        const tool = tools.find((t) => t.name === toolCall.tool.name);
+        if (!tool) {
+            throw new AgentExecutionError(
+                `Tool ${toolCall.tool.name} not found for agent ${agentId}`,
+                { agentId },
+            );
+        }
+
+        await this.executeTool(
+            agentId,
+            toolCallId,
+            tool,
+            session,
+            toolCall.arguments,
+        );
+    }
+
+    async rejectToolCall(
+        agentId: string,
+        toolCallId: string,
+        reason?: string,
+    ): Promise<void> {
+        const memory =
+            await this.configuration.memoryManager.getAgentMemory(agentId);
+        const pendingCalls = memory.getPendingToolCalls();
+        if (!pendingCalls.includes(toolCallId)) {
+            throw new AgentExecutionError(
+                `No pending tool call with ID ${toolCallId} found for agent ${agentId}`,
+                { agentId },
+            );
+        }
+
+        const toolCall = memory.transcript.find(
+            (entry) => entry.type === "tool_call" && entry.id === toolCallId,
+        );
+        if (!toolCall || toolCall.type !== "tool_call") {
+            throw new AgentExecutionError(
+                `Tool call ${toolCallId} not found in transcript for agent ${agentId}`,
+                { agentId },
+            );
+        }
+
+        const rejectionMessage = reason ?? "rejected";
+        const result = {
+            rejected: true,
+            message: rejectionMessage,
+        };
+
+        await this.notifyObservers(
+            "onToolCallEnd",
+            agentId,
+            toolCallId,
+            toolCall.tool.name,
+            result,
+        );
+
+        await this.handleToolResponse(
+            agentId,
+            toolCall.tool.name,
+            toolCallId,
+            result,
+            true,
+        );
+
+        await this.configuration.communicator.emit("tool:complete", {
+            agentId,
+            toolCallId,
+            tool: toolCall.tool.name,
+            result,
+        });
+
+        await this.sendMessage(agentId, rejectionMessage);
     }
 }

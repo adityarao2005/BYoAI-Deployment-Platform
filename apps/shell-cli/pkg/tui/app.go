@@ -21,6 +21,13 @@ type DisplayMessage struct {
 	Content string
 }
 
+// PendingToolApproval represents a tool call awaiting user confirmation.
+type PendingToolApproval struct {
+	ToolCallID string         `json:"toolCallId"`
+	Tool       string         `json:"tool"`
+	Args       map[string]any `json:"args"`
+}
+
 // ─── Bubble Tea Messages ─────────────────────────────────────────────
 
 type sseEventMsg client.SSEEvent
@@ -29,6 +36,8 @@ type sseStreamEndMsg struct{}
 type interactionCreatedMsg string
 type sendMsgSuccess struct{}
 type sendMsgErrMsg struct{ err error }
+type toolDecisionSuccess struct{}
+type toolDecisionErrMsg struct{ err error }
 
 // ─── Model ───────────────────────────────────────────────────────────
 
@@ -42,13 +51,14 @@ type AppModel struct {
 	viewport      viewport.Model
 	spinner       spinner.Model
 
-	isAgentRunning bool
-	initialPrompt  string
-	width          int
-	height         int
-	err            error
-	quitting       bool
-	ready          bool
+	isAgentRunning  bool
+	pendingApproval *PendingToolApproval
+	initialPrompt   string
+	width           int
+	height          int
+	err             error
+	quitting        bool
+	ready           bool
 
 	// SSE lifecycle
 	sseCtx    context.Context
@@ -109,6 +119,18 @@ func (m AppModel) sendPromptCmd(prompt string) tea.Cmd {
 			return sendMsgErrMsg{err: err}
 		}
 		return sendMsgSuccess{}
+	}
+}
+
+// sendToolDecisionCmd sends user approval or rejection for a pending tool call.
+func (m AppModel) sendToolDecisionCmd(toolCallID, action, reason string) tea.Cmd {
+	return func() tea.Msg {
+		ctx := context.Background()
+		err := m.client.SendToolDecision(ctx, m.interactionID, toolCallID, action, reason)
+		if err != nil {
+			return toolDecisionErrMsg{err: err}
+		}
+		return toolDecisionSuccess{}
 	}
 }
 
@@ -197,6 +219,41 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case tea.KeyEnter:
+			if m.pendingApproval != nil {
+				text := strings.TrimSpace(strings.ToLower(m.input.Value()))
+				m.input.SetValue("")
+				approval := m.pendingApproval
+				if text == "y" || text == "yes" || text == "accept" {
+					m.pendingApproval = nil
+					m.messages = append(m.messages, DisplayMessage{
+						Role:    "user",
+						Content: fmt.Sprintf("Accepted tool call: %s", approval.Tool),
+					})
+					m.viewport.SetContent(m.renderMessages())
+					m.viewport.GotoBottom()
+					cmds = append(cmds, m.sendToolDecisionCmd(approval.ToolCallID, "accept", ""))
+					return m, tea.Batch(cmds...)
+				} else if text == "n" || text == "no" || text == "reject" {
+					m.pendingApproval = nil
+					m.messages = append(m.messages, DisplayMessage{
+						Role:    "user",
+						Content: fmt.Sprintf("Rejected tool call: %s", approval.Tool),
+					})
+					m.viewport.SetContent(m.renderMessages())
+					m.viewport.GotoBottom()
+					cmds = append(cmds, m.sendToolDecisionCmd(approval.ToolCallID, "reject", "User rejected tool execution"))
+					return m, tea.Batch(cmds...)
+				} else {
+					m.messages = append(m.messages, DisplayMessage{
+						Role:    "system",
+						Content: "Please enter 'y' to accept or 'n' to reject the tool call.",
+					})
+					m.viewport.SetContent(m.renderMessages())
+					m.viewport.GotoBottom()
+					return m, nil
+				}
+			}
+
 			if m.isAgentRunning {
 				// Locked: cannot send while agent is running
 				return m, nil
@@ -304,13 +361,25 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.viewport.SetContent(m.renderMessages())
 		m.viewport.GotoBottom()
 
+	case toolDecisionSuccess:
+		// Tool decision successfully sent
+
+	case toolDecisionErrMsg:
+		m.err = msg.err
+		m.messages = append(m.messages, DisplayMessage{
+			Role:    "system",
+			Content: fmt.Sprintf("❌ Tool decision error: %v", msg.err),
+		})
+		m.viewport.SetContent(m.renderMessages())
+		m.viewport.GotoBottom()
+
 	case spinner.TickMsg:
 		var cmd tea.Cmd
 		m.spinner, cmd = m.spinner.Update(msg)
 		cmds = append(cmds, cmd)
 	}
 
-	if !m.isAgentRunning && !(m.mode == "non-interactive" && len(m.messages) > 0) {
+	if (!m.isAgentRunning || m.pendingApproval != nil) && !(m.mode == "non-interactive" && len(m.messages) > 0) {
 		var inputCmd tea.Cmd
 		m.input, inputCmd = m.input.Update(msg)
 		cmds = append(cmds, inputCmd)
@@ -349,6 +418,22 @@ func (m AppModel) handleSSEEvent(evt client.SSEEvent) AppModel {
 	case "agent:run":
 		m.isAgentRunning = true
 
+	case client.EventToolApprovalReq:
+		var approval PendingToolApproval
+		if err := json.Unmarshal([]byte(evt.Data), &approval); err == nil {
+			m.pendingApproval = &approval
+			argsJSON, _ := json.Marshal(approval.Args)
+			m.messages = append(m.messages, DisplayMessage{
+				Role:    "tool",
+				Content: fmt.Sprintf("⚠️ Tool Approval Required: %s(%s)\nType 'y' (accept) or 'n' (reject) to decide.", approval.Tool, string(argsJSON)),
+			})
+		} else {
+			m.messages = append(m.messages, DisplayMessage{
+				Role:    "tool",
+				Content: fmt.Sprintf("⚠️ Tool Approval Required: %s", evt.Data),
+			})
+		}
+
 	case client.EventToolCall:
 		var dataMap map[string]any
 		toolInfo := evt.Data
@@ -366,7 +451,15 @@ func (m AppModel) handleSSEEvent(evt client.SSEEvent) AppModel {
 			Content: fmt.Sprintf("🛠 Tool Call: %s", toolInfo),
 		})
 
-	case "tool:complete":
+	case client.EventToolComplete:
+		if m.pendingApproval != nil {
+			var dataMap map[string]any
+			if err := json.Unmarshal([]byte(evt.Data), &dataMap); err == nil {
+				if id, ok := dataMap["toolCallId"].(string); ok && id == m.pendingApproval.ToolCallID {
+					m.pendingApproval = nil
+				}
+			}
+		}
 		var dataMap map[string]any
 		resultInfo := evt.Data
 		if err := json.Unmarshal([]byte(evt.Data), &dataMap); err == nil {
@@ -389,6 +482,7 @@ func (m AppModel) handleSSEEvent(evt client.SSEEvent) AppModel {
 
 	case client.EventComplete:
 		m.isAgentRunning = false
+		m.pendingApproval = nil
 		m.messages = append(m.messages, DisplayMessage{
 			Role:    "system",
 			Content: "✔ Agent turn completed.",
@@ -396,6 +490,7 @@ func (m AppModel) handleSSEEvent(evt client.SSEEvent) AppModel {
 
 	case "agent:error":
 		m.isAgentRunning = false
+		m.pendingApproval = nil
 		var dataMap map[string]any
 		errText := evt.Data
 		if err := json.Unmarshal([]byte(evt.Data), &dataMap); err == nil {
@@ -467,7 +562,13 @@ func (m AppModel) View() string {
 	b.WriteString("\n")
 
 	// Input area & status
-	if m.isAgentRunning {
+	if m.pendingApproval != nil {
+		argsJSON, _ := json.Marshal(m.pendingApproval.Args)
+		b.WriteString(styles.LockedInputNotice.Render(fmt.Sprintf("⚠️ Tool '%s' requires approval [args: %s]. Type 'y'/'yes' to accept or 'n'/'no' to reject:", m.pendingApproval.Tool, string(argsJSON))))
+		b.WriteString("\n")
+		b.WriteString(m.input.View())
+		b.WriteString("\n")
+	} else if m.isAgentRunning {
 		b.WriteString(styles.LockedInputNotice.Render(fmt.Sprintf("%s Agent is processing... Input is locked until agent:complete", m.spinner.View())))
 		b.WriteString("\n")
 	} else if m.mode == "non-interactive" && len(m.messages) > 0 {

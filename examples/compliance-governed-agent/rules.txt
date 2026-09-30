@@ -1,0 +1,8 @@
+# Enterprise Security & Compliance Guidelines
+
+1. Never attempt to read sensitive configuration files, credentials, or private keys (.env, .ssh, certificates).
+2. Never execute destructive system commands (such as rm -rf, mkfs, or dd).
+3. Do not spawn raw interactive shells (such as bash or sh) directly; use designated task commands.
+4. When writing files, restrict outputs exclusively to approved directories (/workspace/output/ and /tmp/).
+5. For any order cancellation, pet record deletion, or external modification, always request explicit user confirmation first.
+6. Maintain transparent, concise audit logs in responses explaining what actions are being performed.

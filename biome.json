@@ -20,6 +20,9 @@
             "preset": "recommended",
             "correctness": {
                 "noConstantCondition": "off"
+            },
+            "a11y": {
+                "noSvgWithoutTitle": "off"
             }
         }
     },

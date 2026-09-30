@@ -20,6 +20,21 @@ export type AgentEventMap = {
         tool: string;
         result: any;
     };
+    "tool:approval_required": {
+        agentId: string;
+        toolCallId: string;
+        tool: string;
+        args: Record<string, any>;
+    };
+    "tool:accept": {
+        agentId: string;
+        toolCallId: string;
+    };
+    "tool:reject": {
+        agentId: string;
+        toolCallId: string;
+        reason?: string;
+    };
 };
 
 /** Handler callback type for agent events. */

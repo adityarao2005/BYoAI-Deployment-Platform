@@ -97,8 +97,42 @@ export async function sendMessage(id: string, message: string): Promise<{ succes
       return { success: false, error: errorMsg };
     }
     return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err?.message || 'Network error sending message to agent harness' };
+  } catch (err: unknown) {
+    const error = err as { message?: string };
+    return { success: false, error: error?.message || 'Network error sending message to agent harness' };
+  }
+}
+
+export async function sendToolDecision(
+  interactionId: string,
+  toolCallId: string,
+  action: 'accept' | 'reject',
+  reason?: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const res = await fetch(
+      `/api/interactions/${encodeURIComponent(interactionId)}/tools/${encodeURIComponent(toolCallId)}/decision`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, reason }),
+      }
+    );
+    if (!res.ok) {
+      let errorMsg = `Server error (${res.status})`;
+      try {
+        const data = await res.json();
+        if (data.message) errorMsg = data.message;
+        else if (data.error) errorMsg = data.error;
+      } catch {
+        // use default errorMsg
+      }
+      return { success: false, error: errorMsg };
+    }
+    return { success: true };
+  } catch (err: unknown) {
+    const error = err as { message?: string };
+    return { success: false, error: error?.message || 'Network error submitting decision' };
   }
 }
 
@@ -116,6 +150,7 @@ export function subscribeInteractionSSE(
     'agent:error',
     'tool:call',
     'tool:complete',
+    'tool:approval_required',
     'tool:result',
     'user:message',
   ];

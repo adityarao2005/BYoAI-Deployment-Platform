@@ -2,6 +2,10 @@ import z from "zod";
 
 export const BaseToolProviderConfigSchema = z.object({
     name: z.string(),
+    allowedTools: z.array(z.string()).optional(),
+    disallowedTools: z.array(z.string()).optional(),
+    rejectedTools: z.array(z.string()).optional(),
+    userInputTools: z.array(z.string()).optional(),
 });
 
 // OpenAPI tool provider
@@ -158,12 +162,34 @@ export type RemoteComputerUseToolProviderConfig = z.infer<
     typeof RemoteComputerUseToolProviderConfigSchema
 >;
 
+export const PermissionRuleSchema = z.object({
+    allowed: z.array(z.string()).optional(),
+    disallowed: z.array(z.string()).optional(),
+});
+
+export type PermissionRuleConfig = z.infer<typeof PermissionRuleSchema>;
+
+export const ComputerPermissionsSchema = z.object({
+    read: PermissionRuleSchema.optional(),
+    write: PermissionRuleSchema.optional(),
+    execute: PermissionRuleSchema.optional(),
+});
+
+export type ComputerPermissionsConfig = z.infer<
+    typeof ComputerPermissionsSchema
+>;
+
 export const ComputerUseToolProviderConfigSchema = z.object({
     type: z.literal("computer"),
     provider: z.discriminatedUnion("type", [
         LocalComputerUseToolProviderConfigSchema,
         RemoteComputerUseToolProviderConfigSchema,
     ]),
+    allowedTools: z.array(z.string()).optional(),
+    disallowedTools: z.array(z.string()).optional(),
+    rejectedTools: z.array(z.string()).optional(),
+    userInputTools: z.array(z.string()).optional(),
+    permissions: ComputerPermissionsSchema.optional(),
 });
 
 export type ComputerUseToolProviderConfig = z.infer<

@@ -28,10 +28,14 @@ For detailed configuration schema, build, run, and test guides, see [apps/comput
 
 Explore runnable agent configurations in [`examples/`](examples/):
 
+- **[Compliance-Governed Enterprise Agent](examples/compliance-governed-agent/README.md)** (`examples/compliance-governed-agent/`):
+  Demonstrates comprehensive enterprise compliance, combining system prompt behavioral rules, external policy documents, pattern-based tool filtering, human-in-the-loop tool approvals, and fine-grained Computer Use filesystem and command execution permissions.
 - **[Pet Adoption & Store Agent](examples/pet-adoption-agent/README.md)** (`examples/pet-adoption-agent/`):
   Demonstrates a full-stack deployment featuring dynamic OpenAPI tool execution against Swagger Petstore, progressive skill loading from a packaged zip archive, sandboxed computer use, and an interactive Chat UI frontend with OIDC/OAuth2 authentication.
 - **[Local Computer Use Agent](examples/computer-use-agent-local/README.md)** (`examples/computer-use-agent-local/`):
   Demonstrates an agent equipped with direct local computer execution primitives (bash command execution, filesystem manipulation, and environment sandboxing) with optional full-stack Docker Compose and Chat UI support.
+- **[Model Context Protocol (MCP) Agent](examples/mcp-agent/README.md)** (`examples/mcp-agent/`):
+  Demonstrates Model Context Protocol (MCP) tool integration, dynamic JSON-RPC 2.0 tool and resource discovery over `stdio` transport, MCP tool filtering, human-in-the-loop approvals, and external policy rules.
 - **[Docker Computer Use Agent](examples/docker-computer-use/README.md)** (`examples/docker-computer-use/`):
   Demonstrates an agent connected remotely over ConnectRPC to the Computer Controller daemon executing commands in an isolated Docker container sandbox, complete with full-stack Compose and Chat UI.
 

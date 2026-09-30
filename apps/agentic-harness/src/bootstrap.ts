@@ -41,9 +41,14 @@ import {
     StreamableHTTPMcpClientFactory,
     TodosToolProvider,
     toolProviderRegistry,
+    withToolFilter,
 } from "@byo-ai-agent-platform/core/tools";
 import { parse } from "yaml";
-import { type AgentConfig, AgentConfigSchema } from "./agent.config";
+import {
+    type AgentConfig,
+    AgentConfigSchema,
+    type RuleEntry,
+} from "./agent.config";
 
 // ─── Config Loading ──────────────────────────────────────────────────
 // Moved from core/config/config.ts — config loading is an app concern,
@@ -280,6 +285,70 @@ export function registerComputer(
 
 // ─── Tool Provider Registration ─────────────────────────────────────
 
+export async function resolveRules(
+    rawRules: RuleEntry[] = [],
+    baseDir: string = process.cwd(),
+): Promise<string[]> {
+    const resolved: string[] = [];
+    for (const ruleItem of rawRules) {
+        // 1. Explicit file object reference: { file: "./rules.txt" }
+        if (
+            typeof ruleItem === "object" &&
+            ruleItem !== null &&
+            "file" in ruleItem
+        ) {
+            const filePath = ruleItem.file.trim();
+            if (!filePath) continue;
+
+            const candidatePath = path.isAbsolute(filePath)
+                ? filePath
+                : path.resolve(baseDir, filePath);
+
+            try {
+                const fileContent = await fs.readFile(candidatePath, "utf-8");
+                const lines = fileContent
+                    .split("\n")
+                    .map((line) => line.trim())
+                    .filter((line) => line.length > 0 && !line.startsWith("#"));
+                resolved.push(...lines);
+            } catch (err) {
+                logger.warn(
+                    `Failed to read rules file at ${candidatePath}: ${err}`,
+                );
+            }
+            continue;
+        }
+
+        // 2. String entry: either inline rule text or file path fallback
+        const trimmed = typeof ruleItem === "string" ? ruleItem.trim() : "";
+        if (!trimmed) continue;
+
+        const candidatePath = path.isAbsolute(trimmed)
+            ? trimmed
+            : path.resolve(baseDir, trimmed);
+
+        try {
+            const stat = await fs.stat(candidatePath);
+            if (stat.isFile()) {
+                const fileContent = await fs.readFile(candidatePath, "utf-8");
+                const lines = fileContent
+                    .split("\n")
+                    .map((line) => line.trim())
+                    .filter((line) => line.length > 0 && !line.startsWith("#"));
+                if (lines.length > 0) {
+                    resolved.push(...lines);
+                }
+                continue;
+            }
+        } catch {
+            // Not a file, treat as inline rule text
+        }
+
+        resolved.push(trimmed);
+    }
+    return resolved;
+}
+
 export function registerToolProviders(
     config: AgentConfig,
     computer?: ComputerProvider,
@@ -288,16 +357,42 @@ export function registerToolProviders(
     const activeComputer =
         computer !== undefined ? computer : registerComputer(config);
 
+    const computerConfig = config.toolProviders.find(
+        (p): p is ComputerUseToolProviderConfig => p.type === "computer",
+    );
+
     if (activeComputer) {
-        toolProviderRegistry.registerToolProvider(
-            new ComputerUseToolProvider(activeComputer),
+        const computerUseProvider = withToolFilter(
+            new ComputerUseToolProvider(
+                activeComputer,
+                computerConfig?.permissions,
+            ),
+            computerConfig
+                ? {
+                      allowedTools: computerConfig.allowedTools,
+                      disallowedTools: computerConfig.disallowedTools,
+                      rejectedTools: computerConfig.rejectedTools,
+                      userInputTools: computerConfig.userInputTools,
+                  }
+                : undefined,
         );
+        toolProviderRegistry.registerToolProvider(computerUseProvider);
         logger.info("Registered ComputerUseToolProvider");
     }
 
     for (const providerConfig of config.toolProviders) {
+        const filterOptions = {
+            allowedTools: providerConfig.allowedTools,
+            disallowedTools: providerConfig.disallowedTools,
+            rejectedTools: providerConfig.rejectedTools,
+            userInputTools: providerConfig.userInputTools,
+        };
+
         if (providerConfig.type === "openapi") {
-            const openApiProvider = new OpenAPIToolProvider(providerConfig);
+            const openApiProvider = withToolFilter(
+                new OpenAPIToolProvider(providerConfig),
+                filterOptions,
+            );
             toolProviderRegistry.registerToolProvider(openApiProvider);
             logger.info("Registered OpenAPIToolProvider", {
                 name: providerConfig.name,
@@ -328,22 +423,30 @@ export function registerToolProviders(
                     break;
             }
 
-            toolProviderRegistry.registerToolProvider(
+            const mcpProvider = withToolFilter(
                 new McpServerToolProvider(clientFactory),
+                filterOptions,
             );
+            toolProviderRegistry.registerToolProvider(mcpProvider);
             logger.info("Registered McpServerToolProvider", {
                 name: providerConfig.name,
                 transport: providerConfig.transport,
             });
         } else if (providerConfig.type === "scratchpad") {
-            toolProviderRegistry.registerToolProvider(
+            const scratchpadProvider = withToolFilter(
                 new ScratchpadToolProvider(),
+                filterOptions,
             );
+            toolProviderRegistry.registerToolProvider(scratchpadProvider);
             logger.info("Registered ScratchpadToolProvider", {
                 name: providerConfig.name,
             });
         } else if (providerConfig.type === "todos") {
-            toolProviderRegistry.registerToolProvider(new TodosToolProvider());
+            const todosProvider = withToolFilter(
+                new TodosToolProvider(),
+                filterOptions,
+            );
+            toolProviderRegistry.registerToolProvider(todosProvider);
             logger.info("Registered TodosToolProvider", {
                 name: providerConfig.name,
             });
@@ -423,9 +526,12 @@ export async function bootstrap(
         hasComputer: computer !== undefined,
     });
 
+    const resolvedRules = await resolveRules(config.rules ?? []);
+
     const manager = new AgentManager({
         name: config?.name ?? `agent-${randomUUID()}`,
         description: config?.description ?? "You are a helpful assistant.",
+        rules: resolvedRules,
         model: defaultModel,
         skillRepository: skillRepos,
         toolProviders,

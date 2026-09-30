@@ -18,11 +18,13 @@ type SSEEvent struct {
 
 // Common SSE Event types emitted by agentic-harness
 const (
-	EventMessage    = "agent:message"
-	EventToolCall   = "tool:call"
-	EventToolResult = "tool:result"
-	EventComplete   = "agent:complete"
-	EventError      = "error"
+	EventMessage         = "agent:message"
+	EventToolCall        = "tool:call"
+	EventToolResult      = "tool:result"
+	EventToolComplete    = "tool:complete"
+	EventToolApprovalReq = "tool:approval_required"
+	EventComplete        = "agent:complete"
+	EventError           = "error"
 )
 
 // ReadSSEStream reads SSE events from an io.Reader and sends them to the returned channel.
