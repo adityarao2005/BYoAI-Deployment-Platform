@@ -159,7 +159,7 @@ models:
       apiKey: "test-key"
 rules:
   - "Inline rule 1"
-  - "${rulesFilePath}"
+  - file: "${rulesFilePath}"
 security:
   jwksUri: "https://example.com"
   alg: ["RS256"]
@@ -168,7 +168,7 @@ security:
         );
 
         const config = await loadConfig(configPath);
-        expect(config.rules).toEqual(["Inline rule 1", rulesFilePath]);
+        expect(config.rules).toEqual(["Inline rule 1", { file: rulesFilePath }]);
 
         const { resolveRules } = await import("./bootstrap");
         const resolved = await resolveRules(config.rules ?? [], tempConfigDir);
@@ -177,5 +177,20 @@ security:
             "Imported file rule 1",
             "Imported file rule 2",
         ]);
+    });
+
+    it("successfully loads and parses all repository example agent.yaml files", async () => {
+        const exampleConfigs = [
+            join(__dirname, "../../../examples/compliance-governed-agent/agent.yaml"),
+            join(__dirname, "../../../examples/pet-adoption-agent/agent.yaml"),
+            join(__dirname, "../../../examples/computer-use-agent-local/agent.yaml"),
+            join(__dirname, "../../../examples/docker-computer-use/agent.yaml"),
+        ];
+
+        for (const configPath of exampleConfigs) {
+            const config = await loadConfig(configPath);
+            expect(config.models.length).toBeGreaterThan(0);
+            expect(config.toolProviders.length).toBeGreaterThan(0);
+        }
     });
 });

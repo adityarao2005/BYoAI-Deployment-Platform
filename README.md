@@ -28,6 +28,8 @@ For detailed configuration schema, build, run, and test guides, see [apps/comput
 
 Explore runnable agent configurations in [`examples/`](examples/):
 
+- **[Compliance-Governed Enterprise Agent](examples/compliance-governed-agent/README.md)** (`examples/compliance-governed-agent/`):
+  Demonstrates comprehensive enterprise compliance, combining system prompt behavioral rules, external policy documents, pattern-based tool filtering, human-in-the-loop tool approvals, and fine-grained Computer Use filesystem and command execution permissions.
 - **[Pet Adoption & Store Agent](examples/pet-adoption-agent/README.md)** (`examples/pet-adoption-agent/`):
   Demonstrates a full-stack deployment featuring dynamic OpenAPI tool execution against Swagger Petstore, progressive skill loading from a packaged zip archive, sandboxed computer use, and an interactive Chat UI frontend with OIDC/OAuth2 authentication.
 - **[Local Computer Use Agent](examples/computer-use-agent-local/README.md)** (`examples/computer-use-agent-local/`):

@@ -40,8 +40,8 @@ The agent harness operates as an asynchronous, event-driven orchestration layer 
 The platform provides fine-grained compliance controls embedded into the agent runtime:
 
 ### 1. Rules & Guidelines (`agent.yaml` & System Prompt)
-- Defined as inline text strings or relative file paths (e.g. `./compliance-rules.txt`) under `rules:` in `agent.yaml`.
-- File paths are resolved and loaded from disk at bootstrap (`resolveRules()`).
+- Defined as inline text strings (e.g. `"Act professionally..."`) or file references (e.g. `file: ./compliance-rules.txt`) under `rules:` in `agent.yaml`.
+- File references are resolved and loaded from disk at bootstrap (`resolveRules()`), ignoring comment lines starting with `#`.
 - Embedded cleanly into the system prompt under a dedicated `## Rules & Compliance:` section to govern LLM model instructions and behavioral boundaries.
 
 ### 2. Tool Provider Filtering (`withToolFilter`)

@@ -36,7 +36,8 @@ The harness exposes a Hono HTTP server with the following endpoints:
 - `GET /interactions` - List all agent interaction IDs
 - `GET /interactions/:id` - Retrieve agent interaction memory, transcript, and mode
 - `POST /interactions/:id` - Post a user message to the agent interaction (rejects with 400 Bad Request if session is non-interactive and transcript already contains messages)
-- `GET /interactions/:id/sse` - Subscribe to real-time Server-Sent Events (SSE) for the agent interaction (`user:message`, `agent:message`, `agent:run`, `agent:complete`, `tool:call`, `tool:complete`)
+- `POST /interactions/:id/tools/:toolCallId/decision` - Accept or reject a pending tool call requiring human confirmation (JSON body: `{ "action": "accept" | "reject", "reason"?: string }`)
+- `GET /interactions/:id/sse` - Subscribe to real-time Server-Sent Events (SSE) for the agent interaction (`user:message`, `agent:message`, `agent:run`, `agent:complete`, `tool:call`, `tool:approval_required`, `tool:complete`)
 
 ---
 
@@ -91,7 +92,20 @@ description: "Agent equipped with OpenAPI tools, skills, and computer execution 
 
 ---
 
-#### 2. Models (`models`)
+#### 2. Rules & Compliance Guidelines (`rules`)
+
+Defines organizational rules and compliance boundaries that are automatically compiled into the agent's system prompt:
+
+```yaml
+rules:
+  - "Always maintain customer data privacy and never output PII."
+  - "Ask for human confirmation before deleting any persistent records."
+  - file: ./compliance-rules.txt  # Explicit file import loaded from disk
+```
+
+---
+
+#### 3. Models (`models`)
 
 Configures LLM providers. The harness uses the first valid registered model in the list as the active LLM.
 
@@ -169,17 +183,42 @@ skillRepositories:
 
 #### 4. Tool Providers (`toolProviders`)
 
+All tool providers support pattern-based qualification and filtering:
+- `allowedTools`: (Optional) Whitelist of allowed tool name patterns (e.g. `["get*", "find*"]`). All tools are allowed by default if omitted.
+- `disallowedTools` / `rejectedTools`: Blacklist of tool patterns (e.g. `["*delete*", "drop*"]`). Matching tools are completely hidden from the model.
+- `userInputTools`: Tool patterns that require explicit human approval prior to execution in interactive mode (e.g. `["write_*", "deploy_*"]`).
+
 ##### A. Computer Use Tool Provider (`type: computer`)
 
-Equips the agent with bash execution, file read/write, and optional GUI automation.
+Equips the agent with shell execution, file read/write, and optional GUI automation.
 
-###### Local Host Execution
+###### Local Host Execution (with Permissions)
 ```yaml
 toolProviders:
   - type: computer
     provider:
       type: local
-      enableGUIToolsIfAvailable: true
+      enableGUIToolsIfAvailable: false
+    # Tool availability filters
+    allowedTools:
+      - "read_file"
+      - "write_file"
+      - "execute"
+      - "list_directory"
+    userInputTools:
+      - "write_file"
+      - "execute" # Requires human approval in interactive mode
+    # Sandbox security rules
+    permissions:
+      read:
+        allowed: ["/workspace", "/tmp/*"]
+        disallowed: ["/etc/*", "/root/.ssh/*", "/home/*/.ssh/*"]
+      write:
+        allowed: ["/workspace/output/*", "/tmp/*"]
+        disallowed: ["/workspace/secret.key"]
+      execute:
+        allowed: ["find *", "ls *", "cat *"]
+        disallowed: ["bash", "sh", "rm -rf *"]
 ```
 
 ###### Remote Docker Sandbox Execution
@@ -202,6 +241,11 @@ toolProviders:
           - "api.openai.com"
         deniedHosts:
           - "10.0.0.0/8"
+    permissions:
+      read:
+        disallowed: ["/etc/shadow", "/root/*"]
+      execute:
+        disallowed: ["bash", "sh"]
 ```
 
 ##### B. OpenAPI Tool Provider (`type: openapi`)
@@ -295,6 +339,7 @@ toolProviders:
 
 ### Full Example Configurations in Repository
 
+- **[Compliance-Governed Enterprise Agent (`agent.yaml`)](file:///home/aditya/projects/BYoAI-Deployment-Platform/examples/compliance-governed-agent/agent.yaml)**: Complete enterprise compliance suite (rules, tool filtering, human-in-the-loop approvals, and strict computer sandbox permissions).
 - **[Pet Adoption Agent (`agent.yaml`)](file:///home/aditya/projects/BYoAI-Deployment-Platform/examples/pet-adoption-agent/agent.yaml)**: OpenAPI + Zip Skills + Gemini LLM.
 - **[Local Computer Use Agent (`agent.yaml`)](file:///home/aditya/projects/BYoAI-Deployment-Platform/examples/computer-use-agent-local/agent.yaml)**: Local host computer execution + Gemini LLM.
 - **[Docker Computer Use Agent (`agent.yaml`)](file:///home/aditya/projects/BYoAI-Deployment-Platform/examples/docker-computer-use/agent.yaml)**: Remote Docker sandbox computer execution + Gemini LLM.

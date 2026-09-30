@@ -44,7 +44,11 @@ import {
     withToolFilter,
 } from "@byo-ai-agent-platform/core/tools";
 import { parse } from "yaml";
-import { type AgentConfig, AgentConfigSchema } from "./agent.config";
+import {
+    type AgentConfig,
+    AgentConfigSchema,
+    type RuleEntry,
+} from "./agent.config";
 
 // ─── Config Loading ──────────────────────────────────────────────────
 // Moved from core/config/config.ts — config loading is an app concern,
@@ -282,12 +286,41 @@ export function registerComputer(
 // ─── Tool Provider Registration ─────────────────────────────────────
 
 export async function resolveRules(
-    rawRules: string[] = [],
+    rawRules: RuleEntry[] = [],
     baseDir: string = process.cwd(),
 ): Promise<string[]> {
     const resolved: string[] = [];
     for (const ruleItem of rawRules) {
-        const trimmed = ruleItem.trim();
+        // 1. Explicit file object reference: { file: "./rules.txt" }
+        if (
+            typeof ruleItem === "object" &&
+            ruleItem !== null &&
+            "file" in ruleItem
+        ) {
+            const filePath = ruleItem.file.trim();
+            if (!filePath) continue;
+
+            const candidatePath = path.isAbsolute(filePath)
+                ? filePath
+                : path.resolve(baseDir, filePath);
+
+            try {
+                const fileContent = await fs.readFile(candidatePath, "utf-8");
+                const lines = fileContent
+                    .split("\n")
+                    .map((line) => line.trim())
+                    .filter((line) => line.length > 0 && !line.startsWith("#"));
+                resolved.push(...lines);
+            } catch (err) {
+                logger.warn(
+                    `Failed to read rules file at ${candidatePath}: ${err}`,
+                );
+            }
+            continue;
+        }
+
+        // 2. String entry: either inline rule text or file path fallback
+        const trimmed = typeof ruleItem === "string" ? ruleItem.trim() : "";
         if (!trimmed) continue;
 
         const candidatePath = path.isAbsolute(trimmed)
