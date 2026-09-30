@@ -102,6 +102,16 @@ describe("FilteredToolProvider", () => {
         expect(fetchedWrite?.requires_user_input).toBe(true);
     });
 
+    it("should allow all tools by default when allowedTools is omitted", async () => {
+        const filtered = new FilteredToolProvider(mockProvider, {
+            userInputTools: ["write_*"],
+        });
+
+        const all = await filtered.getAllTools();
+        expect(all.map((t) => t.name)).toEqual(["read_file", "write_file", "delete_file"]);
+        expect(await filtered.getToolByName("delete_file")).not.toBeNull();
+    });
+
     it("withToolFilter should return original provider when no filter options provided", () => {
         expect(withToolFilter(mockProvider)).toBe(mockProvider);
         expect(withToolFilter(mockProvider, {})).toBe(mockProvider);
