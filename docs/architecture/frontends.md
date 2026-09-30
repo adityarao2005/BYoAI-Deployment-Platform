@@ -35,11 +35,13 @@ graph LR
 - **Frontend**: Vite + React 19 + TypeScript + Tailwind CSS v4 + `@assistant-ui/react`.
 - **Go Backend**: Confidential OAuth client that handles authorization code flow, manages encrypted session cookies (`gorilla/sessions`), injects Bearer tokens server-side, and serves the static SPA via `embed.FS`.
 - **Non-blocking Event-Driven Flow**: User message submission (`POST /interactions/:id`) returns immediately `{ success: true }` without blocking on agent turn execution. The SSE stream `/interactions/:id/events` drives the UI state (`agent:run` locks input and sets typing indicator, while `agent:complete` or `agent:error` unlocks the input area immediately upon completion).
+- **Human-in-the-Loop Tool Approval**: When a tool requiring user consent is called (`tool:approval_required`), the Chat UI displays the tool name, arguments, and interactive "Accept" / "Reject" buttons. Choosing Accept or Reject calls `POST /interactions/:id/tools/:toolCallId/decision`, which resumes tool execution or returns rejection feedback to the model.
 
 ## 2. Shell CLI (`apps/shell-cli`)
 - **Role**: Terminal user interface (TUI) and batch CLI for developers.
 - **TUI Engine**: Built with Charm's `bubbletea/v2`, `lipgloss/v2`, and `bubbles/v2`.
 - **OAuth PKCE**: Public OAuth client initiating browser authorization flow with an ephemeral localhost callback receiver and storing tokens at `~/.byoai/tokens.json`.
 - **Modes**: Supports both interactive turn-based chat and non-interactive one-shot batch tasks.
-- **SSE Event Subscription**: Employs recursive `tea.Cmd` event reading off Go channels (`StreamEvents`) to dispatch incoming SSE events (`agent:run`, `agent:message`, `tool:call`, `tool:complete`, `agent:complete`, `agent:error`) into Bubble Tea `Update()` loops, ensuring the terminal prompt unlocks immediately when `agent:complete` is received.
+- **SSE Event Subscription**: Employs recursive `tea.Cmd` event reading off Go channels (`StreamEvents`) to dispatch incoming SSE events (`agent:run`, `agent:message`, `tool:call`, `tool:approval_required`, `tool:complete`, `agent:complete`, `agent:error`) into Bubble Tea `Update()` loops, ensuring the terminal prompt unlocks immediately when `agent:complete` is received.
+- **Interactive Tool Approval in Terminal**: When `tool:approval_required` is emitted, the prompt unlocks with an alert asking the user to accept (`y`/`yes`) or reject (`n`/`no`). Upon keypress, the client sends `POST /interactions/:id/tools/:toolCallId/decision` and resumes the agent.
 

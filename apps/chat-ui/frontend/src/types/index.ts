@@ -19,9 +19,12 @@ export interface ChatMessage {
   timestamp: string;
   isError?: boolean;
   toolCall?: {
+    id?: string;
     name: string;
     args?: Record<string, unknown>;
-    result?: string;
+    result?: unknown;
+    requires_user_input?: boolean;
+    decision?: 'pending' | 'accepted' | 'rejected';
   };
 }
 

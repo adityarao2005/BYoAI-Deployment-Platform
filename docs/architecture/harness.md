@@ -22,6 +22,9 @@ The agent harness operates as an asynchronous, event-driven orchestration layer 
     - `agent:message`: Assistant output message.
     - `agent:complete`: Turn completion.
     - `tool:call`: Tool request from model.
+    - `tool:approval_required`: Emitted when an invoked tool has `requires_user_input: true` in interactive mode, pausing tool execution until approved or rejected.
+    - `tool:accept`: Client decision event to execute the pending tool call and resume the agent turn.
+    - `tool:reject`: Client decision event to reject the pending tool call with an optional explanation, injecting a rejection tool response and prompting the agent to adjust its plan.
     - `tool:complete`: Tool result resolution.
   - **`InMemoryAgentCommunicator`**: In-process event bus for local runtime and test execution.
 
@@ -29,6 +32,37 @@ The agent harness operates as an asynchronous, event-driven orchestration layer 
   - Manages transcript persistence and pending tool call resolution (`getPendingToolCalls()` using `Set<string>`).
   - **`InMemoryAgentMemoryManager`**: Transient memory store.
   - **`JsonFileAgentMemoryManager`**: File-backed memory store persisting each agent's conversation history and computer binding to `<storageDir>/<agentId>.json` with atomic writes.
+
+---
+
+## Compliance, Rules & Tool Governance
+
+The platform provides fine-grained compliance controls embedded into the agent runtime:
+
+### 1. Rules & Guidelines (`agent.yaml` & System Prompt)
+- Defined as inline text strings or relative file paths (e.g. `./compliance-rules.txt`) under `rules:` in `agent.yaml`.
+- File paths are resolved and loaded from disk at bootstrap (`resolveRules()`).
+- Embedded cleanly into the system prompt under a dedicated `## Rules & Compliance:` section to govern LLM model instructions and behavioral boundaries.
+
+### 2. Tool Provider Filtering (`withToolFilter`)
+- Tool providers can specify pattern-based rules using wildcards (`*` and `?`):
+  - `allowedTools`: Whitelist of patterns (e.g. `["read_*_file", "search_*"]`). If provided, only matching tools are made available.
+  - `disallowedTools` / `rejectedTools`: Blacklist of patterns (e.g. `["execute_command", "delete_*"]`). Matching tools are completely hidden from `getToolsByName` and `getAllTools`.
+  - `userInputTools`: Patterns requiring explicit user confirmation before execution (e.g. `["write_*", "deploy_*"]`). Matching tools receive the attribute `requires_user_input: true`.
+- Dynamic decoration is provided by `withToolFilter(provider, config)` wrapping any tool provider.
+
+### 3. Interactive vs. Non-Interactive Tool Provision
+- In **non-interactive mode**, any tools requiring confirmation (`requires_user_input: true`) are omitted when supplying tools to the model, preventing deadlocks when no human is present to approve actions.
+- In **interactive mode**, all allowed tools are supplied to the model.
+
+### 4. Human-In-The-Loop Approval Workflow
+- When the model invokes a tool with `requires_user_input: true` during interactive mode:
+  1. The harness emits `tool:approval_required` containing `{ agentId, toolCallId, tool, args }` over SSE.
+  2. The harness pauses tool execution and registers the pending approval.
+  3. Client UI (Chat UI or Shell CLI) renders an interactive approval prompt (Accept / Reject).
+  4. The client dispatches a decision via `POST /interactions/:id/tools/:toolCallId/decision` with `{ action: "accept" | "reject", reason?: string }`.
+  5. On `accept`: The tool is executed and results are dispatched as `tool:complete`.
+  6. On `reject`: A rejected tool response is recorded in transcript memory and a rejection notification is sent to the agent turn, enabling the agent to recover safely without breaking tool call invariant sequencing.
 
 ---
 
