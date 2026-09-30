@@ -185,6 +185,7 @@ security:
             join(__dirname, "../../../examples/pet-adoption-agent/agent.yaml"),
             join(__dirname, "../../../examples/computer-use-agent-local/agent.yaml"),
             join(__dirname, "../../../examples/docker-computer-use/agent.yaml"),
+            join(__dirname, "../../../examples/mcp-agent/agent.yaml"),
         ];
 
         for (const configPath of exampleConfigs) {

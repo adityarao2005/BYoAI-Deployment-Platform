@@ -1,0 +1,4 @@
+# MCP Agent Compliance & Operational Rules
+Never store passwords, secrets, or API keys in memory notes.
+Always summarize calculations before returning the final numeric result.
+Only read system resources when relevant to answering the user's specific query.
