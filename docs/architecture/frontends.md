@@ -34,10 +34,12 @@ graph LR
 - **Role**: Rich web chat interface for browser users.
 - **Frontend**: Vite + React 19 + TypeScript + Tailwind CSS v4 + `@assistant-ui/react`.
 - **Go Backend**: Confidential OAuth client that handles authorization code flow, manages encrypted session cookies (`gorilla/sessions`), injects Bearer tokens server-side, and serves the static SPA via `embed.FS`.
-- **Input Locking**: Prevents race conditions and user collision by disabling text input while an agent is executing until `agent:complete` SSE event is received.
+- **Non-blocking Event-Driven Flow**: User message submission (`POST /interactions/:id`) returns immediately `{ success: true }` without blocking on agent turn execution. The SSE stream `/interactions/:id/events` drives the UI state (`agent:run` locks input and sets typing indicator, while `agent:complete` or `agent:error` unlocks the input area immediately upon completion).
 
 ## 2. Shell CLI (`apps/shell-cli`)
 - **Role**: Terminal user interface (TUI) and batch CLI for developers.
 - **TUI Engine**: Built with Charm's `bubbletea/v2`, `lipgloss/v2`, and `bubbles/v2`.
 - **OAuth PKCE**: Public OAuth client initiating browser authorization flow with an ephemeral localhost callback receiver and storing tokens at `~/.byoai/tokens.json`.
 - **Modes**: Supports both interactive turn-based chat and non-interactive one-shot batch tasks.
+- **SSE Event Subscription**: Employs recursive `tea.Cmd` event reading off Go channels (`StreamEvents`) to dispatch incoming SSE events (`agent:run`, `agent:message`, `tool:call`, `tool:complete`, `agent:complete`, `agent:error`) into Bubble Tea `Update()` loops, ensuring the terminal prompt unlocks immediately when `agent:complete` is received.
+

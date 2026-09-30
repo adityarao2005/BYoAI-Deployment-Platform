@@ -129,7 +129,6 @@ export function App() {
             });
             setErrorMessage(null);
           }
-          setIsAgentRunning(false);
         } else if (event === 'agent:run') {
           setIsAgentRunning(true);
         } else if (event === 'agent:complete') {
@@ -225,25 +224,26 @@ export function App() {
         [selectedId]: [...(prev[selectedId] || []), userMsg],
       }));
 
-      setIsAgentRunning(true);
-
-      const result = await sendMessage(selectedId, content);
-      if (!result.success) {
-        setIsAgentRunning(false);
-        const errorText = result.error || 'Failed to send message to the agent harness.';
-        const errMsg: ChatMessage = {
-          id: `msg-err-${Date.now()}`,
-          role: 'error',
-          isError: true,
-          content: errorText,
-          timestamp: new Date().toISOString(),
-        };
-        setMessages((prev) => ({
-          ...prev,
-          [selectedId]: [...(prev[selectedId] || []), errMsg],
-        }));
-        setErrorMessage(errorText);
-      }
+      // isAgentRunning will be set to true by the SSE 'agent:run' event.
+      // We fire-and-forget the POST — only handle errors from it.
+      sendMessage(selectedId, content).then((result) => {
+        if (!result.success) {
+          const errorText = result.error || 'Failed to send message to the agent harness.';
+          const errMsg: ChatMessage = {
+            id: `msg-err-${Date.now()}`,
+            role: 'error',
+            isError: true,
+            content: errorText,
+            timestamp: new Date().toISOString(),
+          };
+          setMessages((prev) => ({
+            ...prev,
+            [selectedId]: [...(prev[selectedId] || []), errMsg],
+          }));
+          setErrorMessage(errorText);
+          setIsAgentRunning(false);
+        }
+      });
     },
     [selectedId]
   );

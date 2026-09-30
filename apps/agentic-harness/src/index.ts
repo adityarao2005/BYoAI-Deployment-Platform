@@ -127,9 +127,10 @@ app.post(
             });
         }
 
-        // send message to agent
+        // send message to agent — fire-and-forget so the HTTP response
+        // returns immediately while the agent turn runs asynchronously.
         const body = await c.req.valid("json");
-        await manager.sendMessageToAgent(id, body.message);
+        manager.sendMessageToAgent(id, body.message);
         return c.json({ success: true });
     },
 );
