@@ -330,7 +330,10 @@ export function registerToolProviders(
 
     if (activeComputer) {
         const computerUseProvider = withToolFilter(
-            new ComputerUseToolProvider(activeComputer),
+            new ComputerUseToolProvider(
+                activeComputer,
+                computerConfig?.permissions,
+            ),
             computerConfig
                 ? {
                       allowedTools: computerConfig.allowedTools,

@@ -62,6 +62,16 @@ toolProviders:
     provider:
       type: local
       enableGUIToolsIfAvailable: true
+    permissions:
+      read:
+        allowed: ["/workspace", "/tmp/*"]
+        disallowed: ["/etc/*", "/root/.ssh/*"]
+      write:
+        allowed: ["/workspace/*", "/tmp/*"]
+        disallowed: ["/workspace/secret.key"]
+      execute:
+        allowed: ["find *", "git status", "ls *", "cat *"]
+        disallowed: ["bash", "sh", "git commit*"]
 
   # Computer Use Tool Provider (Remote sandbox via ConnectRPC)
   - type: computer
@@ -76,6 +86,14 @@ toolProviders:
       resources:
         cpu: "2"
         memory: "4GiB"
+    permissions:
+      read:
+        allowed: ["/app", "/tmp"]
+        disallowed: ["/etc/shadow", "/root/*"]
+      write:
+        allowed: ["/app/output/*", "/tmp/*"]
+      execute:
+        disallowed: ["rm -rf *", "sh", "bash"]
 ```
 
 ---

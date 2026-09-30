@@ -10,14 +10,23 @@ import type {
     GraphicalComputer,
     HeadlessComputer,
 } from "../../computer/computer";
+import {
+    type ComputerPermissions,
+    assertCommandAllowed,
+    assertPathAllowed,
+} from "./permissions";
 
 /**
  * Creates Tool objects for headless computer operations.
  *
  * @param computer HeadlessComputer implementation
+ * @param permissions Optional permissions rules governing read, write, and command execution
  * @returns Array of Tool objects (execute, read_file, write_file, list_directory, get_user_id, get_group_id)
  */
-export function createHeadlessTools(computer: HeadlessComputer): Tool[] {
+export function createHeadlessTools(
+    computer: HeadlessComputer,
+    permissions?: ComputerPermissions,
+): Tool[] {
     return [
         {
             name: "execute",
@@ -45,6 +54,9 @@ export function createHeadlessTools(computer: HeadlessComputer): Tool[] {
                 ["command"],
             ),
             execute: async (args: Record<string, any>) => {
+                if (permissions?.execute) {
+                    assertCommandAllowed(args.command, permissions.execute);
+                }
                 return computer.execute({
                     command: args.command,
                     cwd: args.cwd,
@@ -70,6 +82,9 @@ export function createHeadlessTools(computer: HeadlessComputer): Tool[] {
                 ["path"],
             ),
             execute: async (args: Record<string, any>) => {
+                if (permissions?.read) {
+                    assertPathAllowed("read", args.path, permissions.read);
+                }
                 return computer.readFile({
                     path: args.path,
                     offset: args.offset,
@@ -92,6 +107,9 @@ export function createHeadlessTools(computer: HeadlessComputer): Tool[] {
                 ["path", "content"],
             ),
             execute: async (args: Record<string, any>) => {
+                if (permissions?.write) {
+                    assertPathAllowed("write", args.path, permissions.write);
+                }
                 return computer.writeFile({
                     path: args.path,
                     content: args.content,
@@ -110,6 +128,9 @@ export function createHeadlessTools(computer: HeadlessComputer): Tool[] {
                 ["path"],
             ),
             execute: async (args: Record<string, any>) => {
+                if (permissions?.read) {
+                    assertPathAllowed("read", args.path, permissions.read);
+                }
                 return computer.listDirectory({
                     path: args.path,
                 });

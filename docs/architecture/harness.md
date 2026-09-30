@@ -65,6 +65,13 @@ The platform provides fine-grained compliance controls embedded into the agent r
   5. On `accept`: The tool is executed and results are dispatched as `tool:complete`.
   6. On `reject`: A rejected tool response is recorded in transcript memory and a rejection notification is sent to the agent turn, enabling the agent to recover safely without breaking tool call invariant sequencing.
 
+### 5. Computer Use Specific Rules (`permissions`)
+Configurable under the `computer` tool provider in `agent.yaml` to restrict read, write, and command execution on the agentic harness side:
+- **`permissions.read`**: Rules for `read_file` and `list_directory`. Supports file/directory paths and wildcard patterns (`*`, `?`). Any directory path automatically permits all files and subdirectories inside it.
+- **`permissions.write`**: Rules for `write_file`.
+- **`permissions.execute`**: Rules for shell commands and command sequences (`execute`). Checks whole command, sub-commands in chains/pipelines (`&&`, `||`, `;`, `|`), executable binary names, and wildcard patterns (e.g. `bash`, `sh`, `git commit*`, `find *`).
+- **Precedence**: `disallowed` takes highest precedence; if `allowed` whitelist is specified, all actions/sub-commands must match an allowed pattern. Denials throw descriptive errors returning clear feedback to the model.
+
 ---
 
 ## User Authentication & OAuth2 Token Propagation (`packages/core/src/agents/agent.auth.ts`)
