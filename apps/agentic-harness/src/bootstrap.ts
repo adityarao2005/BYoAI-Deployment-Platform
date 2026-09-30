@@ -282,7 +282,7 @@ export function registerComputer(
 // ─── Tool Provider Registration ─────────────────────────────────────
 
 export async function resolveRules(
-    rawRules: string[],
+    rawRules: string[] = [],
     baseDir: string = process.cwd(),
 ): Promise<string[]> {
     const resolved: string[] = [];

@@ -142,4 +142,40 @@ security:
         const config = await loadConfig(configPath);
         expect(config.models[0]?.properties.apiKey).toBe("fallback-key");
     });
+
+    it("parses rules from agent.yaml and resolves file imports", async () => {
+        tempConfigDir = await mkdtemp(join(tmpdir(), "agent-rules-test-"));
+        const rulesFilePath = join(tempConfigDir, "rules.txt");
+        await writeFile(rulesFilePath, "Imported file rule 1\n# Comment to ignore\nImported file rule 2\n", "utf8");
+
+        const configPath = join(tempConfigDir, "agent.yaml");
+        await writeFile(
+            configPath,
+            `
+models:
+  - name: test-model
+    brand: gemini
+    properties:
+      apiKey: "test-key"
+rules:
+  - "Inline rule 1"
+  - "${rulesFilePath}"
+security:
+  jwksUri: "https://example.com"
+  alg: ["RS256"]
+`,
+            "utf8",
+        );
+
+        const config = await loadConfig(configPath);
+        expect(config.rules).toEqual(["Inline rule 1", rulesFilePath]);
+
+        const { resolveRules } = await import("./bootstrap");
+        const resolved = await resolveRules(config.rules ?? [], tempConfigDir);
+        expect(resolved).toEqual([
+            "Inline rule 1",
+            "Imported file rule 1",
+            "Imported file rule 2",
+        ]);
+    });
 });

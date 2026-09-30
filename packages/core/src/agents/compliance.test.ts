@@ -96,7 +96,7 @@ describe("Compliance & Security Features", () => {
         await manager.sendMessageToAgent(agent.id, "Execute non-interactive task");
 
         expect(model.calls.length).toBe(1);
-        const toolsSupplied = model.calls[0].tools;
+        const toolsSupplied = model.calls[0]!.tools;
         expect(toolsSupplied.map((t) => t.name)).toEqual(["safe_tool"]);
     });
 
