@@ -15,13 +15,13 @@ server.registerTool(
     {
         description:
             "Performs mathematical calculations (add, subtract, multiply, divide, power).",
-        inputSchema: {
+        inputSchema: z.object({
             operation: z
                 .enum(["add", "subtract", "multiply", "divide", "power"])
                 .describe("Math operation"),
             a: z.number().describe("First number"),
             b: z.number().describe("Second number"),
-        },
+        }),
     },
     async ({ operation, a, b }) => {
         let result: number;
@@ -62,7 +62,7 @@ server.registerTool(
     {
         description:
             "Returns server environment metrics including platform, node/bun runtime, and memory usage.",
-        inputSchema: {},
+        inputSchema: z.object({}),
     },
     async () => {
         return {
@@ -98,10 +98,10 @@ server.registerTool(
     {
         description:
             "Stores a persistent key-value note into agent memory. (Requires user confirmation).",
-        inputSchema: {
+        inputSchema: z.object({
             key: z.string().describe("Unique identifier for the note"),
             content: z.string().describe("Text content of the note"),
-        },
+        }),
     },
     async ({ key, content }) => {
         notesStore.set(key, content);
