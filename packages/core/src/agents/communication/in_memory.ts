@@ -19,9 +19,9 @@ export class InMemoryAgentCommunicator implements AgentCommunicator {
         this.emitted.push({ event, payload });
         const handlers = this.listeners.get(event);
         if (handlers) {
-            for (const handler of handlers) {
-                await handler(payload);
-            }
+            await Promise.all(
+                Array.from(handlers).map((handler) => handler(payload)),
+            );
         }
     }
 

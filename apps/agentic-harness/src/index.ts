@@ -246,7 +246,7 @@ app.get("/interactions/:id/sse", async (c) => {
         try {
             // Keep stream open with periodic keepalive ping
             while (!stream.aborted) {
-                await stream.sleep(15000);
+                await stream.sleep(3000);
                 if (!stream.aborted) {
                     await stream.writeSSE({
                         event: "ping",
@@ -308,5 +308,7 @@ app.get("/admin/interactions", async (c) => {
         }),
     );
 });
+
+Object.assign(app, { idleTimeout: 255 });
 
 export default app;
