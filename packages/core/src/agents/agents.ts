@@ -16,6 +16,18 @@ import type { AgentCommunicator } from "./agent.messaging";
 import type { AgentObserver } from "./agent.observer";
 import type { AuthContext, UserTokenManager } from "./agent.auth";
 import { AgentExecutionError } from "@/errors/exceptions";
+import type { ComputerLifecycle } from "@/config/tool_config";
+import type {
+    ComputerLifecycleManager,
+    ComputerLifecycleScope,
+} from "./agent.computer_lifecycle";
+import {
+    type MemoryManager,
+    normalizeMemoryManager,
+} from "./agent.unified_memory";
+
+export { type MemoryManager };
+
 /**
  * Plain agent identifier.
  */
@@ -34,11 +46,12 @@ export type AgentConfiguration = {
     readonly model: Model;
     readonly skillRepository: SkillRepository[];
     readonly toolProviders: ToolProvider[];
-    readonly memoryManager: AgentMemoryManager;
+    readonly memoryManager: MemoryManager | AgentMemoryManager;
     readonly communicator: AgentCommunicator;
     readonly computerProvider?: ComputerProvider;
+    readonly computerLifecycleManager?: ComputerLifecycleManager;
     readonly observers?: AgentObserver[];
-    readonly userTokenManager: UserTokenManager;
+    readonly userTokenManager?: UserTokenManager;
     readonly rules?: string[];
 };
 
@@ -140,12 +153,18 @@ export interface IAgentLifecycleManager {
  */
 export class AgentManager implements IAgentLifecycleManager {
     private configuration: AgentConfiguration;
+    private memory: MemoryManager;
     private executor: AgentExecutor;
     private unsubscribers: Array<() => void> = [];
 
     constructor(configuration: AgentConfiguration, executor?: AgentExecutor) {
         this.configuration = configuration;
-        this.executor = executor ?? new AgentExecutor(configuration);
+        this.memory = normalizeMemoryManager(configuration.memoryManager, {
+            userTokenManager: configuration.userTokenManager,
+            computerLifecycleManager: configuration.computerLifecycleManager,
+        });
+        this.executor =
+            executor ?? new AgentExecutor(configuration, this.memory);
     }
 
     async init(): Promise<void> {
@@ -304,43 +323,74 @@ export class AgentManager implements IAgentLifecycleManager {
         const mode =
             typeof props === "object" && props.mode ? props.mode : "interactive";
         const id =
-            await this.configuration.memoryManager.createAgentMemoryEntry(
+            await this.memory.agent.createAgentMemoryEntry(
                 this.configuration.name,
                 userId,
                 mode,
             );
 
         if (this.configuration.computerProvider) {
-            // TODO: handle lifecycle differences
-            const computerId =
-                await this.configuration.computerProvider.createComputer();
+            const lifecycle: ComputerLifecycle =
+                this.configuration.computerProvider.lifecycle ?? "user";
+
+            const scope: ComputerLifecycleScope = {
+                lifecycle,
+                agentName: this.configuration.name,
+                userId,
+                interactionId: id,
+            };
+
+            const existing =
+                await this.memory.computerLifecycle.getComputer(scope);
+
+            let computerId = existing?.computerId;
+            let skillsPath = existing?.skillsPath;
+
+            if (!computerId) {
+                computerId =
+                    await this.configuration.computerProvider.createComputer();
+                if (computerId) {
+                    if (this.configuration.computerProvider.sendSkillsZip) {
+                        for (const repo of this.configuration.skillRepository) {
+                            try {
+                                const zipBuffer =
+                                    await exportSkillRepositoryToZip(repo);
+                                skillsPath =
+                                    await this.configuration.computerProvider.sendSkillsZip(
+                                        computerId,
+                                        zipBuffer,
+                                    );
+                            } catch {
+                                // Ignore failure to send skills zip if repo export is unavailable
+                            }
+                        }
+                    }
+
+                    await this.memory.computerLifecycle.setComputer(scope, {
+                        computerId,
+                        skillsPath,
+                        lifecycle,
+                        createdAt: Date.now(),
+                    });
+                }
+            }
+
             if (computerId) {
-                await this.configuration.memoryManager.setComputerId(
+                await this.memory.agent.setComputerId(
                     id,
                     computerId,
                 );
 
-                if (this.configuration.computerProvider.sendSkillsZip) {
-                    for (const repo of this.configuration.skillRepository) {
-                        try {
-                            const zipBuffer = await exportSkillRepositoryToZip(repo);
-                            const skillsPath = await this.configuration.computerProvider.sendSkillsZip(
-                                computerId,
-                                zipBuffer,
-                            );
-                            await this.configuration.memoryManager.setSkillsPath(
-                                id,
-                                skillsPath,
-                            );
-                        } catch {
-                            // Ignore failure to send skills zip if repo export is unavailable
-                        }
-                    }
+                if (skillsPath) {
+                    await this.memory.agent.setSkillsPath(
+                        id,
+                        skillsPath,
+                    );
                 }
             }
         }
 
-        const value = await this.configuration.memoryManager.getAgent(id);
+        const value = await this.memory.agent.getAgent(id);
 
         if (!value) {
             throw new AgentExecutionError(
@@ -420,13 +470,13 @@ export class AgentManager implements IAgentLifecycleManager {
     async getAgentInteraction(
         id: string,
     ): Promise<AgentInteraction | undefined> {
-        const agent = await this.configuration.memoryManager.getAgent(id);
+        const agent = await this.memory.agent.getAgent(id);
         if (!agent) {
             return undefined;
         }
 
         const memory =
-            await this.configuration.memoryManager.getAgentMemory(id);
+            await this.memory.agent.getAgentMemory(id);
 
         return {
             id,
@@ -442,7 +492,7 @@ export class AgentManager implements IAgentLifecycleManager {
         id: string,
         userId: string,
     ): Promise<AgentInteraction | undefined> {
-        const agent = await this.configuration.memoryManager.getAgentByUser(
+        const agent = await this.memory.agent.getAgentByUser(
             id,
             userId,
         );
@@ -451,7 +501,7 @@ export class AgentManager implements IAgentLifecycleManager {
         }
 
         const memory =
-            await this.configuration.memoryManager.getAgentMemory(id);
+            await this.memory.agent.getAgentMemory(id);
 
         return {
             id,
@@ -463,11 +513,11 @@ export class AgentManager implements IAgentLifecycleManager {
     }
 
     async getAllAgents(): Promise<string[]> {
-        return await this.configuration.memoryManager.getAllAgents();
+        return await this.memory.agent.getAllAgents();
     }
 
     async getAllAgentsByUser(userId: string): Promise<string[]> {
-        return await this.configuration.memoryManager.getAllAgentsByUser(
+        return await this.memory.agent.getAllAgentsByUser(
             userId,
         );
     }
@@ -476,12 +526,20 @@ export class AgentManager implements IAgentLifecycleManager {
         return this.configuration.communicator;
     }
 
-    get memoryManager(): AgentMemoryManager {
-        return this.configuration.memoryManager;
+    get memoryManager(): MemoryManager {
+        return this.memory;
+    }
+
+    get agentMemory(): AgentMemoryManager {
+        return this.memory.agent;
     }
 
     get userTokenManager(): UserTokenManager {
-        return this.configuration.userTokenManager;
+        return this.memory.userToken;
+    }
+
+    get computerLifecycleManager(): ComputerLifecycleManager {
+        return this.memory.computerLifecycle;
     }
 }
 

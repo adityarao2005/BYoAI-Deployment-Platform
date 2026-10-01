@@ -8,6 +8,10 @@ import type { AgentConfiguration, AgentSession } from "./agents";
 import { constructSystemPrompt } from "./agents";
 import type { AgentObserver } from "./agent.observer";
 import { AgentExecutionError } from "@/errors/exceptions";
+import {
+    type MemoryManager,
+    normalizeMemoryManager,
+} from "./agent.unified_memory";
 
 /**
  * Interface representing the core agent runtime execution capabilities.
@@ -47,11 +51,19 @@ export interface IAgentExecutor {
  */
 export class AgentExecutor implements IAgentExecutor {
     private configuration: AgentConfiguration;
+    private memory: MemoryManager;
     private skills: Skill[] = [];
     private tools: Tool[] | undefined = undefined;
 
-    constructor(configuration: AgentConfiguration) {
+    constructor(configuration: AgentConfiguration, memory?: MemoryManager) {
         this.configuration = configuration;
+        this.memory =
+            memory ??
+            normalizeMemoryManager(configuration.memoryManager, {
+                userTokenManager: configuration.userTokenManager,
+                computerLifecycleManager:
+                    configuration.computerLifecycleManager,
+            });
     }
 
     async notifyError(
@@ -94,7 +106,7 @@ export class AgentExecutor implements IAgentExecutor {
         session: AgentSession;
         tools: Tool[];
     }> {
-        const agent = await this.configuration.memoryManager.getAgent(agentId);
+        const agent = await this.memory.agent.getAgent(agentId);
         if (!agent) {
             throw new AgentExecutionError(
                 `The agent ${agentId} should exist before creating a new session`,
@@ -102,7 +114,7 @@ export class AgentExecutor implements IAgentExecutor {
             );
         }
         const memory =
-            await this.configuration.memoryManager.getAgentMemory(agentId);
+            await this.memory.agent.getAgentMemory(agentId);
 
         if (this.tools === undefined) {
             this.tools = (
@@ -114,11 +126,9 @@ export class AgentExecutor implements IAgentExecutor {
             ).flat();
         }
 
-        const authContext = this.configuration.userTokenManager
-            ? await this.configuration.userTokenManager.getUserToken(
-                  agent.userId,
-              )
-            : undefined;
+        const authContext = await this.memory.userToken.getUserToken(
+            agent.userId,
+        );
 
         return {
             session: {
@@ -139,7 +149,7 @@ export class AgentExecutor implements IAgentExecutor {
 
     async sendMessage(agentId: string, message: string): Promise<void> {
         const memory =
-            await this.configuration.memoryManager.getAgentMemory(agentId);
+            await this.memory.agent.getAgentMemory(agentId);
         if (memory.mode === "non-interactive" && memory.transcript.length > 0) {
             throw new AgentExecutionError(
                 `Cannot send message to non-interactive agent ${agentId} with existing transcript messages`,
@@ -147,7 +157,7 @@ export class AgentExecutor implements IAgentExecutor {
             );
         }
         await this.notifyObservers("onTurnStart", agentId, message);
-        await this.configuration.memoryManager.addTranscriptEntries(agentId, [
+        await this.memory.agent.addTranscriptEntries(agentId, [
             {
                 role: "user",
                 type: "message",
@@ -163,7 +173,7 @@ export class AgentExecutor implements IAgentExecutor {
     async runTurn(agentId: string): Promise<void> {
         const { session, tools } = await this.createAgentSession(agentId);
         const memory =
-            await this.configuration.memoryManager.getAgentMemory(agentId);
+            await this.memory.agent.getAgentMemory(agentId);
 
         const prompt = constructSystemPrompt(
             session.name,
@@ -201,7 +211,7 @@ export class AgentExecutor implements IAgentExecutor {
 
         await this.notifyObservers("onModelEnd", agentId, output);
 
-        await this.configuration.memoryManager.addTranscriptEntries(
+        await this.memory.agent.addTranscriptEntries(
             agentId,
             output,
         );
@@ -377,7 +387,7 @@ export class AgentExecutor implements IAgentExecutor {
         skipRun = false,
     ): Promise<void> {
         const memory =
-            await this.configuration.memoryManager.getAgentMemory(agentId);
+            await this.memory.agent.getAgentMemory(agentId);
 
         const existing = memory.transcript.find(
             (e) => e.type === "tool_response" && e.id === toolCallId,
@@ -396,7 +406,7 @@ export class AgentExecutor implements IAgentExecutor {
             execute: async () => {},
         };
 
-        await this.configuration.memoryManager.addTranscriptEntries(agentId, [
+        await this.memory.agent.addTranscriptEntries(agentId, [
             {
                 type: "tool_response",
                 result,
@@ -406,7 +416,7 @@ export class AgentExecutor implements IAgentExecutor {
         ]);
 
         const updatedMemory =
-            await this.configuration.memoryManager.getAgentMemory(agentId);
+            await this.memory.agent.getAgentMemory(agentId);
 
         if (!skipRun && updatedMemory.getPendingToolCalls().length === 0) {
             await this.configuration.communicator.emit("agent:run", {
@@ -420,7 +430,7 @@ export class AgentExecutor implements IAgentExecutor {
         toolCallId: string,
     ): Promise<void> {
         const memory =
-            await this.configuration.memoryManager.getAgentMemory(agentId);
+            await this.memory.agent.getAgentMemory(agentId);
         const pendingCalls = memory.getPendingToolCalls();
         if (!pendingCalls.includes(toolCallId)) {
             throw new AgentExecutionError(
@@ -463,7 +473,7 @@ export class AgentExecutor implements IAgentExecutor {
         reason?: string,
     ): Promise<void> {
         const memory =
-            await this.configuration.memoryManager.getAgentMemory(agentId);
+            await this.memory.agent.getAgentMemory(agentId);
         const pendingCalls = memory.getPendingToolCalls();
         if (!pendingCalls.includes(toolCallId)) {
             throw new AgentExecutionError(

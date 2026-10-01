@@ -611,3 +611,155 @@ describe("InMemoryAgentMemoryManager & AgentManager User Scoping", () => {
     });
 });
 
+describe("AgentManager Computer Lifecycles", () => {
+    function createMockComputerProvider(
+        lifecycle?: "server" | "user" | "interaction",
+    ) {
+        let counter = 0;
+        const createdComputers: string[] = [];
+        return {
+            lifecycle,
+            createdComputers,
+            init: async () => {},
+            createComputer: async () => {
+                const id = `mock-comp-${++counter}`;
+                createdComputers.push(id);
+                return id;
+            },
+            getComputer: async () => ({ type: 0 as any, error: "" }),
+            deleteComputer: async () => {},
+            sendSkillsZip: async (computerId: string) => `/skills/${computerId}`,
+        };
+    }
+
+    const testModel: Model = {
+        name: "test-model",
+        async execute() {
+            return [{ role: "assistant", type: "message", content: "ok" }];
+        },
+    };
+
+    const mockSkillRepo: any = {
+        name: "mock-skills",
+        getAllSkills: async () => [
+            {
+                frontMatter: { name: "test-skill", description: "testing" },
+                instructions: "do something",
+            },
+        ],
+        exportSkillsToZip: async () => Buffer.from("mock-zip"),
+    };
+
+    it("defaults to 'user' lifecycle: reuses computer per user across interactions", async () => {
+        const mockProvider = createMockComputerProvider(); // lifecycle undefined -> default "user"
+        const communicator = new InMemoryAgentCommunicator();
+        const memoryManager = new InMemoryAgentMemoryManager();
+
+        const manager = new AgentManager({
+            name: "UserLifecycleAgent",
+            description: "Tests user lifecycle",
+            model: testModel,
+            skillRepository: [mockSkillRepo],
+            toolProviders: [],
+            memoryManager,
+            communicator,
+            computerProvider: mockProvider,
+        });
+        await manager.init();
+
+        // User 1 Interaction 1
+        const u1Int1 = await manager.createAgent("user-1");
+        expect(u1Int1.computerId).toBe("mock-comp-1");
+
+        // User 1 Interaction 2
+        const u1Int2 = await manager.createAgent("user-1");
+        expect(u1Int2.computerId).toBe("mock-comp-1");
+
+        // User 2 Interaction 1
+        const u2Int1 = await manager.createAgent("user-2");
+        expect(u2Int1.computerId).toBe("mock-comp-2");
+
+        // User 2 Interaction 2
+        const u2Int2 = await manager.createAgent("user-2");
+        expect(u2Int2.computerId).toBe("mock-comp-2");
+
+        // Exactly 2 computers created
+        expect(mockProvider.createdComputers).toEqual([
+            "mock-comp-1",
+            "mock-comp-2",
+        ]);
+
+        // Skills path should be set on all interactions
+        const mem1 = await manager.memoryManager.agent.getAgentMemory(u1Int1.id);
+        const mem2 = await manager.memoryManager.agent.getAgentMemory(u1Int2.id);
+        expect(mem1.skillsPath).toBe("/skills/mock-comp-1");
+        expect(mem2.skillsPath).toBe("/skills/mock-comp-1");
+
+        manager.destroy();
+    });
+
+    it("'server' lifecycle: reuses single computer across all users and interactions", async () => {
+        const mockProvider = createMockComputerProvider("server");
+        const communicator = new InMemoryAgentCommunicator();
+        const memoryManager = new InMemoryAgentMemoryManager();
+
+        const manager = new AgentManager({
+            name: "ServerLifecycleAgent",
+            description: "Tests server lifecycle",
+            model: testModel,
+            skillRepository: [mockSkillRepo],
+            toolProviders: [],
+            memoryManager,
+            communicator,
+            computerProvider: mockProvider,
+        });
+        await manager.init();
+
+        const u1 = await manager.createAgent("user-1");
+        const u2 = await manager.createAgent("user-2");
+        const u3 = await manager.createAgent("user-3");
+
+        expect(u1.computerId).toBe("mock-comp-1");
+        expect(u2.computerId).toBe("mock-comp-1");
+        expect(u3.computerId).toBe("mock-comp-1");
+
+        expect(mockProvider.createdComputers).toEqual(["mock-comp-1"]);
+
+        manager.destroy();
+    });
+
+    it("'interaction' lifecycle: creates new computer for every interaction", async () => {
+        const mockProvider = createMockComputerProvider("interaction");
+        const communicator = new InMemoryAgentCommunicator();
+        const memoryManager = new InMemoryAgentMemoryManager();
+
+        const manager = new AgentManager({
+            name: "InteractionLifecycleAgent",
+            description: "Tests interaction lifecycle",
+            model: testModel,
+            skillRepository: [mockSkillRepo],
+            toolProviders: [],
+            memoryManager,
+            communicator,
+            computerProvider: mockProvider,
+        });
+        await manager.init();
+
+        const u1Int1 = await manager.createAgent("user-1");
+        const u1Int2 = await manager.createAgent("user-1");
+        const u2Int1 = await manager.createAgent("user-2");
+
+        expect(u1Int1.computerId).toBe("mock-comp-1");
+        expect(u1Int2.computerId).toBe("mock-comp-2");
+        expect(u2Int1.computerId).toBe("mock-comp-3");
+
+        expect(mockProvider.createdComputers).toEqual([
+            "mock-comp-1",
+            "mock-comp-2",
+            "mock-comp-3",
+        ]);
+
+        manager.destroy();
+    });
+});
+

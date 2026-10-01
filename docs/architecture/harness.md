@@ -74,6 +74,45 @@ Configurable under the `computer` tool provider in `agent.yaml` to restrict read
 
 ---
 
+## Memory Architecture & Computer Lifecycles (`packages/core/src/agents/`)
+
+The platform features a unified **`MemoryManager`** interface (`agent.unified_memory.ts`) that coordinates three distinct state domains:
+1. **`agent` (`AgentMemoryManager`)**: Manages agent conversations, transcripts, interaction metadata, and handles. Implemented by `InMemoryAgentMemoryManager` and `JsonFileAgentMemoryManager`.
+2. **`userToken` (`UserTokenManager`)**: Manages OAuth2 access tokens and credentials per user session with automatic expiration cleanup.
+3. **`computerLifecycle` (`ComputerLifecycleManager`)**: Manages computer session mappings across different lifecycle tiers (`agent.computer_lifecycle.ts`).
+
+### Computer Lifecycle Modes (`server`, `user`, `interaction`)
+
+When `computerProvider` is configured in `agent.yaml`, the `lifecycle` property determines computer instance reuse:
+
+```yaml
+toolProviders:
+  - type: computer
+    lifecycle: user # "server" | "user" | "interaction" (defaults to "user")
+    provider:
+      type: local
+      enableGUIToolsIfAvailable: false
+```
+
+- **`server`**: 1 computer shared for all users and interactions for this agent (`server:${agentName}`). Ideal for persistent shared service agents.
+- **`user`** *(Default)*: 1 computer per user, shared across all interactions of that user with this agent (`user:${agentName}:${userId}`). Maintains user workspace persistence across multiple turns and interactions.
+- **`interaction`**: 1 isolated computer session per interaction (`interaction:${interactionId}`). Completely ephemeral and destroyed or isolated per conversation.
+
+Storage backends for computer lifecycles:
+- **`InMemoryComputerLifecycleManager`**: Map-based storage in RAM.
+- **`JsonFileComputerLifecycleManager`**: Persistent atomic file storage on disk.
+
+```typescript
+// Unified Memory Composition
+const memoryManager = new CompositeMemoryManager({
+    agent: new InMemoryAgentMemoryManager(),
+    userToken: new InMemoryUserTokenManager(),
+    computerLifecycle: new InMemoryComputerLifecycleManager(),
+});
+```
+
+---
+
 ## User Authentication & OAuth2 Token Propagation (`packages/core/src/agents/agent.auth.ts`)
 
 The platform implements user token management and context propagation down to downstream tools (OpenAPI and Remote MCP servers) acting on behalf of the user:

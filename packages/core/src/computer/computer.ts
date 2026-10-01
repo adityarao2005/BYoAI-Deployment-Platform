@@ -1,3 +1,4 @@
+import type { ComputerLifecycle } from "@/config/tool_config";
 import type { ComputerType } from "@/gen/computer_api/v1/computer_pb";
 
 /**
@@ -291,6 +292,11 @@ export type ComputerPayload =
  * Provides the computer for you
  */
 export interface ComputerProvider {
+    /**
+     * The lifecycle mode of the computer session ("server" | "user" | "interaction").
+     */
+    readonly lifecycle?: ComputerLifecycle;
+
     /**
      * Initializes provider
      */
