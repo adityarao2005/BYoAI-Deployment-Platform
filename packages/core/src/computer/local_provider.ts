@@ -30,7 +30,10 @@ import type {
     TypeArgs,
     WriteFileArgs,
 } from "@/computer/computer";
-import type { LocalComputerUseToolProviderConfig } from "@/config/tool_config";
+import type {
+    ComputerLifecycle,
+    LocalComputerUseToolProviderConfig,
+} from "@/config/tool_config";
 import { ComputerType } from "@/gen/computer_api/v1/computer_pb";
 import type { Tool } from "@/tools";
 
@@ -598,10 +601,15 @@ export class LocalGraphicalComputer
  */
 export class LocalComputerProvider implements ComputerProvider {
     config: LocalComputerUseToolProviderConfig;
+    readonly lifecycle: ComputerLifecycle;
     computers: Map<string, ComputerPayload>;
 
-    constructor(config: LocalComputerUseToolProviderConfig) {
+    constructor(
+        config: LocalComputerUseToolProviderConfig,
+        lifecycle: ComputerLifecycle = config.lifecycle ?? "user",
+    ) {
         this.config = config;
+        this.lifecycle = lifecycle;
         this.computers = new Map();
     }
 

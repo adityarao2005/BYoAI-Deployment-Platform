@@ -13,10 +13,11 @@ export * from "./remote_provider";
 export function createComputerProvider(
     config: ComputerUseToolProviderConfig,
 ): ComputerProvider {
+    const lifecycle = config.lifecycle ?? config.provider.lifecycle ?? "user";
     switch (config.provider.type) {
         case "local":
-            return new LocalComputerProvider(config.provider);
+            return new LocalComputerProvider(config.provider, lifecycle);
         case "remote":
-            return new RemoteComputerProvider(config.provider);
+            return new RemoteComputerProvider(config.provider, lifecycle);
     }
 }

@@ -4,9 +4,11 @@ import path from "node:path";
 import {
     AgentManager,
     type AgentObserver,
+    CompositeMemoryManager,
     ConsoleAgentObserver,
     InMemoryAgentCommunicator,
     InMemoryAgentMemoryManager,
+    InMemoryComputerLifecycleManager,
     InMemoryUserTokenManager,
     LoggingAgentObserver,
 } from "@byo-ai-agent-platform/core/agents";
@@ -505,8 +507,11 @@ export async function bootstrap(
     }
 
     const communicator = new InMemoryAgentCommunicator();
-    const memoryManager = new InMemoryAgentMemoryManager();
-    const tokenManager = new InMemoryUserTokenManager();
+    const memoryManager = new CompositeMemoryManager({
+        agent: new InMemoryAgentMemoryManager(),
+        userToken: new InMemoryUserTokenManager(),
+        computerLifecycle: new InMemoryComputerLifecycleManager(),
+    });
 
     const skillRepos = skillRepositoryRegistry.getAllSkillRepositories();
     const toolProviders = [
@@ -536,7 +541,6 @@ export async function bootstrap(
         skillRepository: skillRepos,
         toolProviders,
         memoryManager,
-        userTokenManager: tokenManager,
         communicator,
         computerProvider: computer,
         observers,

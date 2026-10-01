@@ -58,10 +58,18 @@ export type OpenAPIToolProviderConfig = z.infer<
 
 // Computer Use Tool Providers
 
+export const ComputerLifecycleSchema = z.enum([
+    "server",
+    "user",
+    "interaction",
+]);
+export type ComputerLifecycle = z.infer<typeof ComputerLifecycleSchema>;
+
 // local tool provider
 export const LocalComputerUseToolProviderConfigSchema = z.object({
     type: z.literal("local"),
     enableGUIToolsIfAvailable: z.boolean(),
+    lifecycle: ComputerLifecycleSchema.optional(),
 });
 
 export type LocalComputerUseToolProviderConfig = z.infer<
@@ -76,6 +84,7 @@ export const RemoteComputerUseToolProviderConfigSchema = z.object({
     enableGUIToolsIfAvailable: z.boolean().default(false),
     url: z.string(), // computer controller connectrpc base url
     image: z.string(), // docker image
+    lifecycle: ComputerLifecycleSchema.optional(),
 
     // TODO: when we work on the on getting user based & session based rbac stuff when we rework the agent harness to be event driven, we need to add a new computerLifetime argument with options for "server", "user", "session"
 
@@ -181,6 +190,7 @@ export type ComputerPermissionsConfig = z.infer<
 
 export const ComputerUseToolProviderConfigSchema = z.object({
     type: z.literal("computer"),
+    lifecycle: ComputerLifecycleSchema.optional(),
     provider: z.discriminatedUnion("type", [
         LocalComputerUseToolProviderConfigSchema,
         RemoteComputerUseToolProviderConfigSchema,

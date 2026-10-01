@@ -384,12 +384,19 @@ describe("Tool Provider Registration", () => {
         expect(providers).toHaveLength(1);
     });
 
-    it("registerComputer returns undefined when no computer provider is configured", () => {
+    it("registerComputer sets default lifecycle to 'user' when not specified", () => {
         const config: AgentConfig = {
             models: [],
             skillRepositories: [],
-            toolProviders: [],
-
+            toolProviders: [
+                {
+                    type: "computer",
+                    provider: {
+                        type: "local",
+                        enableGUIToolsIfAvailable: false,
+                    },
+                },
+            ],
             security: {
                 alg: ["RS512"],
                 jwksUri: "https://example.com",
@@ -397,10 +404,55 @@ describe("Tool Provider Registration", () => {
         };
 
         const computer = registerComputer(config);
-        expect(computer).toBeUndefined();
+        expect(computer).toBeDefined();
+        expect(computer?.lifecycle).toBe("user");
+    });
 
-        registerToolProviders(config, computer);
-        const providers = toolProviderRegistry.getAllToolProviders();
-        expect(providers).toHaveLength(0);
+    it("registerComputer propagates explicit lifecycle ('server', 'interaction')", () => {
+        const serverConfig: AgentConfig = {
+            models: [],
+            skillRepositories: [],
+            toolProviders: [
+                {
+                    type: "computer",
+                    lifecycle: "server",
+                    provider: {
+                        type: "local",
+                        enableGUIToolsIfAvailable: false,
+                    },
+                },
+            ],
+            security: {
+                alg: ["RS512"],
+                jwksUri: "https://example.com",
+            },
+        };
+
+        const serverComputer = registerComputer(serverConfig);
+        expect(serverComputer).toBeDefined();
+        expect(serverComputer?.lifecycle).toBe("server");
+
+        const interactionConfig: AgentConfig = {
+            models: [],
+            skillRepositories: [],
+            toolProviders: [
+                {
+                    type: "computer",
+                    lifecycle: "interaction",
+                    provider: {
+                        type: "local",
+                        enableGUIToolsIfAvailable: false,
+                    },
+                },
+            ],
+            security: {
+                alg: ["RS512"],
+                jwksUri: "https://example.com",
+            },
+        };
+
+        const interactionComputer = registerComputer(interactionConfig);
+        expect(interactionComputer).toBeDefined();
+        expect(interactionComputer?.lifecycle).toBe("interaction");
     });
 });

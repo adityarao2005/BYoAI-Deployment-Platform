@@ -11,7 +11,10 @@ import {
     createConnectTransport,
 } from "@connectrpc/connect-node";
 import dotenv from "dotenv";
-import type { RemoteComputerUseToolProviderConfig } from "@/config/tool_config";
+import type {
+    ComputerLifecycle,
+    RemoteComputerUseToolProviderConfig,
+} from "@/config/tool_config";
 import { ComputerProviderError } from "@/errors/exceptions";
 import { getLogger } from "@/logger";
 import {
@@ -689,6 +692,7 @@ export class RemoteComputerProvider implements ComputerProvider {
 
     // configuration for the computer provider
     config: RemoteComputerUseToolProviderConfig;
+    readonly lifecycle: ComputerLifecycle;
     environment?: Record<string, string>;
     resources?: {
         cpu?: string;
@@ -701,8 +705,12 @@ export class RemoteComputerProvider implements ComputerProvider {
 
     private logger = getLogger("RemoteComputerProvider");
 
-    constructor(config: RemoteComputerUseToolProviderConfig) {
+    constructor(
+        config: RemoteComputerUseToolProviderConfig,
+        lifecycle: ComputerLifecycle = config.lifecycle ?? "user",
+    ) {
         this.config = config;
+        this.lifecycle = lifecycle;
     }
 
     // initialize the tool provider
