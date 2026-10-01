@@ -1,10 +1,33 @@
 # BYoAI-Deployment-Platform
 
-The Platform to Deploy AI Agents.
+The Platform to Deploy Focused and Complaint AI Agents.
 
-View architecture documentation in [docs/architecture/](docs/architecture/).
+## What this is?
+
+This repo contains a list of tools which allows one to:
+- create AI agents declaratively
+- ensure AI agents are sandboxed and have managed complaince
+- customize AI agents with skills and tools (openapi, mcp, computer use, agent to agent, etc)
+- allow AI agents to manage their computers (based on container images)
+- interface with AI agents via Chat UI, SDK, CLI or REST api
+- manage the AI agents
+
+## What this isn't? (or wasn't intended to be)
+
+AI agents nowadays are either synonomous to either 1 of the following things even though agents strictly do not need to interact with users or systems in these means:
+- chatbot (with or without tools)
+- openclaw style agent
+- coding assistant
+
+While we do have a UI for interacting with the agent via chatbot, one could interact with the agent via CLI, SDK, or HTTP. One could also build their own customizable agent using the @core package which the main agent harness depends on.
+
+While a lot of the functionality is shared/inspired by coding agents such as claude code, codex, opencode, antigravity, cursor, bob and what not, the tools created here weren't strictly designed for the usage of enhancing developer workflows (even though the user of this platform could make it act as a coding agent with enough tools, rules and skills). This platform was mainly designed to allow users to manage and customize their AI agents easily and declaratively while still supporting sandboxing and complaince options open to be enabled.
+
+While a lot of the functionality provided by openclaw functionality, openclaw in the early days was very insecure. Things have changed since then and openclaw has definetly become more secure (and OpenAI and NVIDIA have made their own secure versions), this project was created with the security first mindset learning from the flaws of openclaw. OpenClaw only supports running 1 instance of a personalized jack-of-all-trades agent whereas our tools support running multiple specialized and focused agents (making information accuracy and RBAC more easier to implement on the user end).
 
 ## Architecture & Sub-projects
+
+View architecture documentation in [docs/architecture/](docs/architecture/).
 
 ### Local Models (`local_models/`)
 Python-based local LLM server setup utilizing `uv` and Docker Compose.
@@ -63,3 +86,11 @@ task run             # Start service (or: go run ./cmd/controller)
 task test            # Run unit tests (or: go test -v ./...)
 task docker_test     # Run Docker integration tests
 ```
+
+## Where did I use AI?
+
+I used AI coding agents as pair programmers to accelerate implementation, generate test coverage, and sanity-check architectural designs:
+- **AI Tools Used**: Antigravity, GitHub Copilot.
+- **Architectural Ownership & Human Design**: System architecture, component boundaries (Go ConnectRPC daemon, Bun/TypeScript runtime, local Python model stack), security sandbox isolation models, and YAML schema specifications were designed and directed by [@adityarao2005](https://github.com/adityarao2005).
+- **AI Contributions**: Scaffolding boilerplate, generating protobuf definitions, expanding unit/integration test suites, and assisting with documentation.
+- **Validation & QA**: 100% of generated code, schemas, and configurations were manually reviewed, debugged, and verified via end-to-end integration testing and automated test suites (`task unit_test`, `task test`, `task docker_test`) and also manual tests (by me actually running this and seeing if it works).
