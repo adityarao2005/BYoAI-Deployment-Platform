@@ -27,7 +27,6 @@ export function matchesPattern(pattern: string, name: string): boolean {
 export interface ToolFilterOptions {
     allowedTools?: string[];
     disallowedTools?: string[];
-    rejectedTools?: string[];
     userInputTools?: string[];
 }
 
@@ -48,10 +47,7 @@ export class FilteredToolProvider implements ToolProvider {
      */
     isToolAllowed(name: string): boolean {
         // Disallowed / rejected patterns take highest precedence
-        const disallowedPatterns = [
-            ...(this.options.disallowedTools ?? []),
-            ...(this.options.rejectedTools ?? []),
-        ];
+        const disallowedPatterns = this.options.disallowedTools ?? [];
 
         for (const pattern of disallowedPatterns) {
             if (matchesPattern(pattern, name)) {
@@ -142,8 +138,7 @@ export function withToolFilter(
 
     const hasAllowed = options.allowedTools && options.allowedTools.length > 0;
     const hasDisallowed =
-        (options.disallowedTools && options.disallowedTools.length > 0) ||
-        (options.rejectedTools && options.rejectedTools.length > 0);
+        (options.disallowedTools && options.disallowedTools.length > 0);
     const hasUserInput =
         options.userInputTools && options.userInputTools.length > 0;
 

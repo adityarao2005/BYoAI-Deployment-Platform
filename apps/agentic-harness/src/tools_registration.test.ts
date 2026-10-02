@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import type { AgentHandle } from "@byo-ai-agent-platform/core/agents";
 import {
+    Agent2AgentToolProvider,
     McpServerToolProvider,
     OpenAPIToolProvider,
     ScratchpadToolProvider,
@@ -46,7 +47,6 @@ describe("Tool Provider Registration", () => {
             skillRepositories: [],
             toolProviders: [
                 {
-                    name: "my-scratchpad-service",
                     type: "scratchpad",
                 },
             ],
@@ -69,7 +69,6 @@ describe("Tool Provider Registration", () => {
             skillRepositories: [],
             toolProviders: [
                 {
-                    name: "my-todos-service",
                     type: "todos",
                 },
             ],
@@ -84,6 +83,30 @@ describe("Tool Provider Registration", () => {
         const providers = toolProviderRegistry.getAllToolProviders();
         expect(providers).toHaveLength(1);
         expect(providers[0]).toBeInstanceOf(TodosToolProvider);
+    });
+
+    it("registers agent tool provider from config", () => {
+        const config: AgentConfig = {
+            models: [],
+            skillRepositories: [],
+            toolProviders: [
+                {
+                    name: "sub-agent-analyzer",
+                    type: "agent",
+                    url: "http://localhost:4000",
+                },
+            ],
+            security: {
+                alg: ["RS512"],
+                jwksUri: "https://example.com",
+            },
+        };
+
+        registerToolProviders(config);
+
+        const providers = toolProviderRegistry.getAllToolProviders();
+        expect(providers).toHaveLength(1);
+        expect(providers[0]).toBeInstanceOf(Agent2AgentToolProvider);
     });
 
     it("registers mcp stdio tool provider from config", () => {

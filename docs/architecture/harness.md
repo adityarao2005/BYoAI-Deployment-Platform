@@ -48,7 +48,7 @@ The platform provides fine-grained compliance controls embedded into the agent r
 - Tool providers can specify pattern-based rules using wildcards (`*` and `?`):
   - **Default Behavior**: All tools are allowed by default unless explicitly blacklisted or restricted by a whitelist.
   - `allowedTools`: Optional whitelist of patterns (e.g. `["read_*_file", "search_*"]`). When omitted or empty, all tools provided by the provider remain allowed by default. If specified, only tools matching at least one pattern in the list are made available.
-  - `disallowedTools` / `rejectedTools`: Blacklist of patterns (e.g. `["execute_command", "delete_*"]`). Matching tools take precedence and are completely hidden from `getToolsByName` and `getAllTools`.
+  - `disallowedTools`: Blacklist of patterns (e.g. `["execute_command", "delete_*"]`). Matching tools take precedence and are completely hidden from `getToolsByName` and `getAllTools`.
   - `userInputTools`: Patterns requiring explicit user confirmation before execution (e.g. `["write_*", "deploy_*"]`). Matching tools receive the attribute `requires_user_input: true`.
 - Dynamic decoration is provided by `withToolFilter(provider, config)` wrapping any tool provider. If no filter options are configured, the provider is returned unaltered.
 
