@@ -1,10 +1,9 @@
-import z from "zod";
+import z, { string } from "zod";
 
 export const BaseToolProviderConfigSchema = z.object({
     name: z.string(),
     allowedTools: z.array(z.string()).optional(),
     disallowedTools: z.array(z.string()).optional(),
-    rejectedTools: z.array(z.string()).optional(),
     userInputTools: z.array(z.string()).optional(),
 });
 
@@ -197,7 +196,6 @@ export const ComputerUseToolProviderConfigSchema = z.object({
     ]),
     allowedTools: z.array(z.string()).optional(),
     disallowedTools: z.array(z.string()).optional(),
-    rejectedTools: z.array(z.string()).optional(),
     userInputTools: z.array(z.string()).optional(),
     permissions: ComputerPermissionsSchema.optional(),
 });
@@ -292,7 +290,7 @@ export type McpToolProviderConfig = z.infer<typeof McpToolProviderConfigSchema>;
 
 // Scratchpad tool provider
 export const ScratchpadToolProviderConfigSchema =
-    BaseToolProviderConfigSchema.extend({
+    z.object({
         type: z.literal("scratchpad"),
     });
 
@@ -302,13 +300,19 @@ export type ScratchpadToolProviderConfig = z.infer<
 
 // Todos tool provider
 export const TodosToolProviderConfigSchema =
-    BaseToolProviderConfigSchema.extend({
+    z.object({
         type: z.literal("todos"),
     });
 
 export type TodosToolProviderConfig = z.infer<
     typeof TodosToolProviderConfigSchema
 >;
+
+export const Agent2AgentToolProviderConfigSchema = z.object({
+    type: z.literal("agent"),
+    name: z.string(),
+    url: z.string()
+})
 
 /**
  * Universal Zod discriminated union schema for tool provider configuration (`openapi`, `computer`, `mcp`, `scratchpad`, `todos`).
@@ -319,6 +323,7 @@ export const ToolProviderConfigSchema = z.discriminatedUnion("type", [
     McpToolProviderConfigSchema,
     ScratchpadToolProviderConfigSchema,
     TodosToolProviderConfigSchema,
+    Agent2AgentToolProviderConfigSchema
 ]);
 
 /**

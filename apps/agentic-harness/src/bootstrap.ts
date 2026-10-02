@@ -371,11 +371,10 @@ export function registerToolProviders(
             ),
             computerConfig
                 ? {
-                      allowedTools: computerConfig.allowedTools,
-                      disallowedTools: computerConfig.disallowedTools,
-                      rejectedTools: computerConfig.rejectedTools,
-                      userInputTools: computerConfig.userInputTools,
-                  }
+                    allowedTools: computerConfig.allowedTools,
+                    disallowedTools: computerConfig.disallowedTools,
+                    userInputTools: computerConfig.userInputTools,
+                }
                 : undefined,
         );
         toolProviderRegistry.registerToolProvider(computerUseProvider);
@@ -383,10 +382,25 @@ export function registerToolProviders(
     }
 
     for (const providerConfig of config.toolProviders) {
+
+        if (providerConfig.type === "scratchpad") {
+            const scratchpadProvider = new ScratchpadToolProvider();
+            toolProviderRegistry.registerToolProvider(scratchpadProvider);
+            logger.info("Registered ScratchpadToolProvider");
+            continue;
+        } else if (providerConfig.type === "todos") {
+            const todosProvider = new TodosToolProvider()
+            toolProviderRegistry.registerToolProvider(todosProvider);
+            logger.info("Registered TodosToolProvider");
+            continue;
+        } else if (providerConfig.type === "agent") {
+
+            continue;
+        }
+
         const filterOptions = {
             allowedTools: providerConfig.allowedTools,
             disallowedTools: providerConfig.disallowedTools,
-            rejectedTools: providerConfig.rejectedTools,
             userInputTools: providerConfig.userInputTools,
         };
 
@@ -433,24 +447,6 @@ export function registerToolProviders(
             logger.info("Registered McpServerToolProvider", {
                 name: providerConfig.name,
                 transport: providerConfig.transport,
-            });
-        } else if (providerConfig.type === "scratchpad") {
-            const scratchpadProvider = withToolFilter(
-                new ScratchpadToolProvider(),
-                filterOptions,
-            );
-            toolProviderRegistry.registerToolProvider(scratchpadProvider);
-            logger.info("Registered ScratchpadToolProvider", {
-                name: providerConfig.name,
-            });
-        } else if (providerConfig.type === "todos") {
-            const todosProvider = withToolFilter(
-                new TodosToolProvider(),
-                filterOptions,
-            );
-            toolProviderRegistry.registerToolProvider(todosProvider);
-            logger.info("Registered TodosToolProvider", {
-                name: providerConfig.name,
             });
         }
     }

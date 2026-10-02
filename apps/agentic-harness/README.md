@@ -185,7 +185,7 @@ skillRepositories:
 
 All tool providers support pattern-based qualification and filtering:
 - `allowedTools`: (Optional) Whitelist of allowed tool name patterns (e.g. `["get*", "find*"]`). All tools are allowed by default if omitted.
-- `disallowedTools` / `rejectedTools`: Blacklist of tool patterns (e.g. `["*delete*", "drop*"]`). Matching tools are completely hidden from the model.
+- `disallowedTools`: Blacklist of tool patterns (e.g. `["*delete*", "drop*"]`). Matching tools are completely hidden from the model.
 - `userInputTools`: Tool patterns that require explicit human approval prior to execution in interactive mode (e.g. `["write_*", "deploy_*"]`).
 
 ##### A. Computer Use Tool Provider (`type: computer`)

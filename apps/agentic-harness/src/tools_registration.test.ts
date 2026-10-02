@@ -46,7 +46,6 @@ describe("Tool Provider Registration", () => {
             skillRepositories: [],
             toolProviders: [
                 {
-                    name: "my-scratchpad-service",
                     type: "scratchpad",
                 },
             ],
@@ -69,7 +68,6 @@ describe("Tool Provider Registration", () => {
             skillRepositories: [],
             toolProviders: [
                 {
-                    name: "my-todos-service",
                     type: "todos",
                 },
             ],
