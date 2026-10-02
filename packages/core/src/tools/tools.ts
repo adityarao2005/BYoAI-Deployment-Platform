@@ -1,5 +1,5 @@
 import type { AgentHandle, AgentSession } from "@/agents";
-import { z } from "zod";
+import type { z } from "zod";
 
 /**
  * Represents an executable tool for an agent.
