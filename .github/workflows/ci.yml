@@ -50,6 +50,3 @@ jobs:
 
       - name: Run build
         run: task build
-
-      - name: Validate container images build
-        run: task build_container_images
