@@ -32,6 +32,7 @@ import {
     ZipSkillRepository,
 } from "@byo-ai-agent-platform/core/skills";
 import {
+    Agent2AgentToolProvider,
     ComputerUseStdioMcpClientFactory,
     ComputerUseToolProvider,
     loadSkillToolProvider,
@@ -389,12 +390,9 @@ export function registerToolProviders(
             logger.info("Registered ScratchpadToolProvider");
             continue;
         } else if (providerConfig.type === "todos") {
-            const todosProvider = new TodosToolProvider()
+            const todosProvider = new TodosToolProvider();
             toolProviderRegistry.registerToolProvider(todosProvider);
             logger.info("Registered TodosToolProvider");
-            continue;
-        } else if (providerConfig.type === "agent") {
-
             continue;
         }
 
@@ -403,6 +401,19 @@ export function registerToolProviders(
             disallowedTools: providerConfig.disallowedTools,
             userInputTools: providerConfig.userInputTools,
         };
+
+        if (providerConfig.type === "agent") {
+            const agentProvider = withToolFilter(
+                new Agent2AgentToolProvider(providerConfig),
+                filterOptions,
+            );
+            toolProviderRegistry.registerToolProvider(agentProvider);
+            logger.info("Registered Agent2AgentToolProvider", {
+                name: providerConfig.name,
+                url: providerConfig.url,
+            });
+            continue;
+        }
 
         if (providerConfig.type === "openapi") {
             const openApiProvider = withToolFilter(

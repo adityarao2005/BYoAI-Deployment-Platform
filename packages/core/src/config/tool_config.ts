@@ -308,11 +308,17 @@ export type TodosToolProviderConfig = z.infer<
     typeof TodosToolProviderConfigSchema
 >;
 
-export const Agent2AgentToolProviderConfigSchema = z.object({
-    type: z.literal("agent"),
-    name: z.string(),
-    url: z.string()
-})
+export const Agent2AgentToolProviderConfigSchema =
+    BaseToolProviderConfigSchema.extend({
+        type: z.literal("agent"),
+        url: z.string(),
+        description: z.string().optional(),
+        timeoutMs: z.number().optional(),
+    });
+
+export type Agent2AgentToolProviderConfig = z.infer<
+    typeof Agent2AgentToolProviderConfigSchema
+>;
 
 /**
  * Universal Zod discriminated union schema for tool provider configuration (`openapi`, `computer`, `mcp`, `scratchpad`, `todos`).
