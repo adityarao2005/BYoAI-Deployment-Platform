@@ -2,6 +2,19 @@
 
 version: '3'
 
+vars:
+  VERSION:
+    sh: cat ../../VERSION | tr -d '[:space:]'
+  GIT_COMMIT:
+    sh: git rev-parse --short HEAD 2>/dev/null || echo "unknown"
+  BUILD_DATE:
+    sh: date -u +%Y-%m-%dT%H:%M:%SZ
+  LDFLAGS: >-
+    -s -w
+    -X main.version={{.VERSION}}
+    -X main.gitCommit={{.GIT_COMMIT}}
+    -X main.buildDate={{.BUILD_DATE}}
+
 tasks:
   install_frontend:
     desc: Install Chat UI frontend dependencies
@@ -45,7 +58,19 @@ tasks:
     cmds:
       - go fmt ./...
       - go mod tidy
-      - CGO_ENABLED=0 go build -v -ldflags="-s -w" -o bin/chat-ui ./cmd/server
+      - CGO_ENABLED=0 go build -v -trimpath -ldflags="{{.LDFLAGS}}" -o bin/chat-ui ./cmd/server
+
+  cross_build:
+    desc: Cross-compile Chat UI for a specific OS/architecture
+    deps:
+      - build_frontend
+    requires:
+      vars: [GOOS, GOARCH]
+    vars:
+      OUTPUT_DIR: '{{.OUTPUT_DIR | default "bin"}}'
+      EXT: '{{if eq .GOOS "windows"}}.exe{{end}}'
+    cmds:
+      - CGO_ENABLED=0 GOOS={{.GOOS}} GOARCH={{.GOARCH}} go build -v -trimpath -ldflags="{{.LDFLAGS}}" -o {{.OUTPUT_DIR}}/chat-ui-{{.GOOS}}-{{.GOARCH}}{{.EXT}} ./cmd/server
 
   test:
     desc: Run unit tests for Chat UI
@@ -71,7 +96,7 @@ tasks:
       - build
       - test
     cmds:
-      - docker build -f docker/Dockerfile -t chat-ui:latest .
+      - docker build -f docker/Dockerfile --label "org.opencontainers.image.version={{.VERSION}}" -t chat-ui:{{.VERSION}} -t chat-ui:latest .
 
   build_container_images:
     desc: Build all container images for Chat UI

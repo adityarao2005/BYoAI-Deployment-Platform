@@ -14,8 +14,11 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// Set via -ldflags at build time
 var (
-	version = "0.1.0-dev"
+	version   = "dev"
+	gitCommit = "unknown"
+	buildDate = "unknown"
 )
 
 func main() {
@@ -49,7 +52,7 @@ func main() {
 	flag.Parse()
 
 	if showVersion {
-		fmt.Printf("byoai version %s\n", version)
+		fmt.Printf("byoai version %s (commit: %s, built: %s)\n", version, gitCommit, buildDate)
 		os.Exit(0)
 	}
 

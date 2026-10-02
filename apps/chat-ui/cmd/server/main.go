@@ -19,6 +19,13 @@ import (
 	chimw "github.com/go-chi/chi/v5/middleware"
 )
 
+// Set via -ldflags at build time
+var (
+	version   = "dev"
+	gitCommit = "unknown"
+	buildDate = "unknown"
+)
+
 func main() {
 	cfg, err := config.LoadFromEnv()
 	if err != nil {
@@ -42,6 +49,9 @@ func main() {
 	slog.SetDefault(logger)
 
 	slog.Info("Starting Chat UI Server",
+		"version", version,
+		"commit", gitCommit,
+		"built", buildDate,
 		"listen_addr", cfg.ListenAddr,
 		"agent_harness_uri", cfg.AgentHarnessURI,
 		"oauth_issuer_uri", cfg.OAuthIssuerURI,

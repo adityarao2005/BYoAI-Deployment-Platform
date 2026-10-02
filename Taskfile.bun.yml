@@ -63,11 +63,14 @@ tasks:
 
   build_container_image:
     desc: Build the Agentic Harness container image
+    vars:
+      VERSION:
+        sh: cat VERSION | tr -d '[:space:]'
     deps:
       - build
       - test
     cmds:
-      - docker build -f apps/agentic-harness/docker/Dockerfile -t agentic-harness:latest .
+      - docker build -f apps/agentic-harness/docker/Dockerfile --target distroless --label "org.opencontainers.image.version={{.VERSION}}" -t agentic-harness:{{.VERSION}} -t agentic-harness:latest .
 
 
   build_container_images:

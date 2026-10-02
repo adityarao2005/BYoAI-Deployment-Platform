@@ -10,6 +10,12 @@ Use this skill when verifying changes, executing test suites, or building projec
 
 Run commands from the repository root:
 
+- **Show Version**:
+
+  ```bash
+  task version
+  ```
+
 - **Generate Protobuf Stubs**:
 
   ```bash
@@ -22,7 +28,7 @@ Run commands from the repository root:
   task unit_test
   ```
 
-  Executes tests across sub-projects (`apps/agentic-harness/`, `packages/core/`, and `apps/computer_controller/`).
+  Executes tests across sub-projects (`apps/agentic-harness/`, `packages/core/`, `apps/computer_controller/`, `apps/chat-ui/`, `apps/shell-cli/`).
 
 - **Build**:
 
@@ -30,7 +36,23 @@ Run commands from the repository root:
   task build
   ```
 
-  Builds all packages and apps in the monorepo.
+  Builds all packages and apps in the monorepo. Go binaries are compiled with version information from the `VERSION` file injected via `-ldflags`.
+
+- **Build Container Images**:
+
+  ```bash
+  task build_container_images
+  ```
+
+  Builds Docker container images for all components (agentic-harness, computer-controller, chat-ui, shell-cli).
+
+- **Tag a Release**:
+
+  ```bash
+  task release
+  ```
+
+  Reads the version from `VERSION`, creates an annotated git tag `v<VERSION>`, and pushes it to trigger the GitHub Actions release workflow.
 
 ## Individual Sub-project Execution
 
@@ -57,3 +79,12 @@ Run commands from the repository root:
   cd local_models
   uv run python ...
   ```
+
+## Versioning
+
+The platform version is defined in the `VERSION` file at the repository root. All Go binaries have version, git commit, and build date injected via `-ldflags` at compile time.
+
+## CI/CD
+
+- **CI** (`.github/workflows/ci.yml`): Runs on push/PR to `main` — lint, typecheck, test, build, validate Docker images.
+- **Release** (`.github/workflows/release.yml`): Triggered by pushing a `v*` tag — cross-compiles Go binaries, pushes Docker images to GHCR, creates a GitHub Release.

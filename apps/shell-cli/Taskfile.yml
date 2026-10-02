@@ -2,6 +2,19 @@
 
 version: '3'
 
+vars:
+  VERSION:
+    sh: cat ../../VERSION | tr -d '[:space:]'
+  GIT_COMMIT:
+    sh: git rev-parse --short HEAD 2>/dev/null || echo "unknown"
+  BUILD_DATE:
+    sh: date -u +%Y-%m-%dT%H:%M:%SZ
+  LDFLAGS: >-
+    -s -w
+    -X main.version={{.VERSION}}
+    -X main.gitCommit={{.GIT_COMMIT}}
+    -X main.buildDate={{.BUILD_DATE}}
+
 tasks:
   build:
     desc: Build the Shell CLI binary
@@ -15,7 +28,17 @@ tasks:
     cmds:
       - go fmt ./...
       - go mod tidy
-      - CGO_ENABLED=0 go build -v -ldflags="-s -w" -o bin/byoai ./cmd/byoai
+      - CGO_ENABLED=0 go build -v -trimpath -ldflags="{{.LDFLAGS}}" -o bin/byoai ./cmd/byoai
+
+  cross_build:
+    desc: Cross-compile Shell CLI for a specific OS/architecture
+    requires:
+      vars: [GOOS, GOARCH]
+    vars:
+      OUTPUT_DIR: '{{.OUTPUT_DIR | default "bin"}}'
+      EXT: '{{if eq .GOOS "windows"}}.exe{{end}}'
+    cmds:
+      - CGO_ENABLED=0 GOOS={{.GOOS}} GOARCH={{.GOARCH}} go build -v -trimpath -ldflags="{{.LDFLAGS}}" -o {{.OUTPUT_DIR}}/byoai-{{.GOOS}}-{{.GOARCH}}{{.EXT}} ./cmd/byoai
 
   test:
     desc: Run unit tests for Shell CLI
@@ -38,7 +61,7 @@ tasks:
       - build
       - test
     cmds:
-      - docker build -f docker/Dockerfile -t shell-cli:latest .
+      - docker build -f docker/Dockerfile --label "org.opencontainers.image.version={{.VERSION}}" -t shell-cli:{{.VERSION}} -t shell-cli:latest .
 
   build_container_images:
     desc: Build all container images for Shell CLI

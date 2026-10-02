@@ -2,6 +2,14 @@
 
 version: '3'
 
+vars:
+  VERSION:
+    sh: cat VERSION | tr -d '[:space:]'
+  GIT_COMMIT:
+    sh: git rev-parse --short HEAD 2>/dev/null || echo "unknown"
+  BUILD_DATE:
+    sh: date -u +%Y-%m-%dT%H:%M:%SZ
+
 includes:
   agentic_harness:
     taskfile: 'Taskfile.bun.yml'
@@ -16,6 +24,11 @@ includes:
     dir: apps/shell-cli
 
 tasks:
+  version:
+    desc: Display the current platform version
+    cmds:
+      - echo "{{.VERSION}} (commit {{.GIT_COMMIT}}, built {{.BUILD_DATE}})"
+
   unit_test:
     desc: Test all packages and apps across the monorepo
     deps:
@@ -49,6 +62,20 @@ tasks:
       - buf lint
       - buf generate
 
+  cross_build:
+    desc: Cross-compile all Go binaries for a specific OS/architecture
+    requires:
+      vars: [GOOS, GOARCH]
+    vars:
+      OUTPUT_DIR: '{{.OUTPUT_DIR | default "dist"}}'
+    cmds:
+      - task: computer_controller:cross_build
+        vars: { GOOS: '{{.GOOS}}', GOARCH: '{{.GOARCH}}', OUTPUT_DIR: '../../{{.OUTPUT_DIR}}' }
+      - task: chat_ui:cross_build
+        vars: { GOOS: '{{.GOOS}}', GOARCH: '{{.GOARCH}}', OUTPUT_DIR: '../../{{.OUTPUT_DIR}}' }
+      - task: shell_cli:cross_build
+        vars: { GOOS: '{{.GOOS}}', GOARCH: '{{.GOARCH}}', OUTPUT_DIR: '../../{{.OUTPUT_DIR}}' }
+
   build_container_images:
     desc: Builds the container images
     deps:
@@ -57,3 +84,19 @@ tasks:
       - agentic_harness:build_container_images
       - chat_ui:build_container_images
       - shell_cli:build_container_images
+
+  release:
+    desc: Tag a release from the current VERSION file and push the tag
+    preconditions:
+      - sh: '[ -f VERSION ]'
+        msg: 'VERSION file not found'
+      - sh: 'git diff --quiet HEAD'
+        msg: 'Working directory is dirty — commit all changes first'
+    cmds:
+      - |
+        VERSION=$(cat VERSION | tr -d '[:space:]')
+        TAG="v${VERSION}"
+        echo "🏷️  Tagging release ${TAG}..."
+        git tag -a "${TAG}" -m "Release ${TAG}"
+        git push origin "${TAG}"
+        echo "✅ Tag ${TAG} pushed. Release workflow will run on GitHub Actions."

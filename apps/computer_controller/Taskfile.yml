@@ -2,6 +2,19 @@
 
 version: '3'
 
+vars:
+  VERSION:
+    sh: cat ../../VERSION | tr -d '[:space:]'
+  GIT_COMMIT:
+    sh: git rev-parse --short HEAD 2>/dev/null || echo "unknown"
+  BUILD_DATE:
+    sh: date -u +%Y-%m-%dT%H:%M:%SZ
+  LDFLAGS: >-
+    -s -w
+    -X main.version={{.VERSION}}
+    -X main.gitCommit={{.GIT_COMMIT}}
+    -X main.buildDate={{.BUILD_DATE}}
+
 tasks:
   build:
     desc: Build the computer controller binary
@@ -15,7 +28,17 @@ tasks:
     cmds:
       - go fmt ./...
       - go mod tidy
-      - CGO_ENABLED=0 go build -v -ldflags="-s -w" -o bin/controller ./cmd/controller
+      - CGO_ENABLED=0 go build -v -trimpath -ldflags="{{.LDFLAGS}}" -o bin/controller ./cmd/controller
+
+  cross_build:
+    desc: Cross-compile computer controller for a specific OS/architecture
+    requires:
+      vars: [GOOS, GOARCH]
+    vars:
+      OUTPUT_DIR: '{{.OUTPUT_DIR | default "bin"}}'
+      EXT: '{{if eq .GOOS "windows"}}.exe{{end}}'
+    cmds:
+      - CGO_ENABLED=0 GOOS={{.GOOS}} GOARCH={{.GOARCH}} go build -v -trimpath -ldflags="{{.LDFLAGS}}" -o {{.OUTPUT_DIR}}/controller-{{.GOOS}}-{{.GOARCH}}{{.EXT}} ./cmd/controller
 
   test:
     desc: Run unit tests for computer controller
@@ -43,7 +66,7 @@ tasks:
       - build
       - test
     cmds:
-      - docker build -f docker/Dockerfile --target {{.TARGET | default "scratch"}} -t computer-controller:{{.TARGET | default "latest"}} .
+      - docker build -f docker/Dockerfile --target {{.TARGET | default "scratch"}} --label "org.opencontainers.image.version={{.VERSION}}" -t computer-controller:{{.TARGET | default "latest"}}-{{.VERSION}} -t computer-controller:{{.TARGET | default "latest"}} .
 
   build_container_images:
     desc: Build container images for computer controller (scratch, distroless, podman)
