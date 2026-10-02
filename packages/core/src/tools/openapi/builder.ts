@@ -1,7 +1,7 @@
 import type { AgentSession } from "@/agents";
 import type { OpenAPIToolProviderConfig } from "@/config/tool_config";
 import type { Tool } from "@/tools";
-import { type ToolObjectArgument, toolObject } from "@/tools/tool_argument";
+import { createJsonSchemaZodSchema } from "@/tools/schema";
 import { executeOpenAPIOperation } from "./executor";
 import { convertOpenAPISchemaToToolArgument } from "./schema";
 
@@ -175,11 +175,12 @@ export function buildToolsFromSpec(
                 }
             }
 
-            const inputSchema: ToolObjectArgument = toolObject(
-                `Input parameters for ${toolName}`,
+            const inputSchema = createJsonSchemaZodSchema({
+                type: "object",
+                description: `Input parameters for ${toolName}`,
                 properties,
-                requiredFields.length > 0 ? requiredFields : undefined,
-            );
+                required: requiredFields.length > 0 ? requiredFields : null,
+            });
 
             const tool: Tool = {
                 name: toolName,

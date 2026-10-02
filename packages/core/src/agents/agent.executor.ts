@@ -2,7 +2,7 @@ import type {
     ModelMessageOutput,
 } from "@/models/conversation";
 import type { Skill } from "@/skills";
-import { validateToolArgument } from "@/tools/tool_argument";
+import { z } from "zod";
 import type { Tool } from "@/tools/tools";
 import type { AgentConfiguration, AgentSession } from "./agents";
 import { constructSystemPrompt } from "./agents";
@@ -282,24 +282,32 @@ export class AgentExecutor implements IAgentExecutor {
             return;
         }
 
-        if (!validateToolArgument(tool.inputSchema, args)) {
-            const errorResult = {
-                error: `Invalid arguments for tool ${tool.name}`,
-            };
-            await this.notifyObservers(
-                "onToolCallEnd",
-                agentId,
-                toolCallId,
-                tool.name,
-                errorResult,
-            );
-            await this.configuration.communicator.emit("tool:complete", {
-                agentId,
-                toolCallId,
-                tool: tool.name,
-                result: errorResult,
-            });
-            return;
+        let validatedArgs: any = args;
+        if (
+            tool.inputSchema &&
+            typeof (tool.inputSchema as any).safeParse === "function"
+        ) {
+            const parseResult = (tool.inputSchema as any).safeParse(args);
+            if (!parseResult.success) {
+                const errorResult = {
+                    error: `Invalid arguments for tool ${tool.name}: ${parseResult.error.message}`,
+                };
+                await this.notifyObservers(
+                    "onToolCallEnd",
+                    agentId,
+                    toolCallId,
+                    tool.name,
+                    errorResult,
+                );
+                await this.configuration.communicator.emit("tool:complete", {
+                    agentId,
+                    toolCallId,
+                    tool: tool.name,
+                    result: errorResult,
+                });
+                return;
+            }
+            validatedArgs = parseResult.data;
         }
 
         if (tool.requires_user_input) {
@@ -310,7 +318,7 @@ export class AgentExecutor implements IAgentExecutor {
                         agentId,
                         toolCallId,
                         tool: tool.name,
-                        args,
+                        args: validatedArgs,
                     },
                 );
                 return;
@@ -335,7 +343,7 @@ export class AgentExecutor implements IAgentExecutor {
             return;
         }
 
-        await this.executeTool(agentId, toolCallId, tool, session, args);
+        await this.executeTool(agentId, toolCallId, tool, session, validatedArgs);
     }
 
     private async executeTool(
@@ -402,7 +410,7 @@ export class AgentExecutor implements IAgentExecutor {
         const toolRef: Tool = matchingTool ?? {
             name: toolName,
             description: "",
-            inputSchema: { type: "object", description: "", properties: {} },
+            inputSchema: z.object({}),
             execute: async () => {},
         };
 

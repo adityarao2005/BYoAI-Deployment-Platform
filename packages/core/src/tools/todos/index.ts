@@ -1,12 +1,6 @@
 import { isToolCallRequest } from "@/models";
-import {
-    type Tool,
-    type ToolProvider,
-    toolArray,
-    toolInteger,
-    toolObject,
-    toolString,
-} from "@/tools";
+import { z } from "zod";
+import type { Tool, ToolProvider } from "@/tools";
 
 export class TodosToolProvider implements ToolProvider {
     async getToolByName(name: string): Promise<Tool | null> {
@@ -22,10 +16,7 @@ export class TodosToolProvider implements ToolProvider {
                 name: "get_todos",
                 description:
                     "This tool allows you to get a numbered list of your todo items.",
-                inputSchema: toolObject(
-                    "Input for the tool. No properties are needed",
-                    {},
-                ),
+                inputSchema: z.object({}),
                 async execute(_, session) {
                     const memory = session.memory.transcript;
 
@@ -89,15 +80,11 @@ export class TodosToolProvider implements ToolProvider {
                 name: "add_todo",
                 description:
                     "This tool allows you to add an uncompleted todo item to the list.",
-                inputSchema: toolObject(
-                    "Input for adding a todo item.",
-                    {
-                        todo: toolString(
-                            "The todo item description or task to add.",
-                        ),
-                    },
-                    ["todo"],
-                ),
+                inputSchema: z.object({
+                    todo: z
+                        .string()
+                        .describe("The todo item description or task to add."),
+                }),
                 async execute(_args, _session) {
                     return {
                         message: "Success: Todo item added to list.",
@@ -108,16 +95,13 @@ export class TodosToolProvider implements ToolProvider {
                 name: "complete_todos",
                 description:
                     "This tool allows you to mark one or more todo items as completed given their todo numbers.",
-                inputSchema: toolObject(
-                    "Input for completing todo items.",
-                    {
-                        todoNumbers: toolArray(
-                            toolInteger("Todo item number (1-based index)"),
+                inputSchema: z.object({
+                    todoNumbers: z
+                        .array(z.number().int())
+                        .describe(
                             "List of 1-based todo item numbers to mark as completed",
                         ),
-                    },
-                    ["todoNumbers"],
-                ),
+                }),
                 async execute(_args, _session) {
                     return {
                         message: "Success: Todo items marked as completed.",

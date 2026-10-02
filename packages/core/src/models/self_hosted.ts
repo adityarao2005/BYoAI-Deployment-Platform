@@ -6,6 +6,7 @@ import type {
     ModelMessageOutput,
 } from "./conversation";
 import type { Model } from "./models";
+import { getToolJsonSchema } from "@/tools/schema";
 
 function toChatCompletionInteraction(
     message: ModelInteraction[],
@@ -71,7 +72,9 @@ export class SelfHostedModel implements Model {
                 function: {
                     name: tool.name,
                     description: tool.description,
-                    parameters: tool.inputSchema,
+                    parameters: getToolJsonSchema(
+                        tool.inputSchema,
+                    ) as Record<string, unknown>,
                 },
             })),
         });

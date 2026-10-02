@@ -1,5 +1,5 @@
 import { type ContentListUnion, GoogleGenAI } from "@google/genai";
-import type { ToolArgument } from "@/tools/tool_argument";
+import { getToolJsonSchema } from "@/tools/schema";
 import type {
     ModelInput,
     ModelInteraction,
@@ -7,7 +7,7 @@ import type {
 } from "./conversation";
 import type { Model } from "./models";
 
-export function formatSchemaForGemini(arg: ToolArgument): any {
+export function formatSchemaForGemini(arg: any): any {
     // Deep clone to prevent mutating your core registry state
     const clone = JSON.parse(JSON.stringify(arg));
 
@@ -126,7 +126,9 @@ export class GeminiModel implements Model {
                         {
                             name: tool.name,
                             description: tool.description,
-                            parameters: formatSchemaForGemini(tool.inputSchema),
+                            parameters: formatSchemaForGemini(
+                                getToolJsonSchema(tool.inputSchema),
+                            ),
                         },
                     ],
                 })),

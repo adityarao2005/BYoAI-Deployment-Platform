@@ -1,6 +1,7 @@
 import type { Client } from "@modelcontextprotocol/client";
 import type { AgentHandle, AgentSession } from "@/agents";
-import { type Tool, type ToolProvider, toolObject, toolString } from "@/tools";
+import { z } from "zod";
+import { type Tool, type ToolProvider, createJsonSchemaZodSchema } from "@/tools";
 
 export interface McpClientFactory {
     readonly name: string;
@@ -98,12 +99,12 @@ export class McpServerToolProvider implements ToolProvider {
             agentTools.push({
                 description: tool.description,
                 name: `${this.clientFactory.name}_tools_${tool.name}`,
-                inputSchema: {
+                inputSchema: createJsonSchemaZodSchema({
                     properties,
                     type: "object",
                     description: tool.description || "Input schema",
                     required,
-                },
+                }),
                 execute: async (args: Record<string, any>, session?: AgentSession) => {
                     return await this.executeMcpTool(agent, tool.name, args, session);
                 },
@@ -114,8 +115,8 @@ export class McpServerToolProvider implements ToolProvider {
         agentTools.push({
             description: `Retrieves an MCP resource associated with the mcp server ${this.clientFactory.name} and the provided URI`,
             name: `${this.clientFactory.name}_read_resource`,
-            inputSchema: toolObject("Schema Object for tool call input", {
-                uri: toolString("URI of the resource"),
+            inputSchema: z.object({
+                uri: z.string().describe("URI of the resource"),
             }),
             execute: async ({ uri }: { uri: string }, session?: AgentSession) => {
                 return await this.readMcpResource(agent, uri, session);
@@ -126,7 +127,7 @@ export class McpServerToolProvider implements ToolProvider {
         agentTools.push({
             description: `Lists the MCP resources associated with the mcp server ${this.clientFactory.name}`,
             name: `${this.clientFactory.name}_list_resources`,
-            inputSchema: toolObject("Schema Object for tool call input", {}),
+            inputSchema: z.object({}),
             execute: async () => {
                 return resources;
             },

@@ -5,6 +5,7 @@ import type {
     ModelMessageOutput,
 } from "./conversation";
 import type { Model } from "./models";
+import { getToolJsonSchema } from "@/tools/schema";
 
 function toAnthropicInteraction(
     message: ModelInteraction[],
@@ -55,7 +56,7 @@ export class AnthropicModel implements Model {
             system: input.systemPrompt ?? "You are a helpful assistant.",
             messages: toAnthropicInteraction(input.history),
             tools: input.tools.map((tool) => ({
-                input_schema: tool.inputSchema,
+                input_schema: getToolJsonSchema(tool.inputSchema) as any,
                 name: tool.name,
                 description: tool.description,
                 strict: true,

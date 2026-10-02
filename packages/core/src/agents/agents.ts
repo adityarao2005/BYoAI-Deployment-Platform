@@ -6,7 +6,6 @@ import type {
 import type { Model } from "@/models/models";
 import { exportSkillRepositoryToZip, type Skill, type SkillRepository } from "@/skills";
 import type { ComputerProvider } from "@/tools";
-import { validateToolArgument } from "@/tools/tool_argument";
 import type { Tool, ToolProvider } from "@/tools/tools";
 import { AgentMemory, type AgentMemoryManager } from "./agent.memory";
 
