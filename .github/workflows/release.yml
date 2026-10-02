@@ -1,0 +1,330 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/byoai
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Validate: ensure VERSION file matches the pushed git tag
+  # ---------------------------------------------------------------------------
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Validate version
+        id: version
+        run: |
+          FILE_VERSION=$(cat VERSION | tr -d '[:space:]')
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$FILE_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::VERSION file ($FILE_VERSION) does not match git tag ($TAG_VERSION)"
+            exit 1
+          fi
+          echo "version=$FILE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+          echo "✅ Version validated: $FILE_VERSION"
+
+  # ---------------------------------------------------------------------------
+  # Test: full test suite (same as CI)
+  # ---------------------------------------------------------------------------
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: [1.25.4]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache: true
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Task
+        uses: go-task/setup-task@v1
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Run tests
+        run: task unit_test
+
+  # ---------------------------------------------------------------------------
+  # Build Go Binaries: cross-compile for all platform/arch combinations
+  # ---------------------------------------------------------------------------
+  build-go-binaries:
+    needs: [validate, test]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64, arm64]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.4'
+          cache: true
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Task
+        uses: go-task/setup-task@v1
+
+      - name: Install chat-ui frontend dependencies
+        working-directory: apps/chat-ui/frontend
+        run: bun install
+
+      - name: Cross-compile all Go binaries
+        run: task cross_build GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }}
+
+      - name: Upload binary artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/*
+          retention-days: 1
+
+  # ---------------------------------------------------------------------------
+  # Build TypeScript Bundle: agentic-harness dist/
+  # ---------------------------------------------------------------------------
+  build-ts-bundle:
+    needs: [validate, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Task
+        uses: go-task/setup-task@v1
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build TypeScript packages
+        run: bun run build
+
+      - name: Upload harness bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: harness-bundle
+          path: |
+            apps/agentic-harness/dist/
+            packages/core/dist/
+          retention-days: 1
+
+  # ---------------------------------------------------------------------------
+  # Docker Images: build multi-arch and push to GHCR
+  # ---------------------------------------------------------------------------
+  docker-images:
+    needs: [validate, build-go-binaries, build-ts-bundle]
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.validate.outputs.version }}
+    strategy:
+      matrix:
+        include:
+          - name: agentic-harness
+            dockerfile: apps/agentic-harness/docker/Dockerfile
+            context: .
+            target: distroless
+            image_suffix: agentic-harness
+          - name: computer-controller
+            dockerfile: apps/computer_controller/docker/Dockerfile
+            context: apps/computer_controller
+            target: distroless
+            image_suffix: computer-controller
+          - name: computer-controller-podman
+            dockerfile: apps/computer_controller/docker/Dockerfile
+            context: apps/computer_controller
+            target: podman
+            image_suffix: computer-controller-podman
+          - name: chat-ui
+            dockerfile: apps/chat-ui/docker/Dockerfile
+            context: apps/chat-ui
+            target: ""
+            image_suffix: chat-ui
+          - name: shell-cli
+            dockerfile: apps/shell-cli/docker/Dockerfile
+            context: apps/shell-cli
+            target: ""
+            image_suffix: shell-cli
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Download Go binary artifacts (linux/amd64)
+        uses: actions/download-artifact@v4
+        with:
+          name: binaries-linux-amd64
+          path: dist/linux-amd64
+
+      - name: Download Go binary artifacts (linux/arm64)
+        uses: actions/download-artifact@v4
+        with:
+          name: binaries-linux-arm64
+          path: dist/linux-arm64
+
+      - name: Download harness bundle
+        if: matrix.name == 'agentic-harness'
+        uses: actions/download-artifact@v4
+        with:
+          name: harness-bundle
+          path: .
+
+      - name: Prepare Go binaries for Docker context
+        if: matrix.name != 'agentic-harness'
+        run: |
+          # Copy the linux/amd64 binaries into the component's bin/ directory
+          # for the Dockerfile COPY commands (existing Dockerfiles expect bin/)
+          COMPONENT="${{ matrix.context }}"
+          mkdir -p "${COMPONENT}/bin"
+
+          case "${{ matrix.name }}" in
+            computer-controller|computer-controller-podman)
+              cp dist/linux-amd64/controller-linux-amd64 "${COMPONENT}/bin/controller"
+              chmod +x "${COMPONENT}/bin/controller"
+              ;;
+            chat-ui)
+              cp dist/linux-amd64/chat-ui-linux-amd64 "${COMPONENT}/bin/chat-ui"
+              chmod +x "${COMPONENT}/bin/chat-ui"
+              ;;
+            shell-cli)
+              cp dist/linux-amd64/byoai-linux-amd64 "${COMPONENT}/bin/byoai"
+              chmod +x "${COMPONENT}/bin/byoai"
+              ;;
+          esac
+
+      - name: Set up Bun (for harness)
+        if: matrix.name == 'agentic-harness'
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install harness dependencies (for harness)
+        if: matrix.name == 'agentic-harness'
+        run: bun install
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: docker-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_PREFIX }}-${{ matrix.image_suffix }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.validate.outputs.tag }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.validate.outputs.tag }}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target || '' }}
+          push: true
+          tags: ${{ steps.docker-meta.outputs.tags }}
+          labels: |
+            org.opencontainers.image.version=${{ env.VERSION }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ---------------------------------------------------------------------------
+  # GitHub Release: create release with all binaries attached
+  # ---------------------------------------------------------------------------
+  github-release:
+    needs: [validate, build-go-binaries, docker-images]
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.validate.outputs.version }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Download all binary artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: binaries-*
+          path: dist/
+          merge-multiple: true
+
+      - name: List release assets
+        run: |
+          echo "📦 Release assets:"
+          ls -lhR dist/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.validate.outputs.tag }}
+          name: "v${{ env.VERSION }}"
+          generate_release_notes: true
+          files: dist/*
+          body: |
+            ## Docker Images
+
+            ```bash
+            # Agentic Harness
+            docker pull ${{ env.IMAGE_PREFIX }}-agentic-harness:${{ env.VERSION }}
+
+            # Computer Controller (distroless)
+            docker pull ${{ env.IMAGE_PREFIX }}-computer-controller:${{ env.VERSION }}
+
+            # Computer Controller (podman — for nested container sandboxing)
+            docker pull ${{ env.IMAGE_PREFIX }}-computer-controller-podman:${{ env.VERSION }}
+
+            # Chat UI
+            docker pull ${{ env.IMAGE_PREFIX }}-chat-ui:${{ env.VERSION }}
+
+            # Shell CLI
+            docker pull ${{ env.IMAGE_PREFIX }}-shell-cli:${{ env.VERSION }}
+            ```
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
