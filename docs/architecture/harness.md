@@ -210,3 +210,35 @@ await manager.sendMessageToAgent(agent.id, "Fetch my account profile");
 // - OpenAPIToolProvider sends HTTP request with header `Authorization: Bearer user-oauth2-access-token`
 // - Once 3600s passes, the timer automatically clears the token from userTokenManager
 ```
+
+---
+
+## Generic Tool Architecture & Zod Schema Validation (`packages/core/src/tools/`)
+
+The platform uses a generic, Zod-based architecture for all tool definitions, replacing custom JSON Schema arguments with compile-time type safety and runtime schema validation:
+
+### 1. Generic Tool Interface (`Tool<TSchema>`)
+```typescript
+export interface Tool<TSchema extends z.ZodTypeAny = z.ZodTypeAny> {
+    name: string;
+    description?: string;
+    inputSchema: TSchema;
+    requires_user_input?: boolean;
+    execute(args: z.infer<TSchema>, session: AgentSession): Promise<any>;
+}
+```
+
+- **Type Inference**: Tool authors use `createTool({ name, inputSchema, execute(args, session) })`, allowing TypeScript to automatically infer `args` as `z.infer<TSchema>`.
+- **Type Erasure**: Because `TSchema` defaults to `z.ZodTypeAny`, heterogeneous collections like `ToolProvider.getAllTools(): Promise<Tool[]>` and `ToolProviderRegistry` treat tools with erased schema types (`z.infer<z.ZodTypeAny>` is `unknown`/`any`) without casting or complex union types.
+
+### 2. Runtime Validation in `AgentExecutor`
+When the LLM triggers a tool call, `AgentExecutor` validates inputs via Zod:
+1. Runs `tool.inputSchema.safeParse(args)`.
+2. On failure, returns a formatted error result (`Invalid arguments for tool ${tool.name}: ${error.message}`) to the agent turn without crashing the process.
+3. On success, passes validated and coerced `parseResult.data` to `tool.execute()`.
+
+### 3. LLM Schema Serialization (`getToolJsonSchema`)
+- Zod schemas are converted to standard JSON Schema dictionaries via `getToolJsonSchema(schema)` using native Zod 4 JSON Schema conversion.
+- Metadata keys like `$schema` and `~standard` are stripped to maintain strict compatibility with model parameter specifications (OpenAI function tools, Anthropic tools, Gemini function declarations, and Ollama/self-hosted endpoints).
+- Dynamic tools (OpenAPI specifications, Model Context Protocol servers) are wrapped via `createJsonSchemaZodSchema(rawJsonSchema)` to preserve upstream wire schemas while exposing standard Zod validation.
+
