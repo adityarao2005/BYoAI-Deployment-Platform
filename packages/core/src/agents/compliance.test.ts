@@ -8,6 +8,7 @@ import {
     InMemoryUserTokenManager,
 } from "@/agents";
 import type { Model, ModelInput, ModelMessageOutput } from "@/models";
+import { z } from "zod";
 import type { Tool, ToolProvider } from "@/tools";
 
 class MockComplianceModel implements Model {
@@ -55,7 +56,7 @@ describe("Compliance & Security Features", () => {
         const safeTool: Tool = {
             name: "safe_tool",
             description: "Safe tool",
-            inputSchema: { type: "object", description: "", properties: {} },
+            inputSchema: z.object({}),
             execute: async () => "safe",
         };
 
@@ -63,7 +64,7 @@ describe("Compliance & Security Features", () => {
             name: "risky_tool",
             description: "Risky tool",
             requires_user_input: true,
-            inputSchema: { type: "object", description: "", properties: {} },
+            inputSchema: z.object({}),
             execute: async () => "risky",
         };
 
@@ -111,7 +112,7 @@ describe("Compliance & Security Features", () => {
             name: "delete_database",
             description: "Dangerous database delete",
             requires_user_input: true,
-            inputSchema: { type: "object", description: "", properties: {} },
+            inputSchema: z.object({}),
             execute: async () => {
                 toolExecuted = true;
                 return { deleted: true };
@@ -188,7 +189,7 @@ describe("Compliance & Security Features", () => {
             name: "format_disk",
             description: "Format disk tool",
             requires_user_input: true,
-            inputSchema: { type: "object", description: "", properties: {} },
+            inputSchema: z.object({}),
             execute: async () => {
                 toolExecuted = true;
                 return { formatted: true };

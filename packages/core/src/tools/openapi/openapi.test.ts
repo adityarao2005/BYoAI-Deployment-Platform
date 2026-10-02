@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { getToolJsonSchema } from "@/tools/schema";
 import { normalizeOpenAPIDocument } from ".";
 
 const petSchema = {
@@ -286,12 +287,18 @@ describe("buildToolsFromSpec", () => {
             (t) => t.name === "test-provider_listPets",
         )!;
         expect(listPetsTool.description).toBe("List all pets");
-        expect(listPetsTool.inputSchema.properties).toHaveProperty("limit");
+        expect(
+            getToolJsonSchema(listPetsTool.inputSchema).properties,
+        ).toHaveProperty("limit");
 
         const getPetTool = tools.find(
             (t) => t.name === "test-provider_get_pets_petId",
         )!;
-        expect(getPetTool.inputSchema.properties).toHaveProperty("petId");
-        expect(getPetTool.inputSchema.required).toEqual(["petId"]);
+        expect(
+            getToolJsonSchema(getPetTool.inputSchema).properties,
+        ).toHaveProperty("petId");
+        expect(getToolJsonSchema(getPetTool.inputSchema).required).toEqual([
+            "petId",
+        ]);
     });
 });

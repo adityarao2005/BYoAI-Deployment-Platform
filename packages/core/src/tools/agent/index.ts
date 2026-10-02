@@ -1,6 +1,6 @@
 import type { Agent2AgentToolProviderConfig } from "@/config";
-import { toolObject, toolString } from "../tool_argument";
-import type { Tool, ToolProvider } from "../tools";
+import { z } from "zod";
+import { type Tool, type ToolProvider, createTool } from "../tools";
 
 export class Agent2AgentToolProvider implements ToolProvider {
     agentBaseUrl: string;
@@ -30,18 +30,16 @@ export class Agent2AgentToolProvider implements ToolProvider {
         const timeoutMs = this.timeoutMs;
 
         return [
-            {
+            createTool({
                 name: toolName,
                 description,
-                inputSchema: toolObject(
-                    "Input parameters for delegating a task to the agent",
-                    {
-                        prompt: toolString("Prompt of task to be performed by the agent"),
-                    },
-                    ["prompt"],
-                ),
+                inputSchema: z.object({
+                    prompt: z
+                        .string()
+                        .describe("Prompt of task to be performed by the agent"),
+                }),
                 async execute(args, session) {
-                    const prompt = args?.prompt;
+                    const prompt = args.prompt;
                     if (!prompt || typeof prompt !== "string") {
                         throw new Error(
                             "Missing or invalid 'prompt' argument: expected a non-empty string.",
@@ -182,7 +180,7 @@ export class Agent2AgentToolProvider implements ToolProvider {
                             });
                     });
                 },
-            },
+            }),
         ];
     }
 }

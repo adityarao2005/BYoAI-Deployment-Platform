@@ -5,6 +5,6 @@ export * from "./openapi";
 export * from "./scratchpad";
 export * from "./todos";
 export * from "./agent";
-export * from "./tool_argument";
 export * from "./tools";
+export * from "./schema";
 export * from "./filter";

@@ -5,6 +5,7 @@ import type {
     ModelMessageOutput,
 } from "./conversation";
 import type { Model } from "./models";
+import { getToolJsonSchema } from "@/tools/schema";
 
 function toOpenAIInteraction(
     message: ModelInteraction[],
@@ -54,7 +55,7 @@ export class OpenAIModel implements Model {
                 type: "function",
                 name: tool.name,
                 description: tool.description,
-                parameters: tool.inputSchema,
+                parameters: getToolJsonSchema(tool.inputSchema),
                 strict: true,
             })),
         });

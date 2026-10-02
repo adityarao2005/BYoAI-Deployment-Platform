@@ -1,22 +1,31 @@
 import type { AgentHandle, AgentSession } from "@/agents";
-import type { ToolObjectArgument } from "./tool_argument";
+import type { z } from "zod";
 
 /**
  * Represents an executable tool for an agent.
- * Each tool has a name, description, schema for input arguments, and an `execute` function.
+ * Each tool has a name, description, Zod schema for input arguments, and an `execute` function.
  */
-export interface Tool {
+export interface Tool<TSchema extends z.ZodType = z.ZodType> {
     name: string;
     description?: string;
-    inputSchema: ToolObjectArgument; // JSON Schema for input validation
+    inputSchema: TSchema;
     requires_user_input?: boolean;
 
     /**
      * Executes the tool call given input arguments and session context.
-     * @param args - The tool input arguments.
+     * @param args - The typed tool input arguments derived from TSchema.
      * @param session - The agent execution session.
      */
-    execute(args: Record<string, any>, session: AgentSession): Promise<any>;
+    execute(args: z.infer<TSchema>, session: AgentSession): Promise<any>;
+}
+
+/**
+ * Helper to construct a strongly typed Tool without having to manually specify generic parameters.
+ */
+export function createTool<TSchema extends z.ZodType>(
+    tool: Tool<TSchema>,
+): Tool<TSchema> {
+    return tool;
 }
 
 /**

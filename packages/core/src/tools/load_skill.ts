@@ -1,22 +1,15 @@
 import type { AgentHandle, AgentSession } from "@/agents/agents";
 import { getSkillMDFile, type SkillRepository } from "@/skills";
+import { z } from "zod";
 import type { Tool, ToolProvider } from "./tools";
 
 function createLoadSkillTool(repositories?: SkillRepository[]): Tool {
     return {
         name: "load_skill",
         description: "Load a skill into the agent's memory.",
-        inputSchema: {
-            type: "object",
-            description: "The skill to load into the agent's memory.",
-            properties: {
-                skillName: {
-                    type: "string",
-                    description: "The name of the skill to load.",
-                },
-            },
-            required: ["skillName"],
-        },
+        inputSchema: z.object({
+            skillName: z.string().describe("The name of the skill to load."),
+        }),
         async execute(args: Record<string, any>, session?: AgentSession) {
             const skillName = args.skillName;
             const repos = session?.skillRepositories ?? repositories ?? [];

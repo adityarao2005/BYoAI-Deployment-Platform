@@ -1,11 +1,5 @@
 import type { Tool } from "@/tools";
-import {
-    toolArray,
-    toolBoolean,
-    toolInteger,
-    toolObject,
-    toolString,
-} from "@/tools/tool_argument";
+import { z } from "zod";
 import type {
     GraphicalComputer,
     HeadlessComputer,
@@ -31,28 +25,31 @@ export function createHeadlessTools(
         {
             name: "execute",
             description: "Execute a command on the computer shell.",
-            inputSchema: toolObject(
-                "Execute command inputs",
-                {
-                    command: toolString("The command to execute on the shell."),
-                    cwd: toolString(
-                        "Working directory for the command execution.",
-                    ),
-                    envVars: toolObject(
-                        "Environment variables key-value map.",
-                        {},
-                        undefined,
-                        true,
-                    ),
-                    stdin: toolString("Input data for standard input."),
-                    shell: toolString("Custom shell executable."),
-                    shellArgs: toolArray(
-                        toolString("Shell argument"),
-                        "Arguments for the shell.",
-                    ),
-                },
-                ["command"],
-            ),
+            inputSchema: z.object({
+                command: z
+                    .string()
+                    .describe("The command to execute on the shell."),
+                cwd: z
+                    .string()
+                    .optional()
+                    .describe("Working directory for the command execution."),
+                envVars: z
+                    .record(z.string(), z.any())
+                    .optional()
+                    .describe("Environment variables key-value map."),
+                stdin: z
+                    .string()
+                    .optional()
+                    .describe("Input data for standard input."),
+                shell: z
+                    .string()
+                    .optional()
+                    .describe("Custom shell executable."),
+                shellArgs: z
+                    .array(z.string())
+                    .optional()
+                    .describe("Arguments for the shell."),
+            }),
             execute: async (args: Record<string, any>) => {
                 if (permissions?.execute) {
                     assertCommandAllowed(args.command, permissions.execute);
@@ -70,17 +67,19 @@ export function createHeadlessTools(
         {
             name: "read_file",
             description: "Read content from a file on the computer.",
-            inputSchema: toolObject(
-                "Read file inputs",
-                {
-                    path: toolString("Path to the file to read."),
-                    offset: toolInteger(
-                        "Optional byte offset to start reading from.",
-                    ),
-                    limit: toolInteger("Optional maximum bytes to read."),
-                },
-                ["path"],
-            ),
+            inputSchema: z.object({
+                path: z.string().describe("Path to the file to read."),
+                offset: z
+                    .number()
+                    .int()
+                    .optional()
+                    .describe("Optional byte offset to start reading from."),
+                limit: z
+                    .number()
+                    .int()
+                    .optional()
+                    .describe("Optional maximum bytes to read."),
+            }),
             execute: async (args: Record<string, any>) => {
                 if (permissions?.read) {
                     assertPathAllowed("read", args.path, permissions.read);
@@ -95,17 +94,14 @@ export function createHeadlessTools(
         {
             name: "write_file",
             description: "Write content to a file on the computer.",
-            inputSchema: toolObject(
-                "Write file inputs",
-                {
-                    path: toolString("Path to the file to write."),
-                    content: toolString("Content to write to the file."),
-                    append: toolBoolean(
-                        "Whether to append content to existing file.",
-                    ),
-                },
-                ["path", "content"],
-            ),
+            inputSchema: z.object({
+                path: z.string().describe("Path to the file to write."),
+                content: z.string().describe("Content to write to the file."),
+                append: z
+                    .boolean()
+                    .optional()
+                    .describe("Whether to append content to existing file."),
+            }),
             execute: async (args: Record<string, any>) => {
                 if (permissions?.write) {
                     assertPathAllowed("write", args.path, permissions.write);
@@ -120,13 +116,9 @@ export function createHeadlessTools(
         {
             name: "list_directory",
             description: "List contents of a directory on the computer.",
-            inputSchema: toolObject(
-                "List directory inputs",
-                {
-                    path: toolString("Directory path to list."),
-                },
-                ["path"],
-            ),
+            inputSchema: z.object({
+                path: z.string().describe("Directory path to list."),
+            }),
             execute: async (args: Record<string, any>) => {
                 if (permissions?.read) {
                     assertPathAllowed("read", args.path, permissions.read);
@@ -139,7 +131,7 @@ export function createHeadlessTools(
         {
             name: "get_user_id",
             description: "Get the current user ID on the computer.",
-            inputSchema: toolObject("Get user ID inputs", {}),
+            inputSchema: z.object({}),
             execute: async () => {
                 return computer.getUserId();
             },
@@ -147,7 +139,7 @@ export function createHeadlessTools(
         {
             name: "get_group_id",
             description: "Get the current group ID on the computer.",
-            inputSchema: toolObject("Get group ID inputs", {}),
+            inputSchema: z.object({}),
             execute: async () => {
                 return computer.getGroupId();
             },
@@ -166,15 +158,27 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
         {
             name: "capture_screenshot",
             description: "Capture a screenshot of the computer screen.",
-            inputSchema: toolObject("Capture screenshot inputs", {
-                x: toolInteger(
-                    "Optional top-left X coordinate for crop region.",
-                ),
-                y: toolInteger(
-                    "Optional top-left Y coordinate for crop region.",
-                ),
-                width: toolInteger("Optional width for crop region."),
-                height: toolInteger("Optional height for crop region."),
+            inputSchema: z.object({
+                x: z
+                    .number()
+                    .int()
+                    .optional()
+                    .describe("Optional top-left X coordinate for crop region."),
+                y: z
+                    .number()
+                    .int()
+                    .optional()
+                    .describe("Optional top-left Y coordinate for crop region."),
+                width: z
+                    .number()
+                    .int()
+                    .optional()
+                    .describe("Optional width for crop region."),
+                height: z
+                    .number()
+                    .int()
+                    .optional()
+                    .describe("Optional height for crop region."),
             }),
             execute: async (args: Record<string, any> = {}) => {
                 return computer.captureScreenshot(args);
@@ -183,17 +187,14 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
         {
             name: "click",
             description: "Click mouse at specified coordinates.",
-            inputSchema: toolObject(
-                "Click inputs",
-                {
-                    x: toolInteger("X coordinate for click."),
-                    y: toolInteger("Y coordinate for click."),
-                    button: toolString(
-                        "Mouse button (e.g. left, right, middle).",
-                    ),
-                },
-                ["x", "y"],
-            ),
+            inputSchema: z.object({
+                x: z.number().int().describe("X coordinate for click."),
+                y: z.number().int().describe("Y coordinate for click."),
+                button: z
+                    .string()
+                    .optional()
+                    .describe("Mouse button (e.g. left, right, middle)."),
+            }),
             execute: async (args: Record<string, any>) => {
                 return computer.click({
                     x: args.x,
@@ -205,13 +206,9 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
         {
             name: "type",
             description: "Type text into the active window.",
-            inputSchema: toolObject(
-                "Type inputs",
-                {
-                    text: toolString("Text to type."),
-                },
-                ["text"],
-            ),
+            inputSchema: z.object({
+                text: z.string().describe("Text to type."),
+            }),
             execute: async (args: Record<string, any>) => {
                 return computer.type({ text: args.text });
             },
@@ -219,13 +216,9 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
         {
             name: "press_key",
             description: "Press a key on the keyboard.",
-            inputSchema: toolObject(
-                "Press key inputs",
-                {
-                    key: toolString("Key name to press."),
-                },
-                ["key"],
-            ),
+            inputSchema: z.object({
+                key: z.string().describe("Key name to press."),
+            }),
             execute: async (args: Record<string, any>) => {
                 return computer.pressKey({ key: args.key });
             },
@@ -233,13 +226,9 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
         {
             name: "release_key",
             description: "Release a key on the keyboard.",
-            inputSchema: toolObject(
-                "Release key inputs",
-                {
-                    key: toolString("Key name to release."),
-                },
-                ["key"],
-            ),
+            inputSchema: z.object({
+                key: z.string().describe("Key name to release."),
+            }),
             execute: async (args: Record<string, any>) => {
                 return computer.releaseKey({ key: args.key });
             },
@@ -247,13 +236,9 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
         {
             name: "press_and_hold_key",
             description: "Press and hold a key on the keyboard.",
-            inputSchema: toolObject(
-                "Press and hold key inputs",
-                {
-                    key: toolString("Key name to press and hold."),
-                },
-                ["key"],
-            ),
+            inputSchema: z.object({
+                key: z.string().describe("Key name to press and hold."),
+            }),
             execute: async (args: Record<string, any>) => {
                 return computer.pressAndHoldKey({ key: args.key });
             },
@@ -261,7 +246,7 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
         {
             name: "release_all_keys",
             description: "Release all held keys on the keyboard.",
-            inputSchema: toolObject("Release all keys inputs", {}),
+            inputSchema: z.object({}),
             execute: async () => {
                 return computer.releaseAllKeys();
             },
@@ -270,16 +255,12 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
             name: "drag",
             description:
                 "Drag mouse from starting coordinates to ending coordinates.",
-            inputSchema: toolObject(
-                "Drag inputs",
-                {
-                    x1: toolInteger("Start X coordinate."),
-                    y1: toolInteger("Start Y coordinate."),
-                    x2: toolInteger("End X coordinate."),
-                    y2: toolInteger("End Y coordinate."),
-                },
-                ["x1", "y1", "x2", "y2"],
-            ),
+            inputSchema: z.object({
+                x1: z.number().int().describe("Start X coordinate."),
+                y1: z.number().int().describe("Start Y coordinate."),
+                x2: z.number().int().describe("End X coordinate."),
+                y2: z.number().int().describe("End Y coordinate."),
+            }),
             execute: async (args: Record<string, any>) => {
                 return computer.drag({
                     x1: args.x1,
@@ -292,14 +273,10 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
         {
             name: "move_mouse_to",
             description: "Move mouse cursor to coordinates.",
-            inputSchema: toolObject(
-                "Move mouse to inputs",
-                {
-                    x: toolInteger("X coordinate."),
-                    y: toolInteger("Y coordinate."),
-                },
-                ["x", "y"],
-            ),
+            inputSchema: z.object({
+                x: z.number().int().describe("X coordinate."),
+                y: z.number().int().describe("Y coordinate."),
+            }),
             execute: async (args: Record<string, any>) => {
                 return computer.moveMouseTo({
                     x: args.x,
@@ -310,14 +287,10 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
         {
             name: "scroll",
             description: "Scroll screen horizontally or vertically.",
-            inputSchema: toolObject(
-                "Scroll inputs",
-                {
-                    dx: toolInteger("Horizontal scroll delta."),
-                    dy: toolInteger("Vertical scroll delta."),
-                },
-                ["dx", "dy"],
-            ),
+            inputSchema: z.object({
+                dx: z.number().int().describe("Horizontal scroll delta."),
+                dy: z.number().int().describe("Vertical scroll delta."),
+            }),
             execute: async (args: Record<string, any>) => {
                 return computer.scroll({
                     dx: args.dx,
@@ -328,7 +301,7 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
         {
             name: "get_clipboard",
             description: "Get text content from the clipboard.",
-            inputSchema: toolObject("Get clipboard inputs", {}),
+            inputSchema: z.object({}),
             execute: async () => {
                 return computer.getClipboard();
             },
@@ -336,13 +309,9 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
         {
             name: "set_clipboard",
             description: "Set text content in the clipboard.",
-            inputSchema: toolObject(
-                "Set clipboard inputs",
-                {
-                    text: toolString("Text to set in clipboard."),
-                },
-                ["text"],
-            ),
+            inputSchema: z.object({
+                text: z.string().describe("Text to set in clipboard."),
+            }),
             execute: async (args: Record<string, any>) => {
                 return computer.setClipboard({ text: args.text });
             },
@@ -350,7 +319,7 @@ export function createGraphicalTools(computer: GraphicalComputer): Tool[] {
         {
             name: "get_screen_size",
             description: "Get the screen size dimensions.",
-            inputSchema: toolObject("Get screen size inputs", {}),
+            inputSchema: z.object({}),
             execute: async () => {
                 return computer.getScreenSize();
             },
