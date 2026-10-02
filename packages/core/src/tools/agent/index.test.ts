@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import type { AgentSession } from "@/agents";
+import { getToolJsonSchema } from "@/tools/schema";
 import { Agent2AgentToolProvider } from ".";
 
 class MockEventSource {
@@ -74,7 +75,9 @@ describe("Agent2AgentToolProvider", () => {
             expect(tools[0]!.description).toBe(
                 "Calls external agent code-reviewer for help to perform a task",
             );
-            expect(tools[0]!.inputSchema.required).toContain("prompt");
+            expect(
+                getToolJsonSchema(tools[0]!.inputSchema).required,
+            ).toContain("prompt");
 
             const byName = await provider.getToolByName("agent_code_reviewer_exec_task");
             expect(byName).not.toBeNull();

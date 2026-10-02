@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { z } from "zod";
 import type { Tool, ToolProvider } from "./tools";
 import { FilteredToolProvider, matchesPattern, withToolFilter } from "./filter";
 
@@ -36,19 +37,19 @@ describe("FilteredToolProvider", () => {
         {
             name: "read_file",
             description: "Read a file",
-            inputSchema: { type: "object", description: "", properties: {} },
+            inputSchema: z.object({}),
             execute: async () => "read",
         },
         {
             name: "write_file",
             description: "Write a file",
-            inputSchema: { type: "object", description: "", properties: {} },
+            inputSchema: z.object({}),
             execute: async () => "written",
         },
         {
             name: "delete_file",
             description: "Delete a file",
-            inputSchema: { type: "object", description: "", properties: {} },
+            inputSchema: z.object({}),
             execute: async () => "deleted",
         },
     ];

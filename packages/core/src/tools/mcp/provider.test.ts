@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import type { Client } from "@modelcontextprotocol/client";
 import type { AgentHandle, AgentSession } from "@/agents";
+import { getToolJsonSchema } from "@/tools/schema";
 import { type McpClientFactory, McpServerToolProvider } from "./provider";
 
 const vi = { fn: mock };
@@ -111,8 +112,8 @@ describe("McpServerToolProvider", () => {
         const noArgsTool = tools.find(
             (t) => t.name === "test_server_tools_no_args",
         );
-        expect(noArgsTool?.inputSchema.properties).toEqual({});
-        expect(noArgsTool?.inputSchema.required).toBeNull();
+        expect(getToolJsonSchema(noArgsTool?.inputSchema).properties).toEqual({});
+        expect(getToolJsonSchema(noArgsTool?.inputSchema).required).toBeNull();
     });
 
     it("retrieves a tool by name using getToolByName", async () => {

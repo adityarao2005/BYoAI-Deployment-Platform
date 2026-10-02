@@ -3,7 +3,8 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import type { Model } from "@/models/models";
-import type { Tool, ToolProvider } from "@/tools/tools";
+import { z } from "zod";
+import { type Tool, type ToolProvider, createTool } from "@/tools/tools";
 import { constructSystemPrompt, type AgentConfiguration, AgentManager, AgentMemory } from "./agents";
 import type { Skill } from "../skills";
 import { InMemoryAgentCommunicator } from "./communication";
@@ -43,34 +44,23 @@ describe("AgentMemory", () => {
 
         expect(memory.getPendingToolCalls()).toEqual([]);
 
+        const dummyTool: Tool = {
+            name: "test",
+            description: "",
+            inputSchema: z.object({}),
+            execute: async () => {},
+        };
+
         memory.transcript.push({
             type: "tool_call",
             id: "call_1",
-            tool: {
-                name: "test",
-                description: "",
-                inputSchema: {
-                    type: "object",
-                    description: "",
-                    properties: {},
-                },
-                execute: async () => {},
-            },
+            tool: dummyTool,
             arguments: {},
         });
         memory.transcript.push({
             type: "tool_call",
             id: "call_2",
-            tool: {
-                name: "test",
-                description: "",
-                inputSchema: {
-                    type: "object",
-                    description: "",
-                    properties: {},
-                },
-                execute: async () => {},
-            },
+            tool: dummyTool,
             arguments: {},
         });
 
@@ -80,16 +70,7 @@ describe("AgentMemory", () => {
         memory.transcript.push({
             type: "tool_response",
             id: "call_1",
-            tool: {
-                name: "test",
-                description: "",
-                inputSchema: {
-                    type: "object",
-                    description: "",
-                    properties: {},
-                },
-                execute: async () => {},
-            },
+            tool: dummyTool,
             result: "ok",
         });
 
@@ -99,16 +80,7 @@ describe("AgentMemory", () => {
         memory.transcript.push({
             type: "tool_response",
             id: "unknown_id",
-            tool: {
-                name: "test",
-                description: "",
-                inputSchema: {
-                    type: "object",
-                    description: "",
-                    properties: {},
-                },
-                execute: async () => {},
-            },
+            tool: dummyTool,
             result: "ok",
         });
 
@@ -118,16 +90,7 @@ describe("AgentMemory", () => {
         memory.transcript.push({
             type: "tool_response",
             id: "call_2",
-            tool: {
-                name: "test",
-                description: "",
-                inputSchema: {
-                    type: "object",
-                    description: "",
-                    properties: {},
-                },
-                execute: async () => {},
-            },
+            tool: dummyTool,
             result: "ok",
         });
 
@@ -254,23 +217,18 @@ describe("AgentManager Integration", () => {
 
         let toolExecuted = false;
 
-        const calculatorTool: Tool = {
+        const calculatorTool = createTool({
             name: "calculate",
             description: "Add numbers",
-            inputSchema: {
-                type: "object",
-                description: "params",
-                properties: {
-                    a: { type: "integer", description: "First number" },
-                    b: { type: "integer", description: "Second number" },
-                },
-                required: ["a", "b"],
-            },
+            inputSchema: z.object({
+                a: z.number().int().describe("First number"),
+                b: z.number().int().describe("Second number"),
+            }),
             async execute(args, _session) {
                 toolExecuted = true;
                 return { result: args.a + args.b };
             },
-        };
+        });
 
         const toolProvider: ToolProvider = {
             async getAllTools() {
@@ -358,21 +316,16 @@ describe("AgentManager Integration", () => {
         const memoryManager = new InMemoryAgentMemoryManager();
         const tokenManager = new InMemoryUserTokenManager();
 
-        const failingTool: Tool = {
+        const failingTool = createTool({
             name: "fail_tool",
             description: "A tool that throws an error",
-            inputSchema: {
-                type: "object",
-                description: "params",
-                properties: {
-                    value: { type: "string", description: "any string" },
-                },
-                required: ["value"],
-            },
+            inputSchema: z.object({
+                value: z.string().describe("any string"),
+            }),
             async execute() {
                 throw new Error("Simulated network timeout");
             },
-        };
+        });
 
         const toolProvider: ToolProvider = {
             async getAllTools() {

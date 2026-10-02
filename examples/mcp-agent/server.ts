@@ -42,7 +42,7 @@ server.registerTool(
                 result = a / b;
                 break;
             case "power":
-                result = Math.pow(a, b);
+                result = a ** b;
                 break;
         }
 

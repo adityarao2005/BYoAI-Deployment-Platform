@@ -7,7 +7,8 @@ import {
 } from "@/agents";
 import type { AgentEventMap } from "@/agents/agent.messaging";
 import type { Model } from "@/models/models";
-import type { Tool, ToolProvider } from "@/tools/tools";
+import { z } from "zod";
+import { type Tool, type ToolProvider, createTool } from "@/tools/tools";
 import { InMemoryAgentCommunicator } from "../communication";
 import { InMemoryAgentMemoryManager } from "../memory";
 import { ConsoleAgentObserver } from "./console";
@@ -102,21 +103,16 @@ describe("AgentObserver", () => {
             },
         };
 
-        const dummyTool: Tool = {
+        const dummyTool = createTool({
             name: "echo_tool",
             description: "Echoes input",
-            inputSchema: {
-                type: "object",
-                description: "params",
-                properties: {
-                    text: { type: "string", description: "text" },
-                },
-                required: ["text"],
-            },
+            inputSchema: z.object({
+                text: z.string().describe("text"),
+            }),
             async execute(args) {
                 return { echo: args.text };
             },
-        };
+        });
 
         const dummyProvider: ToolProvider = {
             async getAllTools() {
