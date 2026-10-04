@@ -35,6 +35,30 @@ export type AgentEventMap = {
         toolCallId: string;
         reason?: string;
     };
+    /** Emitted on the parent's communicator when a subagent is spawned */
+    "subagent:start": {
+        agentId: string;
+        subAgentId: string;
+        goal: string;
+    };
+    /** Emitted on the parent's communicator when a subagent produces a message */
+    "subagent:message": {
+        agentId: string;
+        subAgentId: string;
+        content: string;
+    };
+    /** Emitted on the parent's communicator when a subagent completes */
+    "subagent:complete": {
+        agentId: string;
+        subAgentId: string;
+        result: string;
+    };
+    /** Emitted on the parent's communicator when a subagent encounters an error */
+    "subagent:error": {
+        agentId: string;
+        subAgentId: string;
+        error: string;
+    };
 };
 
 /** Handler callback type for agent events. */

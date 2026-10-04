@@ -17,11 +17,12 @@ export class InMemoryAgentMemoryManager implements AgentMemoryManager {
         name: string,
         userId: string,
         mode: InteractiveMode = "interactive",
+        parentId?: string,
     ): Promise<string> {
         const id = `agent-${++this.counter}`;
         this.memories.set(
             id,
-            new AgentMemory(name, userId, [], undefined, undefined, mode),
+            new AgentMemory(name, userId, [], undefined, undefined, mode, parentId),
         );
         return id;
     }
@@ -70,6 +71,7 @@ export class InMemoryAgentMemoryManager implements AgentMemoryManager {
             userId: memory.userId,
             name: memory.name,
             computerId: memory.computerId,
+            parentId: memory.parentId,
         };
     }
 
@@ -84,10 +86,21 @@ export class InMemoryAgentMemoryManager implements AgentMemoryManager {
     }
 
     async getAllAgents(): Promise<string[]> {
-        return Array.from(this.memories.keys());
+        return Array.from(this.memories.entries())
+            .filter(([_, memory]) => !memory.parentId)
+            .map(([key]) => key);
     }
 
     async getAllAgentsByUser(user: string): Promise<string[]> {
-        return this.memories.entries().filter(([key, value]) => value.userId === user).map(([key]) => key).toArray();
+        return Array.from(this.memories.entries())
+            .filter(([_, memory]) => memory.userId === user && !memory.parentId)
+            .map(([key]) => key);
+    }
+
+    async getSubAgents(parentId: string): Promise<string[]> {
+        return Array.from(this.memories.entries())
+            .filter(([_, memory]) => memory.parentId === parentId)
+            .map(([key]) => key);
     }
 }
+

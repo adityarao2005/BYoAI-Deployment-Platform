@@ -394,6 +394,13 @@ export function registerToolProviders(
             toolProviderRegistry.registerToolProvider(todosProvider);
             logger.info("Registered TodosToolProvider");
             continue;
+        } else if (providerConfig.type === "computer") {
+            // Computer provider is registered separately above
+            continue;
+        } else if (providerConfig.type === "subagent") {
+            // Subagent provider is registered separately in bootstrap after all other providers
+            logger.info("Subagent tool provider config found (will be registered after all tool providers)");
+            continue;
         }
 
         const filterOptions = {

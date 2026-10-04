@@ -320,6 +320,43 @@ export type Agent2AgentToolProviderConfig = z.infer<
     typeof Agent2AgentToolProviderConfigSchema
 >;
 
+// Subagent tool provider
+
+/**
+ * Per-provider filter specifying which tools to inherit from a named provider.
+ */
+export const InheritedToolProviderFilterSchema = z.object({
+    name: z.string(),
+    allowedTools: z.array(z.string()).optional(),
+    disallowedTools: z.array(z.string()).optional(),
+});
+
+export type InheritedToolProviderFilter = z.infer<
+    typeof InheritedToolProviderFilterSchema
+>;
+
+/**
+ * Configuration schema for the subagent tool provider.
+ * Controls tool inheritance, recursion, computer sharing, and execution limits.
+ */
+export const SubAgentToolProviderConfigSchema = z.object({
+    type: z.literal("subagent"),
+    /** Per-provider filters. Omit to inherit all providers with all tools. */
+    inheritedToolProviders: z.array(InheritedToolProviderFilterSchema).optional(),
+    /** Whether the subagent can itself spawn sub-subagents */
+    allowRecursive: z.boolean().default(false),
+    /** Whether to share the parent's computer with the subagent */
+    shareComputer: z.boolean().default(true),
+    /** Maximum recursion depth for nested subagents */
+    maxDepth: z.number().default(3),
+    /** Timeout in milliseconds for a single subagent execution */
+    timeoutMs: z.number().default(120_000),
+});
+
+export type SubAgentToolProviderConfig = z.infer<
+    typeof SubAgentToolProviderConfigSchema
+>;
+
 /**
  * Universal Zod discriminated union schema for tool provider configuration (`openapi`, `computer`, `mcp`, `scratchpad`, `todos`).
  */
@@ -329,7 +366,8 @@ export const ToolProviderConfigSchema = z.discriminatedUnion("type", [
     McpToolProviderConfigSchema,
     ScratchpadToolProviderConfigSchema,
     TodosToolProviderConfigSchema,
-    Agent2AgentToolProviderConfigSchema
+    Agent2AgentToolProviderConfigSchema,
+    SubAgentToolProviderConfigSchema,
 ]);
 
 /**
