@@ -46,6 +46,8 @@ export interface SubAgentContext {
     readonly parentToolProviders: ToolProvider[];
     /** Current recursion depth (0 for top-level agents) */
     readonly currentDepth: number;
+    /** The root interaction ID for SSE routing */
+    readonly rootAgentId?: string;
 }
 
 /**
@@ -126,6 +128,7 @@ async function runSubAgent(
 ): Promise<{ subAgentId: string; result: string }> {
     const { goal } = args;
     const parentId = session.agent.id;
+    const rootAgentId = context.rootAgentId ?? session.agent.id;
     const parentCommunicator = context.parentCommunicator;
     const inheritComputer = shouldInheritComputer(config);
 
@@ -148,13 +151,15 @@ async function runSubAgent(
     logger.info("Spawning subagent", {
         subAgentId,
         parentId,
+        rootAgentId,
         goal: goal.substring(0, 100),
         depth: context.currentDepth + 1,
     });
 
     // Notify parent's communicator
     await parentCommunicator.emit("subagent:start", {
-        agentId: parentId,
+        agentId: rootAgentId,
+        parentId,
         subAgentId,
         goal,
     });
@@ -206,7 +211,7 @@ async function runSubAgent(
                 session,
                 agentMessages,
                 parentCommunicator,
-                parentId,
+                rootAgentId,
                 inheritComputer,
             ),
             createTimeout(config.timeoutMs, subAgentId),
@@ -218,12 +223,12 @@ async function runSubAgent(
                 : "Subagent completed task successfully.";
 
         await parentCommunicator.emit("subagent:complete", {
-            agentId: parentId,
+            agentId: rootAgentId,
             subAgentId,
             result: finalResult,
         });
 
-        logger.info("Subagent completed", { subAgentId, parentId });
+        logger.info("Subagent completed", { subAgentId, parentId, rootAgentId });
 
         return { subAgentId, result: finalResult };
     } catch (error) {
@@ -231,12 +236,12 @@ async function runSubAgent(
             error instanceof Error ? error.message : String(error);
 
         await parentCommunicator.emit("subagent:error", {
-            agentId: parentId,
+            agentId: rootAgentId,
             subAgentId,
             error: errorMessage,
         });
 
-        logger.error("Subagent failed", { subAgentId, parentId, error: errorMessage });
+        logger.error("Subagent failed", { subAgentId, parentId, rootAgentId, error: errorMessage });
 
         return {
             subAgentId,
@@ -471,6 +476,7 @@ async function resolveInheritedTools(
         const childContext: SubAgentContext = {
             ...context,
             currentDepth: nextDepth,
+            rootAgentId: context.rootAgentId ?? parentSession.agent.id,
         };
         const childSubAgentProvider = new SubAgentToolProvider(
             config,

@@ -39,6 +39,7 @@ export type AgentEventMap = {
     "subagent:start": {
         agentId: string;
         subAgentId: string;
+        parentId?: string;
         goal: string;
     };
     /** Emitted on the parent's communicator when a subagent produces a message */

@@ -199,6 +199,10 @@ describe('subscribeInteractionSSE', () => {
     expect(registeredEvents).toContain('tool:call');
     expect(registeredEvents).toContain('tool:complete');
     expect(registeredEvents).toContain('user:message');
+    expect(registeredEvents).toContain('subagent:start');
+    expect(registeredEvents).toContain('subagent:message');
+    expect(registeredEvents).toContain('subagent:complete');
+    expect(registeredEvents).toContain('subagent:error');
   });
 
   it('parses JSON data and calls onEvent with parsed payload', () => {

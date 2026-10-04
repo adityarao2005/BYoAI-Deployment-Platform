@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { Sidebar } from '@/components/Sidebar';
 import { ChatView } from '@/components/ChatView';
-import type { Interaction, ChatMessage, UserProfile } from '@/types';
+import type { Interaction, ChatMessage, UserProfile, SubAgentTask } from '@/types';
 import {
   fetchCurrentUser,
   fetchInteractions,
@@ -11,6 +11,53 @@ import {
   sendToolDecision,
   subscribeInteractionSSE,
 } from '@/lib/api';
+
+function updateSubAgentTree(
+  tasks: SubAgentTask[],
+  targetId: string,
+  updater: (task: SubAgentTask) => SubAgentTask
+): { updated: boolean; tasks: SubAgentTask[] } {
+  let anyUpdated = false;
+  const newTasks = tasks.map((t) => {
+    if (t.id === targetId) {
+      anyUpdated = true;
+      return updater(t);
+    }
+    if (t.subagents && t.subagents.length > 0) {
+      const childRes = updateSubAgentTree(t.subagents, targetId, updater);
+      if (childRes.updated) {
+        anyUpdated = true;
+        return { ...t, subagents: childRes.tasks };
+      }
+    }
+    return t;
+  });
+  return { updated: anyUpdated, tasks: newTasks };
+}
+
+function attachChildSubAgent(
+  tasks: SubAgentTask[],
+  parentId: string,
+  childTask: SubAgentTask
+): { attached: boolean; tasks: SubAgentTask[] } {
+  let attached = false;
+  const newTasks = tasks.map((t) => {
+    if (t.id === parentId) {
+      attached = true;
+      const existing = (t.subagents || []).some((s) => s.id === childTask.id);
+      return existing ? t : { ...t, subagents: [...(t.subagents || []), childTask] };
+    }
+    if (t.subagents && t.subagents.length > 0) {
+      const childRes = attachChildSubAgent(t.subagents, parentId, childTask);
+      if (childRes.attached) {
+        attached = true;
+        return { ...t, subagents: childRes.tasks };
+      }
+    }
+    return t;
+  });
+  return { attached, tasks: newTasks };
+}
 
 export function App() {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -291,6 +338,147 @@ export function App() {
             }));
             setErrorMessage(errorText);
           }
+        } else if (event === 'subagent:start') {
+          const saPayload = data as {
+            agentId?: string;
+            parentId?: string;
+            subAgentId?: string;
+            goal?: string;
+          };
+          const subAgentId = saPayload?.subAgentId;
+          const parentId = saPayload?.parentId;
+          const goal = saPayload?.goal || 'Subagent task';
+          if (!subAgentId) return;
+
+          const newSubTask: SubAgentTask = {
+            id: subAgentId,
+            parentId: parentId || eventAgentId,
+            goal,
+            status: 'running',
+            messages: [],
+            subagents: [],
+            startedAt: new Date().toISOString(),
+          };
+
+          setMessages((prev) => {
+            const current = prev[eventAgentId] || [];
+
+            // If it's a child of another subagent (nested recursion)
+            if (parentId && parentId !== eventAgentId) {
+              let attached = false;
+              const updated = current.map((m) => {
+                if (m.role === 'subagent' && m.subagent) {
+                  const res = attachChildSubAgent([m.subagent], parentId, newSubTask);
+                  if (res.attached) {
+                    attached = true;
+                    return { ...m, subagent: res.tasks[0] };
+                  }
+                }
+                return m;
+              });
+              if (attached) {
+                return { ...prev, [eventAgentId]: updated };
+              }
+            }
+
+            // Top-level subagent under this interaction
+            const exists = current.some((m) => m.subagent?.id === subAgentId);
+            if (exists) return prev;
+
+            return {
+              ...prev,
+              [eventAgentId]: [
+                ...current,
+                {
+                  id: `msg-sa-${subAgentId}`,
+                  role: 'subagent',
+                  content: goal,
+                  timestamp: new Date().toISOString(),
+                  subagent: newSubTask,
+                },
+              ],
+            };
+          });
+        } else if (event === 'subagent:message') {
+          const saPayload = data as {
+            agentId?: string;
+            subAgentId?: string;
+            content?: string;
+          };
+          const subAgentId = saPayload?.subAgentId;
+          const text = saPayload?.content;
+          if (!subAgentId || !text) return;
+
+          setMessages((prev) => {
+            const current = prev[eventAgentId] || [];
+            const updated = current.map((m) => {
+              if (m.role === 'subagent' && m.subagent) {
+                const res = updateSubAgentTree([m.subagent], subAgentId, (task) => ({
+                  ...task,
+                  messages: [...task.messages, text],
+                }));
+                if (res.updated) {
+                  return { ...m, subagent: res.tasks[0] };
+                }
+              }
+              return m;
+            });
+            return { ...prev, [eventAgentId]: updated };
+          });
+        } else if (event === 'subagent:complete') {
+          const saPayload = data as {
+            agentId?: string;
+            subAgentId?: string;
+            result?: string;
+          };
+          const subAgentId = saPayload?.subAgentId;
+          const result = saPayload?.result;
+          if (!subAgentId) return;
+
+          setMessages((prev) => {
+            const current = prev[eventAgentId] || [];
+            const updated = current.map((m) => {
+              if (m.role === 'subagent' && m.subagent) {
+                const res = updateSubAgentTree([m.subagent], subAgentId, (task) => ({
+                  ...task,
+                  status: 'completed',
+                  result: result ?? task.result,
+                }));
+                if (res.updated) {
+                  return { ...m, subagent: res.tasks[0] };
+                }
+              }
+              return m;
+            });
+            return { ...prev, [eventAgentId]: updated };
+          });
+        } else if (event === 'subagent:error') {
+          const saPayload = data as {
+            agentId?: string;
+            subAgentId?: string;
+            error?: string;
+          };
+          const subAgentId = saPayload?.subAgentId;
+          const error = saPayload?.error;
+          if (!subAgentId) return;
+
+          setMessages((prev) => {
+            const current = prev[eventAgentId] || [];
+            const updated = current.map((m) => {
+              if (m.role === 'subagent' && m.subagent) {
+                const res = updateSubAgentTree([m.subagent], subAgentId, (task) => ({
+                  ...task,
+                  status: 'error',
+                  error: error ?? 'Subagent execution error',
+                }));
+                if (res.updated) {
+                  return { ...m, subagent: res.tasks[0] };
+                }
+              }
+              return m;
+            });
+            return { ...prev, [eventAgentId]: updated };
+          });
         }
       },
       (err) => {
