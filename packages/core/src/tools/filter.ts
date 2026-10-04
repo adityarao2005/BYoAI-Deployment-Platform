@@ -42,6 +42,14 @@ export class FilteredToolProvider implements ToolProvider {
         this.options = options;
     }
 
+    get name(): string | undefined {
+        return (this.provider as any).name ?? (this.provider as any).config?.name;
+    }
+
+    get innerProvider(): ToolProvider {
+        return this.provider;
+    }
+
     /**
      * Determines whether a tool with the given name is permitted.
      */

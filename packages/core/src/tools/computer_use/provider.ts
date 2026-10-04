@@ -11,6 +11,7 @@ import type { ComputerPermissions } from "./permissions";
 
 // abstract computer use tool provider
 export class ComputerUseToolProvider implements ToolProvider {
+    readonly name: string = "computer";
     // hash based on agent name
     private cachedTools: Map<string, Tool[]> = new Map();
     private provider: ComputerProvider;

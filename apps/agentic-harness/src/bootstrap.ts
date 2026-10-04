@@ -16,7 +16,10 @@ import {
     type ComputerProvider,
     createComputerProvider,
 } from "@byo-ai-agent-platform/core/computer";
-import type { ComputerUseToolProviderConfig } from "@byo-ai-agent-platform/core/config";
+import type {
+    ComputerUseToolProviderConfig,
+    SubAgentToolProviderConfig,
+} from "@byo-ai-agent-platform/core/config";
 import { ConfigError } from "@byo-ai-agent-platform/core/errors";
 import { getLogger } from "@byo-ai-agent-platform/core/logger";
 import {
@@ -42,6 +45,8 @@ import {
     ScratchpadToolProvider,
     StdioMcpClientFactory,
     StreamableHTTPMcpClientFactory,
+    type SubAgentContext,
+    SubAgentToolProvider,
     TodosToolProvider,
     toolProviderRegistry,
     withToolFilter,
@@ -538,14 +543,45 @@ export async function bootstrap(
         new ConsoleAgentObserver(),
     ];
 
+    const resolvedRules = await resolveRules(config.rules ?? []);
+
+    const subagentConfig = config.toolProviders?.find(
+        (p): p is SubAgentToolProviderConfig => p.type === "subagent",
+    );
+    if (subagentConfig) {
+        const subAgentContext: SubAgentContext = {
+            configuration: {
+                model: defaultModel,
+                skillRepository: skillRepos,
+                rules: resolvedRules,
+                observers,
+                communicator,
+                memoryManager,
+                computerProvider: computer,
+                toolProviders,
+            },
+            memory: memoryManager,
+            parentCommunicator: communicator,
+            parentToolProviders: toolProviders,
+            currentDepth: 0,
+        };
+        const subAgentProvider = new SubAgentToolProvider(
+            subagentConfig,
+            subAgentContext,
+        );
+        toolProviders.push(subAgentProvider);
+        logger.info("Registered SubAgentToolProvider", {
+            allowRecursive: subagentConfig.allowRecursive,
+            maxDepth: subagentConfig.maxDepth,
+        });
+    }
+
     logger.info("Bootstrapping Agentic Harness", {
         model: defaultModel.name,
         skillReposCount: skillRepos.length,
         toolProvidersCount: toolProviders.length,
         hasComputer: computer !== undefined,
     });
-
-    const resolvedRules = await resolveRules(config.rules ?? []);
 
     const manager = new AgentManager({
         name: config?.name ?? `agent-${randomUUID()}`,

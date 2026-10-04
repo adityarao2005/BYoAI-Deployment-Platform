@@ -523,6 +523,10 @@ export class AgentManager implements IAgentLifecycleManager {
         );
     }
 
+    async getSubAgents(parentId: string): Promise<string[]> {
+        return await this.memory.agent.getSubAgents(parentId);
+    }
+
     get communicator(): AgentCommunicator {
         return this.configuration.communicator;
     }

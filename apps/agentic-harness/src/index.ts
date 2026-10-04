@@ -284,6 +284,10 @@ app.get("/interactions/:id/sse", async (c) => {
             "tool:call",
             "tool:complete",
             "tool:approval_required",
+            "subagent:start",
+            "subagent:message",
+            "subagent:complete",
+            "subagent:error",
         ];
 
         const unsubscribers = eventNames.map((eventName) =>

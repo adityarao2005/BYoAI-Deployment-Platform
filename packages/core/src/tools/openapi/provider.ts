@@ -11,6 +11,10 @@ export class OpenAPIToolProvider implements ToolProvider {
         this.config = config;
     }
 
+    get name(): string {
+        return this.config.name;
+    }
+
     private async loadTools(): Promise<Tool[]> {
         if (!this.cachedTools) {
             const doc = (await parseSpecURL(this.config.specUrl)) as Record<

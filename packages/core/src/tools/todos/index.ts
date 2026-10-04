@@ -3,6 +3,8 @@ import { z } from "zod";
 import type { Tool, ToolProvider } from "@/tools";
 
 export class TodosToolProvider implements ToolProvider {
+    readonly name: string = "todos";
+
     async getToolByName(name: string): Promise<Tool | null> {
         return (
             (await this.getAllTools()).find((tool) => tool.name === name) ??
