@@ -551,6 +551,9 @@ export async function bootstrap(
     if (subagentConfig) {
         const subAgentContext: SubAgentContext = {
             configuration: {
+                name: config?.name ?? `agent-${randomUUID()}`,
+                description:
+                    config?.description ?? "You are a helpful assistant.",
                 model: defaultModel,
                 skillRepository: skillRepos,
                 rules: resolvedRules,

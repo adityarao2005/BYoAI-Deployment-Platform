@@ -1,6 +1,5 @@
 import { describe, expect, it } from "bun:test";
 import {
-    AgentManager,
     type AgentConfiguration,
     type AgentSession,
     type AgentHandle,
@@ -11,7 +10,7 @@ import {
     CompositeMemoryManager,
 } from "@/agents";
 import { AgentMemory } from "@/agents/agent.memory";
-import type { Model, ModelExecutionInput, ModelMessageOutput } from "@/models";
+import type { Model, ModelInput, ModelMessageOutput } from "@/models";
 import type { Tool, ToolProvider } from "../tools";
 import { createTool } from "../tools";
 import { ScratchpadToolProvider } from "../scratchpad";
@@ -19,14 +18,13 @@ import { TodosToolProvider } from "../todos";
 import {
     SubAgentToolProvider,
     type SubAgentContext,
-    shouldInheritComputer,
 } from "./index";
 import type { SubAgentToolProviderConfig } from "@/config";
 import { z } from "zod";
 
 describe("SubAgentToolProvider", () => {
     function createMockModel(
-        handler: (input: ModelExecutionInput) => Promise<ModelMessageOutput[]>,
+        handler: (input: ModelInput) => Promise<ModelMessageOutput[]>,
     ): Model {
         return {
             name: "mock-model",
@@ -37,6 +35,7 @@ describe("SubAgentToolProvider", () => {
     function createDummySession(
         agentId = "parent-agent-1",
         computerId?: string,
+        skillRepositories: any[] = [],
     ): AgentSession {
         const handle: AgentHandle = {
             id: agentId,
@@ -51,7 +50,7 @@ describe("SubAgentToolProvider", () => {
             userId: "user-1",
             memory: new AgentMemory("parent-agent", "user-1"),
             mode: "interactive",
-            skillRepositories: [],
+            skillRepositories,
             rules: [],
             authContext: {},
             computerProvider: computerId
@@ -60,6 +59,33 @@ describe("SubAgentToolProvider", () => {
                       getComputer: async () => ({}) as any,
                   } as any)
                 : undefined,
+        };
+    }
+
+    function createDummyContext(
+        model: Model,
+        memory: CompositeMemoryManager,
+        communicator: InMemoryAgentCommunicator,
+        toolProviders: ToolProvider[] = [],
+        skillRepository: any[] = [],
+        currentDepth = 0,
+    ): SubAgentContext {
+        const configuration: AgentConfiguration = {
+            name: "test-parent",
+            description: "test parent agent",
+            model,
+            skillRepository,
+            toolProviders,
+            memoryManager: memory,
+            communicator,
+        };
+
+        return {
+            configuration,
+            memory,
+            parentCommunicator: communicator,
+            parentToolProviders: toolProviders,
+            currentDepth,
         };
     }
 
@@ -78,28 +104,27 @@ describe("SubAgentToolProvider", () => {
             timeoutMs: 5000,
         };
 
-        const contextAtLimit: SubAgentContext = {
-            configuration: {
-                model: createMockModel(async () => []),
-                skillRepository: [],
-                toolProviders: [],
-                memoryManager: memory,
-                communicator,
-            },
+        const contextAtLimit = createDummyContext(
+            createMockModel(async () => []),
             memory,
-            parentCommunicator: communicator,
-            parentToolProviders: [],
-            currentDepth: 2,
-        };
+            communicator,
+            [],
+            [],
+            2,
+        );
 
         const providerAtLimit = new SubAgentToolProvider(config, contextAtLimit);
         const tools = await providerAtLimit.getAllTools();
         expect(tools).toHaveLength(0);
 
-        const contextBelowLimit: SubAgentContext = {
-            ...contextAtLimit,
-            currentDepth: 1,
-        };
+        const contextBelowLimit = createDummyContext(
+            createMockModel(async () => []),
+            memory,
+            communicator,
+            [],
+            [],
+            1,
+        );
         const providerBelow = new SubAgentToolProvider(config, contextBelowLimit);
         const availableTools = await providerBelow.getAllTools();
         expect(availableTools).toHaveLength(1);
@@ -115,15 +140,15 @@ describe("SubAgentToolProvider", () => {
         });
 
         const eventsReceived: Array<{ event: string; payload: any }> = [];
-        communicator.on("subagent:start", (payload) =>
-            eventsReceived.push({ event: "subagent:start", payload }),
-        );
-        communicator.on("subagent:message", (payload) =>
-            eventsReceived.push({ event: "subagent:message", payload }),
-        );
-        communicator.on("subagent:complete", (payload) =>
-            eventsReceived.push({ event: "subagent:complete", payload }),
-        );
+        communicator.on("subagent:start", (payload) => {
+            eventsReceived.push({ event: "subagent:start", payload });
+        });
+        communicator.on("subagent:message", (payload) => {
+            eventsReceived.push({ event: "subagent:message", payload });
+        });
+        communicator.on("subagent:complete", (payload) => {
+            eventsReceived.push({ event: "subagent:complete", payload });
+        });
 
         let turnCount = 0;
         const mockModel = createMockModel(async () => {
@@ -145,19 +170,7 @@ describe("SubAgentToolProvider", () => {
             timeoutMs: 5000,
         };
 
-        const context: SubAgentContext = {
-            configuration: {
-                model: mockModel,
-                skillRepository: [],
-                toolProviders: [],
-                memoryManager: memory,
-                communicator,
-            },
-            memory,
-            parentCommunicator: communicator,
-            parentToolProviders: [],
-            currentDepth: 0,
-        };
+        const context = createDummyContext(mockModel, memory, communicator);
 
         const provider = new SubAgentToolProvider(subAgentConfig, context);
         const subagentTool = (await provider.getToolByName("create_subagent"))!;
@@ -209,7 +222,7 @@ describe("SubAgentToolProvider", () => {
 
         let observedTools: string[] = [];
         const mockModel = createMockModel(async (input) => {
-            observedTools = (input.tools ?? []).map((t) => t.name);
+            observedTools = (input.tools ?? []).map((t: Tool) => t.name);
             return [
                 {
                     role: "assistant",
@@ -241,24 +254,17 @@ describe("SubAgentToolProvider", () => {
         };
 
         const scratchpad = new ScratchpadToolProvider();
-        const context: SubAgentContext = {
-            configuration: {
-                model: mockModel,
-                skillRepository: [dummySkillRepo],
-                toolProviders: [scratchpad],
-                memoryManager: memory,
-                communicator,
-            },
+        const context = createDummyContext(
+            mockModel,
             memory,
-            parentCommunicator: communicator,
-            parentToolProviders: [scratchpad],
-            currentDepth: 0,
-        };
+            communicator,
+            [scratchpad],
+            [dummySkillRepo],
+        );
 
         const provider = new SubAgentToolProvider(subAgentConfig, context);
         const subagentTool = (await provider.getToolByName("create_subagent"))!;
-        const session = createDummySession();
-        session.skillRepositories = [dummySkillRepo];
+        const session = createDummySession("parent-1", undefined, [dummySkillRepo]);
 
         await subagentTool.execute({ goal: "test skills" }, session);
 
@@ -278,7 +284,7 @@ describe("SubAgentToolProvider", () => {
 
         let observedTools: string[] = [];
         const mockModel = createMockModel(async (input) => {
-            observedTools = (input.tools ?? []).map((t) => t.name);
+            observedTools = (input.tools ?? []).map((t: Tool) => t.name);
             return [
                 {
                     role: "assistant",
@@ -313,19 +319,12 @@ describe("SubAgentToolProvider", () => {
             timeoutMs: 5000,
         };
 
-        const context: SubAgentContext = {
-            configuration: {
-                model: mockModel,
-                skillRepository: [],
-                toolProviders: [dummyComputerToolProvider],
-                memoryManager: memory,
-                communicator,
-            },
+        const context = createDummyContext(
+            mockModel,
             memory,
-            parentCommunicator: communicator,
-            parentToolProviders: [dummyComputerToolProvider],
-            currentDepth: 0,
-        };
+            communicator,
+            [dummyComputerToolProvider],
+        );
 
         const provider = new SubAgentToolProvider(subAgentConfig, context);
         const subagentTool = (await provider.getToolByName("create_subagent"))!;
@@ -353,7 +352,7 @@ describe("SubAgentToolProvider", () => {
 
         let observedTools: string[] = [];
         const mockModel = createMockModel(async (input) => {
-            observedTools = (input.tools ?? []).map((t) => t.name);
+            observedTools = (input.tools ?? []).map((t: Tool) => t.name);
             return [
                 {
                     role: "assistant",
@@ -388,19 +387,12 @@ describe("SubAgentToolProvider", () => {
             timeoutMs: 5000,
         };
 
-        const context: SubAgentContext = {
-            configuration: {
-                model: mockModel,
-                skillRepository: [],
-                toolProviders: [dummyComputerToolProvider],
-                memoryManager: memory,
-                communicator,
-            },
+        const context = createDummyContext(
+            mockModel,
             memory,
-            parentCommunicator: communicator,
-            parentToolProviders: [dummyComputerToolProvider],
-            currentDepth: 0,
-        };
+            communicator,
+            [dummyComputerToolProvider],
+        );
 
         const provider = new SubAgentToolProvider(subAgentConfig, context);
         const subagentTool = (await provider.getToolByName("create_subagent"))!;
@@ -428,7 +420,7 @@ describe("SubAgentToolProvider", () => {
 
         let observedTools: string[] = [];
         const mockModel = createMockModel(async (input) => {
-            observedTools = (input.tools ?? []).map((t) => t.name);
+            observedTools = (input.tools ?? []).map((t: Tool) => t.name);
             return [
                 {
                     role: "assistant",
@@ -457,19 +449,12 @@ describe("SubAgentToolProvider", () => {
             timeoutMs: 5000,
         };
 
-        const context: SubAgentContext = {
-            configuration: {
-                model: mockModel,
-                skillRepository: [],
-                toolProviders: [scratchpad, todos],
-                memoryManager: memory,
-                communicator,
-            },
+        const context = createDummyContext(
+            mockModel,
             memory,
-            parentCommunicator: communicator,
-            parentToolProviders: [scratchpad, todos],
-            currentDepth: 0,
-        };
+            communicator,
+            [scratchpad, todos],
+        );
 
         const provider = new SubAgentToolProvider(subAgentConfig, context);
         const subagentTool = (await provider.getToolByName("create_subagent"))!;
