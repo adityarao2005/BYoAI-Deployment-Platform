@@ -43,6 +43,7 @@ export function loadSkillToolProvider(
     const loadSkillTool = createLoadSkillTool(repos);
 
     return {
+        name: "skills",
         async getAllTools() {
             return [loadSkillTool];
         },

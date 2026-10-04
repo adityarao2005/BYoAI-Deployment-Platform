@@ -20,6 +20,8 @@ export interface JsonAgentMemoryRecord {
     name: string;
     userId: string;
     mode?: InteractiveMode;
+    /** If set, this agent is a subagent spawned by the parent with this ID */
+    parentId?: string;
 }
 
 /**
@@ -70,6 +72,7 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
         name: string,
         userId: string,
         mode: InteractiveMode = "interactive",
+        parentId?: string,
     ): Promise<string> {
         await this.ensureStorageDir();
         const id = `agent-${crypto.randomUUID()}`;
@@ -79,6 +82,7 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
             transcript: [],
             userId,
             mode,
+            parentId,
         };
         await this.writeRecord(initialRecord);
         return id;
@@ -93,6 +97,7 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
             record.computerId,
             record.skillsPath,
             record.mode ?? "interactive",
+            record.parentId,
         );
     }
 
@@ -117,6 +122,7 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
                 userId: record.userId,
                 computerId: record.computerId,
                 name: record.name,
+                parentId: record.parentId,
             };
         } catch {
             return undefined;
@@ -137,25 +143,55 @@ export class JsonFileAgentMemoryManager implements AgentMemoryManager {
         await this.ensureStorageDir();
         try {
             const files = await fs.readdir(this.storageDir);
-            return files
+            const ids = files
                 .filter((file) => file.endsWith(".json"))
                 .map((file) => file.replace(/\.json$/, ""));
+            // Filter out subagents
+            const result: string[] = [];
+            for (const id of ids) {
+                const agent = await this.getAgent(id);
+                if (agent && !agent.parentId) {
+                    result.push(id);
+                }
+            }
+            return result;
         } catch {
             return [];
         }
     }
 
     async getAllAgentsByUser(userId: string): Promise<string[]> {
-        const agents = await this.getAllAgents()
+        const allIds = await this.getAllAgents();
 
-        const result = []
-        for (const agent of agents) {
-            const value = await this.getAgent(agent)
-            if (value?.userId === userId)
-                result.push(agent)
+        const result: string[] = [];
+        for (const id of allIds) {
+            const agent = await this.getAgent(id);
+            if (agent?.userId === userId) {
+                result.push(id);
+            }
         }
 
-        return result
+        return result;
+    }
+
+    async getSubAgents(parentId: string): Promise<string[]> {
+        await this.ensureStorageDir();
+        try {
+            const files = await fs.readdir(this.storageDir);
+            const ids = files
+                .filter((file) => file.endsWith(".json"))
+                .map((file) => file.replace(/\.json$/, ""));
+            const result: string[] = [];
+            for (const id of ids) {
+                const agent = await this.getAgent(id);
+                if (agent?.parentId === parentId) {
+                    result.push(id);
+                }
+            }
+            return result;
+        } catch {
+            return [];
+        }
     }
 
     async addTranscriptEntries(

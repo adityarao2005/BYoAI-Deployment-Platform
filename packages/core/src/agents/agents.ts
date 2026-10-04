@@ -35,6 +35,8 @@ export type AgentHandle = {
     name: string;
     computerId?: string;
     userId: string;
+    /** If set, this agent is a subagent spawned by the parent with this ID */
+    parentId?: string;
 };
 /**
  * Full configuration object for initializing an {@link AgentManager}.
@@ -519,6 +521,10 @@ export class AgentManager implements IAgentLifecycleManager {
         return await this.memory.agent.getAllAgentsByUser(
             userId,
         );
+    }
+
+    async getSubAgents(parentId: string): Promise<string[]> {
+        return await this.memory.agent.getSubAgents(parentId);
     }
 
     get communicator(): AgentCommunicator {

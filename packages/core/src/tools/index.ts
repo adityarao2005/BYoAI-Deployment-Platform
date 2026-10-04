@@ -8,3 +8,4 @@ export * from "./agent";
 export * from "./tools";
 export * from "./schema";
 export * from "./filter";
+export * from "./subagent";

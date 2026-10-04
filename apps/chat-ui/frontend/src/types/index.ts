@@ -12,9 +12,21 @@ export interface Interaction {
   unreadCount?: number;
 }
 
+export interface SubAgentTask {
+  id: string;
+  parentId: string;
+  goal: string;
+  status: 'running' | 'completed' | 'error';
+  messages: string[];
+  subagents: SubAgentTask[];
+  result?: string;
+  error?: string;
+  startedAt: string;
+}
+
 export interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant' | 'system' | 'tool' | 'error';
+  role: 'user' | 'assistant' | 'system' | 'tool' | 'error' | 'subagent';
   content: string;
   timestamp: string;
   isError?: boolean;
@@ -26,6 +38,7 @@ export interface ChatMessage {
     requires_user_input?: boolean;
     decision?: 'pending' | 'accepted' | 'rejected';
   };
+  subagent?: SubAgentTask;
 }
 
 export interface UserProfile {

@@ -320,6 +320,85 @@ export type Agent2AgentToolProviderConfig = z.infer<
     typeof Agent2AgentToolProviderConfigSchema
 >;
 
+// Subagent tool provider
+
+/**
+ * Object filter specifying which tools to inherit from a named provider.
+ */
+export const InheritedToolProviderFilterObjectSchema = z.object({
+    name: z.string(),
+    allowedTools: z.array(z.string()).optional(),
+    disallowedTools: z.array(z.string()).optional(),
+});
+
+/**
+ * Per-provider filter specifying which tools to inherit from a named provider.
+ * Supports:
+ * - Simple string name: `"petstore"` or `"scratchpad"`
+ * - Filter object: `{ name: "petstore", allowedTools: ["read*"] }`
+ * - Map entry from YAML: `{ petstore: { allowedTools: ["read*"], disallowedTools: ["write*"] } }`
+ */
+export const InheritedToolProviderFilterSchema = z.union([
+    z.string().transform((name) => ({
+        name,
+        allowedTools: undefined,
+        disallowedTools: undefined,
+    })),
+    InheritedToolProviderFilterObjectSchema,
+    z
+        .record(
+            z.string(),
+            z
+                .object({
+                    allowedTools: z.array(z.string()).optional(),
+                    disallowedTools: z.array(z.string()).optional(),
+                })
+                .optional(),
+        )
+        .transform((record) => {
+            const entries = Object.entries(record);
+            if (entries.length === 0) {
+                return { name: "" };
+            }
+            const [name, filters] = entries[0]!;
+            return {
+                name,
+                allowedTools: filters?.allowedTools,
+                disallowedTools: filters?.disallowedTools,
+            };
+        }),
+]);
+
+export type InheritedToolProviderFilter = z.infer<
+    typeof InheritedToolProviderFilterSchema
+>;
+
+/**
+ * Configuration schema for the subagent tool provider.
+ * Controls tool inheritance, recursion, computer sharing, and execution limits.
+ */
+export const SubAgentToolProviderConfigSchema = z.object({
+    type: z.literal("subagent"),
+    /** Per-provider filters. Omit to inherit all providers with all tools. */
+    inheritedToolProviders: z.array(InheritedToolProviderFilterSchema).optional(),
+    /** Whether the subagent can itself spawn sub-subagents */
+    allowRecursive: z.boolean().default(false),
+    /** Whether to allow/inherit the parent's computer in the subagent */
+    inheritComputer: z.boolean().default(false),
+    /** Alias for inheritComputer */
+    allow_computer: z.boolean().optional(),
+    /** Alias for inheritComputer */
+    shareComputer: z.boolean().optional(),
+    /** Maximum recursion depth for nested subagents */
+    maxDepth: z.number().default(3),
+    /** Timeout in milliseconds for a single subagent execution */
+    timeoutMs: z.number().default(120_000),
+});
+
+export type SubAgentToolProviderConfig = z.infer<
+    typeof SubAgentToolProviderConfigSchema
+>;
+
 /**
  * Universal Zod discriminated union schema for tool provider configuration (`openapi`, `computer`, `mcp`, `scratchpad`, `todos`).
  */
@@ -329,7 +408,8 @@ export const ToolProviderConfigSchema = z.discriminatedUnion("type", [
     McpToolProviderConfigSchema,
     ScratchpadToolProviderConfigSchema,
     TodosToolProviderConfigSchema,
-    Agent2AgentToolProviderConfigSchema
+    Agent2AgentToolProviderConfigSchema,
+    SubAgentToolProviderConfigSchema,
 ]);
 
 /**

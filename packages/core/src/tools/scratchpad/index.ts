@@ -3,6 +3,8 @@ import { z } from "zod";
 import type { Tool, ToolProvider } from "@/tools";
 
 export class ScratchpadToolProvider implements ToolProvider {
+    readonly name: string = "scratchpad";
+
     async getToolByName(name: string): Promise<Tool | null> {
         return (await this.getAllTools()).find((tool) => tool.name === name) ?? null;
     }

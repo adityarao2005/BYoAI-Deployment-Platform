@@ -153,6 +153,10 @@ export function subscribeInteractionSSE(
     'tool:approval_required',
     'tool:result',
     'user:message',
+    'subagent:start',
+    'subagent:message',
+    'subagent:complete',
+    'subagent:error',
   ];
 
   for (const evtName of eventTypes) {

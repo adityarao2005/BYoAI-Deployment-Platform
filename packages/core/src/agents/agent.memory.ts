@@ -11,6 +11,8 @@ export class AgentMemory {
     name: string;
     userId: string;
     mode: InteractiveMode;
+    /** If set, this agent is a subagent spawned by the parent with this ID */
+    parentId?: string;
 
     constructor(
         name: string,
@@ -19,6 +21,7 @@ export class AgentMemory {
         computerId?: string,
         skillsPath?: string,
         mode: InteractiveMode = "interactive",
+        parentId?: string,
     ) {
         this.transcript = transcript;
         this.computerId = computerId;
@@ -26,6 +29,7 @@ export class AgentMemory {
         this.name = name;
         this.userId = userId;
         this.mode = mode;
+        this.parentId = parentId;
     }
 
     /**
@@ -55,6 +59,7 @@ export interface AgentMemoryManager {
         name: string,
         userId: string,
         mode?: InteractiveMode,
+        parentId?: string,
     ): Promise<string>;
 
     /** Retrieves memory for a given agent */
@@ -86,4 +91,7 @@ export interface AgentMemoryManager {
 
     // get all agents by user
     getAllAgentsByUser(userId: string): Promise<string[]>
+
+    /** Retrieves IDs of subagents spawned by the given parent agent */
+    getSubAgents(parentId: string): Promise<string[]>;
 }

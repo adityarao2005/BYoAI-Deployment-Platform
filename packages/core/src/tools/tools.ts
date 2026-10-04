@@ -33,6 +33,11 @@ export function createTool<TSchema extends z.ZodType>(
  */
 export interface ToolProvider {
     /**
+     * Optional identifier or name for this provider (e.g. 'openapi', 'mcp', 'scratchpad').
+     */
+    readonly name?: string;
+
+    /**
      * Retrieves a tool by name for a specific agent. Returns null if not found.
      * @param name - Name of the tool.
      * @param agent - Optional target agent context.
