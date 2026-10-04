@@ -72,15 +72,16 @@ Subagents can be nested recursively (depth 0, 1, 2, ...). The state tree is main
 Always verify your changes before finishing:
 
 ```bash
-# 1. Run frontend logic and utility unit tests
-bun test apps/chat-ui/frontend/src/lib/
+# 1. Run all frontend unit and UI component tests in non-interactive/CI mode
+CI=1 bun test apps/chat-ui/frontend/src/ < /dev/null
 
 # 2. Run Biome lint & format check on chat components
-bun run biome check apps/chat-ui/frontend/src/components/chat/
+CI=1 bun run biome check apps/chat-ui/frontend/src/components/ < /dev/null
 
 # 3. Verify production Vite bundle compiles without errors
 cd apps/chat-ui/frontend && bun run build
 ```
 
-> [!NOTE]
-> Do not attempt to run interactive `@testing-library/react` tests without a dedicated headless browser runner, as unconfigured simulated DOM timer polyfills can block Bun's process loop. Keep unit tests focused on data utilities (`lib/*.test.ts`) and pure component logic.
+> [!TIP]
+> Always run `bun test` and `bun run biome check` with `CI=1` and standard input redirected (`< /dev/null`) in agent environments to prevent interactive TTY listeners from blocking subshell process termination.
+
