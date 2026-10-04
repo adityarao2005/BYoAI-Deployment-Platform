@@ -242,3 +242,38 @@ When the LLM triggers a tool call, `AgentExecutor` validates inputs via Zod:
 - Metadata keys like `$schema` and `~standard` are stripped to maintain strict compatibility with model parameter specifications (OpenAI function tools, Anthropic tools, Gemini function declarations, and Ollama/self-hosted endpoints).
 - Dynamic tools (OpenAPI specifications, Model Context Protocol servers) are wrapped via `createJsonSchemaZodSchema(rawJsonSchema)` to preserve upstream wire schemas while exposing standard Zod validation.
 
+---
+
+## Subagent Orchestration & Execution (`packages/core/src/tools/subagent/`)
+
+The platform supports in-process child agents spawned on-demand by the parent agent to decompose complex tasks into focused sub-tasks:
+
+### 1. Architectural Principles
+- **Parent/Child Relationship**: Denoted canonically by `parentId` on `AgentHandle` and persisted in `AgentMemory`. Subagents are automatically excluded from top-level interaction listings (`getAllAgents()` and `getAllAgentsByUser()`) while remaining retrievable via `getSubAgents(parentId)`.
+- **Non-Interactive Execution**: Subagents operate strictly in `non-interactive` mode. Any tools requiring user approval (`requires_user_input: true`) are omitted to guarantee deterministic execution without blocking.
+- **Automatic Skill Loading**: Skill repositories configured on the parent are automatically inherited by the subagent (`load_skill` tool is provided without needing explicit inheritance configuration).
+- **Guarded Computer Inheritance**: Computer resources are only inherited when `inheritComputer` (or `allow_computer`) is explicitly set to `true`. When enabled, the subagent shares the parent's `computerId` and computer execution tools. When disabled, computer access is entirely isolated.
+- **Selective Tool Inheritance**: `inheritedToolProviders` allows granular specification of which tool providers are inherited:
+  - If omitted: All non-computer, non-recursive parent tool providers are inherited by default.
+  - If specified: Can be provided as strings (`"scratchpad"`, `"mcp"`), objects (`{ name: "petstore", allowedTools: ["read*"] }`), or YAML maps (`petstore: { allowedTools: ["read*"], disallowedTools: ["write*"] }`). Wildcard matching (`*`, `?`) restricts tool exposure.
+- **Recursive Subagents**: Configurable via `allowRecursive` and capped by `maxDepth` (default 3) to prevent runaway execution loops.
+- **Real-Time UI Telemetry**: Subagent execution turn events (`subagent:start`, `subagent:message`, `subagent:complete`, `subagent:error`) are dispatched directly to the parent's `AgentCommunicator`, allowing SSE streams to broadcast child progress to frontend chat interfaces (e.g. nested progress accordions).
+
+### 2. Configuration Example (`agent.yaml`)
+```yaml
+toolProviders:
+  - type: subagent
+    allowRecursive: true
+    inheritComputer: false
+    maxDepth: 3
+    timeoutMs: 120000
+    inheritedToolProviders:
+      - scratchpad
+      - petstore:
+          allowedTools:
+            - "read*"
+          disallowedTools:
+            - "delete*"
+      - mcp
+```
+
