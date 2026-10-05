@@ -13,7 +13,6 @@ import {
 import {
     PersistenceConfigSchema,
     normalizePersistenceConfig,
-    normalizeSingleStoreConfig,
 } from "./agent.config";
 import {
     createAgentMemoryManager,

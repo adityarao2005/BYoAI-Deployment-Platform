@@ -104,14 +104,14 @@ describe.skipIf(!shouldRunIntegration)(
 
             await memoryManager.addTranscriptEntries(agentId, [
                 {
-                    type: "user_message",
-                    id: "msg-live-1",
-                    text: "Hello live PG",
+                    type: "message",
+                    role: "user",
+                    content: "Hello live PG",
                 },
                 {
-                    type: "agent_message",
-                    id: "msg-live-2",
-                    text: "Hello user",
+                    type: "message",
+                    role: "assistant",
+                    content: "Hello user",
                 },
             ]);
 

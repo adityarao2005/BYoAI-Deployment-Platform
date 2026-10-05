@@ -104,9 +104,9 @@ describe.skipIf(!shouldRunIntegration)(
 
             await memoryManager.addTranscriptEntries(agentId, [
                 {
-                    type: "user_message",
-                    id: "msg-m-1",
-                    text: "Hello live Mongo",
+                    type: "message",
+                    role: "user",
+                    content: "Hello live Mongo",
                 },
             ]);
 
