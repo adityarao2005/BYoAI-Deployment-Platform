@@ -50,7 +50,7 @@ tasks:
   integration_test:
     desc: Run containerized integration tests using testcontainers (requires Docker)
     cmds:
-      - RUN_INTEGRATION_TESTS=1 bun test --timeout 120000 packages/*connector*/**/*.integration.test.ts
+      - RUN_INTEGRATION_TESTS=1 bun test --timeout 120000 packages/*connector*/**/*.integration.test.ts packages/{postgres,redis,mongo}/**/*.integration.test.ts
     deps:
       - install
 

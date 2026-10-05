@@ -144,15 +144,15 @@ export async function createAgentMemoryManager(
 
     const mod = await resolveDynamicModule(packageName, "chatMemory");
     const Candidate =
-        mod.default ??
         mod.AgentMemoryManager ??
         mod.ChatMemory ??
         mod.createAgentMemoryManager ??
-        mod.createChatMemory;
+        mod.createChatMemory ??
+        mod.default;
 
     if (!Candidate) {
         throw new ConfigError(
-            `ChatMemory package "${packageName}" does not export default, AgentMemoryManager, ChatMemory, createAgentMemoryManager, or createChatMemory`,
+            `ChatMemory package "${packageName}" does not export AgentMemoryManager, ChatMemory, createAgentMemoryManager, createChatMemory, or default`,
         );
     }
 
@@ -209,15 +209,15 @@ export async function createUserTokenManager(
 
     const mod = await resolveDynamicModule(packageName, "tokenStore");
     const Candidate =
-        mod.default ??
         mod.UserTokenManager ??
         mod.TokenStore ??
         mod.createUserTokenManager ??
-        mod.createTokenStore;
+        mod.createTokenStore ??
+        mod.default;
 
     if (!Candidate) {
         throw new ConfigError(
-            `TokenStore package "${packageName}" does not export default, UserTokenManager, TokenStore, createUserTokenManager, or createTokenStore`,
+            `TokenStore package "${packageName}" does not export UserTokenManager, TokenStore, createUserTokenManager, createTokenStore, or default`,
         );
     }
 
@@ -274,15 +274,15 @@ export async function createComputerLifecycleManager(
 
     const mod = await resolveDynamicModule(packageName, "computerStore");
     const Candidate =
-        mod.default ??
         mod.ComputerLifecycleManager ??
         mod.ComputerStore ??
         mod.createComputerLifecycleManager ??
-        mod.createComputerStore;
+        mod.createComputerStore ??
+        mod.default;
 
     if (!Candidate) {
         throw new ConfigError(
-            `ComputerStore package "${packageName}" does not export default, ComputerLifecycleManager, ComputerStore, createComputerLifecycleManager, or createComputerStore`,
+            `ComputerStore package "${packageName}" does not export ComputerLifecycleManager, ComputerStore, createComputerLifecycleManager, createComputerStore, or default`,
         );
     }
 
