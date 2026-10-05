@@ -37,6 +37,50 @@ export const RuleEntrySchema = z.union([
 export type RuleEntry = z.infer<typeof RuleEntrySchema>;
 
 /**
+ * Zod schema defining messaging configuration in `agent.yaml`.
+ * Can be omitted or set to "in_memory", or configured with a dynamic package and properties.
+ */
+export const AgentMessagingConfigSchema = z.union([
+    z.literal("in_memory"),
+    z.object({
+        package: z.string().min(1),
+        properties: z.union([
+            z.record(z.string(), z.any()),
+            z.array(z.string()),
+        ]).optional(),
+    }),
+]).optional().default("in_memory");
+
+export type AgentMessagingConfig = z.infer<typeof AgentMessagingConfigSchema>;
+
+/**
+ * Normalizes messaging properties from either an array of KEY=VALUE strings
+ * or a dictionary object into a unified Record<string, any>.
+ */
+export function normalizeMessagingProperties(
+    properties?: Record<string, any> | string[],
+): Record<string, any> {
+    if (!properties) {
+        return {};
+    }
+    if (Array.isArray(properties)) {
+        const result: Record<string, any> = {};
+        for (const item of properties) {
+            const eqIndex = item.indexOf("=");
+            if (eqIndex !== -1) {
+                const key = item.slice(0, eqIndex).trim();
+                const value = item.slice(eqIndex + 1).trim();
+                result[key] = value;
+            } else {
+                result[item.trim()] = true;
+            }
+        }
+        return result;
+    }
+    return { ...properties };
+}
+
+/**
  * Zod schema defining the agent configuration file structure (`agent.yaml`).
  */
 export const AgentConfigSchema = z.object({
@@ -47,6 +91,7 @@ export const AgentConfigSchema = z.object({
     skillRepositories: z.array(SkillRepositoryConfigSchema).default([]),
     toolProviders: z.array(ToolProviderConfigSchema).optional().default([]),
     security: AgentSecuritySchema,
+    messaging: AgentMessagingConfigSchema.default("in_memory").optional(),
 });
 
 /**

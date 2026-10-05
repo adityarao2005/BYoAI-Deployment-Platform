@@ -47,6 +47,13 @@ tasks:
     cmds:
       - task: test
 
+  integration_test:
+    desc: Run containerized integration tests using testcontainers (requires Docker)
+    cmds:
+      - RUN_INTEGRATION_TESTS=1 bun test --timeout 120000 packages/*connector*/**/*.integration.test.ts
+    deps:
+      - install
+
   build:
     desc: Build all packages and apps in the monorepo
     cmds:

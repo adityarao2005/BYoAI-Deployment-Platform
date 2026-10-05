@@ -169,63 +169,72 @@ export class AgentManager implements IAgentLifecycleManager {
     }
 
     async init(): Promise<void> {
+        await this.configuration.communicator.init?.();
         await this.executor.init();
 
         // Subscribe to communicator events to drive agent execution
         const comm = this.configuration.communicator;
 
         this.unsubscribers.push(
-            comm.on("agent:run", async ({ agentId }) => {
-                try {
-                    await this.executor.runTurn(agentId);
-                } catch (error) {
-                    const errorMessage =
-                        error instanceof Error ? error.message : String(error);
-                    await this.executor.notifyError(
-                        agentId,
-                        error,
-                        "agent:run",
-                    );
-                    await this.configuration.communicator.emit("agent:error", {
-                        agentId,
-                        error: errorMessage,
-                        context: "agent:run",
-                    });
-                    await this.configuration.communicator.emit(
-                        "agent:complete",
-                        {
+            comm.on(
+                "agent:run",
+                async ({ agentId }) => {
+                    try {
+                        await this.executor.runTurn(agentId);
+                    } catch (error) {
+                        const errorMessage =
+                            error instanceof Error ? error.message : String(error);
+                        await this.executor.notifyError(
                             agentId,
-                        },
-                    );
-                }
-            }),
+                            error,
+                            "agent:run",
+                        );
+                        await this.configuration.communicator.emit("agent:error", {
+                            agentId,
+                            error: errorMessage,
+                            context: "agent:run",
+                        });
+                        await this.configuration.communicator.emit(
+                            "agent:complete",
+                            {
+                                agentId,
+                            },
+                        );
+                    }
+                },
+                { delivery: "queue" },
+            ),
         );
 
         this.unsubscribers.push(
-            comm.on("user:message", async ({ agentId, content }) => {
-                try {
-                    await this.executor.sendMessage(agentId, content);
-                } catch (error) {
-                    const errorMessage =
-                        error instanceof Error ? error.message : String(error);
-                    await this.executor.notifyError(
-                        agentId,
-                        error,
-                        "user:message",
-                    );
-                    await this.configuration.communicator.emit("agent:error", {
-                        agentId,
-                        error: errorMessage,
-                        context: "user:message",
-                    });
-                    await this.configuration.communicator.emit(
-                        "agent:complete",
-                        {
+            comm.on(
+                "user:message",
+                async ({ agentId, content }) => {
+                    try {
+                        await this.executor.sendMessage(agentId, content);
+                    } catch (error) {
+                        const errorMessage =
+                            error instanceof Error ? error.message : String(error);
+                        await this.executor.notifyError(
                             agentId,
-                        },
-                    );
-                }
-            }),
+                            error,
+                            "user:message",
+                        );
+                        await this.configuration.communicator.emit("agent:error", {
+                            agentId,
+                            error: errorMessage,
+                            context: "user:message",
+                        });
+                        await this.configuration.communicator.emit(
+                            "agent:complete",
+                            {
+                                agentId,
+                            },
+                        );
+                    }
+                },
+                { delivery: "queue" },
+            ),
         );
 
         this.unsubscribers.push(
@@ -247,6 +256,7 @@ export class AgentManager implements IAgentLifecycleManager {
                         );
                     }
                 },
+                { delivery: "queue" },
             ),
         );
 
@@ -269,6 +279,7 @@ export class AgentManager implements IAgentLifecycleManager {
                         );
                     }
                 },
+                { delivery: "queue" },
             ),
         );
 
@@ -307,15 +318,16 @@ export class AgentManager implements IAgentLifecycleManager {
             }
         };
 
-        this.unsubscribers.push(comm.on("tool:accept", handleAccept));
-        this.unsubscribers.push(comm.on("tool:reject", handleReject));
+        this.unsubscribers.push(comm.on("tool:accept", handleAccept, { delivery: "queue" }));
+        this.unsubscribers.push(comm.on("tool:reject", handleReject, { delivery: "queue" }));
     }
 
-    destroy(): void {
+    async destroy(): Promise<void> {
         for (const unsub of this.unsubscribers) {
             unsub();
         }
         this.unsubscribers = [];
+        await this.configuration.communicator.destroy?.();
     }
 
     // Creates the agent

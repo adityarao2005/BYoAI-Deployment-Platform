@@ -1,0 +1,26 @@
+{
+    "name": "@byo-ai-agent-platform/rabbitmq-connector",
+    "version": "0.1.0",
+    "module": "src/index.ts",
+    "main": "src/index.ts",
+    "type": "module",
+    "scripts": {
+        "typecheck": "tsc --noEmit",
+        "build": "bun build ./src/index.ts --outdir ./dist --target=bun"
+    },
+    "peerDependencies": {
+        "typescript": "^7"
+    },
+    "dependencies": {
+        "@byo-ai-agent-platform/core": "workspace:*",
+        "amqplib": "^0.10.4"
+    },
+    "devDependencies": {
+        "@types/amqplib": "^0.10.5",
+        "@types/bun": "latest",
+        "testcontainers": "^10.18.0"
+    },
+    "exports": {
+        ".": "./src/index.ts"
+    }
+}

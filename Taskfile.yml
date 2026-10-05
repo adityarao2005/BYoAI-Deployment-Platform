@@ -37,6 +37,11 @@ tasks:
       - chat_ui:test
       - shell_cli:test
 
+  integration_test:
+    desc: Run containerized integration tests using testcontainers (requires Docker)
+    deps:
+      - agentic_harness:integration_test
+
   build:
     desc: Builds all packages and apps across the monorepo
     deps:

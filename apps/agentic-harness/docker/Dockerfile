@@ -20,6 +20,7 @@ RUN bun install --frozen-lockfile || bun install
 COPY apps/agentic-harness/dist /app/apps/agentic-harness/dist
 
 RUN chmod -R a+rX /app
+RUN mkdir -p /workspace && chown -R 65532:65532 /workspace && chmod 777 /workspace
 
 # -----------------------------------------------------------------------------
 # Target: Distroless (minimal, ca-certificates, non-root security)
@@ -27,6 +28,9 @@ RUN chmod -R a+rX /app
 FROM oven/bun:1-distroless AS distroless
 
 COPY --from=builder /app /app
+COPY --from=builder --chown=65532:65532 /workspace /workspace
+
+ENV NODE_PATH="/workspace/node_modules:/app/node_modules"
 
 USER 65532:65532
 WORKDIR /workspace
