@@ -107,8 +107,15 @@ persistence:
 
 Each store independently supports:
 - Built-ins: `"in_memory"` (transient RAM) and `"json_files"` (file-backed JSON with atomic writes).
-- Dynamic packages: Loaded at runtime via Bun without requiring harness rebuilds.
-- All first-party providers ([`@byo-ai-agent-platform/postgres`](file:///home/aditya/projects/BYoAI-Deployment-Platform/packages/postgres), [`@byo-ai-agent-platform/redis`](file:///home/aditya/projects/BYoAI-Deployment-Platform/packages/redis), [`@byo-ai-agent-platform/mongo`](file:///home/aditya/projects/BYoAI-Deployment-Platform/packages/mongo)) export all three managers (`AgentMemoryManager`, `UserTokenManager`, `ComputerLifecycleManager`).
+- Dynamic packages: Loaded at runtime via Bun without requiring harness rebuilds. No shorthands are used to ensure zero namespace collisions with custom packages or user-defined wrappers.
+- All first-party providers export all three managers (`AgentMemoryManager`, `UserTokenManager`, `ComputerLifecycleManager`):
+  - **`@byo-ai-agent-platform/postgres`**: PostgreSQL powered by **Drizzle ORM** (`drizzle-orm/node-postgres`), with automatic schema DDL, typed queries, and connection pooling.
+  - **`@byo-ai-agent-platform/sqlite`**: Embedded SQLite powered by **Drizzle ORM** and Bun's high-performance native `bun:sqlite` engine for zero-config local and single-container deployments.
+  - **`@byo-ai-agent-platform/mysql`**: MySQL & MariaDB powered by **Drizzle ORM** (`drizzle-orm/mysql2`) with automatic schema DDL and connection pooling.
+  - **`@byo-ai-agent-platform/libsql`**: Edge SQLite and Turso powered by **Drizzle ORM** and `@libsql/client` supporting local file, memory, and remote edge databases.
+  - **`@byo-ai-agent-platform/redis`**: High-performance key-value store powered by `ioredis` with native key TTLs for user token expiration.
+  - **`@byo-ai-agent-platform/mongo`**: MongoDB & DocumentDB powered by official `mongodb` driver with strongly-typed TypeScript document schemas.
+  - **`@byo-ai-agent-platform/dynamodb`**: AWS DynamoDB powered by AWS SDK v3 (`@aws-sdk/client-dynamodb` and `@aws-sdk/lib-dynamodb`) with auto-table provisioning and document client unmarshalling.
 
 ---
 

@@ -348,17 +348,29 @@ persistence: in_memory
 # Shorthand for local JSON files:
 persistence: json_files
 
-# Mix-and-match across built-ins and dynamic providers:
+# Mix-and-match across built-ins and dynamic providers (specify exact package names):
 persistence:
   chatMemory:
     provider: "@byo-ai-agent-platform/postgres"
     properties:
       url: "postgresql://localhost:5432/byoai"
   tokenStore:
-    provider: "@byo-ai-agent-platform/redis"
+    provider: "@byo-ai-agent-platform/sqlite"
+    properties:
+      path: "./data/tokens.db"
   computerStore:
-    provider: "@byo-ai-agent-platform/mongo"
+    provider: "@byo-ai-agent-platform/redis"
 ```
+
+##### Supported Persistence Provider Packages
+Every provider package exports all three managers (`AgentMemoryManager`, `UserTokenManager`, and `ComputerLifecycleManager`):
+- **`@byo-ai-agent-platform/postgres`**: PostgreSQL powered by **Drizzle ORM** with connection pooling and automated DDL.
+- **`@byo-ai-agent-platform/sqlite`**: Embedded/file-based SQLite powered by **Drizzle ORM** and Bun's native `bun:sqlite` engine.
+- **`@byo-ai-agent-platform/mysql`**: MySQL & MariaDB powered by **Drizzle ORM** (`drizzle-orm/mysql2`).
+- **`@byo-ai-agent-platform/libsql`**: Edge SQLite and Turso powered by **Drizzle ORM** and `@libsql/client`.
+- **`@byo-ai-agent-platform/redis`**: High-performance key-value store with native key TTLs.
+- **`@byo-ai-agent-platform/mongo`**: MongoDB with strongly-typed TypeScript document schemas.
+- **`@byo-ai-agent-platform/dynamodb`**: AWS DynamoDB powered by AWS SDK v3 with automated table creation.
 
 ---
 
