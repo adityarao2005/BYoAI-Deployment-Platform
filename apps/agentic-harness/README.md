@@ -337,8 +337,46 @@ toolProviders:
 
 ---
 
+#### 5. Persistence Backends (`persistence`)
+
+Configures independent storage engines for chat history, user auth tokens, and computer lifecycles:
+
+```yaml
+# Shorthand for in-memory (default):
+persistence: in_memory
+
+# Shorthand for local JSON files:
+persistence: json_files
+
+# Mix-and-match across built-ins and dynamic providers (specify exact package names):
+persistence:
+  chatMemory:
+    provider: "@byo-ai-agent-platform/postgres"
+    properties:
+      url: "postgresql://localhost:5432/byoai"
+  tokenStore:
+    provider: "@byo-ai-agent-platform/sqlite"
+    properties:
+      path: "./data/tokens.db"
+  computerStore:
+    provider: "@byo-ai-agent-platform/redis"
+```
+
+##### Supported Persistence Provider Packages
+Every provider package exports all three managers (`AgentMemoryManager`, `UserTokenManager`, and `ComputerLifecycleManager`):
+- **`@byo-ai-agent-platform/postgres`**: PostgreSQL powered by **Drizzle ORM** with connection pooling and automated DDL.
+- **`@byo-ai-agent-platform/sqlite`**: Embedded/file-based SQLite powered by **Drizzle ORM** and Bun's native `bun:sqlite` engine.
+- **`@byo-ai-agent-platform/mysql`**: MySQL & MariaDB powered by **Drizzle ORM** (`drizzle-orm/mysql2`).
+- **`@byo-ai-agent-platform/libsql`**: Edge SQLite and Turso powered by **Drizzle ORM** and `@libsql/client`.
+- **`@byo-ai-agent-platform/redis`**: High-performance key-value store with native key TTLs.
+- **`@byo-ai-agent-platform/mongo`**: MongoDB with strongly-typed TypeScript document schemas.
+- **`@byo-ai-agent-platform/dynamodb`**: AWS DynamoDB powered by AWS SDK v3 with automated table creation.
+
+---
+
 ### Full Example Configurations in Repository
 
+- **[Pluggable Messaging & DB Persistence Agent (`agent.yaml`)](file:///home/aditya/projects/BYoAI-Deployment-Platform/examples/plugin-messaging-and-db/agent.yaml)**: Clustered setup with Redis messaging, PostgreSQL chat history, Redis token store, and MongoDB computer lifecycles.
 - **[Compliance-Governed Enterprise Agent (`agent.yaml`)](file:///home/aditya/projects/BYoAI-Deployment-Platform/examples/compliance-governed-agent/agent.yaml)**: Complete enterprise compliance suite (rules, tool filtering, human-in-the-loop approvals, and strict computer sandbox permissions).
 - **[Pet Adoption Agent (`agent.yaml`)](file:///home/aditya/projects/BYoAI-Deployment-Platform/examples/pet-adoption-agent/agent.yaml)**: OpenAPI + Zip Skills + Gemini LLM.
 - **[Local Computer Use Agent (`agent.yaml`)](file:///home/aditya/projects/BYoAI-Deployment-Platform/examples/computer-use-agent-local/agent.yaml)**: Local host computer execution + Gemini LLM.

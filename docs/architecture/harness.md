@@ -75,10 +75,47 @@ messaging:
 - `task test` / `task unit_test`: Executes fast unit tests across all connectors and monorepo packages using mocked drivers.
 - `task integration_test`: Spins up live Docker containers with `testcontainers` (Redis, RabbitMQ, Kafka) and verifies multi-instance queue competing consumer and broadcast fanout behavior.
 
-- **Memory Management Layer (`AgentMemoryManager` / `packages/core/src/agents/memory/`)**:
-  - Manages transcript persistence and pending tool call resolution (`getPendingToolCalls()` using `Set<string>`).
-  - **`InMemoryAgentMemoryManager`**: Transient memory store.
-  - **`JsonFileAgentMemoryManager`**: File-backed memory store persisting each agent's conversation history and computer binding to `<storageDir>/<agentId>.json` with atomic writes.
+### Persistence Configuration (`agent.yaml`)
+
+The harness supports dynamic, pluggable persistence for all storage modes:
+- **`chatMemory`**: Conversation transcripts, interactive mode, and subagent trees ([`AgentMemoryManager`](file:///home/aditya/projects/BYoAI-Deployment-Platform/packages/core/src/agents/agent.memory.ts)).
+- **`tokenStore`**: Active user OAuth2 authentication credentials and tokens ([`UserTokenManager`](file:///home/aditya/projects/BYoAI-Deployment-Platform/packages/core/src/agents/agent.auth.ts)).
+- **`computerStore`**: Computer sandbox session bindings across lifecycle scopes ([`ComputerLifecycleManager`](file:///home/aditya/projects/BYoAI-Deployment-Platform/packages/core/src/agents/agent.computer_lifecycle.ts)).
+
+```yaml
+# 1. Default: In-Memory for all three stores (or omitted)
+persistence: in_memory
+
+# 2. Local JSON files on disk for all three stores
+persistence: json_files
+
+# 3. Mix-and-match across built-in and external dynamic providers
+persistence:
+  chatMemory:
+    provider: "@byo-ai-agent-platform/postgres"
+    properties:
+      url: "postgresql://postgres:postgres@localhost:5432/byoai"
+  tokenStore:
+    provider: "@byo-ai-agent-platform/redis"
+    properties:
+      url: "redis://localhost:6379"
+  computerStore:
+    provider: "@byo-ai-agent-platform/mongo"
+    properties:
+      url: "mongodb://localhost:27017/byoai"
+```
+
+Each store independently supports:
+- Built-ins: `"in_memory"` (transient RAM) and `"json_files"` (file-backed JSON with atomic writes).
+- Dynamic packages: Loaded at runtime via Bun without requiring harness rebuilds. No shorthands are used to ensure zero namespace collisions with custom packages or user-defined wrappers.
+- All first-party providers export all three managers (`AgentMemoryManager`, `UserTokenManager`, `ComputerLifecycleManager`):
+  - **`@byo-ai-agent-platform/postgres`**: PostgreSQL powered by **Drizzle ORM** (`drizzle-orm/node-postgres`), with automatic schema DDL, typed queries, and connection pooling.
+  - **`@byo-ai-agent-platform/sqlite`**: Embedded SQLite powered by **Drizzle ORM** and Bun's high-performance native `bun:sqlite` engine for zero-config local and single-container deployments.
+  - **`@byo-ai-agent-platform/mysql`**: MySQL & MariaDB powered by **Drizzle ORM** (`drizzle-orm/mysql2`) with automatic schema DDL and connection pooling.
+  - **`@byo-ai-agent-platform/libsql`**: Edge SQLite and Turso powered by **Drizzle ORM** and `@libsql/client` supporting local file, memory, and remote edge databases.
+  - **`@byo-ai-agent-platform/redis`**: High-performance key-value store powered by `ioredis` with native key TTLs for user token expiration.
+  - **`@byo-ai-agent-platform/mongo`**: MongoDB & DocumentDB powered by official `mongodb` driver with strongly-typed TypeScript document schemas.
+  - **`@byo-ai-agent-platform/dynamodb`**: AWS DynamoDB powered by AWS SDK v3 (`@aws-sdk/client-dynamodb` and `@aws-sdk/lib-dynamodb`) with auto-table provisioning and document client unmarshalling.
 
 ---
 

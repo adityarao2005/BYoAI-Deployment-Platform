@@ -61,6 +61,12 @@ import {
     normalizeMessagingProperties,
     type RuleEntry,
 } from "./agent.config";
+import {
+    createAgentMemoryManager,
+    createComputerLifecycleManager,
+    createUnifiedMemoryManager,
+    createUserTokenManager,
+} from "./persistence_loader";
 
 // ─── Config Loading ──────────────────────────────────────────────────
 // Moved from core/config/config.ts — config loading is an app concern,
@@ -592,6 +598,13 @@ export async function createAgentCommunicator(
     return communicator;
 }
 
+export {
+    createAgentMemoryManager,
+    createComputerLifecycleManager,
+    createUnifiedMemoryManager,
+    createUserTokenManager,
+};
+
 /**
  * Container holding the fully initialized agent, agent manager, and communicator.
  */
@@ -643,11 +656,7 @@ export async function bootstrap(
     }
 
     const communicator = await createAgentCommunicator(config.messaging);
-    const memoryManager = new CompositeMemoryManager({
-        agent: new InMemoryAgentMemoryManager(),
-        userToken: new InMemoryUserTokenManager(),
-        computerLifecycle: new InMemoryComputerLifecycleManager(),
-    });
+    const memoryManager = await createUnifiedMemoryManager(config.persistence);
 
     const skillRepos = skillRepositoryRegistry.getAllSkillRepositories();
     const toolProviders = [
