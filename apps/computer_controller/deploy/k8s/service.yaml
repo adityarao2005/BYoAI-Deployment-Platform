@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: computer-controller
+  namespace: byoai-sandboxes
+  labels:
+    app.kubernetes.io/name: computer-controller
+    app.kubernetes.io/part-of: byoai-platform
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: computer-controller
+  ports:
+    - name: connect-rpc
+      port: 8080
+      targetPort: connect-rpc
+      protocol: TCP

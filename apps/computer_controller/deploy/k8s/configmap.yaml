@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: computer-controller-config
+  namespace: byoai-sandboxes
+data:
+  computer.yaml: |
+    type: kubernetes
+    workspaceDir: "/workspace"
+
+    server:
+      host: "0.0.0.0"
+      port: 8080
+      security:
+        bearerToken: "${CC_API_KEY}"
+
+    spec:
+      namespace: "byoai-sandboxes"
+      imagePullPolicy: "IfNotPresent"
+      podReadyTimeoutSeconds: 60
+      labels:
+        app.kubernetes.io/part-of: "byoai-platform"

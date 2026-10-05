@@ -16,9 +16,9 @@ The Computer Controller server loads its configuration from a YAML file named `c
 
 | Field | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `type` | String | Yes | N/A | Provider type. Must be either `local` or `docker`. |
+| `type` | String | Yes | N/A | Provider type. Must be `local`, `docker`, or `kubernetes` (alias: `k8s`). |
 | `server` | Object | No | `{}` | Server network settings (`host`, `port`, `security`). |
-| `spec` | Object | No | `{}` | Provider-specific Docker configuration (only valid when `type: docker`). |
+| `spec` | Object | No | `{}` | Provider-specific configuration (`DockerSpec` or `KubernetesSpec`). |
 
 #### Server Network Settings (`server`)
 
@@ -51,6 +51,20 @@ The Computer Controller server loads its configuration from a YAML file named `c
 | `apiVersion` | String | `""` | Docker API version string (e.g. `"1.41"`). |
 | `certPath` | String | `""` | Directory path containing TLS certs (`ca.pem`, `cert.pem`, `key.pem`). |
 | `imagePullPolicy` | String | `"IfNotPresent"` | Container image pull policy (`IfNotPresent`, `Always`, or `Never`). |
+
+#### Kubernetes Provider Spec Fields (`spec`)
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `kubeconfig` | String | `""` | Path to kubeconfig file. When omitted, auto-detects in-cluster ServiceAccount token or `~/.kube/config`. |
+| `context` | String | `""` | Kubeconfig context name to select. |
+| `namespace` | String | `"default"` | Target namespace for sandbox pods. Defaults to `$POD_NAMESPACE`, in-cluster SA namespace, or `"default"`. |
+| `imagePullPolicy` | String | `"IfNotPresent"` | Container image pull policy (`IfNotPresent`, `Always`, or `Never`). |
+| `serviceAccountName` | String | `""` | Optional ServiceAccount name to attach to spawned sandbox pods. |
+| `labels` | Map | `{}` | Custom labels to attach to created sandbox pods. |
+| `annotations` | Map | `{}` | Custom annotations to attach to created sandbox pods. |
+| `nodeSelector` | Map | `{}` | Optional node selector labels for sandbox pod scheduling. |
+| `podReadyTimeoutSeconds` | Integer | `60` | Maximum time in seconds to wait for a sandbox pod to reach `Running` & Ready status. |
 
 ---
 
@@ -143,9 +157,71 @@ spec:
   imagePullPolicy: "Always"
 ```
 
+#### 7. Kubernetes In-Cluster Mode (Deployment inside Pod)
+
+Running directly inside a Kubernetes cluster as a Deployment. Zero-config authentication using the Pod's mounted ServiceAccount:
+
+```yaml
+type: kubernetes
+workspaceDir: "/workspace"
+server:
+  host: "0.0.0.0"
+  port: 8080
+  security:
+    bearerToken: "${CC_API_KEY}"
+spec:
+  namespace: "byoai-sandboxes"
+  imagePullPolicy: "IfNotPresent"
+  podReadyTimeoutSeconds: 60
+  labels:
+    app.kubernetes.io/part-of: "byoai-platform"
+```
+
+#### 8. Kubernetes Out-of-Cluster Mode (Connecting via kubeconfig)
+
+Running locally or on an external VM, managing sandbox pods in a remote or local cluster (Minikube, Kind, EKS, GKE):
+
+```yaml
+type: k8s
+server:
+  host: "localhost"
+  port: 8080
+spec:
+  kubeconfig: "${KUBECONFIG:-/home/user/.kube/config}"
+  context: "minikube"
+  namespace: "byoai-sandboxes"
+  imagePullPolicy: "IfNotPresent"
+```
+
 ---
 
-### Network Access Control & Egress Firewalling (Docker Mode)
+### Kubernetes Production Deployment (`deploy/k8s/`)
+
+Ready-to-apply Kubernetes manifests are provided in `deploy/k8s/`:
+- `deploy/k8s/rbac.yaml`: Namespace `byoai-sandboxes`, `ServiceAccount`, and `Role` with permissions for pods, pod execution (`pods/exec`), and `networkpolicies`.
+- `deploy/k8s/configmap.yaml`: Mounts `computer.yaml` configuring `type: kubernetes`.
+- `deploy/k8s/deployment.yaml`: Deployment of `computer-controller` with ServiceAccount and resource limits.
+- `deploy/k8s/service.yaml`: ClusterIP service exposing port 8080 for internal cluster communication (e.g. from `agentic-harness`).
+
+Deploy with:
+```bash
+kubectl apply -f deploy/k8s/rbac.yaml
+kubectl apply -f deploy/k8s/configmap.yaml
+kubectl apply -f deploy/k8s/deployment.yaml
+kubectl apply -f deploy/k8s/service.yaml
+```
+
+---
+
+### Network Access Control & Egress Firewalling
+
+#### Docker Mode
+When `CreateComputer` is invoked with `networkRules` (`allowedHosts` / `deniedHosts`), Docker mode creates an internal bridge network (`byoai-net-<session_id>`) and routes container traffic through an embedded in-process Go HTTP & SOCKS5 proxy (`host.docker.internal:<proxy_port>`).
+
+#### Kubernetes Mode
+In Kubernetes mode, when `networkRules` are provided, the controller dynamically provisions a native Kubernetes `networking.k8s.io/v1` `NetworkPolicy` (`byoai-netpol-<session_id>`) targeted to the sandbox pod's session label (`byoai.ai/session-id: <session_id>`). It permits DNS traffic (port 53 UDP/TCP) and explicitly permits egress to allowed CIDR blocks and resolved IP addresses, cleanly enforcing cloud-native network isolation without proxy overhead.
+
+---
 
 When `CreateComputer` is invoked by an agent harness with `networkRules` (`allowedHosts` and/or `deniedHosts`), the Computer Controller enforces non-root container network sandboxing:
 
