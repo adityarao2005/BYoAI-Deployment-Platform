@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { dirname } from "node:path";
+import { mkdirSync } from "node:fs";
 import {
     AgentMemory,
     type AgentHandle,
@@ -12,9 +14,9 @@ import {
     getComputerLifecycleStorageKey,
 } from "@byo-ai-agent-platform/core/agents";
 import type { ModelInteraction } from "@byo-ai-agent-platform/core/models";
+import { Database } from "bun:sqlite";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
-import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
-import pg, { type PoolConfig } from "pg";
+import { drizzle, type BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import * as schema from "./schema";
 import {
     byoaiAgentMemories,
@@ -23,56 +25,52 @@ import {
     byoaiUserTokens,
 } from "./schema";
 
-const { Pool } = pg;
-
 export * from "./schema";
 
-export interface PostgresPersistenceProperties {
+export interface SqlitePersistenceProperties {
+    path?: string;
+    filePath?: string;
     url?: string;
     URL?: string;
-    connectionString?: string;
-    host?: string;
-    HOST?: string;
-    port?: string | number;
-    PORT?: string | number;
-    user?: string;
-    USER?: string;
-    password?: string;
-    PASSWORD?: string;
-    database?: string;
-    DATABASE?: string;
-    ssl?: boolean | any;
-    max?: number;
+    filename?: string;
+    readonly?: boolean;
+    create?: boolean;
     [key: string]: any;
 }
 
-function createPool(props?: PostgresPersistenceProperties): pg.Pool {
-    const connStr = props?.url ?? props?.URL ?? props?.connectionString;
-    if (connStr) {
-        return new Pool({ connectionString: connStr });
+function resolveDbPath(props?: SqlitePersistenceProperties): string {
+    let p =
+        props?.path ??
+        props?.filePath ??
+        props?.filename ??
+        props?.url ??
+        props?.URL ??
+        process.env.SQLITE_PATH ??
+        ":memory:";
+
+    if (p.startsWith("sqlite://")) {
+        p = p.replace(/^sqlite:\/\//, "");
     }
-
-    const config: PoolConfig = {
-        host: props?.host ?? props?.HOST ?? "localhost",
-        port:
-            typeof props?.port === "string"
-                ? Number.parseInt(props.port, 10)
-                : (props?.port ?? 5432),
-        user: props?.user ?? props?.USER ?? "postgres",
-        password: props?.password ?? props?.PASSWORD ?? "postgres",
-        database: props?.database ?? props?.DATABASE ?? "postgres",
-        max: props?.max ?? 10,
-    };
-
-    if (props?.ssl !== undefined) {
-        config.ssl = props.ssl;
-    }
-
-    return new Pool(config);
+    return p;
 }
 
-async function runSchemaDDL(db: NodePgDatabase<typeof schema>): Promise<void> {
-    await db.execute(sql`
+function createSqliteDatabase(props?: SqlitePersistenceProperties): Database {
+    const dbPath = resolveDbPath(props);
+    if (dbPath !== ":memory:") {
+        const dir = dirname(dbPath);
+        if (dir && dir !== ".") {
+            mkdirSync(dir, { recursive: true });
+        }
+    }
+    return new Database(dbPath, {
+        readonly: props?.readonly ?? false,
+        create: props?.create ?? true,
+    });
+}
+
+function runSchemaDDL(db: Database): void {
+    db.run("PRAGMA foreign_keys = ON;");
+    db.run(`
         CREATE TABLE IF NOT EXISTS byoai_agent_memories (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
@@ -81,25 +79,25 @@ async function runSchemaDDL(db: NodePgDatabase<typeof schema>): Promise<void> {
             parent_id TEXT,
             computer_id TEXT,
             skills_path TEXT,
-            created_at TIMESTAMPTZ DEFAULT NOW()
+            created_at INTEGER
         );
 
         CREATE TABLE IF NOT EXISTS byoai_transcripts (
-            id SERIAL PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             agent_id TEXT NOT NULL REFERENCES byoai_agent_memories(id) ON DELETE CASCADE,
-            entry JSONB NOT NULL,
-            created_at TIMESTAMPTZ DEFAULT NOW()
+            entry TEXT NOT NULL,
+            created_at INTEGER
         );
 
-        CREATE INDEX IF NOT EXISTS idx_byoai_transcripts_agent_id ON byoai_transcripts(agent_id);
+        CREATE INDEX IF NOT EXISTS idx_sqlite_byoai_transcripts_agent_id ON byoai_transcripts(agent_id);
 
         CREATE TABLE IF NOT EXISTS byoai_user_tokens (
             user_id TEXT PRIMARY KEY,
             access_token TEXT,
             token_type TEXT,
-            expires_at BIGINT,
-            extra_headers JSONB,
-            updated_at TIMESTAMPTZ DEFAULT NOW()
+            expires_at INTEGER,
+            extra_headers TEXT,
+            updated_at INTEGER
         );
 
         CREATE TABLE IF NOT EXISTS byoai_computer_sessions (
@@ -107,43 +105,45 @@ async function runSchemaDDL(db: NodePgDatabase<typeof schema>): Promise<void> {
             computer_id TEXT NOT NULL,
             lifecycle TEXT NOT NULL,
             skills_path TEXT,
-            created_at BIGINT
+            created_at INTEGER
         );
     `);
 }
 
 /**
- * PostgreSQL Drizzle-powered implementation of AgentMemoryManager.
+ * SQLite Drizzle-powered implementation of AgentMemoryManager.
  */
-export class PostgresAgentMemoryManager implements AgentMemoryManager {
-    public readonly pool: pg.Pool;
-    public readonly db: NodePgDatabase<typeof schema>;
-    private initPromise: Promise<void> | null = null;
+export class SqliteAgentMemoryManager implements AgentMemoryManager {
+    public readonly client: Database;
+    public readonly db: BunSQLiteDatabase<typeof schema>;
+    private initialized = false;
 
     constructor(
         props?:
-            | PostgresPersistenceProperties
-            | pg.Pool
-            | NodePgDatabase<typeof schema>
+            | SqlitePersistenceProperties
+            | Database
+            | BunSQLiteDatabase<typeof schema>
             | any,
     ) {
         if (props && "select" in props && typeof props.select === "function") {
             this.db = props;
-            this.pool = (props as any).$client ?? (props as any).session?.client;
-        } else if (props && ("query" in props || props instanceof Pool)) {
-            this.pool = props;
-            this.db = drizzle(this.pool, { schema });
+            this.client = (props as any).session?.client;
+        } else if (props && props instanceof Database) {
+            this.client = props;
+            this.db = drizzle(this.client, { schema });
         } else {
-            this.pool = createPool(props);
-            this.db = drizzle(this.pool, { schema });
+            this.client = createSqliteDatabase(props);
+            this.db = drizzle(this.client, { schema });
         }
     }
 
     async init(): Promise<void> {
-        if (!this.initPromise) {
-            this.initPromise = runSchemaDDL(this.db);
+        if (!this.initialized) {
+            if (this.client) {
+                runSchemaDDL(this.client);
+            }
+            this.initialized = true;
         }
-        await this.initPromise;
     }
 
     async createAgentMemoryEntry(
@@ -154,32 +154,38 @@ export class PostgresAgentMemoryManager implements AgentMemoryManager {
     ): Promise<string> {
         await this.init();
         const id = randomUUID();
-        await this.db.insert(byoaiAgentMemories).values({
-            id,
-            name,
-            userId,
-            mode,
-            parentId: parentId ?? null,
-        });
+        this.db
+            .insert(byoaiAgentMemories)
+            .values({
+                id,
+                name,
+                userId,
+                mode,
+                parentId: parentId ?? null,
+                createdAt: Date.now(),
+            })
+            .run();
         return id;
     }
 
     async getAgentMemory(agentId: string): Promise<AgentMemory> {
         await this.init();
-        const [meta] = await this.db
+        const [meta] = this.db
             .select()
             .from(byoaiAgentMemories)
-            .where(eq(byoaiAgentMemories.id, agentId));
+            .where(eq(byoaiAgentMemories.id, agentId))
+            .all();
 
         if (!meta) {
             throw new Error(`Agent ${agentId} not found`);
         }
 
-        const transcriptRows = await this.db
+        const transcriptRows = this.db
             .select({ entry: byoaiTranscripts.entry })
             .from(byoaiTranscripts)
             .where(eq(byoaiTranscripts.agentId, agentId))
-            .orderBy(asc(byoaiTranscripts.id));
+            .orderBy(asc(byoaiTranscripts.id))
+            .all();
 
         const transcript: ModelInteraction[] = transcriptRows.map(
             (r) => r.entry as ModelInteraction,
@@ -203,44 +209,52 @@ export class PostgresAgentMemoryManager implements AgentMemoryManager {
         if (conversationEntries.length === 0) return;
         await this.init();
 
-        await this.db.insert(byoaiTranscripts).values(
-            conversationEntries.map((entry) => ({
-                agentId,
-                entry,
-            })),
-        );
+        for (const entry of conversationEntries) {
+            this.db
+                .insert(byoaiTranscripts)
+                .values({
+                    agentId,
+                    entry: entry as any,
+                    createdAt: Date.now(),
+                })
+                .run();
+        }
     }
 
     async setComputerId(agentId: string, computerId: string): Promise<void> {
         await this.init();
-        await this.db
+        this.db
             .update(byoaiAgentMemories)
             .set({ computerId })
-            .where(eq(byoaiAgentMemories.id, agentId));
+            .where(eq(byoaiAgentMemories.id, agentId))
+            .run();
     }
 
     async setSkillsPath(agentId: string, skillsPath: string): Promise<void> {
         await this.init();
-        await this.db
+        this.db
             .update(byoaiAgentMemories)
             .set({ skillsPath })
-            .where(eq(byoaiAgentMemories.id, agentId));
+            .where(eq(byoaiAgentMemories.id, agentId))
+            .run();
     }
 
     async setName(agentId: string, name: string): Promise<void> {
         await this.init();
-        await this.db
+        this.db
             .update(byoaiAgentMemories)
             .set({ name })
-            .where(eq(byoaiAgentMemories.id, agentId));
+            .where(eq(byoaiAgentMemories.id, agentId))
+            .run();
     }
 
     async getAgent(id: string): Promise<AgentHandle | undefined> {
         await this.init();
-        const [row] = await this.db
+        const [row] = this.db
             .select()
             .from(byoaiAgentMemories)
-            .where(eq(byoaiAgentMemories.id, id));
+            .where(eq(byoaiAgentMemories.id, id))
+            .all();
 
         if (!row) return undefined;
         return {
@@ -257,7 +271,7 @@ export class PostgresAgentMemoryManager implements AgentMemoryManager {
         userId: string,
     ): Promise<AgentHandle | undefined> {
         await this.init();
-        const [row] = await this.db
+        const [row] = this.db
             .select()
             .from(byoaiAgentMemories)
             .where(
@@ -265,7 +279,8 @@ export class PostgresAgentMemoryManager implements AgentMemoryManager {
                     eq(byoaiAgentMemories.id, id),
                     eq(byoaiAgentMemories.userId, userId),
                 ),
-            );
+            )
+            .all();
 
         if (!row) return undefined;
         return {
@@ -279,75 +294,80 @@ export class PostgresAgentMemoryManager implements AgentMemoryManager {
 
     async getAllAgents(): Promise<string[]> {
         await this.init();
-        const rows = await this.db
+        const rows = this.db
             .select({ id: byoaiAgentMemories.id })
             .from(byoaiAgentMemories)
-            .orderBy(desc(byoaiAgentMemories.createdAt));
+            .orderBy(desc(byoaiAgentMemories.createdAt))
+            .all();
 
         return rows.map((r) => r.id);
     }
 
     async getAllAgentsByUser(userId: string): Promise<string[]> {
         await this.init();
-        const rows = await this.db
+        const rows = this.db
             .select({ id: byoaiAgentMemories.id })
             .from(byoaiAgentMemories)
             .where(eq(byoaiAgentMemories.userId, userId))
-            .orderBy(desc(byoaiAgentMemories.createdAt));
+            .orderBy(desc(byoaiAgentMemories.createdAt))
+            .all();
 
         return rows.map((r) => r.id);
     }
 
     async getSubAgents(parentId: string): Promise<string[]> {
         await this.init();
-        const rows = await this.db
+        const rows = this.db
             .select({ id: byoaiAgentMemories.id })
             .from(byoaiAgentMemories)
             .where(eq(byoaiAgentMemories.parentId, parentId))
-            .orderBy(desc(byoaiAgentMemories.createdAt));
+            .orderBy(desc(byoaiAgentMemories.createdAt))
+            .all();
 
         return rows.map((r) => r.id);
     }
 
     async destroy(): Promise<void> {
-        if (this.pool && typeof this.pool.end === "function") {
-            await this.pool.end();
+        if (this.client && typeof this.client.close === "function") {
+            this.client.close();
         }
     }
 }
 
 /**
- * PostgreSQL Drizzle-powered implementation of UserTokenManager.
+ * SQLite Drizzle-powered implementation of UserTokenManager.
  */
-export class PostgresUserTokenManager implements UserTokenManager {
-    public readonly pool: pg.Pool;
-    public readonly db: NodePgDatabase<typeof schema>;
-    private initPromise: Promise<void> | null = null;
+export class SqliteUserTokenManager implements UserTokenManager {
+    public readonly client: Database;
+    public readonly db: BunSQLiteDatabase<typeof schema>;
+    private initialized = false;
 
     constructor(
         props?:
-            | PostgresPersistenceProperties
-            | pg.Pool
-            | NodePgDatabase<typeof schema>
+            | SqlitePersistenceProperties
+            | Database
+            | BunSQLiteDatabase<typeof schema>
             | any,
     ) {
         if (props && "select" in props && typeof props.select === "function") {
             this.db = props;
-            this.pool = (props as any).$client ?? (props as any).session?.client;
-        } else if (props && ("query" in props || props instanceof Pool)) {
-            this.pool = props;
-            this.db = drizzle(this.pool, { schema });
+            this.client = (props as any).session?.client;
+        } else if (props && props instanceof Database) {
+            this.client = props;
+            this.db = drizzle(this.client, { schema });
         } else {
-            this.pool = createPool(props);
-            this.db = drizzle(this.pool, { schema });
+            this.client = createSqliteDatabase(props);
+            this.db = drizzle(this.client, { schema });
         }
     }
 
     async init(): Promise<void> {
-        if (!this.initPromise) {
-            this.initPromise = runSchemaDDL(this.db);
+        if (!this.initialized) {
+            if (this.client) {
+                runSchemaDDL(this.client);
+            }
+            this.initialized = true;
         }
-        await this.initPromise;
     }
 
     private getExpirationMs(expiresAt?: number): number | undefined {
@@ -357,15 +377,15 @@ export class PostgresUserTokenManager implements UserTokenManager {
 
     async getUserToken(userId: string): Promise<AuthContext | undefined> {
         await this.init();
-        const [row] = await this.db
+        const [row] = this.db
             .select()
             .from(byoaiUserTokens)
-            .where(eq(byoaiUserTokens.userId, userId));
+            .where(eq(byoaiUserTokens.userId, userId))
+            .all();
 
         if (!row) return undefined;
 
-        const expiresAtNum = row.expiresAt ? Number(row.expiresAt) : undefined;
-        const expMs = this.getExpirationMs(expiresAtNum);
+        const expMs = this.getExpirationMs(row.expiresAt ?? undefined);
         if (expMs !== undefined && Date.now() >= expMs) {
             await this.clearUserToken(userId);
             return undefined;
@@ -374,7 +394,7 @@ export class PostgresUserTokenManager implements UserTokenManager {
         return {
             accessToken: row.accessToken ?? undefined,
             tokenType: row.tokenType ?? undefined,
-            expiresAt: expiresAtNum,
+            expiresAt: row.expiresAt ?? undefined,
             extraHeaders: (row.extraHeaders as Record<string, string>) ?? undefined,
         };
     }
@@ -387,7 +407,7 @@ export class PostgresUserTokenManager implements UserTokenManager {
             return;
         }
 
-        await this.db
+        this.db
             .insert(byoaiUserTokens)
             .values({
                 userId,
@@ -395,7 +415,7 @@ export class PostgresUserTokenManager implements UserTokenManager {
                 tokenType: authContext.tokenType ?? null,
                 expiresAt: authContext.expiresAt ?? null,
                 extraHeaders: authContext.extraHeaders ?? null,
-                updatedAt: sql`NOW()`,
+                updatedAt: Date.now(),
             })
             .onConflictDoUpdate({
                 target: byoaiUserTokens.userId,
@@ -404,57 +424,61 @@ export class PostgresUserTokenManager implements UserTokenManager {
                     tokenType: authContext.tokenType ?? null,
                     expiresAt: authContext.expiresAt ?? null,
                     extraHeaders: authContext.extraHeaders ?? null,
-                    updatedAt: sql`NOW()`,
+                    updatedAt: Date.now(),
                 },
-            });
+            })
+            .run();
     }
 
     async clearUserToken(userId: string): Promise<void> {
         await this.init();
-        await this.db
+        this.db
             .delete(byoaiUserTokens)
-            .where(eq(byoaiUserTokens.userId, userId));
+            .where(eq(byoaiUserTokens.userId, userId))
+            .run();
     }
 
     async destroy(): Promise<void> {
-        if (this.pool && typeof this.pool.end === "function") {
-            await this.pool.end();
+        if (this.client && typeof this.client.close === "function") {
+            this.client.close();
         }
     }
 }
 
 /**
- * PostgreSQL Drizzle-powered implementation of ComputerLifecycleManager.
+ * SQLite Drizzle-powered implementation of ComputerLifecycleManager.
  */
-export class PostgresComputerLifecycleManager implements ComputerLifecycleManager {
-    public readonly pool: pg.Pool;
-    public readonly db: NodePgDatabase<typeof schema>;
-    private initPromise: Promise<void> | null = null;
+export class SqliteComputerLifecycleManager implements ComputerLifecycleManager {
+    public readonly client: Database;
+    public readonly db: BunSQLiteDatabase<typeof schema>;
+    private initialized = false;
 
     constructor(
         props?:
-            | PostgresPersistenceProperties
-            | pg.Pool
-            | NodePgDatabase<typeof schema>
+            | SqlitePersistenceProperties
+            | Database
+            | BunSQLiteDatabase<typeof schema>
             | any,
     ) {
         if (props && "select" in props && typeof props.select === "function") {
             this.db = props;
-            this.pool = (props as any).$client ?? (props as any).session?.client;
-        } else if (props && ("query" in props || props instanceof Pool)) {
-            this.pool = props;
-            this.db = drizzle(this.pool, { schema });
+            this.client = (props as any).session?.client;
+        } else if (props && props instanceof Database) {
+            this.client = props;
+            this.db = drizzle(this.client, { schema });
         } else {
-            this.pool = createPool(props);
-            this.db = drizzle(this.pool, { schema });
+            this.client = createSqliteDatabase(props);
+            this.db = drizzle(this.client, { schema });
         }
     }
 
     async init(): Promise<void> {
-        if (!this.initPromise) {
-            this.initPromise = runSchemaDDL(this.db);
+        if (!this.initialized) {
+            if (this.client) {
+                runSchemaDDL(this.client);
+            }
+            this.initialized = true;
         }
-        await this.initPromise;
     }
 
     async getComputer(
@@ -462,17 +486,18 @@ export class PostgresComputerLifecycleManager implements ComputerLifecycleManage
     ): Promise<ComputerSessionRecord | undefined> {
         await this.init();
         const key = getComputerLifecycleStorageKey(scope);
-        const [row] = await this.db
+        const [row] = this.db
             .select()
             .from(byoaiComputerSessions)
-            .where(eq(byoaiComputerSessions.key, key));
+            .where(eq(byoaiComputerSessions.key, key))
+            .all();
 
         if (!row) return undefined;
         return {
             computerId: row.computerId,
             lifecycle: row.lifecycle as any,
             skillsPath: row.skillsPath ?? undefined,
-            createdAt: row.createdAt ? Number(row.createdAt) : undefined,
+            createdAt: row.createdAt ?? undefined,
         };
     }
 
@@ -482,7 +507,7 @@ export class PostgresComputerLifecycleManager implements ComputerLifecycleManage
     ): Promise<void> {
         await this.init();
         const key = getComputerLifecycleStorageKey(scope);
-        await this.db
+        this.db
             .insert(byoaiComputerSessions)
             .values({
                 key,
@@ -499,75 +524,77 @@ export class PostgresComputerLifecycleManager implements ComputerLifecycleManage
                     skillsPath: record.skillsPath ?? null,
                     createdAt: record.createdAt ?? Date.now(),
                 },
-            });
+            })
+            .run();
     }
 
     async removeComputer(scope: ComputerLifecycleScope): Promise<void> {
         await this.init();
         const key = getComputerLifecycleStorageKey(scope);
-        await this.db
+        this.db
             .delete(byoaiComputerSessions)
-            .where(eq(byoaiComputerSessions.key, key));
+            .where(eq(byoaiComputerSessions.key, key))
+            .run();
     }
 
     async clear(): Promise<void> {
         await this.init();
-        await this.db.delete(byoaiComputerSessions);
+        this.db.delete(byoaiComputerSessions).run();
     }
 
     async destroy(): Promise<void> {
-        if (this.pool && typeof this.pool.end === "function") {
-            await this.pool.end();
+        if (this.client && typeof this.client.close === "function") {
+            this.client.close();
         }
     }
 }
 
 // Named exports for all 3 managers
 export {
-    PostgresAgentMemoryManager as AgentMemoryManager,
-    PostgresAgentMemoryManager as ChatMemory,
-    PostgresUserTokenManager as UserTokenManager,
-    PostgresUserTokenManager as TokenStore,
-    PostgresComputerLifecycleManager as ComputerLifecycleManager,
-    PostgresComputerLifecycleManager as ComputerStore,
+    SqliteAgentMemoryManager as AgentMemoryManager,
+    SqliteAgentMemoryManager as ChatMemory,
+    SqliteUserTokenManager as UserTokenManager,
+    SqliteUserTokenManager as TokenStore,
+    SqliteComputerLifecycleManager as ComputerLifecycleManager,
+    SqliteComputerLifecycleManager as ComputerStore,
 };
 
 // Factory functions
 export function createAgentMemoryManager(
-    props?: PostgresPersistenceProperties,
-): PostgresAgentMemoryManager {
-    return new PostgresAgentMemoryManager(props);
+    props?: SqlitePersistenceProperties,
+): SqliteAgentMemoryManager {
+    return new SqliteAgentMemoryManager(props);
 }
 
 export function createChatMemory(
-    props?: PostgresPersistenceProperties,
-): PostgresAgentMemoryManager {
-    return new PostgresAgentMemoryManager(props);
+    props?: SqlitePersistenceProperties,
+): SqliteAgentMemoryManager {
+    return new SqliteAgentMemoryManager(props);
 }
 
 export function createTokenStore(
-    props?: PostgresPersistenceProperties,
-): PostgresUserTokenManager {
-    return new PostgresUserTokenManager(props);
+    props?: SqlitePersistenceProperties,
+): SqliteUserTokenManager {
+    return new SqliteUserTokenManager(props);
 }
 
 export function createUserTokenManager(
-    props?: PostgresPersistenceProperties,
-): PostgresUserTokenManager {
-    return new PostgresUserTokenManager(props);
+    props?: SqlitePersistenceProperties,
+): SqliteUserTokenManager {
+    return new SqliteUserTokenManager(props);
 }
 
 export function createComputerStore(
-    props?: PostgresPersistenceProperties,
-): PostgresComputerLifecycleManager {
-    return new PostgresComputerLifecycleManager(props);
+    props?: SqlitePersistenceProperties,
+): SqliteComputerLifecycleManager {
+    return new SqliteComputerLifecycleManager(props);
 }
 
 export function createComputerLifecycleManager(
-    props?: PostgresPersistenceProperties,
-): PostgresComputerLifecycleManager {
-    return new PostgresComputerLifecycleManager(props);
+    props?: SqlitePersistenceProperties,
+): SqliteComputerLifecycleManager {
+    return new SqliteComputerLifecycleManager(props);
 }
 
 // Default export
-export default PostgresAgentMemoryManager;
+export default SqliteAgentMemoryManager;

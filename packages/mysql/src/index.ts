@@ -13,8 +13,8 @@ import {
 } from "@byo-ai-agent-platform/core/agents";
 import type { ModelInteraction } from "@byo-ai-agent-platform/core/models";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
-import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
-import pg, { type PoolConfig } from "pg";
+import { drizzle, type MySql2Database } from "drizzle-orm/mysql2";
+import mysql, { type Pool, type PoolOptions } from "mysql2/promise";
 import * as schema from "./schema";
 import {
     byoaiAgentMemories,
@@ -23,14 +23,12 @@ import {
     byoaiUserTokens,
 } from "./schema";
 
-const { Pool } = pg;
-
 export * from "./schema";
 
-export interface PostgresPersistenceProperties {
+export interface MySqlPersistenceProperties {
     url?: string;
     URL?: string;
-    connectionString?: string;
+    uri?: string;
     host?: string;
     HOST?: string;
     port?: string | number;
@@ -41,107 +39,117 @@ export interface PostgresPersistenceProperties {
     PASSWORD?: string;
     database?: string;
     DATABASE?: string;
-    ssl?: boolean | any;
-    max?: number;
+    connectionLimit?: number;
+    ssl?: any;
     [key: string]: any;
 }
 
-function createPool(props?: PostgresPersistenceProperties): pg.Pool {
-    const connStr = props?.url ?? props?.URL ?? props?.connectionString;
-    if (connStr) {
-        return new Pool({ connectionString: connStr });
+function createMySqlPool(props?: MySqlPersistenceProperties): Pool {
+    const connUri = props?.url ?? props?.URL ?? props?.uri;
+    if (connUri) {
+        return mysql.createPool(connUri);
     }
 
-    const config: PoolConfig = {
+    const opts: PoolOptions = {
         host: props?.host ?? props?.HOST ?? "localhost",
         port:
             typeof props?.port === "string"
                 ? Number.parseInt(props.port, 10)
-                : (props?.port ?? 5432),
-        user: props?.user ?? props?.USER ?? "postgres",
-        password: props?.password ?? props?.PASSWORD ?? "postgres",
-        database: props?.database ?? props?.DATABASE ?? "postgres",
-        max: props?.max ?? 10,
+                : (props?.port ?? 3306),
+        user: props?.user ?? props?.USER ?? "root",
+        password: props?.password ?? props?.PASSWORD ?? "",
+        database: props?.database ?? props?.DATABASE ?? "test",
+        connectionLimit: props?.connectionLimit ?? 10,
     };
 
     if (props?.ssl !== undefined) {
-        config.ssl = props.ssl;
+        opts.ssl = props.ssl;
     }
 
-    return new Pool(config);
+    return mysql.createPool(opts);
 }
 
-async function runSchemaDDL(db: NodePgDatabase<typeof schema>): Promise<void> {
-    await db.execute(sql`
-        CREATE TABLE IF NOT EXISTS byoai_agent_memories (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            user_id TEXT NOT NULL,
-            mode TEXT NOT NULL,
-            parent_id TEXT,
-            computer_id TEXT,
-            skills_path TEXT,
-            created_at TIMESTAMPTZ DEFAULT NOW()
-        );
+async function runSchemaDDL(pool: Pool): Promise<void> {
+    const conn = await pool.getConnection();
+    try {
+        await conn.query(`
+            CREATE TABLE IF NOT EXISTS byoai_agent_memories (
+                id VARCHAR(255) PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                user_id VARCHAR(255) NOT NULL,
+                mode VARCHAR(64) NOT NULL,
+                parent_id VARCHAR(255),
+                computer_id VARCHAR(255),
+                skills_path VARCHAR(1024),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
 
-        CREATE TABLE IF NOT EXISTS byoai_transcripts (
-            id SERIAL PRIMARY KEY,
-            agent_id TEXT NOT NULL REFERENCES byoai_agent_memories(id) ON DELETE CASCADE,
-            entry JSONB NOT NULL,
-            created_at TIMESTAMPTZ DEFAULT NOW()
-        );
+        await conn.query(`
+            CREATE TABLE IF NOT EXISTS byoai_transcripts (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                agent_id VARCHAR(255) NOT NULL,
+                entry JSON NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_mysql_byoai_transcripts_agent_id (agent_id)
+            );
+        `);
 
-        CREATE INDEX IF NOT EXISTS idx_byoai_transcripts_agent_id ON byoai_transcripts(agent_id);
+        await conn.query(`
+            CREATE TABLE IF NOT EXISTS byoai_user_tokens (
+                user_id VARCHAR(255) PRIMARY KEY,
+                access_token TEXT,
+                token_type VARCHAR(64),
+                expires_at BIGINT,
+                extra_headers JSON,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            );
+        `);
 
-        CREATE TABLE IF NOT EXISTS byoai_user_tokens (
-            user_id TEXT PRIMARY KEY,
-            access_token TEXT,
-            token_type TEXT,
-            expires_at BIGINT,
-            extra_headers JSONB,
-            updated_at TIMESTAMPTZ DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS byoai_computer_sessions (
-            key TEXT PRIMARY KEY,
-            computer_id TEXT NOT NULL,
-            lifecycle TEXT NOT NULL,
-            skills_path TEXT,
-            created_at BIGINT
-        );
-    `);
+        await conn.query(`
+            CREATE TABLE IF NOT EXISTS byoai_computer_sessions (
+                \`key\` VARCHAR(512) PRIMARY KEY,
+                computer_id VARCHAR(255) NOT NULL,
+                lifecycle VARCHAR(64) NOT NULL,
+                skills_path VARCHAR(1024),
+                created_at BIGINT
+            );
+        `);
+    } finally {
+        conn.release();
+    }
 }
 
 /**
- * PostgreSQL Drizzle-powered implementation of AgentMemoryManager.
+ * MySQL Drizzle-powered implementation of AgentMemoryManager.
  */
-export class PostgresAgentMemoryManager implements AgentMemoryManager {
-    public readonly pool: pg.Pool;
-    public readonly db: NodePgDatabase<typeof schema>;
+export class MySqlAgentMemoryManager implements AgentMemoryManager {
+    public readonly pool: Pool;
+    public readonly db: MySql2Database<typeof schema>;
     private initPromise: Promise<void> | null = null;
 
     constructor(
         props?:
-            | PostgresPersistenceProperties
-            | pg.Pool
-            | NodePgDatabase<typeof schema>
+            | MySqlPersistenceProperties
+            | Pool
+            | MySql2Database<typeof schema>
             | any,
     ) {
         if (props && "select" in props && typeof props.select === "function") {
             this.db = props;
             this.pool = (props as any).$client ?? (props as any).session?.client;
-        } else if (props && ("query" in props || props instanceof Pool)) {
+        } else if (props && ("query" in props || "getConnection" in props)) {
             this.pool = props;
-            this.db = drizzle(this.pool, { schema });
+            this.db = drizzle(this.pool, { schema, mode: "default" });
         } else {
-            this.pool = createPool(props);
-            this.db = drizzle(this.pool, { schema });
+            this.pool = createMySqlPool(props);
+            this.db = drizzle(this.pool, { schema, mode: "default" });
         }
     }
 
     async init(): Promise<void> {
         if (!this.initPromise) {
-            this.initPromise = runSchemaDDL(this.db);
+            this.initPromise = runSchemaDDL(this.pool);
         }
         await this.initPromise;
     }
@@ -203,12 +211,12 @@ export class PostgresAgentMemoryManager implements AgentMemoryManager {
         if (conversationEntries.length === 0) return;
         await this.init();
 
-        await this.db.insert(byoaiTranscripts).values(
-            conversationEntries.map((entry) => ({
+        for (const entry of conversationEntries) {
+            await this.db.insert(byoaiTranscripts).values({
                 agentId,
-                entry,
-            })),
-        );
+                entry: entry as any,
+            });
+        }
     }
 
     async setComputerId(agentId: string, computerId: string): Promise<void> {
@@ -317,35 +325,35 @@ export class PostgresAgentMemoryManager implements AgentMemoryManager {
 }
 
 /**
- * PostgreSQL Drizzle-powered implementation of UserTokenManager.
+ * MySQL Drizzle-powered implementation of UserTokenManager.
  */
-export class PostgresUserTokenManager implements UserTokenManager {
-    public readonly pool: pg.Pool;
-    public readonly db: NodePgDatabase<typeof schema>;
+export class MySqlUserTokenManager implements UserTokenManager {
+    public readonly pool: Pool;
+    public readonly db: MySql2Database<typeof schema>;
     private initPromise: Promise<void> | null = null;
 
     constructor(
         props?:
-            | PostgresPersistenceProperties
-            | pg.Pool
-            | NodePgDatabase<typeof schema>
+            | MySqlPersistenceProperties
+            | Pool
+            | MySql2Database<typeof schema>
             | any,
     ) {
         if (props && "select" in props && typeof props.select === "function") {
             this.db = props;
             this.pool = (props as any).$client ?? (props as any).session?.client;
-        } else if (props && ("query" in props || props instanceof Pool)) {
+        } else if (props && ("query" in props || "getConnection" in props)) {
             this.pool = props;
-            this.db = drizzle(this.pool, { schema });
+            this.db = drizzle(this.pool, { schema, mode: "default" });
         } else {
-            this.pool = createPool(props);
-            this.db = drizzle(this.pool, { schema });
+            this.pool = createMySqlPool(props);
+            this.db = drizzle(this.pool, { schema, mode: "default" });
         }
     }
 
     async init(): Promise<void> {
         if (!this.initPromise) {
-            this.initPromise = runSchemaDDL(this.db);
+            this.initPromise = runSchemaDDL(this.pool);
         }
         await this.initPromise;
     }
@@ -395,16 +403,13 @@ export class PostgresUserTokenManager implements UserTokenManager {
                 tokenType: authContext.tokenType ?? null,
                 expiresAt: authContext.expiresAt ?? null,
                 extraHeaders: authContext.extraHeaders ?? null,
-                updatedAt: sql`NOW()`,
             })
-            .onConflictDoUpdate({
-                target: byoaiUserTokens.userId,
+            .onDuplicateKeyUpdate({
                 set: {
                     accessToken: authContext.accessToken ?? null,
                     tokenType: authContext.tokenType ?? null,
                     expiresAt: authContext.expiresAt ?? null,
                     extraHeaders: authContext.extraHeaders ?? null,
-                    updatedAt: sql`NOW()`,
                 },
             });
     }
@@ -424,35 +429,35 @@ export class PostgresUserTokenManager implements UserTokenManager {
 }
 
 /**
- * PostgreSQL Drizzle-powered implementation of ComputerLifecycleManager.
+ * MySQL Drizzle-powered implementation of ComputerLifecycleManager.
  */
-export class PostgresComputerLifecycleManager implements ComputerLifecycleManager {
-    public readonly pool: pg.Pool;
-    public readonly db: NodePgDatabase<typeof schema>;
+export class MySqlComputerLifecycleManager implements ComputerLifecycleManager {
+    public readonly pool: Pool;
+    public readonly db: MySql2Database<typeof schema>;
     private initPromise: Promise<void> | null = null;
 
     constructor(
         props?:
-            | PostgresPersistenceProperties
-            | pg.Pool
-            | NodePgDatabase<typeof schema>
+            | MySqlPersistenceProperties
+            | Pool
+            | MySql2Database<typeof schema>
             | any,
     ) {
         if (props && "select" in props && typeof props.select === "function") {
             this.db = props;
             this.pool = (props as any).$client ?? (props as any).session?.client;
-        } else if (props && ("query" in props || props instanceof Pool)) {
+        } else if (props && ("query" in props || "getConnection" in props)) {
             this.pool = props;
-            this.db = drizzle(this.pool, { schema });
+            this.db = drizzle(this.pool, { schema, mode: "default" });
         } else {
-            this.pool = createPool(props);
-            this.db = drizzle(this.pool, { schema });
+            this.pool = createMySqlPool(props);
+            this.db = drizzle(this.pool, { schema, mode: "default" });
         }
     }
 
     async init(): Promise<void> {
         if (!this.initPromise) {
-            this.initPromise = runSchemaDDL(this.db);
+            this.initPromise = runSchemaDDL(this.pool);
         }
         await this.initPromise;
     }
@@ -491,8 +496,7 @@ export class PostgresComputerLifecycleManager implements ComputerLifecycleManage
                 skillsPath: record.skillsPath ?? null,
                 createdAt: record.createdAt ?? Date.now(),
             })
-            .onConflictDoUpdate({
-                target: byoaiComputerSessions.key,
+            .onDuplicateKeyUpdate({
                 set: {
                     computerId: record.computerId,
                     lifecycle: record.lifecycle,
@@ -524,50 +528,50 @@ export class PostgresComputerLifecycleManager implements ComputerLifecycleManage
 
 // Named exports for all 3 managers
 export {
-    PostgresAgentMemoryManager as AgentMemoryManager,
-    PostgresAgentMemoryManager as ChatMemory,
-    PostgresUserTokenManager as UserTokenManager,
-    PostgresUserTokenManager as TokenStore,
-    PostgresComputerLifecycleManager as ComputerLifecycleManager,
-    PostgresComputerLifecycleManager as ComputerStore,
+    MySqlAgentMemoryManager as AgentMemoryManager,
+    MySqlAgentMemoryManager as ChatMemory,
+    MySqlUserTokenManager as UserTokenManager,
+    MySqlUserTokenManager as TokenStore,
+    MySqlComputerLifecycleManager as ComputerLifecycleManager,
+    MySqlComputerLifecycleManager as ComputerStore,
 };
 
 // Factory functions
 export function createAgentMemoryManager(
-    props?: PostgresPersistenceProperties,
-): PostgresAgentMemoryManager {
-    return new PostgresAgentMemoryManager(props);
+    props?: MySqlPersistenceProperties,
+): MySqlAgentMemoryManager {
+    return new MySqlAgentMemoryManager(props);
 }
 
 export function createChatMemory(
-    props?: PostgresPersistenceProperties,
-): PostgresAgentMemoryManager {
-    return new PostgresAgentMemoryManager(props);
+    props?: MySqlPersistenceProperties,
+): MySqlAgentMemoryManager {
+    return new MySqlAgentMemoryManager(props);
 }
 
 export function createTokenStore(
-    props?: PostgresPersistenceProperties,
-): PostgresUserTokenManager {
-    return new PostgresUserTokenManager(props);
+    props?: MySqlPersistenceProperties,
+): MySqlUserTokenManager {
+    return new MySqlUserTokenManager(props);
 }
 
 export function createUserTokenManager(
-    props?: PostgresPersistenceProperties,
-): PostgresUserTokenManager {
-    return new PostgresUserTokenManager(props);
+    props?: MySqlPersistenceProperties,
+): MySqlUserTokenManager {
+    return new MySqlUserTokenManager(props);
 }
 
 export function createComputerStore(
-    props?: PostgresPersistenceProperties,
-): PostgresComputerLifecycleManager {
-    return new PostgresComputerLifecycleManager(props);
+    props?: MySqlPersistenceProperties,
+): MySqlComputerLifecycleManager {
+    return new MySqlComputerLifecycleManager(props);
 }
 
 export function createComputerLifecycleManager(
-    props?: PostgresPersistenceProperties,
-): PostgresComputerLifecycleManager {
-    return new PostgresComputerLifecycleManager(props);
+    props?: MySqlPersistenceProperties,
+): MySqlComputerLifecycleManager {
+    return new MySqlComputerLifecycleManager(props);
 }
 
 // Default export
-export default PostgresAgentMemoryManager;
+export default MySqlAgentMemoryManager;

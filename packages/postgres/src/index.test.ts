@@ -11,6 +11,11 @@ import {
     createTokenStore,
 } from "./index";
 
+function extractSql(queryConfig: any): string {
+    if (typeof queryConfig === "string") return queryConfig;
+    return queryConfig?.text ?? "";
+}
+
 describe("Postgres Persistence Unit Tests - All 3 Managers", () => {
     it("exposes all 3 persistence managers and factories", () => {
         expect(PostgresAgentMemoryManager).toBeDefined();
@@ -36,18 +41,24 @@ describe("Postgres Persistence Unit Tests - All 3 Managers", () => {
                 query: mock(async () => ({ rows: [] })),
                 release: mock(() => {}),
             })),
-            query: mock(async (queryStr: string, params: any[]) => {
-                if (queryStr.includes("SELECT access_token")) {
-                    return {
-                        rows: [
-                            {
-                                access_token: "pg-tok-1",
-                                token_type: "Bearer",
-                                expires_at: Date.now() + 100_000,
-                                extra_headers: { "X-Env": "prod" },
-                            },
-                        ],
-                    };
+            query: mock(async (queryConfig: any, params: any[]) => {
+                const sqlText = extractSql(queryConfig);
+                if (sqlText.includes('from "byoai_user_tokens"')) {
+                    if (queryConfig.rowMode === "array") {
+                        // [userId, accessToken, tokenType, expiresAt, extraHeaders, updatedAt]
+                        return {
+                            rows: [
+                                [
+                                    "user-pg",
+                                    "pg-tok-1",
+                                    "Bearer",
+                                    Date.now() + 100_000,
+                                    { "X-Env": "prod" },
+                                    new Date(),
+                                ],
+                            ],
+                        };
+                    }
                 }
                 return { rows: [] };
             }),
@@ -72,17 +83,23 @@ describe("Postgres Persistence Unit Tests - All 3 Managers", () => {
                 query: mock(async () => ({ rows: [] })),
                 release: mock(() => {}),
             })),
-            query: mock(async (queryStr: string) => {
-                if (queryStr.includes("SELECT computer_id")) {
-                    return {
-                        rows: [
-                            {
-                                computer_id: "comp-pg-1",
-                                lifecycle: "user",
-                                skills_path: "/workspace/skills",
-                            },
-                        ],
-                    };
+            query: mock(async (queryConfig: any) => {
+                const sqlText = extractSql(queryConfig);
+                if (sqlText.includes('from "byoai_computer_sessions"')) {
+                    if (queryConfig.rowMode === "array") {
+                        // [key, computerId, lifecycle, skillsPath, createdAt]
+                        return {
+                            rows: [
+                                [
+                                    "user:agent-pg:u-pg",
+                                    "comp-pg-1",
+                                    "user",
+                                    "/workspace/skills",
+                                    1700000000000,
+                                ],
+                            ],
+                        };
+                    }
                 }
                 return { rows: [] };
             }),
@@ -114,38 +131,46 @@ describe("Postgres Persistence Unit Tests - All 3 Managers", () => {
                 query: mock(async () => ({ rows: [] })),
                 release: mock(() => {}),
             })),
-            query: mock(async (queryStr: string, params: any[]) => {
-                if (queryStr.includes("INSERT INTO byoai_agent_memories")) {
-                    createdId = params[0];
+            query: mock(async (queryConfig: any, params: any[]) => {
+                const sqlText = extractSql(queryConfig);
+                if (sqlText.includes('insert into "byoai_agent_memories"')) {
+                    createdId = params?.[0];
                     return { rows: [] };
                 }
-                if (queryStr.includes("SELECT id, name, user_id, mode")) {
-                    return {
-                        rows: [
-                            {
-                                id: createdId ?? "agent-pg-id",
-                                name: "Postgres Agent",
-                                user_id: "user-123",
-                                mode: "interactive",
-                                parent_id: null,
-                                computer_id: null,
-                                skills_path: null,
-                            },
-                        ],
-                    };
+                if (sqlText.includes('from "byoai_agent_memories"')) {
+                    if (queryConfig.rowMode === "array") {
+                        // [id, name, userId, mode, parentId, computerId, skillsPath, createdAt]
+                        return {
+                            rows: [
+                                [
+                                    createdId ?? "agent-pg-id",
+                                    "Postgres Agent",
+                                    "user-123",
+                                    "interactive",
+                                    null,
+                                    null,
+                                    null,
+                                    new Date(),
+                                ],
+                            ],
+                        };
+                    }
                 }
-                if (queryStr.includes("SELECT entry FROM byoai_transcripts")) {
-                    return {
-                        rows: [
-                            {
-                                entry: {
-                                    type: "message",
-                                    role: "user",
-                                    content: "Hello Postgres",
-                                },
-                            },
-                        ],
-                    };
+                if (sqlText.includes('from "byoai_transcripts"')) {
+                    if (queryConfig.rowMode === "array") {
+                        // select({ entry: byoaiTranscripts.entry }) -> [entry]
+                        return {
+                            rows: [
+                                [
+                                    {
+                                        type: "message",
+                                        role: "user",
+                                        content: "Hello Postgres",
+                                    },
+                                ],
+                            ],
+                        };
+                    }
                 }
                 return { rows: [] };
             }),

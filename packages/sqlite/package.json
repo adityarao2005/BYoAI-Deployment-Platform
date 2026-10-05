@@ -1,5 +1,5 @@
 {
-    "name": "@byo-ai-agent-platform/postgres",
+    "name": "@byo-ai-agent-platform/sqlite",
     "version": "0.1.0",
     "module": "src/index.ts",
     "main": "src/index.ts",
@@ -13,13 +13,10 @@
     },
     "dependencies": {
         "@byo-ai-agent-platform/core": "workspace:*",
-        "drizzle-orm": "^0.45.3",
-        "pg": "^8.13.3"
+        "drizzle-orm": "^0.45.3"
     },
     "devDependencies": {
-        "@types/bun": "latest",
-        "@types/pg": "^8.11.11",
-        "testcontainers": "^10.18.0"
+        "@types/bun": "latest"
     },
     "exports": {
         ".": "./src/index.ts"
