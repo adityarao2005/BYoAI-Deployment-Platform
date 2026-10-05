@@ -337,8 +337,34 @@ toolProviders:
 
 ---
 
+#### 5. Persistence Backends (`persistence`)
+
+Configures independent storage engines for chat history, user auth tokens, and computer lifecycles:
+
+```yaml
+# Shorthand for in-memory (default):
+persistence: in_memory
+
+# Shorthand for local JSON files:
+persistence: json_files
+
+# Mix-and-match across built-ins and dynamic providers:
+persistence:
+  chatMemory:
+    provider: "@byo-ai-agent-platform/postgres"
+    properties:
+      url: "postgresql://localhost:5432/byoai"
+  tokenStore:
+    provider: "@byo-ai-agent-platform/redis"
+  computerStore:
+    provider: "@byo-ai-agent-platform/mongo"
+```
+
+---
+
 ### Full Example Configurations in Repository
 
+- **[Pluggable Messaging & DB Persistence Agent (`agent.yaml`)](file:///home/aditya/projects/BYoAI-Deployment-Platform/examples/plugin-messaging-and-db/agent.yaml)**: Clustered setup with Redis messaging, PostgreSQL chat history, Redis token store, and MongoDB computer lifecycles.
 - **[Compliance-Governed Enterprise Agent (`agent.yaml`)](file:///home/aditya/projects/BYoAI-Deployment-Platform/examples/compliance-governed-agent/agent.yaml)**: Complete enterprise compliance suite (rules, tool filtering, human-in-the-loop approvals, and strict computer sandbox permissions).
 - **[Pet Adoption Agent (`agent.yaml`)](file:///home/aditya/projects/BYoAI-Deployment-Platform/examples/pet-adoption-agent/agent.yaml)**: OpenAPI + Zip Skills + Gemini LLM.
 - **[Local Computer Use Agent (`agent.yaml`)](file:///home/aditya/projects/BYoAI-Deployment-Platform/examples/computer-use-agent-local/agent.yaml)**: Local host computer execution + Gemini LLM.

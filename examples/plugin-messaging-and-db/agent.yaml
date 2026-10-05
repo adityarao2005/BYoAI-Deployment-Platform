@@ -1,0 +1,44 @@
+name: clustered-research-agent
+description: "High-throughput clustered agent demonstrating pluggable messaging and database persistence."
+
+models:
+  - name: gemini-2.5-flash
+    brand: gemini
+    properties:
+      apiKey: ${GEMINI_API_KEY}
+
+# Dynamic Plugin Messaging Connector (Redis Streams & PubSub)
+messaging:
+  package: "@byo-ai-agent-platform/redis-connector"
+  properties:
+    url: "redis://redis:6379"
+    telemetryTopic: "agentic:telemetry"
+    commandsStream: "agentic:commands"
+    consumerGroup: "agentic:workers"
+
+# Dynamic Plugin Persistence Stores (Mix-and-Match across backends)
+persistence:
+  chatMemory:
+    provider: "@byo-ai-agent-platform/postgres"
+    properties:
+      url: "postgresql://postgres:postgres@postgres:5432/byoai"
+  tokenStore:
+    provider: "@byo-ai-agent-platform/redis"
+    properties:
+      url: "redis://redis:6379"
+  computerStore:
+    provider: "@byo-ai-agent-platform/mongo"
+    properties:
+      url: "mongodb://mongo:27017/byoai"
+
+rules:
+  - "Maintain user context across conversational turns using PostgreSQL transcripts."
+  - "Persist transient authentication tokens in Redis."
+  - "Track distributed computer sessions in MongoDB."
+
+security:
+  jwksUri: "http://oauth-provider:8080/default/jwks"
+  alg:
+    - RS256
+  verify:
+    iss: "http://oauth-provider:8080/default"

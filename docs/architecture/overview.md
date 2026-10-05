@@ -26,7 +26,7 @@ The platform uses custom Kubernetes Custom Resource Definitions (CRDs) to manage
      - Auto-approved tool policies.
    - **Model Preferences**: Model selection rankings and fallback options.
    - **Skills**: Skill repository attachments (Zip archives or Git repositories).
-   - **Memory & State**: Persistence backends (Redis, PostgreSQL, JSON disk storage).
+   - **Memory & State**: Pluggable persistence backends (PostgreSQL, Redis, MongoDB, local JSON files, in-memory) for chat transcripts, authentication tokens, and computer session lifecycles.
    - **Telemetry & Isolation**: OpenTelemetry tracing, network policies, inbound/outbound message queues.
 
 3. **Frontends CRD (`AgentFrontend`)**:

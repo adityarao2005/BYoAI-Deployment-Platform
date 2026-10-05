@@ -1,0 +1,74 @@
+# Docker Compose for Agentic Harness with Pluggable Messaging and DB Persistence
+# Services:
+#   - PostgreSQL (port 5432): Chat history and transcripts
+#   - Redis (port 6379): Clustered event streaming & OAuth token store
+#   - MongoDB (port 27017): Computer session lifecycles
+#   - Agentic Harness (port 3000): Extensible agent runtime with dynamic plugins installed via Bun
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: byoai-plugin-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: byoai
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: byoai-plugin-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mongo:
+    image: mongo:7
+    container_name: byoai-plugin-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  agentic-harness:
+    build:
+      context: ../..
+      dockerfile: examples/plugin-messaging-and-db/Dockerfile
+    container_name: byoai-plugin-agentic-harness
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      AGENT_CONFIG_PATH: /workspace/agent.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  redis-data:
+  mongo-data:
