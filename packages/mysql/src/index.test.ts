@@ -44,19 +44,24 @@ describe("MySQL Persistence Unit Tests - All 3 Managers", () => {
             query: mock(async (queryConfig: any) => {
                 const sqlText = extractSql(queryConfig);
                 if (sqlText.includes("byoai_user_tokens")) {
-                    return [
-                        [
-                            {
-                                user_id: "user-mysql",
-                                access_token: "mysql-tok-1",
-                                token_type: "Bearer",
-                                expires_at: Date.now() + 100_000,
-                                extra_headers: { "X-Env": "mysql" },
-                            },
-                        ],
-                    ];
+                    if (queryConfig.rowsAsArray) {
+                        // [userId, accessToken, tokenType, expiresAt, extraHeaders, updatedAt]
+                        return [
+                            [
+                                [
+                                    "user-mysql",
+                                    "mysql-tok-1",
+                                    "Bearer",
+                                    Date.now() + 100_000,
+                                    { "X-Env": "mysql" },
+                                    new Date(),
+                                ],
+                            ],
+                            [],
+                        ];
+                    }
                 }
-                return [[]];
+                return [[], []];
             }),
             end: mock(async () => {}),
         } as any;
@@ -82,19 +87,23 @@ describe("MySQL Persistence Unit Tests - All 3 Managers", () => {
             query: mock(async (queryConfig: any) => {
                 const sqlText = extractSql(queryConfig);
                 if (sqlText.includes("byoai_computer_sessions")) {
-                    return [
-                        [
-                            {
-                                key: "user:agent-mysql:u-mysql",
-                                computer_id: "comp-mysql-1",
-                                lifecycle: "user",
-                                skills_path: "/workspace/skills",
-                                created_at: 1700000000000,
-                            },
-                        ],
-                    ];
+                    if (queryConfig.rowsAsArray) {
+                        // [key, computerId, lifecycle, skillsPath, createdAt]
+                        return [
+                            [
+                                [
+                                    "user:agent-mysql:u-mysql",
+                                    "comp-mysql-1",
+                                    "user",
+                                    "/workspace/skills",
+                                    1700000000000,
+                                ],
+                            ],
+                            [],
+                        ];
+                    }
                 }
-                return [[]];
+                return [[], []];
             }),
             end: mock(async () => {}),
         } as any;
@@ -128,38 +137,45 @@ describe("MySQL Persistence Unit Tests - All 3 Managers", () => {
                 const sqlText = extractSql(queryConfig);
                 if (sqlText.includes("insert into `byoai_agent_memories`")) {
                     createdId = params?.[0];
-                    return [[]];
+                    return [[], []];
                 }
                 if (sqlText.includes("from `byoai_agent_memories`")) {
-                    return [
-                        [
-                            {
-                                id: createdId ?? "agent-mysql-id",
-                                name: "MySQL Agent",
-                                user_id: "user-my-123",
-                                mode: "interactive",
-                                parent_id: null,
-                                computer_id: null,
-                                skills_path: null,
-                                created_at: new Date(),
-                            },
-                        ],
-                    ];
+                    if (queryConfig.rowsAsArray) {
+                        // [id, name, userId, mode, parentId, computerId, skillsPath, createdAt]
+                        return [
+                            [
+                                [
+                                    createdId ?? "agent-mysql-id",
+                                    "MySQL Agent",
+                                    "user-my-123",
+                                    "interactive",
+                                    null,
+                                    null,
+                                    null,
+                                    new Date(),
+                                ],
+                            ],
+                            [],
+                        ];
+                    }
                 }
                 if (sqlText.includes("from `byoai_transcripts`")) {
-                    return [
-                        [
-                            {
-                                entry: {
-                                    type: "message",
-                                    role: "user",
-                                    content: "Hello MySQL",
-                                },
-                            },
-                        ],
-                    ];
+                    if (queryConfig.rowsAsArray) {
+                        return [
+                            [
+                                [
+                                    {
+                                        type: "message",
+                                        role: "user",
+                                        content: "Hello MySQL",
+                                    },
+                                ],
+                            ],
+                            [],
+                        ];
+                    }
                 }
-                return [[]];
+                return [[], []];
             }),
             end: mock(async () => {}),
         } as any;
