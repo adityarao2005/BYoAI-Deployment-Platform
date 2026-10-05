@@ -16,17 +16,23 @@ The agent harness operates as an asynchronous, event-driven orchestration layer 
   - Built-in error handling wrapping tool validation and execution to emit safe error results back into the model transcript.
 
 - **Communication Layer (`AgentCommunicator` / `packages/core/src/agents/communication/`)**:
-  - Typed pub/sub bus with events:
-    - `user:message`: Inbound message from client / queue.
-    - `agent:run`: Trigger execution turn on current history.
-    - `agent:message`: Assistant output message.
-    - `agent:complete`: Turn completion.
-    - `tool:call`: Tool request from model.
-    - `tool:approval_required`: Emitted when an invoked tool has `requires_user_input: true` in interactive mode, pausing tool execution until approved or rejected.
-    - `tool:accept`: Client decision event to execute the pending tool call and resume the agent turn.
-    - `tool:reject`: Client decision event to reject the pending tool call with an optional explanation, injecting a rejection tool response and prompting the agent to adjust its plan.
-    - `tool:complete`: Tool result resolution.
-  - **`InMemoryAgentCommunicator`**: In-process event bus for local runtime and test execution.
+  - Typed pub/sub and queue event bus separating command dispatch from telemetry fanout:
+    - `user:message`: Inbound message from client / queue (`delivery: "queue"`).
+    - `agent:run`: Trigger execution turn on current history (`delivery: "queue"`).
+    - `agent:message`: Assistant output message chunk (`delivery: "broadcast"`).
+    - `agent:complete`: Turn completion notification (`delivery: "broadcast"`).
+    - `agent:error`: Error notification (`delivery: "broadcast"`).
+    - `tool:call`: Tool request from model (dispatched to worker queue for execution; broadcast to telemetry for UI progress).
+    - `tool:approval_required`: Emitted when an invoked tool has `requires_user_input: true` in interactive mode, pausing tool execution until approved or rejected (`delivery: "broadcast"`).
+    - `tool:accept`: Client decision event to execute the pending tool call and resume the agent turn (`delivery: "queue"`).
+    - `tool:reject`: Client decision event to reject the pending tool call with an optional explanation, injecting a rejection tool response and prompting the agent to adjust its plan (`delivery: "queue"`).
+    - `tool:complete`: Tool result resolution (`delivery: "broadcast"`).
+    - `subagent:*`: Subagent lifecycle and message telemetry (`delivery: "broadcast"`).
+  - **Delivery Modes (`DeliveryMode`)**:
+    - `queue`: Competing consumer semantics for horizontally scaled clusters. Guarantees exactly one instance executes the task/command (e.g. via Kafka partition key `agentId`, RabbitMQ work queues, or Redis streams).
+    - `broadcast`: Fanout semantics. Ensures all instances receive telemetry notifications to forward over active client SSE streams (`/interactions/:id/sse`).
+  - **`InMemoryAgentCommunicator`**: In-process synchronous event bus for local runtime and test execution.
+  - **Dynamic Broker Connectors (`agent.yaml` `messaging`)**: Supports pluggable external packages (e.g. `@byo-ai-agent-platform/kafka-connector`, `@byo-ai-agent-platform/rabbitmq-connector`, `@byo-ai-agent-platform/redis-connector`) dynamically imported at bootstrap with property normalization.
 
 - **Memory Management Layer (`AgentMemoryManager` / `packages/core/src/agents/memory/`)**:
   - Manages transcript persistence and pending tool call resolution (`getPendingToolCalls()` using `Set<string>`).

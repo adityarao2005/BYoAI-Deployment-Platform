@@ -291,11 +291,15 @@ app.get("/interactions/:id/sse", async (c) => {
         ];
 
         const unsubscribers = eventNames.map((eventName) =>
-            manager.communicator.on(eventName, (payload) => {
-                if (payload.agentId === id) {
-                    writeEvent(eventName, payload);
-                }
-            }),
+            manager.communicator.on(
+                eventName,
+                (payload) => {
+                    if (payload.agentId === id) {
+                        writeEvent(eventName, payload);
+                    }
+                },
+                { delivery: "broadcast" },
+            ),
         );
 
         stream.onAbort(() => {

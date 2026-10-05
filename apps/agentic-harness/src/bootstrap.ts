@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
+import { createRequire } from "node:module";
 import path from "node:path";
 import {
+    type AgentCommunicator,
     AgentManager,
     type AgentObserver,
     CompositeMemoryManager,
@@ -55,6 +57,8 @@ import { parse } from "yaml";
 import {
     type AgentConfig,
     AgentConfigSchema,
+    type AgentMessagingConfig,
+    normalizeMessagingProperties,
     type RuleEntry,
 } from "./agent.config";
 
@@ -476,6 +480,119 @@ export function registerToolProviders(
 }
 
 /**
+ * Creates and initializes an AgentCommunicator instance based on the messaging config.
+ * Supports "in_memory" (default) or dynamically loaded packages.
+ *
+ * Package resolution order:
+ * 1. Path-based resolution if packageName starts with '.', '..', '/', or 'file://'
+ * 2. Dynamic import(packageName)
+ * 3. Fallback resolution via createRequire from process.cwd() (e.g. /workspace/node_modules)
+ * 4. Fallback resolution via path.resolve(process.cwd(), "node_modules", packageName)
+ */
+export async function createAgentCommunicator(
+    messagingConfig?: AgentMessagingConfig,
+): Promise<AgentCommunicator> {
+    if (!messagingConfig || messagingConfig === "in_memory") {
+        logger.info("Using InMemoryAgentCommunicator");
+        const communicator = new InMemoryAgentCommunicator();
+        await communicator.init?.();
+        return communicator;
+    }
+
+    const { package: packageName, properties } = messagingConfig;
+    const normalizedProps = normalizeMessagingProperties(properties);
+
+    logger.info("Loading dynamic AgentCommunicator package", {
+        package: packageName,
+    });
+
+    let mod: any;
+
+    if (
+        packageName.startsWith(".") ||
+        packageName.startsWith("/") ||
+        packageName.startsWith("file://")
+    ) {
+        const resolvedPath =
+            packageName.startsWith("file://") || path.isAbsolute(packageName)
+                ? packageName
+                : path.resolve(process.cwd(), packageName);
+        try {
+            mod = await import(resolvedPath);
+        } catch (error) {
+            throw new ConfigError(
+                `Failed to load communicator package from path "${resolvedPath}": ${error instanceof Error ? error.message : String(error)}`,
+            );
+        }
+    } else {
+        try {
+            mod = await import(packageName);
+        } catch (_err1) {
+            try {
+                const req = createRequire(
+                    path.resolve(process.cwd(), "package.json"),
+                );
+                const resolvedModule = req.resolve(packageName);
+                mod = await import(resolvedModule);
+            } catch (err2) {
+                try {
+                    const localPath = path.resolve(
+                        process.cwd(),
+                        "node_modules",
+                        packageName,
+                    );
+                    mod = await import(localPath);
+                } catch {
+                    throw new ConfigError(
+                        `Failed to dynamically resolve communicator package "${packageName}". Ensure it is installed via "bun add ${packageName}" or present in node_modules: ${err2 instanceof Error ? err2.message : String(err2)}`,
+                    );
+                }
+            }
+        }
+    }
+
+    const CommunicatorExport =
+        mod.default ?? mod.AgentCommunicator ?? mod.createCommunicator;
+
+    if (!CommunicatorExport) {
+        throw new ConfigError(
+            `Communicator package "${packageName}" does not export default, AgentCommunicator, or createCommunicator`,
+        );
+    }
+
+    let communicator: AgentCommunicator;
+    if (typeof CommunicatorExport === "function") {
+        try {
+            communicator = new (CommunicatorExport as any)(normalizedProps);
+        } catch (_ctorErr) {
+            communicator = await (CommunicatorExport as any)(normalizedProps);
+        }
+    } else if (typeof mod.createCommunicator === "function") {
+        communicator = await mod.createCommunicator(normalizedProps);
+    } else {
+        throw new ConfigError(
+            `Unable to initialize AgentCommunicator from package "${packageName}": export is neither a class nor a factory function.`,
+        );
+    }
+
+    if (
+        !communicator ||
+        typeof communicator.emit !== "function" ||
+        typeof communicator.on !== "function"
+    ) {
+        throw new ConfigError(
+            `Communicator package "${packageName}" did not return a valid AgentCommunicator (must implement emit and on).`,
+        );
+    }
+
+    await communicator.init?.();
+    logger.info("Successfully initialized dynamic AgentCommunicator", {
+        package: packageName,
+    });
+    return communicator;
+}
+
+/**
  * Container holding the fully initialized agent, agent manager, and communicator.
  */
 export interface BootstrappedAgent {
@@ -525,7 +642,7 @@ export async function bootstrap(
         );
     }
 
-    const communicator = new InMemoryAgentCommunicator();
+    const communicator = await createAgentCommunicator(config.messaging);
     const memoryManager = new CompositeMemoryManager({
         agent: new InMemoryAgentMemoryManager(),
         userToken: new InMemoryUserTokenManager(),
