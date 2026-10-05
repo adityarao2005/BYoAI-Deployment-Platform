@@ -543,13 +543,13 @@ export async function createAgentCommunicator(
                     );
                     mod = await import(localPath);
                 } catch {
-                    throw new ConfigError(
-                        `Failed to dynamically resolve communicator package "${packageName}". Ensure it is installed via "bun add ${packageName}" or present in node_modules: ${err2 instanceof Error ? err2.message : String(err2)}`,
-                    );
+                        throw new ConfigError(
+                            `Failed to dynamically resolve communicator package "${packageName}". Ensure it is installed via "bun add ${packageName}" or present in node_modules: ${err2 instanceof Error ? err2.message : String(err2)}`,
+                        );
+                    }
                 }
             }
         }
-    }
 
     const CommunicatorExport =
         mod.default ?? mod.AgentCommunicator ?? mod.createCommunicator;
