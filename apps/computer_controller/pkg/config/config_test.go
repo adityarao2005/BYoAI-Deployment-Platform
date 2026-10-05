@@ -283,4 +283,99 @@ server:
 			t.Fatal("expected error for mTLS without server cert/key, got nil")
 		}
 	})
+
+	t.Run("Valid Kubernetes Config - Defaults", func(t *testing.T) {
+		yamlData := []byte(`
+type: kubernetes
+`)
+		cfg, err := LoadConfig(yamlData)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if cfg.Type != TypeKubernetes {
+			t.Errorf("expected type %q, got %q", TypeKubernetes, cfg.Type)
+		}
+		spec, ok := cfg.Spec.(KubernetesSpec)
+		if !ok {
+			t.Fatalf("expected KubernetesSpec, got %T", cfg.Spec)
+		}
+		if spec.Namespace != "default" {
+			t.Errorf("expected namespace default, got %q", spec.Namespace)
+		}
+		if spec.ImagePullPolicy != IfNotPresent {
+			t.Errorf("expected imagePullPolicy IfNotPresent, got %q", spec.ImagePullPolicy)
+		}
+		if spec.PodReadyTimeoutSeconds != 60 {
+			t.Errorf("expected podReadyTimeoutSeconds 60, got %d", spec.PodReadyTimeoutSeconds)
+		}
+	})
+
+	t.Run("Valid Kubernetes Config - k8s Alias and Full Spec", func(t *testing.T) {
+		yamlData := []byte(`
+type: k8s
+spec:
+  kubeconfig: "/custom/kubeconfig"
+  context: "my-context"
+  namespace: "sandbox-ns"
+  imagePullPolicy: "Always"
+  serviceAccountName: "sandbox-sa"
+  labels:
+    env: "test"
+  annotations:
+    note: "agent-pod"
+  nodeSelector:
+    disktype: "ssd"
+  podReadyTimeoutSeconds: 120
+`)
+		cfg, err := LoadConfig(yamlData)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if cfg.Type != TypeKubernetes {
+			t.Errorf("expected type %q, got %q", TypeKubernetes, cfg.Type)
+		}
+		spec, ok := cfg.Spec.(KubernetesSpec)
+		if !ok {
+			t.Fatalf("expected KubernetesSpec, got %T", cfg.Spec)
+		}
+		if spec.Kubeconfig != "/custom/kubeconfig" {
+			t.Errorf("expected kubeconfig /custom/kubeconfig, got %q", spec.Kubeconfig)
+		}
+		if spec.Context != "my-context" {
+			t.Errorf("expected context my-context, got %q", spec.Context)
+		}
+		if spec.Namespace != "sandbox-ns" {
+			t.Errorf("expected namespace sandbox-ns, got %q", spec.Namespace)
+		}
+		if spec.ImagePullPolicy != Always {
+			t.Errorf("expected imagePullPolicy Always, got %q", spec.ImagePullPolicy)
+		}
+		if spec.ServiceAccountName != "sandbox-sa" {
+			t.Errorf("expected serviceAccountName sandbox-sa, got %q", spec.ServiceAccountName)
+		}
+		if spec.Labels["env"] != "test" {
+			t.Errorf("expected label env=test, got %v", spec.Labels)
+		}
+		if spec.Annotations["note"] != "agent-pod" {
+			t.Errorf("expected annotation note=agent-pod, got %v", spec.Annotations)
+		}
+		if spec.NodeSelector["disktype"] != "ssd" {
+			t.Errorf("expected nodeSelector disktype=ssd, got %v", spec.NodeSelector)
+		}
+		if spec.PodReadyTimeoutSeconds != 120 {
+			t.Errorf("expected podReadyTimeoutSeconds 120, got %d", spec.PodReadyTimeoutSeconds)
+		}
+	})
+
+	t.Run("Invalid Kubernetes Config - Invalid ImagePullPolicy", func(t *testing.T) {
+		yamlData := []byte(`
+type: kubernetes
+spec:
+  imagePullPolicy: "InvalidPolicy"
+`)
+		_, err := LoadConfig(yamlData)
+		if err == nil {
+			t.Fatal("expected error for invalid imagePullPolicy, got nil")
+		}
+	})
 }

@@ -13,8 +13,9 @@ import (
 type ConfigType string
 
 const (
-	TypeLocal  ConfigType = "local"
-	TypeDocker ConfigType = "docker"
+	TypeLocal      ConfigType = "local"
+	TypeDocker     ConfigType = "docker"
+	TypeKubernetes ConfigType = "kubernetes"
 )
 
 type ImagePullPolicy string
@@ -32,11 +33,24 @@ type DockerSpec struct {
 	ImagePullPolicy ImagePullPolicy `yaml:"imagePullPolicy,omitempty"`
 }
 
+type KubernetesSpec struct {
+	Kubeconfig             string            `yaml:"kubeconfig,omitempty"`
+	Context                string            `yaml:"context,omitempty"`
+	Namespace              string            `yaml:"namespace,omitempty"`
+	ImagePullPolicy        ImagePullPolicy   `yaml:"imagePullPolicy,omitempty"`
+	ServiceAccountName     string            `yaml:"serviceAccountName,omitempty"`
+	Labels                 map[string]string `yaml:"labels,omitempty"`
+	Annotations            map[string]string `yaml:"annotations,omitempty"`
+	NodeSelector           map[string]string `yaml:"nodeSelector,omitempty"`
+	PodReadyTimeoutSeconds int               `yaml:"podReadyTimeoutSeconds,omitempty"`
+}
+
 type Spec interface {
 	isSpec()
 }
 
-func (DockerSpec) isSpec() {}
+func (DockerSpec) isSpec()     {}
+func (KubernetesSpec) isSpec() {}
 
 type TlsConfig struct {
 	TlsCertificate         string `yaml:"tlsCertificate,omitempty"`
@@ -137,7 +151,11 @@ func (c *ServerConfig) UnmarshalYAML(value *yaml.Node) error {
 
 	raw.Server.Security = sec
 
-	raw.Type = ConfigType(strings.ToLower(string(raw.Type)))
+	typeStr := strings.ToLower(string(raw.Type))
+	if typeStr == "k8s" {
+		typeStr = string(TypeKubernetes)
+	}
+	raw.Type = ConfigType(typeStr)
 	c.Type = raw.Type
 	c.WorkspaceDir = raw.WorkspaceDir
 	c.Server = raw.Server
@@ -165,6 +183,36 @@ func (c *ServerConfig) UnmarshalYAML(value *yaml.Node) error {
 			// valid policy
 		default:
 			return fmt.Errorf("invalid imagePullPolicy %q: must be one of IfNotPresent, Always, Never", spec.ImagePullPolicy)
+		}
+		c.Spec = spec
+
+	case TypeKubernetes:
+		var spec KubernetesSpec
+		if !raw.Spec.IsZero() {
+			if err := raw.Spec.Decode(&spec); err != nil {
+				return fmt.Errorf("failed to parse kubernetes spec: %w", err)
+			}
+		}
+		spec.Kubeconfig = os.ExpandEnv(spec.Kubeconfig)
+		spec.Namespace = os.ExpandEnv(spec.Namespace)
+		if spec.Namespace == "" {
+			if podNs := os.Getenv("POD_NAMESPACE"); podNs != "" {
+				spec.Namespace = podNs
+			} else {
+				spec.Namespace = "default"
+			}
+		}
+		if spec.ImagePullPolicy == "" {
+			spec.ImagePullPolicy = IfNotPresent
+		}
+		switch spec.ImagePullPolicy {
+		case IfNotPresent, Always, Never:
+			// valid policy
+		default:
+			return fmt.Errorf("invalid imagePullPolicy %q: must be one of IfNotPresent, Always, Never", spec.ImagePullPolicy)
+		}
+		if spec.PodReadyTimeoutSeconds <= 0 {
+			spec.PodReadyTimeoutSeconds = 60
 		}
 		c.Spec = spec
 
