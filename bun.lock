@@ -94,6 +94,22 @@
         "typescript": "^7",
       },
     },
+    "packages/redis": {
+      "name": "@byo-ai-agent-platform/redis",
+      "version": "0.1.0",
+      "dependencies": {
+        "@byo-ai-agent-platform/core": "workspace:*",
+        "ioredis": "^5.6.0",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "@types/ioredis": "^5.0.0",
+        "testcontainers": "^10.18.0",
+      },
+      "peerDependencies": {
+        "typescript": "^7",
+      },
+    },
     "packages/redis-connector": {
       "name": "@byo-ai-agent-platform/redis-connector",
       "version": "0.1.0",
@@ -173,6 +189,8 @@
     "@byo-ai-agent-platform/kafka-connector": ["@byo-ai-agent-platform/kafka-connector@workspace:packages/kafka-connector"],
 
     "@byo-ai-agent-platform/rabbitmq-connector": ["@byo-ai-agent-platform/rabbitmq-connector@workspace:packages/rabbitmq-connector"],
+
+    "@byo-ai-agent-platform/redis": ["@byo-ai-agent-platform/redis@workspace:packages/redis"],
 
     "@byo-ai-agent-platform/redis-connector": ["@byo-ai-agent-platform/redis-connector@workspace:packages/redis-connector"],
 
