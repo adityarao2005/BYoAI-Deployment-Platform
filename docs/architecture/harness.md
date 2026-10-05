@@ -32,7 +32,48 @@ The agent harness operates as an asynchronous, event-driven orchestration layer 
     - `queue`: Competing consumer semantics for horizontally scaled clusters. Guarantees exactly one instance executes the task/command (e.g. via Kafka partition key `agentId`, RabbitMQ work queues, or Redis streams).
     - `broadcast`: Fanout semantics. Ensures all instances receive telemetry notifications to forward over active client SSE streams (`/interactions/:id/sse`).
   - **`InMemoryAgentCommunicator`**: In-process synchronous event bus for local runtime and test execution.
-  - **Dynamic Broker Connectors (`agent.yaml` `messaging`)**: Supports pluggable external packages (e.g. `@byo-ai-agent-platform/kafka-connector`, `@byo-ai-agent-platform/rabbitmq-connector`, `@byo-ai-agent-platform/redis-connector`) dynamically imported at bootstrap with property normalization.
+  - **Dynamic Broker Connectors (`agent.yaml` `messaging`)**: Supports pluggable external packages dynamically imported at bootstrap with property normalization:
+    - **`@byo-ai-agent-platform/redis-connector`**: Lightweight Redis Streams (worker queue) + Redis Pub/Sub (telemetry fanout).
+    - **`@byo-ai-agent-platform/rabbitmq-connector`**: AMQP Direct Work Queue (competing consumers) + Fanout Exchange (telemetry fanout).
+    - **`@byo-ai-agent-platform/kafka-connector`**: Log-based streaming with partition-keyed worker consumers (`agentId`) + per-instance consumer group fanout.
+
+### Messaging Connectors Configuration (`agent.yaml`)
+
+```yaml
+# 1. Default: In-Memory (or omitted)
+messaging: in_memory
+
+# 2. Redis Connector
+messaging:
+  package: "@byo-ai-agent-platform/redis-connector"
+  properties:
+    url: "redis://localhost:6379"
+    telemetryTopic: "agentic:telemetry"
+    commandsStream: "agentic:commands"
+    consumerGroup: "agentic:workers"
+
+# 3. RabbitMQ Connector
+messaging:
+  package: "@byo-ai-agent-platform/rabbitmq-connector"
+  properties:
+    url: "amqp://guest:guest@localhost:5672"
+    telemetryExchange: "agentic:telemetry"
+    commandsQueue: "agentic:commands"
+
+# 4. Kafka Connector
+messaging:
+  package: "@byo-ai-agent-platform/kafka-connector"
+  properties:
+    bootstrapServers: "localhost:9092"
+    clientId: "agentic-harness"
+    telemetryTopic: "agentic-telemetry"
+    commandsTopic: "agentic-commands"
+    consumerGroup: "agentic-workers"
+```
+
+### Testing Strategy (Unit vs. Testcontainers Integration Tests)
+- `task test` / `task unit_test`: Executes fast unit tests across all connectors and monorepo packages using mocked drivers.
+- `task integration_test`: Spins up live Docker containers with `testcontainers` (Redis, RabbitMQ, Kafka) and verifies multi-instance queue competing consumer and broadcast fanout behavior.
 
 - **Memory Management Layer (`AgentMemoryManager` / `packages/core/src/agents/memory/`)**:
   - Manages transcript persistence and pending tool call resolution (`getPendingToolCalls()` using `Set<string>`).
