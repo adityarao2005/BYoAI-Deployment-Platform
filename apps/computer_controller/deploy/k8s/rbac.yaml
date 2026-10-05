@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: byoai-sandboxes
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: computer-controller
+  namespace: byoai-sandboxes
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: computer-controller-role
+  namespace: byoai-sandboxes
+rules:
+  # Pod management for agent execution sandboxes
+  - apiGroups: [""]
+    resources: ["pods", "pods/status"]
+    verbs: ["get", "list", "watch", "create", "delete", "update", "patch"]
+  # Pod execution subresource for running commands and interactive sessions
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create", "get"]
+  # NetworkPolicy management for egress isolation
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs: ["get", "list", "watch", "create", "delete", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: computer-controller-rolebinding
+  namespace: byoai-sandboxes
+subjects:
+  - kind: ServiceAccount
+    name: computer-controller
+    namespace: byoai-sandboxes
+roleRef:
+  kind: Role
+  name: computer-controller-role
+  apiGroup: rbac.authorization.k8s.io

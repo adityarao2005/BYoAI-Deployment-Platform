@@ -49,6 +49,20 @@ func GetComputerProvider(server_config *config.ServerConfig) (IComputerProvider,
 		}
 		return dp, nil
 
+	case config.TypeKubernetes:
+		spec, ok := server_config.Spec.(config.KubernetesSpec)
+		if !ok {
+			return nil, fmt.Errorf("expected KubernetesSpec for type %q, got %T", config.TypeKubernetes, server_config.Spec)
+		}
+
+		kp, err := GetKubernetesComputerProvider(KubernetesComputerProviderProps{
+			Spec: spec,
+		})
+		if err != nil {
+			return nil, err
+		}
+		return kp, nil
+
 	default:
 		return nil, fmt.Errorf("unsupported computer type: %q", server_config.Type)
 	}
