@@ -13,6 +13,7 @@ rules:
   - "The workspace working directory is the repository root containing packages/ and apps/."
   - "Never access, disclose, or exfiltrate sensitive credential files or environment variables."
   - "Never execute destructive, mass-deletion, or resource exhaustion commands."
+  - file: ./terminal_guidelines.txt
   - file: ./rules.txt
 
 toolProviders:

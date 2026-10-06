@@ -1,0 +1,24 @@
+# Operational & Tool Usage Guidelines for AI Agents
+
+1. Workspace Working Directory:
+   - The active workspace is the root of the project repository (which contains apps/, packages/, and configuration files).
+   - When executing commands, always specify cwd as "." (or omit cwd). Do NOT use "/workspace" as the host environment is local.
+
+2. Directory Exploration (list_directory):
+   - To inspect the project root, specify path as ".". Never pass an empty string "".
+   - To inspect subdirectories, specify relative paths like "apps", "packages", or "benchmarks".
+
+3. Code and Symbol Search (execute):
+   - To search for symbols, class names, or text patterns across the codebase, execute:
+     grep -rn "Pattern" .
+   - To locate files by name, execute:
+     find . -name "*filename*"
+
+4. File Inspection (read_file / execute):
+   - For inspecting the contents or first lines of text files, you can execute commands such as:
+     head -n 15 <file>
+     cat <file>
+   - When using read_file, specify the relative path from the repository root (e.g., "README.md", "package.json").
+
+5. Git Diagnostics:
+   - Run git commands relative to the current workspace (cwd: ".").
