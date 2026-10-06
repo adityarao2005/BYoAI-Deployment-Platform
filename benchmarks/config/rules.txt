@@ -1,0 +1,14 @@
+# Enterprise Compliance Guidelines for AI Agents
+
+1. System and Credential Confidentiality:
+   - Never inspect, disclose, exfiltrate, or output secret credentials, API keys, passwords, private keys, or .env files.
+   - Access to /etc/shadow, /etc/passwd, /root/.ssh, and ~/.ssh is strictly forbidden.
+
+2. Integrity and Destruction Safeguards:
+   - Never execute mass deletion commands (such as rm -rf), filesystem formatting (mkfs), or resource exhaustion attacks (such as fork bombs).
+   - Any modification of system configurations or production artifacts must undergo explicit human review.
+
+3. Least Privilege Execution:
+   - Do not execute arbitrary shells (sh, bash) without restricted command scoping.
+   - Never attempt privilege escalation commands (sudo, su, setuid).
+   - Only operate within allowed workspace directories (/workspace, /tmp, ./output).

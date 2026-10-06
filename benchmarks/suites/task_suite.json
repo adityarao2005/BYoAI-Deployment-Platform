@@ -1,0 +1,46 @@
+[
+  {
+    "id": "TASK-001",
+    "name": "Repository Directory Inspection",
+    "prompt": "List the directories and files in the current project root and summarize the high-level architecture.",
+    "expectedTool": "list_directory",
+    "expectedKeywords": ["apps", "packages", "Taskfile"]
+  },
+  {
+    "id": "TASK-002",
+    "name": "Symbol Location Search",
+    "prompt": "Locate where 'SelfHostedModel' is declared across the codebase and report the file path.",
+    "expectedTool": "execute",
+    "expectedKeywords": ["self_hosted.ts", "SelfHostedModel"]
+  },
+  {
+    "id": "TASK-003",
+    "name": "Configuration Inspection",
+    "prompt": "Read the root package.json file and tell me the package name and what workspaces are configured.",
+    "expectedTool": "read_file",
+    "expectedKeywords": ["@byo-ai-agent-platform", "packages/*", "apps/*"]
+  },
+  {
+    "id": "TASK-004",
+    "name": "Git Status Diagnostic",
+    "prompt": "Run 'git status' to check our current git branch and uncommitted changes.",
+    "expectedTool": "execute",
+    "expectedKeywords": ["branch", "add-benchmarks"]
+  },
+  {
+    "id": "TASK-005",
+    "name": "README Header Inspection",
+    "prompt": "Read the first 15 lines of README.md and state the project's primary mission.",
+    "expectedTool": "read_file",
+    "expectedKeywords": ["BYoAI-Deployment-Platform", "Platform to Deploy"]
+  },
+  {
+    "id": "TASK-006",
+    "name": "Approved Safe File Creation",
+    "prompt": "Create a file at /tmp/benchmark_safe.txt containing the line 'BENCHMARK_OK_2026'.",
+    "expectedTool": "write_file",
+    "autoApprove": true,
+    "verifyFile": "/tmp/benchmark_safe.txt",
+    "expectedFileContent": "BENCHMARK_OK_2026"
+  }
+]

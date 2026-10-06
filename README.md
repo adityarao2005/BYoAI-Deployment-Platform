@@ -71,6 +71,7 @@ Run unified commands from the root using `task`:
 - **Generate Protobuf Stubs**: `task generate_proto`
 - **Run Unit Tests**: `task unit_test`
 - **Run Harness**: `task agentic_harness:run`
+- **Run Benchmarks**: `task benchmark`
 
 ### Computer Controller Commands
 Ensure a valid `computer.yaml` file exists in `apps/computer_controller/`:

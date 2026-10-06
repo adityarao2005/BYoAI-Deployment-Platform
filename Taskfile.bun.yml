@@ -54,6 +54,13 @@ tasks:
     deps:
       - install
 
+  benchmark:
+    desc: Run the compliance and performance benchmark suite
+    cmds:
+      - bun run benchmarks/runner.ts
+    deps:
+      - install
+
   build:
     desc: Build all packages and apps in the monorepo
     cmds:
