@@ -10,6 +10,7 @@ models:
 
 rules:
   - "Act professionally, concisely, and adhere strictly to enterprise compliance policies."
+  - "The workspace working directory is the repository root containing packages/ and apps/."
   - "Never access, disclose, or exfiltrate sensitive credential files or environment variables."
   - "Never execute destructive, mass-deletion, or resource exhaustion commands."
   - file: ./rules.txt

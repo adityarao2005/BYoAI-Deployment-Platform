@@ -127,7 +127,9 @@ async function main() {
     const isControllerHealthy = await isPortOpen(CONTROLLER_URL);
 
     if (!isControllerHealthy) {
-        const controllerDir = path.resolve(import.meta.dir, "../apps/computer_controller");
+        console.log(`⚡ Computer Controller not detected at ${CONTROLLER_URL}. Spawning Go daemon with COMPUTER_CONFIG_PATH...`);
+        const projectRoot = path.resolve(import.meta.dir, "..");
+        const controllerDir = path.resolve(projectRoot, "apps/computer_controller");
         const computerConfigPath = path.resolve(import.meta.dir, "config/computer.yaml");
         const binaryPath = path.resolve(controllerDir, "bin/controller");
 
@@ -135,7 +137,7 @@ async function main() {
         await $`go build -o bin/controller ./cmd/controller`.cwd(controllerDir);
 
         spawnedController = Bun.spawn([binaryPath], {
-            cwd: controllerDir,
+            cwd: projectRoot,
             env: {
                 ...process.env,
                 COMPUTER_CONFIG_PATH: computerConfigPath,
@@ -437,9 +439,9 @@ async function main() {
             };
         }
 
-        // Wait up to 35s for response
+        // Wait up to 65s for multi-turn response
         const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Timeout waiting for agent response")), 35000),
+            setTimeout(() => reject(new Error("Timeout waiting for agent response")), 65000),
         );
         try {
             await Promise.race([agentCompletePromise, timeoutPromise]);
