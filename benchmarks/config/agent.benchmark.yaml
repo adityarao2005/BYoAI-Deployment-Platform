@@ -17,7 +17,9 @@ rules:
 toolProviders:
   - type: computer
     provider:
-      type: local
+      type: remote
+      url: "http://127.0.0.1:50051"
+      image: "alpine:latest"
       enableGUIToolsIfAvailable: false
     allowedTools:
       - "read_file"
