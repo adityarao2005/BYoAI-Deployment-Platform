@@ -1,3 +1,4 @@
+import { $ } from "bun";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -126,18 +127,21 @@ async function main() {
     const isControllerHealthy = await isPortOpen(CONTROLLER_URL);
 
     if (!isControllerHealthy) {
-        console.log(`⚡ Computer Controller not detected at ${CONTROLLER_URL}. Spawning Go daemon with COMPUTER_CONFIG_PATH...`);
         const controllerDir = path.resolve(import.meta.dir, "../apps/computer_controller");
         const computerConfigPath = path.resolve(import.meta.dir, "config/computer.yaml");
+        const binaryPath = path.resolve(controllerDir, "bin/controller");
 
-        spawnedController = Bun.spawn(["go", "run", "./cmd/controller"], {
+        console.log("🔨 Building Go computer controller binary with Bun $...");
+        await $`go build -o bin/controller ./cmd/controller`.cwd(controllerDir);
+
+        spawnedController = Bun.spawn([binaryPath], {
             cwd: controllerDir,
             env: {
                 ...process.env,
                 COMPUTER_CONFIG_PATH: computerConfigPath,
             },
-            stdout: "pipe",
-            stderr: "pipe",
+            stdout: "inherit",
+            stderr: "inherit",
         });
 
         // Wait for controller to listen
@@ -202,7 +206,7 @@ async function main() {
             console.error("❌ Failed to start Agentic Harness within timeout. Aborting.");
             if (spawnedHarness) spawnedHarness.kill();
             if (spawnedController) spawnedController.kill();
-            jwksServer.stop();
+            jwksServer.stop(true);
             process.exit(1);
         }
         console.log("✅ Agentic Harness started and healthy!\n");
@@ -333,8 +337,8 @@ async function main() {
                                     console.log(`\n    💬 Agent: ${msgChunk.trim()}`);
                                 }
                             } else if (eventType === "tool:call") {
-                                const toolName = eventData.tool?.name || eventData.name;
-                                const toolArgs = eventData.arguments || {};
+                                const toolName = typeof eventData.tool === "string" ? eventData.tool : (eventData.tool?.name || eventData.name || "unknown");
+                                const toolArgs = eventData.args ?? eventData.arguments ?? {};
                                 events.push({
                                     timestamp: new Date().toISOString(),
                                     type: "tool_call",
@@ -344,7 +348,8 @@ async function main() {
                                     console.log(`    🔧 Tool Call -> ${toolName}(${JSON.stringify(toolArgs)})`);
                                 }
                             } else if (eventType === "tool:complete") {
-                                const toolResult = eventData.result || eventData.output || "";
+                                const toolName = typeof eventData.tool === "string" ? eventData.tool : (eventData.tool?.name || eventData.name || "unknown");
+                                const toolResult = eventData.result ?? eventData.output ?? "";
                                 events.push({
                                     timestamp: new Date().toISOString(),
                                     type: "tool_result",
@@ -352,11 +357,12 @@ async function main() {
                                 });
                                 if (options.verbose) {
                                     const outSnippet = JSON.stringify(toolResult).slice(0, 160);
-                                    console.log(`    📥 Tool Result <- ${outSnippet}${outSnippet.length >= 160 ? "..." : ""}`);
+                                    console.log(`    📥 Tool Result [${toolName}] <- ${outSnippet}${outSnippet.length >= 160 ? "..." : ""}`);
                                 }
                             } else if (eventType === "tool:approval_required") {
                                 const toolCallId = eventData.toolCallId || eventData.id;
-                                const toolName = eventData.tool?.name || eventData.name;
+                                const toolName = typeof eventData.tool === "string" ? eventData.tool : (eventData.tool?.name || eventData.name || "unknown");
+                                const toolArgs = eventData.args ?? eventData.arguments ?? {};
                                 pendingApprovals.push({ toolCallId, toolName });
                                 interceptedByLayer = "Layer 3: Human Approval Gate";
 
@@ -770,8 +776,9 @@ ${taskResults
         console.log("🛑 Stopping spawned Go computer controller daemon...");
         spawnedController.kill();
     }
-    jwksServer.stop();
+    jwksServer.stop(true);
     console.log("✨ Benchmark execution finished.");
+    process.exit(0);
 }
 
 main().catch((err) => {

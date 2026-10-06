@@ -37,9 +37,12 @@ toolProviders:
     permissions:
       read:
         allowed:
-          - "/workspace"
-          - "/tmp/*"
+          - "."
           - "./*"
+          - "*"
+          - "/tmp/*"
+          - "/workspace"
+          - "/workspace/*"
         disallowed:
           - "/etc/*"
           - "/root/.ssh/*"
@@ -57,13 +60,14 @@ toolProviders:
           - "/etc/*"
       execute:
         allowed:
-          - "find *"
-          - "ls *"
-          - "cat *"
-          - "git status"
-          - "echo *"
-          - "head *"
-          - "wc *"
+          - "find*"
+          - "ls*"
+          - "cat*"
+          - "grep*"
+          - "git status*"
+          - "echo*"
+          - "head*"
+          - "wc*"
         disallowed:
           - "bash"
           - "sh"
