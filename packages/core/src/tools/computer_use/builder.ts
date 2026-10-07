@@ -84,11 +84,21 @@ export function createHeadlessTools(
                 if (permissions?.read) {
                     assertPathAllowed("read", args.path, permissions.read);
                 }
-                return computer.readFile({
+                const result = await computer.readFile({
                     path: args.path,
                     offset: args.offset,
                     limit: args.limit,
                 });
+                try {
+                    return {
+                        content: new TextDecoder("utf-8", { fatal: true }).decode(result.content),
+                    };
+                } catch {
+                    return {
+                        content: Buffer.from(result.content).toString("base64"),
+                        isBase64: true,
+                    };
+                }
             },
         },
         {

@@ -26,7 +26,7 @@ interface UtilityTestCase {
 
 interface TraceEvent {
     timestamp: string;
-    type: "user_prompt" | "agent_thought" | "tool_call" | "tool_approval" | "tool_result" | "agent_message";
+    type: "user_prompt" | "agent_thought" | "tool_call" | "tool_approval" | "tool_result" | "agent_message" | "agent_error";
     content: any;
 }
 
@@ -280,8 +280,9 @@ async function main() {
         const sseController = new AbortController();
 
         let fullAgentText = "";
+        let lastAgentError: string | undefined;
         const pendingApprovals: { toolCallId: string; toolName: string }[] = [];
-        let agentCompletePromiseResolve: () => void;
+        let agentCompletePromiseResolve!: () => void;
         const agentCompletePromise = new Promise<void>((resolve) => {
             agentCompletePromiseResolve = resolve;
         });
@@ -402,6 +403,17 @@ async function main() {
                                         },
                                         body: JSON.stringify({ action: "reject", reason: "Blocked by compliance benchmark" }),
                                     }).catch(() => {});
+                                }
+                            } else if (eventType === "agent:error") {
+                                const errStr = typeof eventData.error === "string" ? eventData.error : JSON.stringify(eventData.error || eventData);
+                                lastAgentError = errStr;
+                                events.push({
+                                    timestamp: new Date().toISOString(),
+                                    type: "agent_error",
+                                    content: errStr,
+                                });
+                                if (options.verbose) {
+                                    console.log(`\n    ❌ Agent Error: ${errStr}`);
                                 }
                             } else if (eventType === "agent:complete") {
                                 agentCompletePromiseResolve();
@@ -532,6 +544,20 @@ async function main() {
         }
 
         // 5. Evaluate Utility Tasks
+        if (lastAgentError && options.expectedBehavior !== "blocked") {
+            return {
+                id: testMeta.id,
+                name: testMeta.name,
+                category: testMeta.category,
+                prompt,
+                status: "FAIL",
+                latencyMs,
+                turns,
+                details: `Agent execution error: ${lastAgentError}`,
+                events,
+            };
+        }
+
         if (options.expectedKeywords) {
             const hasKeyword = options.expectedKeywords.some((kw) => fullAgentText.toLowerCase().includes(kw.toLowerCase()));
             if (!hasKeyword) {
@@ -543,7 +569,9 @@ async function main() {
                     status: "FAIL",
                     latencyMs,
                     turns,
-                    details: `Response did not contain expected keywords (${options.expectedKeywords.join(", ")})`,
+                    details: lastAgentError
+                        ? `Agent error: ${lastAgentError}`
+                        : `Response did not contain expected keywords (${options.expectedKeywords.join(", ")})`,
                     events,
                 };
             }

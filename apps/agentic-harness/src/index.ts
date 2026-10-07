@@ -376,4 +376,5 @@ app.get("/admin/interactions", async (c) => {
 
 Object.assign(app, { idleTimeout: 255 });
 
+export { manager, config };
 export default app;
