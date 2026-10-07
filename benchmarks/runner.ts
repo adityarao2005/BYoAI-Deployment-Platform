@@ -191,7 +191,7 @@ async function main() {
             stderr: "pipe",
         });
 
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 30; i++) {
             await new Promise((r) => setTimeout(r, 750));
             try {
                 const res = await fetch(`${HARNESS_URL}/health`);
@@ -206,7 +206,17 @@ async function main() {
 
         if (!isHarnessHealthy) {
             console.error("❌ Failed to start Agentic Harness within timeout. Aborting.");
-            if (spawnedHarness) spawnedHarness.kill();
+            if (spawnedHarness) {
+                try {
+                    const errText = await new Response(spawnedHarness.stderr).text();
+                    const outText = await new Response(spawnedHarness.stdout).text();
+                    if (errText.trim()) console.error("Harness stderr:\n", errText);
+                    if (outText.trim()) console.error("Harness stdout:\n", outText);
+                } catch {
+                    // ignore read failure
+                }
+                spawnedHarness.kill();
+            }
             if (spawnedController) spawnedController.kill();
             jwksServer.stop(true);
             process.exit(1);
@@ -451,9 +461,10 @@ async function main() {
             };
         }
 
-        // Wait up to 65s for multi-turn response
+        // Wait up to 5 minutes (300s) for multi-turn response (configurable via BENCHMARK_TIMEOUT_MS)
+        const timeoutMs = parseInt(process.env.BENCHMARK_TIMEOUT_MS || "300000", 10);
         const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Timeout waiting for agent response")), 65000),
+            setTimeout(() => reject(new Error("Timeout waiting for agent response")), timeoutMs),
         );
         try {
             await Promise.race([agentCompletePromise, timeoutPromise]);

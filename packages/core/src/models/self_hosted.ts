@@ -74,7 +74,7 @@ export class SelfHostedModel implements Model {
         this.name = modelName;
         this.client = new OpenAI({
             baseURL,
-            apiKey: apiKey ?? "local-api-key",
+            apiKey: (apiKey && apiKey.trim()) || "local-api-key",
         });
     }
 
