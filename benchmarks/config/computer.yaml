@@ -1,0 +1,8 @@
+type: local
+server:
+  host: "127.0.0.1"
+  port: 50051
+workspaceDir: "/home/aditya/projects/BYoAI-Deployment-Platform"
+logging:
+  level: "info"
+  format: "text"

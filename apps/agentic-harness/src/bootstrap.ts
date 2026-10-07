@@ -664,9 +664,11 @@ export async function bootstrap(
         ...(skillRepos.length > 0 ? [loadSkillToolProvider(skillRepos)] : []),
     ];
 
+    const isTest =
+        process.env.NODE_ENV === "test" || process.env.BUN_ENV === "test";
     const observers = options?.observers ?? [
         new LoggingAgentObserver(),
-        new ConsoleAgentObserver(),
+        ...(isTest ? [] : [new ConsoleAgentObserver()]),
     ];
 
     const resolvedRules = await resolveRules(config.rules ?? []);

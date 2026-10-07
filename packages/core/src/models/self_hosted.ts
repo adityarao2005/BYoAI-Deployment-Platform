@@ -32,9 +32,31 @@ function toChatCompletionInteraction(
                 ],
             } as ChatCompletionAssistantMessageParam;
         } else if (msg.type === "tool_response") {
+            let contentStr: string;
+            const res = msg.result as any;
+            if (typeof res === "string") {
+                contentStr = res;
+            } else if (
+                res &&
+                typeof res === "object" &&
+                "content" in res &&
+                (res.content instanceof Uint8Array ||
+                    (res.content &&
+                        typeof res.content === "object" &&
+                        res.content.type === "Buffer" &&
+                        Array.isArray(res.content.data)))
+            ) {
+                const rawData =
+                    res.content instanceof Uint8Array
+                        ? res.content
+                        : new Uint8Array(res.content.data);
+                contentStr = new TextDecoder().decode(rawData);
+            } else {
+                contentStr = JSON.stringify(msg.result);
+            }
             return {
                 role: "tool",
-                content: JSON.stringify(msg.result),
+                content: contentStr,
                 tool_call_id: msg.id,
                 name: msg.tool.name,
             };
@@ -52,7 +74,7 @@ export class SelfHostedModel implements Model {
         this.name = modelName;
         this.client = new OpenAI({
             baseURL,
-            apiKey: apiKey ?? "local-api-key",
+            apiKey: (apiKey && apiKey.trim()) || "local-api-key",
         });
     }
 
@@ -111,9 +133,18 @@ export class SelfHostedModel implements Model {
                     );
                 }
 
+                let parsedArgs = {};
+                try {
+                    parsedArgs = tool.function.arguments
+                        ? JSON.parse(tool.function.arguments)
+                        : {};
+                } catch {
+                    parsedArgs = {};
+                }
+
                 outputs.push({
                     type: "tool_call",
-                    arguments: JSON.parse(tool.function.arguments),
+                    arguments: parsedArgs,
                     id: tool.id,
                     tool: toolToUse,
                 });

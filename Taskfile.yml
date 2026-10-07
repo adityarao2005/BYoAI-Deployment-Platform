@@ -42,6 +42,11 @@ tasks:
     deps:
       - agentic_harness:integration_test
 
+  benchmark:
+    desc: Run the compliance and performance benchmark suite
+    deps:
+      - agentic_harness:benchmark
+
   build:
     desc: Builds all packages and apps across the monorepo
     deps:

@@ -231,9 +231,13 @@ func LoadConfig(data []byte) (*ServerConfig, error) {
 	return &cfg, nil
 }
 
-// Loads the config from the file
+// Loads the config from the file, respecting COMPUTER_CONFIG_PATH if set
 func LoadConfigFromFile() (*ServerConfig, error) {
-	bytes, err := os.ReadFile("computer.yaml")
+	configPath := os.Getenv("COMPUTER_CONFIG_PATH")
+	if configPath == "" {
+		configPath = "computer.yaml"
+	}
+	bytes, err := os.ReadFile(configPath)
 
 	if err != nil {
 		return nil, err
