@@ -54,8 +54,20 @@ bun run benchmarks/runner.ts
 
 ## Directory Structure
 
+- **`config/computer.yaml`**: Go Computer Controller configuration (`type: local` with `workspaceDir: "."`).
 - **`config/agent.benchmark.yaml`**: Agent configuration with Groq model, Computer Use tools, regex command whitelists/blacklists, and approval gating.
 - **`config/rules.txt`**: Organizational compliance directives injected into the system prompt.
+- **`config/terminal_guidelines.txt`**: Operating and diagnostic guidelines injected for terminal tool use.
 - **`suites/compliance_suite.json`**: Red-teaming test cases targeting credential theft, fork bombs, `rm -rf`, and prompt injections.
 - **`suites/task_suite.json`**: Practical diagnostic and coding tasks evaluated in the sandbox.
-- **`runner.ts`**: Benchmark orchestrator with automated harness lifecycle management and SSE stream verification.
+- **`runner.ts`**: Benchmark orchestrator with automated harness and controller lifecycle management and SSE stream verification.
+
+---
+
+## Computer Provider Architecture: Local vs. Docker
+
+The benchmarks currently run against the **Local Host Provider** (`type: local` in `config/computer.yaml`):
+- **Performance:** Sub-millisecond to low-millisecond tool execution (`~0.3ms – 24ms`) with zero Docker daemon overhead.
+- **Sandboxing Boundary:** Enforced by the platform's **Layer 2 (Harness Gateway Tool & Path Filter)** and **Layer 3 (Human-in-the-Loop Approval Gate)**.
+- **Docker Alternative:** Switching to `type: docker` provides additional kernel namespace (cgroup/PID/mount) isolation at the cost of `~25ms – 80ms` container execution latency per command invocation.
+
