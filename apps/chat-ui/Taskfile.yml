@@ -52,6 +52,7 @@ tasks:
       - '**/*.go'
       - go.mod
       - go.sum
+      - ../../VERSION
       - 'frontend/dist/**/*'
     generates:
       - bin/chat-ui

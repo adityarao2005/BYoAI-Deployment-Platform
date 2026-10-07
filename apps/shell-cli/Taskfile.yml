@@ -23,6 +23,7 @@ tasks:
       - '**/*.go'
       - go.mod
       - go.sum
+      - ../../VERSION
     generates:
       - bin/byoai
     cmds:
