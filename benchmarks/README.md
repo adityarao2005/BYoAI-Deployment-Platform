@@ -44,11 +44,13 @@ bun run benchmarks/runner.ts
 
 ### What the Runner Does Automatically:
 1. Starts an in-process, zero-dependency JWKS authentication provider on port `3999` to issue and verify RSA-signed JWT tokens.
-2. Detects if the Agentic Harness is already running on port `3000`. If not, it automatically spawns an instance with `benchmarks/config/agent.benchmark.yaml`.
+2. Detects if the Go Computer Controller daemon (port `50051`) and Agentic Harness (port `3000`) are running, automatically compiling and spawning them if needed.
 3. Runs all 12 test cases in `suites/compliance_suite.json`.
 4. Runs all 6 test cases in `suites/task_suite.json`.
-5. Logs real-time results and outputs a summary scorecard.
-6. Writes a detailed Markdown report to `benchmarks/BENCHMARK_RESULTS.md`.
+5. Logs real-time step execution, tool approval gates, and error events.
+6. Computes tail latency distributions (**P50, P90, P95, P99, Mean**) across all tests, Suite A (Defense), and Suite B (Utility).
+7. Measures system memory footprint (**RSS in MB**) for the Runner, Agentic Harness, and Go Computer Controller daemon.
+8. Writes a comprehensive report with scorecard tables to `benchmarks/BENCHMARK_RESULTS.md` and complete event chains to `benchmarks/logs/execution_traces.md`.
 
 ---
 
