@@ -151,12 +151,22 @@ export class GeminiModel implements Model {
 
         const output = [] as ModelMessageOutput[];
 
+        const usageMeta = response.usageMetadata;
+        const usage = usageMeta
+            ? {
+                  inputTokens: usageMeta.promptTokenCount,
+                  outputTokens: usageMeta.candidatesTokenCount,
+                  totalTokens: usageMeta.totalTokenCount,
+              }
+            : undefined;
+
         for (const part of parts) {
             if (part.text) {
                 output.push({
                     role: "assistant",
                     type: "message",
                     content: part.text,
+                    usage,
                 });
             } else if (part.functionCall) {
                 const tool = input.tools.find(
@@ -177,6 +187,7 @@ export class GeminiModel implements Model {
                         ? { thoughtSignature: part.thoughtSignature }
                         : {}),
                     tool: tool,
+                    usage,
                 });
             }
         }

@@ -1,4 +1,9 @@
-import type { ModelMessageOutput } from "@/models";
+import type { ModelMessageOutput, ModelUsage } from "@/models";
+
+export interface ModelTurnMetadata {
+    usage?: ModelUsage;
+    model?: string;
+}
 
 /**
  * Observer interface for monitoring agent execution lifecycle events (model prompts, tool calls, turn start/end).
@@ -10,6 +15,7 @@ export interface AgentObserver {
     onModelEnd?(
         agentId: string,
         output: ModelMessageOutput[],
+        metadata?: ModelTurnMetadata,
     ): Promise<void> | void;
     onAgentMessage?(agentId: string, content: string): Promise<void> | void;
     onToolCallStart?(

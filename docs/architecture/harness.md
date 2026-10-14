@@ -361,3 +361,46 @@ toolProviders:
       - mcp
 ```
 
+---
+
+## OpenTelemetry Tracing & Observability (`packages/core/src/agents/observers/opentelemetry.ts`)
+
+The platform includes a built-in OpenTelemetry observer (`OpenTelemetryAgentObserver`) instrumenting agent execution turns, model inferences, token metrics, and tool executions.
+
+### 1. Span Hierarchy & Context Propagation
+
+```
+Trace (Turn Execution)
+  └── [Span] agent.turn
+        ├── Attributes: agent.id, agent.turn.user_message
+        ├── Event: agent.message (Assistant output chunks)
+        ├── [Span] model.execute (Child of agent.turn)
+        │     ├── Attributes: agent.id, gen_ai.request.model
+        │     ├── gen_ai.usage.input_tokens: Prompt tokens
+        │     ├── gen_ai.usage.output_tokens: Completion tokens
+        │     └── gen_ai.usage.total_tokens: Cumulative tokens
+        ├── [Span] tool.execute:<tool_name> (Child of agent.turn)
+        │     ├── Attributes: agent.id, tool.id, tool.name, tool.arguments
+        │     └── Attributes: tool.result (or error exception & SpanStatusCode.ERROR)
+        └── (Success: SpanStatusCode.OK / Failure: SpanStatusCode.ERROR)
+```
+
+### 2. Multi-Protocol Exporter Support (HTTP & gRPC)
+
+- **Automatic Protocol Detection**:
+  - `endpoint: "http://localhost:4318"` (or ports ending in `4318`) → Uses `OTLPTraceExporter` (`@opentelemetry/exporter-trace-otlp-http`).
+  - `endpoint: "localhost:4317"` (or ports ending in `4317` / scheme `grpc://`) → Uses `OTLPTraceExporter` (`@opentelemetry/exporter-trace-otlp-grpc`).
+- **Explicit Protocol Configuration**:
+  ```yaml
+  observer:
+    otel:
+      endpoint: "localhost:4317"
+      protocol: "grpc" # or "http"
+      serviceName: "custom-agent-service"
+      headers:
+        authorization: "Bearer ${OTEL_AUTH_TOKEN}"
+  ```
+- **Model Token Usage Capture**:
+  - `OpenAIModel`, `AnthropicModel`, `GeminiModel`, and `SelfHostedModel` extract token consumption metrics from vendor responses and pass them through `ModelMessageOutput.usage` and `onModelEnd(agentId, output, metadata)`.
+  - Span metrics strictly adhere to the OpenTelemetry Generative AI Semantic Conventions (`gen_ai.usage.*`, `gen_ai.request.model`).
+

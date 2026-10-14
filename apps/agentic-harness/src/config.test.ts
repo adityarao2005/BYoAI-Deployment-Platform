@@ -194,4 +194,66 @@ security:
             expect(config.toolProviders.length).toBeGreaterThan(0);
         }
     });
+
+    it("parses observer configuration with otel string URL from agent.yaml", async () => {
+        tempConfigDir = await mkdtemp(join(tmpdir(), "agent-config-otel-string-"));
+        const configPath = join(tempConfigDir, "agent.yaml");
+
+        await writeFile(
+            configPath,
+            `
+models:
+  - name: "gpt4"
+    brand: "openai"
+    properties:
+      apiKey: "sk-test"
+security:
+  jwksUri: "https://example.com"
+  alg: ["RS256"]
+observer:
+  otel: "http://localhost:4318"
+`,
+            "utf8",
+        );
+
+        const config = await loadConfig(configPath);
+        expect(config.observer?.otel).toBe("http://localhost:4318");
+    });
+
+    it("parses observer configuration with otel structured object from agent.yaml", async () => {
+        tempConfigDir = await mkdtemp(join(tmpdir(), "agent-config-otel-obj-"));
+        const configPath = join(tempConfigDir, "agent.yaml");
+
+        await writeFile(
+            configPath,
+            `
+models:
+  - name: "gpt4"
+    brand: "openai"
+    properties:
+      apiKey: "sk-test"
+security:
+  jwksUri: "https://example.com"
+  alg: ["RS256"]
+observer:
+  otel:
+    endpoint: "localhost:4317"
+    protocol: "grpc"
+    serviceName: "custom-agent-service"
+    headers:
+      authorization: "Bearer otel-token"
+`,
+            "utf8",
+        );
+
+        const config = await loadConfig(configPath);
+        expect(config.observer?.otel).toEqual({
+            endpoint: "localhost:4317",
+            protocol: "grpc",
+            serviceName: "custom-agent-service",
+            headers: {
+                authorization: "Bearer otel-token",
+            },
+        });
+    });
 });

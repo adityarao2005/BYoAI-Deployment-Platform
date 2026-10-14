@@ -111,11 +111,20 @@ export class SelfHostedModel implements Model {
 
         const outputs: ModelMessageOutput[] = [];
 
+        const usage = response.usage
+            ? {
+                  inputTokens: response.usage.prompt_tokens,
+                  outputTokens: response.usage.completion_tokens,
+                  totalTokens: response.usage.total_tokens,
+              }
+            : undefined;
+
         if (message.content) {
             outputs.push({
                 role: "assistant",
                 type: "message",
                 content: message.content,
+                usage,
             });
         }
 
@@ -147,6 +156,7 @@ export class SelfHostedModel implements Model {
                     arguments: parsedArgs,
                     id: tool.id,
                     tool: toolToUse,
+                    usage,
                 });
             }
         }

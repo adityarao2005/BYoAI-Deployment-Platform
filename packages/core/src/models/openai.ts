@@ -66,6 +66,14 @@ export class OpenAIModel implements Model {
 
         const output = [] as ModelMessageOutput[];
 
+        const usage = response.usage
+            ? {
+                  inputTokens: response.usage.input_tokens,
+                  outputTokens: response.usage.output_tokens,
+                  totalTokens: response.usage.total_tokens,
+              }
+            : undefined;
+
         for (const msg of response.output) {
             if (msg.type === "message") {
                 // check if the message has content
@@ -80,6 +88,7 @@ export class OpenAIModel implements Model {
                         role: "assistant",
                         type: "message",
                         content: refusal.refusal,
+                        usage,
                     });
                 }
 
@@ -91,6 +100,7 @@ export class OpenAIModel implements Model {
                         .filter((c) => c.type === "output_text")
                         .flatMap((c) => c.text)
                         .join("\n"),
+                    usage,
                 });
             } else if (msg.type === "function_call") {
                 const tool = input.tools.find((t) => t.name === msg.name);
@@ -106,6 +116,7 @@ export class OpenAIModel implements Model {
                     arguments: JSON.parse(msg.arguments),
                     id: msg.call_id,
                     tool: tool,
+                    usage,
                 });
             }
         }

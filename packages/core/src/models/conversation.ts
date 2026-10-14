@@ -10,10 +10,18 @@ export type UserMessage = {
     content: string;
 };
 
+export type ModelUsage = {
+    inputTokens?: number;
+    outputTokens?: number;
+    totalTokens?: number;
+    details?: Record<string, unknown>;
+};
+
 export type AssistantMessage = {
     role: Role;
     type: "message";
     content: string;
+    usage?: ModelUsage;
 };
 
 export function isMessage(message: ModelInteraction): message is UserMessage {
@@ -27,6 +35,7 @@ export type ToolCallRequest = {
     arguments: Record<string, unknown>;
     id: string;
     thoughtSignature?: string;
+    usage?: ModelUsage;
 };
 
 export function isToolCallRequest(

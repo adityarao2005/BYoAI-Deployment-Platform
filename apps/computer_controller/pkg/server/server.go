@@ -17,6 +17,8 @@ import (
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/config"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/logger"
 	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/services"
+	"github.com/adityarao2005/BYoAI-Deployment-Platform/computer_controller/pkg/telemetry"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 type responseWriterInterceptor struct {
@@ -91,6 +93,10 @@ func NewServerHandlerAndProvider(server_config *config.ServerConfig) (http.Handl
 
 	handler = requestLoggingMiddleware(handler)
 
+	if server_config.Telemetry.IsEnabled() {
+		handler = otelhttp.NewHandler(handler, server_config.Telemetry.ServiceName)
+	}
+
 	return handler, computer_provider, nil
 }
 
@@ -111,6 +117,17 @@ func RunServer() {
 
 	logger.Init(server_config.Logging.Level, server_config.Logging.Format, os.Stdout)
 	logger.Info("Starting Computer Controller Service...", "address", server_config.Server.Address(), "type", server_config.Type)
+
+	shutdownTelemetry, err := telemetry.Init(server_config.Telemetry)
+	if err != nil {
+		logger.Warn("Failed to initialize OpenTelemetry", "error", err)
+	} else {
+		defer func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			_ = shutdownTelemetry(ctx)
+		}()
+	}
 
 	handler, _, err := NewServerHandlerAndProvider(server_config)
 	if err != nil {

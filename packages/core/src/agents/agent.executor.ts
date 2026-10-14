@@ -209,7 +209,11 @@ export class AgentExecutor implements IAgentExecutor {
             throw error;
         }
 
-        await this.notifyObservers("onModelEnd", agentId, output);
+        const usage = output.find((m) => m.usage !== undefined)?.usage;
+        await this.notifyObservers("onModelEnd", agentId, output, {
+            usage,
+            model: this.configuration.model.name,
+        });
 
         await this.memory.agent.addTranscriptEntries(
             agentId,
