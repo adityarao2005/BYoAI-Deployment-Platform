@@ -71,6 +71,9 @@ jobs:
       - name: Lint
         run: bun run lint
 
+      - name: Build TypeScript packages
+        run: bun run build
+
       - name: Typecheck
         run: bun run typecheck
 
@@ -275,10 +278,48 @@ jobs:
           cache-to: type=gha,mode=max
 
   # ---------------------------------------------------------------------------
+  # Publish npm packages: @byo-ai-agent-platform/core and connectors
+  # ---------------------------------------------------------------------------
+  npm-publish:
+    needs: [validate, test, build-ts-bundle]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build TypeScript packages
+        run: bun run build
+
+      - name: Publish to npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_PUBLISH_KEY }}
+        run: |
+          if [ -z "${NPM_TOKEN}" ]; then
+            echo "::warning::NPM_TOKEN secret is not set. Skipping npm package publishing."
+            exit 0
+          fi
+
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+
+          echo "📦 Publishing @byo-ai-agent-platform/core..."
+          (cd packages/core && bun publish --access public --tolerate-republish)
+
+          for pkg in dynamodb kafka-connector libsql mongo mysql postgres rabbitmq-connector redis redis-connector sqlite; do
+            echo "📦 Publishing @byo-ai-agent-platform/${pkg}..."
+            (cd "packages/${pkg}" && bun publish --access public --tolerate-republish)
+          done
+
+  # ---------------------------------------------------------------------------
   # GitHub Release: create release with all binaries attached
   # ---------------------------------------------------------------------------
   github-release:
-    needs: [validate, build-go-binaries, docker-images]
+    needs: [validate, build-go-binaries, docker-images, npm-publish]
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ needs.validate.outputs.version }}
@@ -308,6 +349,23 @@ jobs:
           generate_release_notes: true
           files: dist/*
           body: |
+            ## NPM Packages
+
+            ```bash
+            npm install @byo-ai-agent-platform/core@${{ env.VERSION }}
+            # Persistence & Messaging Adapters:
+            npm install @byo-ai-agent-platform/postgres@${{ env.VERSION }}
+            npm install @byo-ai-agent-platform/sqlite@${{ env.VERSION }}
+            npm install @byo-ai-agent-platform/redis@${{ env.VERSION }}
+            npm install @byo-ai-agent-platform/mongo@${{ env.VERSION }}
+            npm install @byo-ai-agent-platform/mysql@${{ env.VERSION }}
+            npm install @byo-ai-agent-platform/libsql@${{ env.VERSION }}
+            npm install @byo-ai-agent-platform/dynamodb@${{ env.VERSION }}
+            npm install @byo-ai-agent-platform/kafka-connector@${{ env.VERSION }}
+            npm install @byo-ai-agent-platform/rabbitmq-connector@${{ env.VERSION }}
+            npm install @byo-ai-agent-platform/redis-connector@${{ env.VERSION }}
+            ```
+
             ## Docker Images
 
             ```bash
@@ -328,3 +386,4 @@ jobs:
             ```
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

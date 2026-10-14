@@ -92,4 +92,31 @@ tasks:
     deps:
       - task: build_container_image
 
+  npm:pack:
+    desc: Dry-run package packing for npm distribution across all packages
+    deps:
+      - build
+    cmds:
+      - echo "📦 Packing @byo-ai-agent-platform/core..."
+      - cd packages/core && bun pm pack --dry-run
+      - |
+        for pkg in dynamodb kafka-connector libsql mongo mysql postgres rabbitmq-connector redis redis-connector sqlite; do
+          echo "📦 Packing @byo-ai-agent-platform/${pkg}..."
+          (cd "packages/${pkg}" && bun pm pack --dry-run)
+        done
+
+  npm:publish:
+    desc: Publish all platform packages to npm registry (requires NPM_TOKEN or npm login)
+    deps:
+      - build
+    cmds:
+      - echo "🚀 Publishing @byo-ai-agent-platform/core to npm..."
+      - cd packages/core && bun publish --access public --tolerate-republish
+      - |
+        for pkg in dynamodb kafka-connector libsql mongo mysql postgres rabbitmq-connector redis redis-connector sqlite; do
+          echo "🚀 Publishing @byo-ai-agent-platform/${pkg} to npm..."
+          (cd "packages/${pkg}" && bun publish --access public --tolerate-republish)
+        done
+
+
 

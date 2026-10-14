@@ -1,6 +1,6 @@
 {
     "name": "@byo-ai-agent-platform",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "workspaces": {
         "packages": [
             "packages/*",
@@ -14,7 +14,7 @@
         "format": "biome format --write .",
         "test": "bun test",
         "build": "bun --filter '*' build",
-        "check": "bun run lint && bun run typecheck && bun run test"
+        "check": "bun run build && bun run lint && bun run typecheck && bun run test"
     },
     "dependencies": {
         "yaml": "^2.9.0",

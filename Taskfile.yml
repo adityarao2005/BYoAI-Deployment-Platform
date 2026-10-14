@@ -95,6 +95,17 @@ tasks:
       - chat_ui:build_container_images
       - shell_cli:build_container_images
 
+  npm_pack:
+    desc: Dry-run package packing for npm distribution across all packages
+    deps:
+      - agentic_harness:npm:pack
+
+  npm_publish:
+    desc: Publish all platform packages to npm registry (requires NPM_TOKEN or npm login)
+    deps:
+      - agentic_harness:npm:publish
+
+
   release:
     desc: Tag a release from the current VERSION file and push the tag
     preconditions:
