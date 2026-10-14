@@ -207,6 +207,32 @@ export function normalizePersistenceConfig(
 }
 
 /**
+ * Zod schema for OpenTelemetry observer configuration in `agent.yaml`.
+ */
+export const OtelObserverConfigSchema = z.union([
+    z.string(),
+    z.object({
+        endpoint: z.string().optional(),
+        protocol: z.enum(["http", "grpc"]).optional(),
+        serviceName: z.string().optional(),
+        headers: z.record(z.string(), z.string()).optional(),
+    }),
+]);
+
+export type OtelObserverConfig = z.infer<typeof OtelObserverConfigSchema>;
+
+/**
+ * Zod schema for observer options in `agent.yaml`.
+ */
+export const ObserverConfigSchema = z.object({
+    otel: OtelObserverConfigSchema.optional(),
+    console: z.boolean().optional(),
+    logging: z.boolean().optional(),
+});
+
+export type ObserverConfig = z.infer<typeof ObserverConfigSchema>;
+
+/**
  * Zod schema defining the agent configuration file structure (`agent.yaml`).
  */
 export const AgentConfigSchema = z.object({
@@ -219,6 +245,8 @@ export const AgentConfigSchema = z.object({
     security: AgentSecuritySchema,
     messaging: AgentMessagingConfigSchema.default("in_memory").optional(),
     persistence: PersistenceConfigSchema.default("in_memory").optional(),
+    observer: ObserverConfigSchema.optional(),
+    observers: ObserverConfigSchema.optional(),
 });
 
 /**

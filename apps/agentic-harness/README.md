@@ -374,6 +374,40 @@ Every provider package exports all three managers (`AgentMemoryManager`, `UserTo
 
 ---
 
+#### 6. Telemetry & Observability (`observer`)
+
+Configures OpenTelemetry tracing and token usage monitoring across all agent turns, model prompts, and tool calls:
+
+```yaml
+# Shorthand string URL (auto-detects HTTP on 4318 or gRPC on 4317):
+observer:
+  otel: "http://localhost:4318" # OTLP HTTP trace collector endpoint
+
+# Or explicit gRPC collector endpoint:
+observer:
+  otel: "localhost:4317" # or grpc://localhost:4317
+
+# Or structured configuration object:
+observer:
+  otel:
+    endpoint: "http://localhost:4318"
+    protocol: "http" # "http" | "grpc"
+    serviceName: "byo-ai-agent"
+    headers:
+      authorization: "Bearer ${OTEL_AUTH_TOKEN}"
+```
+
+##### Traces, Spans, & Token Usage Captured
+- **`agent.turn`**: Root span per user turn with `agent.id`, user message, and output message events.
+- **`model.execute`**: Child span per LLM inference capturing:
+  - `gen_ai.request.model`: Evaluated model name (e.g. `gpt-4o`, `claude-3-5-sonnet`, `gemini-2.5-flash`).
+  - `gen_ai.usage.input_tokens`: Prompt token count.
+  - `gen_ai.usage.output_tokens`: Completion token count.
+  - `gen_ai.usage.total_tokens`: Total token consumption for the turn.
+- **`tool.execute:<name>`**: Child span per tool invocation recording tool arguments, output results, and exceptions.
+
+---
+
 ### Full Example Configurations in Repository
 
 - **[Pluggable Messaging & DB Persistence Agent (`agent.yaml`)](file:///home/aditya/projects/BYoAI-Deployment-Platform/examples/plugin-messaging-and-db/agent.yaml)**: Clustered setup with Redis messaging, PostgreSQL chat history, Redis token store, and MongoDB computer lifecycles.

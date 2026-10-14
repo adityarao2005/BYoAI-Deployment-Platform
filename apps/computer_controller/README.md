@@ -193,6 +193,21 @@ spec:
   imagePullPolicy: "IfNotPresent"
 ```
 
+#### 9. OpenTelemetry Tracing (`telemetry`)
+
+Enables OpenTelemetry HTTP server tracing middleware and exports spans to an OTLP collector:
+
+```yaml
+type: local
+server:
+  host: "0.0.0.0"
+  port: 8080
+telemetry:
+  otelEndpoint: "http://localhost:4318" # OTLP collector endpoint (HTTP or localhost:4317 for gRPC)
+  serviceName: "computer-controller"
+  protocol: "http" # "http" | "grpc" (auto-detected if omitted)
+```
+
 ---
 
 ### Kubernetes Production Deployment (`deploy/k8s/`)

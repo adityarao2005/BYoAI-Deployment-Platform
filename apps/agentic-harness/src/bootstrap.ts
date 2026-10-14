@@ -13,6 +13,7 @@ import {
     InMemoryComputerLifecycleManager,
     InMemoryUserTokenManager,
     LoggingAgentObserver,
+    OpenTelemetryAgentObserver,
 } from "@byo-ai-agent-platform/core/agents";
 import {
     type ComputerProvider,
@@ -666,10 +667,29 @@ export async function bootstrap(
 
     const isTest =
         process.env.NODE_ENV === "test" || process.env.BUN_ENV === "test";
-    const observers = options?.observers ?? [
+    const observers = options?.observers ? [...options.observers] : [
         new LoggingAgentObserver(),
         ...(isTest ? [] : [new ConsoleAgentObserver()]),
     ];
+
+    const observerConfig = config.observer ?? config.observers;
+    if (observerConfig?.otel) {
+        const otel = observerConfig.otel;
+        const otelOpts =
+            typeof otel === "string"
+                ? { endpoint: otel }
+                : {
+                      endpoint: otel.endpoint,
+                      protocol: otel.protocol,
+                      serviceName: otel.serviceName,
+                      headers: otel.headers,
+                  };
+        observers.push(new OpenTelemetryAgentObserver(otelOpts));
+        logger.info("Configured OpenTelemetryAgentObserver from config", {
+            endpoint: otelOpts.endpoint,
+            protocol: otelOpts.protocol ?? "auto",
+        });
+    }
 
     const resolvedRules = await resolveRules(config.rules ?? []);
 

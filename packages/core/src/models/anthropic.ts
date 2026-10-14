@@ -71,12 +71,23 @@ export class AnthropicModel implements Model {
 
         const output = [] as ModelMessageOutput[];
 
+        const usage = response.usage
+            ? {
+                  inputTokens: response.usage.input_tokens,
+                  outputTokens: response.usage.output_tokens,
+                  totalTokens:
+                      (response.usage.input_tokens ?? 0) +
+                      (response.usage.output_tokens ?? 0),
+              }
+            : undefined;
+
         for (const message of response.content) {
             if (message.type === "text") {
                 output.push({
                     role: "assistant",
                     type: "message",
                     content: message.text,
+                    usage,
                 });
             } else if (message.type === "tool_use") {
                 const toolToUse = input.tools.find(
@@ -94,6 +105,7 @@ export class AnthropicModel implements Model {
                     arguments: message.input as Record<string, unknown>,
                     tool: toolToUse,
                     id: message.id,
+                    usage,
                 });
             }
         }

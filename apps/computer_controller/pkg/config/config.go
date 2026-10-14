@@ -98,11 +98,22 @@ type LoggingConfig struct {
 	Format string `yaml:"format,omitempty"` // "text", "json"
 }
 
+type TelemetryConfig struct {
+	OtelEndpoint string `yaml:"otelEndpoint,omitempty"`
+	ServiceName  string `yaml:"serviceName,omitempty"`
+	Protocol     string `yaml:"protocol,omitempty"` // "http" or "grpc"
+}
+
+func (t TelemetryConfig) IsEnabled() bool {
+	return t.OtelEndpoint != ""
+}
+
 type ServerConfig struct {
 	Type         ConfigType          `yaml:"type"`
 	WorkspaceDir string              `yaml:"workspaceDir,omitempty"`
 	Server       ServerNetworkConfig `yaml:"server,omitempty"`
 	Logging      LoggingConfig       `yaml:"logging,omitempty"`
+	Telemetry    TelemetryConfig     `yaml:"telemetry,omitempty"`
 	Spec         Spec                `yaml:"-"`
 }
 
@@ -113,6 +124,7 @@ func (c *ServerConfig) UnmarshalYAML(value *yaml.Node) error {
 		WorkspaceDir string              `yaml:"workspaceDir"`
 		Server       ServerNetworkConfig `yaml:"server"`
 		Logging      LoggingConfig       `yaml:"logging"`
+		Telemetry    TelemetryConfig     `yaml:"telemetry"`
 		Spec         yaml.Node           `yaml:"spec"`
 	}
 
@@ -156,10 +168,17 @@ func (c *ServerConfig) UnmarshalYAML(value *yaml.Node) error {
 		typeStr = string(TypeKubernetes)
 	}
 	raw.Type = ConfigType(typeStr)
+	raw.Telemetry.OtelEndpoint = os.ExpandEnv(raw.Telemetry.OtelEndpoint)
+	raw.Telemetry.ServiceName = os.ExpandEnv(raw.Telemetry.ServiceName)
+	if raw.Telemetry.ServiceName == "" {
+		raw.Telemetry.ServiceName = "computer-controller"
+	}
+
 	c.Type = raw.Type
 	c.WorkspaceDir = raw.WorkspaceDir
 	c.Server = raw.Server
 	c.Logging = raw.Logging
+	c.Telemetry = raw.Telemetry
 
 	switch raw.Type {
 	case TypeLocal:
