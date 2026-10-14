@@ -35,7 +35,8 @@ Python-based local LLM server setup utilizing `uv` and Docker Compose.
 ### Agent Platform (`@byo-ai-agent-platform/`)
 TypeScript-based monorepo managed with `bun`:
 - **[`@byo-ai-agent-platform/agentic-harness`](apps/agentic-harness/README.md)**: CLI application runtime for loading YAML definitions (`agent.yaml`) and running autonomous agent loops. See [apps/agentic-harness/README.md](apps/agentic-harness/README.md) for full configuration reference.
-- **[`@byo-ai-agent-platform/core`](packages/core/README.md)**: Core TypeScript SDK and library for building agents, LLM integrations, computer sandboxing, and MCP tools programmatically. See [packages/core/README.md](packages/core/README.md) for API usage.
+- **[`@byo-ai-agent-platform/core`](packages/core/README.md)**: Core TypeScript SDK and library for building agents, LLM integrations, computer sandboxing, and MCP tools programmatically. Distributed on npm as `@byo-ai-agent-platform/core`.
+- **Persistence & Messaging Connectors (`packages/`)**: Pluggable storage and event bus packages distributed on npm (`@byo-ai-agent-platform/postgres`, `@byo-ai-agent-platform/sqlite`, `@byo-ai-agent-platform/mysql`, `@byo-ai-agent-platform/mongo`, `@byo-ai-agent-platform/libsql`, `@byo-ai-agent-platform/dynamodb`, `@byo-ai-agent-platform/redis`, `@byo-ai-agent-platform/kafka-connector`, `@byo-ai-agent-platform/rabbitmq-connector`, `@byo-ai-agent-platform/redis-connector`).
 
 
 ### Computer Controller (`apps/computer_controller/`)
@@ -70,6 +71,7 @@ Run unified commands from the root using `task`:
 - **Build All**: `task build`
 - **Generate Protobuf Stubs**: `task generate_proto`
 - **Run Unit Tests**: `task unit_test`
+- **Inspect NPM Packages (Dry Run)**: `task npm_pack`
 - **Run Harness**: `task agentic_harness:run`
 - **Run Benchmarks**: `task benchmark`
 

@@ -1,12 +1,21 @@
 {
     "name": "@byo-ai-agent-platform/redis-connector",
-    "version": "0.1.0",
-    "module": "src/index.ts",
-    "main": "src/index.ts",
+    "version": "1.0.2",
+    "description": "Redis pub/sub messaging adapter for the BYoAI Agent Platform",
+    "publishConfig": {
+        "access": "public"
+    },
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist",
+        "README.md"
+    ],
     "type": "module",
     "scripts": {
         "typecheck": "tsc --noEmit",
-        "build": "bun build ./src/index.ts --outdir ./dist --target=bun"
+        "build": "bun build ./src/index.ts --outdir ./dist --target=bun && bunx tsc --declaration --emitDeclarationOnly --noEmit false --outDir dist && find dist -name '*.test.d.ts' -delete"
     },
     "peerDependencies": {
         "typescript": "^7"
@@ -21,6 +30,10 @@
         "testcontainers": "^10.18.0"
     },
     "exports": {
-        ".": "./src/index.ts"
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "default": "./dist/index.js"
+        }
     }
 }

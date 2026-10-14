@@ -1,10 +1,21 @@
 {
     "name": "@byo-ai-agent-platform/core",
-    "module": "src/index.ts",
+    "version": "1.0.2",
+    "description": "Core runtime, agent contracts, models, tools, observers, and storage interfaces for the BYoAI Agent Platform",
+    "publishConfig": {
+        "access": "public"
+    },
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist",
+        "README.md"
+    ],
     "type": "module",
     "scripts": {
         "typecheck": "tsc --noEmit",
-        "build": "bun build ./src/index.ts --outdir ./dist --target=bun"
+        "build": "bun build --root ./src ./src/index.ts ./src/agents/index.ts ./src/computer/index.ts ./src/config/index.ts ./src/errors/index.ts ./src/logger/index.ts ./src/models/index.ts ./src/skills/index.ts ./src/tools/index.ts --outdir ./dist --target=bun && bunx tsc --declaration --emitDeclarationOnly --noEmit false --outDir dist && find dist -name '*.test.d.ts' -delete"
     },
     "devDependencies": {
         "@modelcontextprotocol/server": "^2.0.0",
@@ -43,21 +54,58 @@
         "zod": "^4.6.1"
     },
     "exports": {
-        "./models": "./src/models/index.ts",
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "default": "./dist/index.js"
+        },
+        "./models": {
+            "types": "./dist/models/index.d.ts",
+            "import": "./dist/models/index.js",
+            "default": "./dist/models/index.js"
+        },
         "./models/*": "./src/models/*",
-        "./agents": "./src/agents/index.ts",
+        "./agents": {
+            "types": "./dist/agents/index.d.ts",
+            "import": "./dist/agents/index.js",
+            "default": "./dist/agents/index.js"
+        },
         "./agents/*": "./src/agents/*",
-        "./skills": "./src/skills/index.ts",
+        "./skills": {
+            "types": "./dist/skills/index.d.ts",
+            "import": "./dist/skills/index.js",
+            "default": "./dist/skills/index.js"
+        },
         "./skills/*": "./src/skills/*",
-        "./tools": "./src/tools/index.ts",
+        "./tools": {
+            "types": "./dist/tools/index.d.ts",
+            "import": "./dist/tools/index.js",
+            "default": "./dist/tools/index.js"
+        },
         "./tools/*": "./src/tools/*",
-        "./config": "./src/config/index.ts",
+        "./config": {
+            "types": "./dist/config/index.d.ts",
+            "import": "./dist/config/index.js",
+            "default": "./dist/config/index.js"
+        },
         "./config/*": "./src/config/*",
-        "./computer": "./src/computer/index.ts",
+        "./computer": {
+            "types": "./dist/computer/index.d.ts",
+            "import": "./dist/computer/index.js",
+            "default": "./dist/computer/index.js"
+        },
         "./computer/*": "./src/computer/*",
-        "./errors": "./src/errors/index.ts",
+        "./errors": {
+            "types": "./dist/errors/index.d.ts",
+            "import": "./dist/errors/index.js",
+            "default": "./dist/errors/index.js"
+        },
         "./errors/*": "./src/errors/*",
-        "./logger": "./src/logger/index.ts",
+        "./logger": {
+            "types": "./dist/logger/index.d.ts",
+            "import": "./dist/logger/index.js",
+            "default": "./dist/logger/index.js"
+        },
         "./logger/*": "./src/logger/*",
         "./*": "./src/*"
     }
