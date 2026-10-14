@@ -14,7 +14,7 @@
         "format": "biome format --write .",
         "test": "bun test",
         "build": "bun --filter '*' build",
-        "check": "bun run lint && bun run typecheck && bun run test"
+        "check": "bun run build && bun run lint && bun run typecheck && bun run test"
     },
     "dependencies": {
         "yaml": "^2.9.0",

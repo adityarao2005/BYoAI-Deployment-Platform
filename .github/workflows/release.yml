@@ -71,6 +71,9 @@ jobs:
       - name: Lint
         run: bun run lint
 
+      - name: Build TypeScript packages
+        run: bun run build
+
       - name: Typecheck
         run: bun run typecheck
 
